@@ -1,0 +1,31 @@
+.dashboard-page {
+    /* Using common .page class from app.css */
+}
+
+.dashboard-section {
+    margin-bottom: 3rem;
+}
+
+.dashboard-section h2 {
+    margin-bottom: 1rem;
+}
+
+.habit-list {
+    list-style: none;
+    padding: 0;
+}
+
+.habit-list li {
+    margin-bottom: 1rem;
+}
+
+.habit-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.habit-description {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}

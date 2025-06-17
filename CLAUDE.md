@@ -37,7 +37,10 @@ pnpm db:seed
 
 ## Style
 - No Tailwind CSS
-- Vanilla CSS
+- Vanilla CSS only
+- NEVER use inline styles (`style={}` props) or `<style>` tags in components
+- ALWAYS create separate `.css` files next to components and import them
+- Use global classes from `app/app.css` when possible (buttons, forms, layout, utilities)
 
 ## Design
 - Light, minimalist
@@ -52,3 +55,8 @@ pnpm db:seed
   - Fix what’s broken as you go.
 - Start by the domain modelling, then move on to infrastructure topics.
 - If at any point you need more information, please ask your questions before moving forward.
+- STYLING ENFORCEMENT: Before completing any frontend work, check that NO components use:
+  - `style={}` props
+  - `<style>` tags
+  - Any inline CSS
+  - If found, move styles to separate `.css` files and use global classes where possible

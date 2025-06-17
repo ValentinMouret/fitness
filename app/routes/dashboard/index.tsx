@@ -1,4 +1,5 @@
 import { ok, ResultAsync } from "neverthrow";
+import "./index.css";
 import {
   Measure,
   MeasurementRepository,
@@ -98,11 +99,11 @@ export default function DashboardPage({ loaderData }: Route.ComponentProps) {
   const { weight, lastWeight, loggedToday, streak, todayHabits, completionMap } = loaderData;
 
   return (
-    <div>
+    <div className="page dashboard-page">
       <h1>Today</h1>
       
       {/* Weight Section */}
-      <section>
+      <section className="dashboard-section">
         <h2>Weight</h2>
       {loggedToday ? (
         <>
@@ -125,41 +126,28 @@ export default function DashboardPage({ loaderData }: Route.ComponentProps) {
       
       {/* Habits Section */}
       {todayHabits.length > 0 && (
-        <section>
+        <section className="dashboard-section">
           <h2>Today's Habits</h2>
-          <ul style={{ listStyle: "none", padding: 0 }}>
+          <ul className="habit-list">
             {todayHabits.map((habit) => {
               const isCompleted = completionMap.get(habit.id) ?? false;
               return (
-                <li key={habit.id} style={{ marginBottom: "1rem" }}>
-                  <Form method="post" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <li key={habit.id} className="mb-2">
+                  <Form method="post" className="habit-form checkbox-wrapper">
                     <input type="hidden" name="intent" value="toggle-habit" />
                     <input type="hidden" name="habitId" value={habit.id} />
                     <input type="hidden" name="completed" value={String(isCompleted)} />
                     <button
                       type="submit"
-                      style={{
-                        background: isCompleted ? "#4caf50" : "white",
-                        border: `2px solid ${isCompleted ? "#4caf50" : "#ccc"}`,
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "16px",
-                        color: isCompleted ? "white" : "transparent",
-                        padding: 0,
-                      }}
+                      className={`checkbox-button ${isCompleted ? 'checked' : ''}`}
                     >
                       {isCompleted && "✓"}
                     </button>
-                    <span style={{ textDecoration: isCompleted ? "line-through" : "none" }}>
+                    <span className={`checkbox-label ${isCompleted ? 'checked' : ''}`}>
                       {habit.name}
                     </span>
                     {habit.description && (
-                      <span style={{ fontSize: "0.875rem", color: "#666" }}>
+                      <span className="habit-description text-small text-muted">
                         - {habit.description}
                       </span>
                     )}

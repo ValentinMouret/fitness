@@ -1,0 +1,65 @@
+.habits-page {
+    /* Using common .page class from app.css */
+}
+
+.today-habits {
+    margin-bottom: 3rem;
+}
+
+.today-habits h2 {
+    margin-bottom: 1rem;
+}
+
+.habit-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.habit-form {
+    margin-bottom: 0.5rem;
+}
+
+.all-habits h2 {
+    margin-bottom: 1rem;
+}
+
+.habit-grid {
+    /* Using common .grid class from app.css */
+}
+
+.habit-card {
+    /* Using common .card class from app.css */
+}
+
+.habit-card-header {
+    /* Using common .card-header class from app.css */
+}
+
+.edit-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.edit-link:hover {
+    background: var(--secondary-color);
+    color: var(--primary-color);
+}
+
+.habit-meta {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.days-detail {
+    color: var(--text-light);
+    font-size: 0.85rem;
+}
+
+.habit-description {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}

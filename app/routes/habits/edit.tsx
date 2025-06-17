@@ -1,7 +1,8 @@
 import { Form, redirect, useActionData, Link, useLoaderData } from "react-router";
+import "./edit.css";
 import { data } from "react-router";
 import type { Route } from "./+types/edit";
-import { HabitRepository, Habit as HabitEntity, type Habit } from "../../habits";
+import { HabitRepository, type Habit as HabitEntity, type Habit } from "../../habits";
 import * as React from "react";
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -122,34 +123,13 @@ export default function EditHabit() {
               {daysOfWeek.map((day) => (
                 <label 
                   key={day.value} 
-                  style={{ 
-                    display: "flex", 
-                    alignItems: "center", 
-                    gap: "0.5rem",
-                    cursor: "pointer",
-                  }}
+                  className="day-checkbox"
                 >
                   <input
                     type="checkbox"
                     name="daysOfWeek"
                     value={day.value}
                     defaultChecked={habit.frequencyConfig.days_of_week?.includes(day.value)}
-                    style={{
-                      WebkitAppearance: "none",
-                      MozAppearance: "none",
-                      appearance: "none",
-                      background: "white",
-                      border: "2px solid #ccc",
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      margin: 0,
-                      position: "relative",
-                    }}
                   />
                   <span>{day.label}</span>
                 </label>
@@ -159,132 +139,15 @@ export default function EditHabit() {
         )}
 
         <div className="form-actions">
-          <Link to="/habits" className="button-secondary">
+          <Link to="/habits" className="button button-secondary">
             Cancel
           </Link>
-          <button type="submit" className="button-primary">
+          <button type="submit" className="button button-primary">
             Save Changes
           </button>
         </div>
       </Form>
 
-      <style>{`
-        .edit-habit-page {
-          padding: 2rem;
-          max-width: 600px;
-          margin: 0 auto;
-        }
-
-        .page-header {
-          margin-bottom: 2rem;
-        }
-
-        .page-header h1 {
-          margin: 0;
-        }
-
-        .error-message {
-          background: #fee;
-          color: #c00;
-          padding: 1rem;
-          border-radius: 4px;
-          margin-bottom: 1rem;
-        }
-
-        .habit-form {
-          background: white;
-          border: 1px solid #e0e0e0;
-          border-radius: 8px;
-          padding: 2rem;
-        }
-
-        .form-group {
-          margin-bottom: 1.5rem;
-        }
-
-        .form-group label,
-        .days-label {
-          display: block;
-          margin-bottom: 0.5rem;
-          font-weight: 500;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-          width: 100%;
-          padding: 0.75rem;
-          border: 1px solid #e0e0e0;
-          border-radius: 4px;
-          font-size: 1rem;
-          box-sizing: border-box;
-        }
-
-        .form-group textarea {
-          min-height: 100px;
-          resize: vertical;
-        }
-
-        .form-actions {
-          display: flex;
-          gap: 1rem;
-          justify-content: flex-end;
-          margin-top: 2rem;
-        }
-
-        .button-primary {
-          background: #333;
-          color: white;
-          border: none;
-          padding: 0.75rem 1.5rem;
-          border-radius: 4px;
-          cursor: pointer;
-          text-decoration: none;
-          font-size: 1rem;
-        }
-
-        .button-primary:hover {
-          background: #555;
-        }
-
-        .button-secondary {
-          background: #f0f0f0;
-          color: #333;
-          border: none;
-          padding: 0.75rem 1.5rem;
-          border-radius: 4px;
-          cursor: pointer;
-          text-decoration: none;
-          font-size: 1rem;
-        }
-
-        .button-secondary:hover {
-          background: #e0e0e0;
-        }
-
-        .days-of-week {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-          gap: 0.5rem;
-          margin-top: 0.25rem;
-        }
-
-        input[type="checkbox"]:checked {
-          background: #4caf50 !important;
-          border-color: #4caf50 !important;
-        }
-
-        input[type="checkbox"]:checked::after {
-          content: "✓";
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          color: white;
-          font-size: 16px;
-          line-height: 1;
-        }
-      `}</style>
     </div>
   );
 }
