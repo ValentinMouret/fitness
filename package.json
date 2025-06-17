@@ -1,0 +1,51 @@
+{
+  "name": "fitness",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "react-router build",
+    "db:dev": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx app/db/index.ts",
+    "dev": "react-router dev",
+    "fmt": "biome format --write",
+    "lint": "biome lint --write",
+    "start": "react-router-serve ./build/server/index.js",
+    "tc": "pnpm run typecheck",
+    "tc:watch": "nodemon --exec 'pnpm tc' --watch src --ext ts,tsx,js,jsx",
+    "test": "vitest",
+    "typecheck": "react-router typegen && tsc"
+  },
+  "dependencies": {
+    "@react-router/node": "^7.5.3",
+    "@react-router/serve": "^7.5.3",
+    "dotenv": "^16.5.0",
+    "drizzle-orm": "^0.44.2",
+    "isbot": "^5.1.27",
+    "lucide-react": "^0.513.0",
+    "neverthrow": "^8.2.0",
+    "openai": "^5.1.1",
+    "pg": "^8.16.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router": "^7.5.3",
+    "zod": "^3.25.61"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@react-router/dev": "^7.5.3",
+    "@types/node": "^20",
+    "@types/pg": "^8.15.4",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "drizzle-kit": "^0.31.1",
+    "nodemon": "^3.1.10",
+    "tailwindcss": "^4.1.4",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.3",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.2.2"
+  }
+}

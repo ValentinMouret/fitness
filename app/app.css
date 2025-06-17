@@ -1,0 +1,11 @@
+:root {
+    --main-color:#228B22;
+}
+
+html {
+    font-family: "Lato";
+}
+
+body {
+    margin: 0;
+}
