@@ -1,4 +1,4 @@
-import { Form, redirect, useActionData, useSearchParams } from "react-router";
+import { Form, redirect, useSearchParams } from "react-router";
 import type { Route } from "./+types/login";
 import { authenticate } from "~/auth";
 import "./login.css";
@@ -17,7 +17,7 @@ export async function action({ request }: Route.ActionArgs) {
     // Set cookie in server response
     const user = { username };
     const sessionCookie = `fitness-rr-session=${encodeURIComponent(JSON.stringify(user))}; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Strict`;
-    
+
     return redirect(redirectTo || "/dashboard", {
       headers: {
         "Set-Cookie": sessionCookie,
@@ -58,7 +58,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
         <h1>Login</h1>
         <Form method="post" className="login-form">
           <input type="hidden" name="redirectTo" value={redirectTo} />
-          
+
           <div className="form-group">
             <label htmlFor="username" className="form-label">
               Username

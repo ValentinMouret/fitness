@@ -35,6 +35,12 @@
     /* Using common .card-header class from app.css */
 }
 
+.card-header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
 .edit-link {
     color: var(--text-muted);
     text-decoration: none;
@@ -62,4 +68,40 @@
 .habit-description {
     font-size: 0.875rem;
     color: var(--text-muted);
+}
+
+/* Streak counter styles for habit cards */
+.habit-card .streak-counter {
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.habit-card .streak-gray {
+    color: #666;
+}
+
+.habit-card .streak-orange {
+    color: #f97316;
+}
+
+.habit-card .streak-red {
+    color: #dc2626;
+}
+
+.habit-card .streak-blue {
+    color: #2563eb;
+}
+
+/* Responsive layout for habit cards */
+@media (max-width: 480px) {
+    .card-header-right {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.5rem;
+    }
+    
+    .habit-card .streak-counter {
+        font-size: 0.8rem;
+    }
 }

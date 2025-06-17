@@ -7,6 +7,7 @@ interface HabitCheckboxProps {
   readonly isCompleted: boolean;
   readonly isSubmitting?: boolean;
   readonly intent?: string;
+  readonly streak?: number;
 }
 
 export default function HabitCheckbox({
@@ -16,7 +17,15 @@ export default function HabitCheckbox({
   isCompleted,
   isSubmitting = false,
   intent = "toggle-habit",
+  streak = 0,
 }: HabitCheckboxProps) {
+  const getStreakColorClass = (streak: number): string => {
+    if (streak >= 90) return "streak-blue";
+    if (streak >= 30) return "streak-red";
+    if (streak >= 7) return "streak-orange";
+    return "streak-gray";
+  };
+
   return (
     <div className="checkbox-wrapper">
       <input type="hidden" name="intent" value={intent} />
@@ -29,12 +38,19 @@ export default function HabitCheckbox({
       >
         {isCompleted && "✓"}
       </button>
-      <span className={`checkbox-label ${isCompleted ? 'checked' : ''}`}>
-        {habitName}
-      </span>
-      {habitDescription && (
-        <span className="habit-description text-small text-muted">
-          - {habitDescription}
+      <div className="habit-content">
+        <span className={`checkbox-label ${isCompleted ? 'checked' : ''}`}>
+          {habitName}
+        </span>
+        {habitDescription && (
+          <span className="habit-description text-small text-muted">
+            - {habitDescription}
+          </span>
+        )}
+      </div>
+      {streak > 0 && (
+        <span className={`streak-counter ${getStreakColorClass(streak)}`}>
+          🔥 {streak} {streak === 1 ? 'day' : 'days'}
         </span>
       )}
     </div>

@@ -9,7 +9,7 @@ import {
 import { HabitRepository, HabitCompletionRepository, HabitService, HabitCompletion } from "~/habits";
 import { isSameDay, today } from "~/time";
 import type { Route } from "./+types/index";
-import { Form } from "react-router";
+import { Form, useLoaderData } from "react-router";
 import { coerceFloat, resultFromNullable } from "~/utils";
 import HabitCheckbox from "~/components/HabitCheckbox";
 
@@ -40,6 +40,35 @@ export async function loader() {
       todayHabits,
       completionMap,
     };
+  }).andThen((data) => {
+    // Calculate streaks for each habit
+    const habitStreakPromises = data.todayHabits.map(async (habit) => {
+      const habitCompletions = await HabitCompletionRepository.fetchByHabitBetween(
+        habit.id,
+        new Date(habit.startDate),
+        todayDate
+      );
+      
+      if (habitCompletions.isOk()) {
+        const streak = HabitService.calculateStreak(habit, habitCompletions.value, todayDate);
+        return [habit.id, streak] as const;
+      }
+      return [habit.id, 0] as const;
+    });
+    
+    return ResultAsync.fromPromise(
+      Promise.all(habitStreakPromises),
+      (err) => {
+        console.error(err);
+        return "database_error" as const;
+      }
+    ).map((streakPairs) => {
+      const habitStreaks = new Map(streakPairs);
+      return {
+        ...data,
+        habitStreaks,
+      };
+    });
   });
 
   if (result.isOk()) {
@@ -96,8 +125,8 @@ export async function action({ request }: Route.ActionArgs) {
   }
 }
 
-export default function DashboardPage({ loaderData }: Route.ComponentProps) {
-  const { weight, lastWeight, loggedToday, streak, todayHabits, completionMap } = loaderData;
+export default function DashboardPage() {
+  const { weight, lastWeight, loggedToday, streak, todayHabits, completionMap, habitStreaks } = useLoaderData<typeof loader>();
 
   return (
     <div className="page dashboard-page">
@@ -132,6 +161,7 @@ export default function DashboardPage({ loaderData }: Route.ComponentProps) {
           <ul className="habit-list">
             {todayHabits.map((habit) => {
               const isCompleted = completionMap.get(habit.id) ?? false;
+              const habitStreak = habitStreaks.get(habit.id) ?? 0;
               return (
                 <li key={habit.id} className="mb-2">
                   <Form method="post" className="habit-form">
@@ -140,6 +170,7 @@ export default function DashboardPage({ loaderData }: Route.ComponentProps) {
                       habitName={habit.name}
                       habitDescription={habit.description}
                       isCompleted={isCompleted}
+                      streak={habitStreak}
                     />
                   </Form>
                 </li>

@@ -1,27 +1,20 @@
+import { data, Form, Link, useActionData, useNavigation } from "react-router";
+import HabitCheckbox from "../../components/HabitCheckbox";
 import {
-  useLoaderData,
-  Form,
-  useActionData,
-  useNavigation,
-  Link,
-} from "react-router";
-import "./index.css";
-import { data } from "react-router";
-import type { Route } from "./+types/index";
-import {
-  HabitRepository,
-  HabitCompletionRepository,
-  HabitService,
   HabitCompletion,
+  HabitCompletionRepository,
+  HabitRepository,
+  HabitService,
 } from "../../habits";
 import { Day, today } from "../../time";
-import HabitCheckbox from "../../components/HabitCheckbox";
+import type { Route } from "./+types/index";
+import "./index.css";
 
 export async function loader() {
   const habits = await HabitRepository.fetchActive();
 
   if (habits.isErr()) {
-    throw data({ error: "Failed to load habits" }, { status: 500 });
+    throw new Response("Failed to load habits", { status: 500 });
   }
 
   const todayCompletions = await HabitCompletionRepository.fetchByDateRange(
@@ -30,13 +23,36 @@ export async function loader() {
   );
 
   if (todayCompletions.isErr()) {
-    throw data({ error: "Failed to load completions" }, { status: 500 });
+    throw new Response("Failed to load completions", { status: 500 });
   }
 
-  return data({
+  // Calculate streaks for each habit
+  const habitStreaks = new Map<string, number>();
+  const todayDate = today();
+
+  for (const habit of habits.value) {
+    const habitCompletions =
+      await HabitCompletionRepository.fetchByHabitBetween(
+        habit.id,
+        new Date(habit.startDate),
+        todayDate,
+      );
+
+    if (habitCompletions.isOk()) {
+      const streak = HabitService.calculateStreak(
+        habit,
+        habitCompletions.value,
+        todayDate,
+      );
+      habitStreaks.set(habit.id, streak);
+    }
+  }
+
+  return {
     habits: habits.value,
     todayCompletions: todayCompletions.value,
-  });
+    habitStreaks,
+  };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -67,9 +83,11 @@ export async function action({ request }: Route.ActionArgs) {
   return null;
 }
 
-export default function HabitsPage() {
-  const { habits, todayCompletions } = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
+export default function HabitsPage({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
+  const { habits, todayCompletions, habitStreaks } = loaderData;
   const navigation = useNavigation();
 
   // Create a map of today's completions
@@ -108,6 +126,7 @@ export default function HabitsPage() {
               .filter((habit) => HabitService.isDueOn(habit, today()))
               .map((habit) => {
                 const isCompleted = completionMap.get(habit.id) ?? false;
+                const habitStreak = habitStreaks.get(habit.id) ?? 0;
 
                 return (
                   <Form
@@ -122,6 +141,7 @@ export default function HabitsPage() {
                       isCompleted={isCompleted}
                       isSubmitting={isSubmitting}
                       intent="toggle-completion"
+                      streak={habitStreak}
                     />
                   </Form>
                 );
@@ -143,49 +163,72 @@ export default function HabitsPage() {
               </Link>
             </div>
           ) : (
-            habits.map((habit) => (
-              <div key={habit.id} className="card habit-card">
-                <div className="card-header habit-card-header">
-                  <h3>{habit.name}</h3>
-                  <Link to={`/habits/${habit.id}/edit`} className="edit-link">
-                    Edit
-                  </Link>
-                </div>
-                {habit.description && <p>{habit.description}</p>}
-                <div className="habit-meta">
-                  <span className="frequency">
-                    {habit.frequencyType === "daily" && "Every day"}
-                    {habit.frequencyType === "weekly" &&
-                      habit.frequencyConfig.days_of_week && (
-                        <>
-                          {habit.frequencyConfig.days_of_week.length} days/week
-                          <span className="days-detail">
-                            {" "}
-                            (
+            habits.map((habit) => {
+              const habitStreak = habitStreaks.get(habit.id) ?? 0;
+              const getStreakColorClass = (streak: number): string => {
+                if (streak >= 90) return "streak-blue";
+                if (streak >= 30) return "streak-red";
+                if (streak >= 7) return "streak-orange";
+                return "streak-gray";
+              };
+
+              return (
+                <div key={habit.id} className="card habit-card">
+                  <div className="card-header habit-card-header">
+                    <h3>{habit.name}</h3>
+                    <div className="card-header-right">
+                      {habitStreak > 0 && (
+                        <span
+                          className={`streak-counter ${getStreakColorClass(habitStreak)}`}
+                        >
+                          🔥 {habitStreak} {habitStreak === 1 ? "day" : "days"}
+                        </span>
+                      )}
+                      <Link
+                        to={`/habits/${habit.id}/edit`}
+                        className="edit-link"
+                      >
+                        Edit
+                      </Link>
+                    </div>
+                  </div>
+                  {habit.description && <p>{habit.description}</p>}
+                  <div className="habit-meta">
+                    <span className="frequency">
+                      {habit.frequencyType === "daily" && "Every day"}
+                      {habit.frequencyType === "weekly" &&
+                        habit.frequencyConfig.days_of_week && (
+                          <>
+                            {habit.frequencyConfig.days_of_week.length}{" "}
+                            days/week
+                            <span className="days-detail">
+                              {" "}
+                              (
+                              {Day.sortDays(habit.frequencyConfig.days_of_week)
+                                .map(Day.toShort)
+                                .join(", ")}
+                              )
+                            </span>
+                          </>
+                        )}
+                      {habit.frequencyType === "monthly" && "Monthly"}
+                      {habit.frequencyType === "custom" &&
+                        habit.frequencyConfig.days_of_week && (
+                          <>
+                            Custom:{" "}
                             {Day.sortDays(habit.frequencyConfig.days_of_week)
                               .map(Day.toShort)
                               .join(", ")}
-                            )
-                          </span>
-                        </>
-                      )}
-                    {habit.frequencyType === "monthly" && "Monthly"}
-                    {habit.frequencyType === "custom" &&
-                      habit.frequencyConfig.days_of_week && (
-                        <>
-                          Custom:{" "}
-                          {Day.sortDays(habit.frequencyConfig.days_of_week)
-                            .map(Day.toShort)
-                            .join(", ")}
-                        </>
-                      )}
-                    {habit.frequencyType === "custom" &&
-                      !habit.frequencyConfig.days_of_week &&
-                      "Custom schedule"}
-                  </span>
+                          </>
+                        )}
+                      {habit.frequencyType === "custom" &&
+                        !habit.frequencyConfig.days_of_week &&
+                        "Custom schedule"}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </section>
