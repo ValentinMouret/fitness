@@ -13,5 +13,6 @@ export default [
     route("workouts", "routes/workouts/index.tsx"),
     route("habits", "routes/habits/index.tsx"),
     route("habits/new", "routes/habits/new.tsx"),
+    route("habits/:id/edit", "routes/habits/edit.tsx"),
   ]),
 ] satisfies RouteConfig;

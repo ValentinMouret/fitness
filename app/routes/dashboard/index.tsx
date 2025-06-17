@@ -139,8 +139,8 @@ export default function DashboardPage({ loaderData }: Route.ComponentProps) {
                     <button
                       type="submit"
                       style={{
-                        background: "none",
-                        border: "2px solid #ccc",
+                        background: isCompleted ? "#4caf50" : "white",
+                        border: `2px solid ${isCompleted ? "#4caf50" : "#ccc"}`,
                         width: "24px",
                         height: "24px",
                         borderRadius: "4px",
@@ -149,6 +149,8 @@ export default function DashboardPage({ loaderData }: Route.ComponentProps) {
                         alignItems: "center",
                         justifyContent: "center",
                         fontSize: "16px",
+                        color: isCompleted ? "white" : "transparent",
+                        padding: 0,
                       }}
                     >
                       {isCompleted && "✓"}

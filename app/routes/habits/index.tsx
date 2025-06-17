@@ -108,7 +108,7 @@ export default function HabitsPage() {
                 const isCompleted = completionMap.get(habit.id) ?? false;
 
                 return (
-                  <Form method="post" key={habit.id} className="habit-item">
+                  <Form method="post" key={habit.id} style={{ marginBottom: "0.5rem" }}>
                     <input
                       type="hidden"
                       name="intent"
@@ -121,21 +121,39 @@ export default function HabitsPage() {
                       value={String(isCompleted)}
                     />
 
-                    <button
-                      type="submit"
-                      className={`habit-toggle ${isCompleted ? "completed" : ""}`}
-                      disabled={isSubmitting}
-                    >
-                      <span className="habit-checkbox">
-                        {isCompleted ? "✓" : ""}
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <button
+                        type="submit"
+                        style={{
+                          background: isCompleted ? "#4caf50" : "white",
+                          border: `2px solid ${isCompleted ? "#4caf50" : "#ccc"}`,
+                          width: "24px",
+                          height: "24px",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "16px",
+                          color: isCompleted ? "white" : "transparent",
+                          padding: 0,
+                        }}
+                        disabled={isSubmitting}
+                      >
+                        {isCompleted && "✓"}
+                      </button>
+                      <span style={{ 
+                        textDecoration: isCompleted ? "line-through" : "none",
+                        color: isCompleted ? "#666" : "inherit",
+                      }}>
+                        {habit.name}
                       </span>
-                      <span className="habit-name">{habit.name}</span>
                       {habit.description && (
-                        <span className="habit-description">
-                          {habit.description}
+                        <span style={{ fontSize: "0.875rem", color: "#666" }}>
+                          - {habit.description}
                         </span>
                       )}
-                    </button>
+                    </div>
                   </Form>
                 );
               })
@@ -158,16 +176,42 @@ export default function HabitsPage() {
           ) : (
             habits.map((habit) => (
               <div key={habit.id} className="habit-card">
-                <h3>{habit.name}</h3>
+                <div className="habit-card-header">
+                  <h3>{habit.name}</h3>
+                  <Link to={`/habits/${habit.id}/edit`} className="edit-link">
+                    Edit
+                  </Link>
+                </div>
                 {habit.description && <p>{habit.description}</p>}
                 <div className="habit-meta">
                   <span className="frequency">
                     {habit.frequencyType === "daily" && "Every day"}
                     {habit.frequencyType === "weekly" &&
-                      habit.frequencyConfig.days_of_week &&
-                      `${habit.frequencyConfig.days_of_week.length} days/week`}
+                      habit.frequencyConfig.days_of_week && (
+                        <>
+                          {habit.frequencyConfig.days_of_week.length} days/week
+                          <span className="days-detail">
+                            {" "}
+                            ({habit.frequencyConfig.days_of_week
+                              .sort((a, b) => a - b)
+                              .map((d) => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d])
+                              .join(", ")})
+                          </span>
+                        </>
+                      )}
                     {habit.frequencyType === "monthly" && "Monthly"}
-                    {habit.frequencyType === "custom" && "Custom schedule"}
+                    {habit.frequencyType === "custom" && 
+                      habit.frequencyConfig.days_of_week && (
+                        <>
+                          Custom: {habit.frequencyConfig.days_of_week
+                            .sort((a, b) => a - b)
+                            .map((d) => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d])
+                            .join(", ")}
+                        </>
+                      )}
+                    {habit.frequencyType === "custom" && 
+                      !habit.frequencyConfig.days_of_week && 
+                      "Custom schedule"}
                   </span>
                 </div>
               </div>
@@ -237,67 +281,6 @@ export default function HabitsPage() {
         .habit-list {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        .habit-item {
-          display: block;
-        }
-
-        .habit-toggle {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          width: 100%;
-          padding: 1rem;
-          background: white;
-          border: 1px solid #e0e0e0;
-          border-radius: 4px;
-          cursor: pointer;
-          text-align: left;
-          transition: all 0.2s;
-        }
-
-        .habit-toggle:hover {
-          border-color: #333;
-        }
-
-        .habit-toggle.completed {
-          background: #f0f8f0;
-          border-color: #4caf50;
-        }
-
-        .habit-toggle:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .habit-checkbox {
-          width: 24px;
-          height: 24px;
-          border: 2px solid #333;
-          border-radius: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-          color: #4caf50;
-        }
-
-        .completed .habit-checkbox {
-          background: #4caf50;
-          border-color: #4caf50;
-          color: white;
-        }
-
-        .habit-name {
-          font-weight: 500;
-          flex: 1;
-        }
-
-        .habit-description {
-          color: #666;
-          font-size: 0.9rem;
         }
 
         .all-habits h2 {
@@ -317,8 +300,29 @@ export default function HabitsPage() {
           padding: 1.5rem;
         }
 
+        .habit-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 0.5rem;
+        }
+
         .habit-card h3 {
-          margin: 0 0 0.5rem 0;
+          margin: 0;
+        }
+
+        .edit-link {
+          color: #666;
+          text-decoration: none;
+          font-size: 0.9rem;
+          padding: 0.25rem 0.5rem;
+          border-radius: 4px;
+          transition: all 0.2s;
+        }
+
+        .edit-link:hover {
+          background: #f0f0f0;
+          color: #333;
         }
 
         .habit-card p {
@@ -329,6 +333,11 @@ export default function HabitsPage() {
         .habit-meta {
           font-size: 0.9rem;
           color: #666;
+        }
+
+        .days-detail {
+          color: #999;
+          font-size: 0.85rem;
         }
 
         .empty-state {

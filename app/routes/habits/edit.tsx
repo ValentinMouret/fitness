@@ -1,10 +1,20 @@
-import { Form, redirect, useActionData, Link } from "react-router";
+import { Form, redirect, useActionData, Link, useLoaderData } from "react-router";
 import { data } from "react-router";
-import type { Route } from "./+types/new";
-import { HabitRepository, Habit as HabitEntity } from "../../habits";
+import type { Route } from "./+types/edit";
+import { HabitRepository, Habit as HabitEntity, type Habit } from "../../habits";
 import * as React from "react";
 
-export async function action({ request }: Route.ActionArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
+  const result = await HabitRepository.fetchById(params.id);
+  
+  if (result.isErr()) {
+    throw data({ error: "Habit not found" }, { status: 404 });
+  }
+
+  return data({ habit: result.value });
+}
+
+export async function action({ request, params }: Route.ActionArgs) {
   const formData = await request.formData();
   
   const name = formData.get("name") as string;
@@ -19,22 +29,32 @@ export async function action({ request }: Route.ActionArgs) {
     }
   }
 
-  const habit = HabitEntity.create(name, frequencyType, frequencyConfig, {
-    description: description || undefined,
-  });
+  const existingHabit = await HabitRepository.fetchById(params.id);
+  if (existingHabit.isErr()) {
+    return data({ error: "Habit not found" }, { status: 404 });
+  }
 
-  const result = await HabitRepository.save(habit);
+  const updatedHabit: Habit = {
+    ...existingHabit.value,
+    name,
+    description: description || undefined,
+    frequencyType,
+    frequencyConfig,
+  };
+
+  const result = await HabitRepository.save(updatedHabit);
   
   if (result.isErr()) {
-    return data({ error: "Failed to create habit" }, { status: 500 });
+    return data({ error: "Failed to update habit" }, { status: 500 });
   }
 
   return redirect("/habits");
 }
 
-export default function NewHabit() {
+export default function EditHabit() {
+  const { habit } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const [frequencyType, setFrequencyType] = React.useState<string>("daily");
+  const [frequencyType, setFrequencyType] = React.useState<string>(habit.frequencyType);
 
   const daysOfWeek = [
     { value: 0, label: "Sunday" },
@@ -47,9 +67,9 @@ export default function NewHabit() {
   ];
 
   return (
-    <div className="new-habit-page">
+    <div className="edit-habit-page">
       <header className="page-header">
-        <h1>Create New Habit</h1>
+        <h1>Edit Habit</h1>
       </header>
 
       {"error" in (actionData ?? {}) && (
@@ -64,6 +84,7 @@ export default function NewHabit() {
             id="name"
             name="name"
             required
+            defaultValue={habit.name}
             placeholder="e.g., Go to gym"
           />
         </div>
@@ -73,6 +94,7 @@ export default function NewHabit() {
           <textarea
             id="description"
             name="description"
+            defaultValue={habit.description}
             placeholder="e.g., Weight training and cardio"
           />
         </div>
@@ -111,6 +133,7 @@ export default function NewHabit() {
                     type="checkbox"
                     name="daysOfWeek"
                     value={day.value}
+                    defaultChecked={habit.frequencyConfig.days_of_week?.includes(day.value)}
                     style={{
                       WebkitAppearance: "none",
                       MozAppearance: "none",
@@ -140,13 +163,13 @@ export default function NewHabit() {
             Cancel
           </Link>
           <button type="submit" className="button-primary">
-            Create Habit
+            Save Changes
           </button>
         </div>
       </Form>
 
       <style>{`
-        .new-habit-page {
+        .edit-habit-page {
           padding: 2rem;
           max-width: 600px;
           margin: 0 auto;
