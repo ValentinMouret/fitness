@@ -1,4 +1,4 @@
-import { err, ok, Result, ResultAsync } from "neverthrow";
+import { err, ok, type Result, ResultAsync } from "neverthrow";
 
 export type ErrDatabase = "database_error";
 export type ErrNotFound = "not_found";

@@ -9,12 +9,12 @@ export function resultFromNullable<T, E>(
 }
 
 export function coerceInt(v: string): Result<number, ErrValidation> {
-  const parsed = parseInt(v);
+  const parsed = Number.parseInt(v);
   return Number.isNaN(parsed) ? err("validation_error") : ok(parsed);
 }
 
 export function coerceFloat(v: string): Result<number, ErrValidation> {
-  const parsed = parseFloat(v);
+  const parsed = Number.parseFloat(v);
   return Number.isNaN(parsed) ? err("validation_error") : ok(parsed);
 }
 

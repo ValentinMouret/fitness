@@ -4,18 +4,17 @@
  * A measure is the value of this measurement at some point in time.
  */
 
+import { and, between, desc, eq, type InferSelectModel } from "drizzle-orm";
 import { Result, ResultAsync, ok } from "neverthrow";
+import { db } from "./db";
+import { measurements, measures } from "./db/schema";
 import {
   executeQuery,
   fetchSingleRecord,
   type ErrRepository,
   type ErrValidation,
 } from "./repository";
-import { db } from "./db";
-import { measurements, measures } from "./db/schema";
-import { and, between, desc, eq, type InferSelectModel } from "drizzle-orm";
 import { addOneDay, isSameDay, removeOneDay, today } from "./time";
-import { pprint } from "./utils";
 
 export interface Measurement {
   readonly name: string;
@@ -118,7 +117,7 @@ export const MeasureRepository = {
 
   fetchByMeasurementName(
     measurementName: string,
-    last: number = 25,
+    last = 25,
   ): ResultAsync<Measure[], ErrRepository> {
     const query = db
       .select()
@@ -137,7 +136,6 @@ export const MeasureRepository = {
     from: Date,
     to: Date,
   ): ResultAsync<Measure[], ErrRepository> {
-    pprint({ from, to });
     const query = db
       .select()
       .from(measures)

@@ -1,6 +1,6 @@
-import React from "react";
+import type React from "react";
 import "./AppLayout.css";
-import { Link, Outlet } from "react-router";
+import { NavLink, Outlet } from "react-router";
 
 const AppLogo: React.FC = () => (
   <h1>{String.fromCodePoint(0x1f49a)} fitness</h1>
@@ -13,13 +13,16 @@ const AppLayout: React.FC = () => {
         <AppLogo />
         <ul>
           <li>
-            <Link to="/dashboard">Dashboard</Link>
+            <NavLink to="/dashboard">Dashboard</NavLink>
           </li>
           <li>
-            <Link to="/nutrition">Nutrition</Link>
+            <a href="/habits">Habits</a>
           </li>
           <li>
-            <Link to="/workouts">Workouts</Link>
+            <NavLink to="/nutrition">Nutrition</NavLink>
+          </li>
+          <li>
+            <NavLink to="/workouts">Workouts</NavLink>
           </li>
         </ul>
       </nav>

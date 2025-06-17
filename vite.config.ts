@@ -4,4 +4,15 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [reactRouter(), tsconfigPaths()],
+  server: {
+    port: Number(process.env.PORT) || 5173,
+  },
+  define: {
+    global: "globalThis",
+  },
+  resolve: {
+    alias: {
+      "cloudflare:sockets": "node:crypto",
+    },
+  },
 });

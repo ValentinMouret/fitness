@@ -62,5 +62,9 @@ on conflict id
           , updated_at = now;
 ```
 
+## Drizzle
+While working in dev mode, it does not make sense to generate migrations.
+Until you know you are done, you should do `pnpm db:dev`. This prepares your database without generating migrations.
+
 ## Agent
 If you need more context on the domain as to how it relates to the database, please ask questions before moving forward.
