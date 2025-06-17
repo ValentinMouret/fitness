@@ -12,9 +12,9 @@ export async function action({ request }: Route.ActionArgs) {
   const description = formData.get("description") as string | undefined;
   const frequencyType = formData.get("frequencyType") as HabitEntity["frequencyType"];
   
-  const frequencyConfig: { days_of_week?: number[]; interval_days?: number; day_of_month?: number; } = {};
+  const frequencyConfig: { days_of_week?: string[]; interval_days?: number; day_of_month?: number; } = {};
   if (frequencyType === "custom" || frequencyType === "weekly") {
-    const daysOfWeek = formData.getAll("daysOfWeek").map(Number);
+    const daysOfWeek = formData.getAll("daysOfWeek").map(String);
     if (daysOfWeek.length > 0) {
       frequencyConfig.days_of_week = daysOfWeek;
     }
@@ -38,13 +38,13 @@ export default function NewHabit() {
   const [frequencyType, setFrequencyType] = React.useState<string>("daily");
 
   const daysOfWeek = [
-    { value: 0, label: "Sunday" },
-    { value: 1, label: "Monday" },
-    { value: 2, label: "Tuesday" },
-    { value: 3, label: "Wednesday" },
-    { value: 4, label: "Thursday" },
-    { value: 5, label: "Friday" },
-    { value: 6, label: "Saturday" },
+    { value: "Sunday", label: "Sunday" },
+    { value: "Monday", label: "Monday" },
+    { value: "Tuesday", label: "Tuesday" },
+    { value: "Wednesday", label: "Wednesday" },
+    { value: "Thursday", label: "Thursday" },
+    { value: "Friday", label: "Friday" },
+    { value: "Saturday", label: "Saturday" },
   ];
 
   return (

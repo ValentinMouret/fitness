@@ -60,3 +60,4 @@ pnpm db:seed
   - `<style>` tags
   - Any inline CSS
   - If found, move styles to separate `.css` files and use global classes where possible
+- If you need to run some QA with the app interface, please ask the human to do so and tell them which actions to perform.
