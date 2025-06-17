@@ -8,11 +8,8 @@ import {
 import "./edit.css";
 import { data } from "react-router";
 import type { Route } from "./+types/edit";
-import {
-  HabitRepository,
-  type Habit as HabitEntity,
-  type Habit,
-} from "../../habits";
+import type { Habit as HabitEntity, Habit } from "../../modules/habits/domain/entity";
+import { HabitRepository } from "../../modules/habits/infra/repository.server";
 import * as React from "react";
 import { allDays } from "~/time";
 

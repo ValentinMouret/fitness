@@ -1,7 +1,5 @@
 /**
- * Habits and habit completions.
- * A habit is something you want to do regularly. E.g.: go to the gym.
- * A habit completion tracks whether you completed the habit on a specific date.
+ * Habit repository infrastructure - database operations.
  */
 
 import {
@@ -13,33 +11,16 @@ import {
   type InferSelectModel,
 } from "drizzle-orm";
 import { Result, ResultAsync, err, ok } from "neverthrow";
-import { db } from "./db";
-import { habit_completions, habits } from "./db/schema";
+import { db } from "../../../db";
+import { habit_completions, habits } from "../../../db/schema";
 import {
   executeQuery,
   fetchSingleRecord,
   type ErrRepository,
   type ErrValidation,
-} from "./repository";
-import { Day, today } from "./time";
-
-export interface FrequencyConfig {
-  days_of_week?: Day[];
-  interval_days?: number;
-  day_of_month?: number;
-}
-
-export interface Habit {
-  readonly id: string;
-  readonly name: string;
-  readonly description?: string;
-  readonly frequencyType: "daily" | "weekly" | "monthly" | "custom";
-  readonly frequencyConfig: FrequencyConfig;
-  readonly targetCount: number;
-  readonly startDate: Date;
-  readonly endDate?: Date;
-  readonly isActive: boolean;
-}
+} from "../../../repository";
+import { today } from "../../../time";
+import type { Habit, HabitCompletion } from "../domain/entity";
 
 function recordToHabit(
   record: InferSelectModel<typeof habits>,
@@ -49,38 +30,13 @@ function recordToHabit(
     name: record.name,
     description: record.description ?? undefined,
     frequencyType: record.frequency_type as Habit["frequencyType"],
-    frequencyConfig: record.frequency_config as FrequencyConfig,
+    frequencyConfig: record.frequency_config as Habit["frequencyConfig"],
     targetCount: record.target_count,
     startDate: new Date(record.start_date),
     endDate: record.end_date ? new Date(record.end_date) : undefined,
     isActive: record.is_active,
   });
 }
-
-export const Habit = {
-  create(
-    name: string,
-    frequencyType: Habit["frequencyType"],
-    frequencyConfig: FrequencyConfig = {},
-    options?: {
-      description?: string;
-      targetCount?: number;
-      startDate?: Date;
-      endDate?: Date;
-    },
-  ): Omit<Habit, "id"> {
-    return {
-      name,
-      description: options?.description,
-      frequencyType,
-      frequencyConfig,
-      targetCount: options?.targetCount ?? 1,
-      startDate: options?.startDate ?? new Date(),
-      endDate: options?.endDate,
-      isActive: true,
-    };
-  },
-};
 
 export const HabitRepository = {
   save(habit: Omit<Habit, "id"> | Habit) {
@@ -155,13 +111,6 @@ export const HabitRepository = {
   },
 };
 
-export interface HabitCompletion {
-  readonly habitId: string;
-  readonly completionDate: Date;
-  readonly completed: boolean;
-  readonly notes?: string;
-}
-
 function recordToHabitCompletion(
   record: InferSelectModel<typeof habit_completions>,
 ): Result<HabitCompletion, ErrValidation> {
@@ -172,22 +121,6 @@ function recordToHabitCompletion(
     notes: record.notes ?? undefined,
   });
 }
-
-export const HabitCompletion = {
-  create(
-    habitId: string,
-    completionDate: Date,
-    completed: boolean,
-    notes?: string,
-  ): HabitCompletion {
-    return {
-      habitId,
-      completionDate,
-      completed,
-      notes,
-    };
-  },
-};
 
 export const HabitCompletionRepository = {
   save(completion: HabitCompletion) {
@@ -284,134 +217,5 @@ export const HabitCompletionRepository = {
     return executeQuery(query, "fetchByDateRange").andThen((records) =>
       Result.combine(records.map(recordToHabitCompletion)),
     );
-  },
-};
-
-export const HabitService = {
-  /**
-   * Checks if a habit should be completed on a given date based on its frequency configuration.
-   */
-  isDueOn(habit: Habit, date: Date): boolean {
-    // Check if date is within habit's active period
-    if (date < habit.startDate) return false;
-    if (habit.endDate && date > habit.endDate) return false;
-
-    switch (habit.frequencyType) {
-      case "daily":
-        return true;
-
-      case "weekly":
-      case "custom": {
-        const dayOfWeek = date.getDay();
-        if (habit.frequencyConfig.days_of_week) {
-          return habit.frequencyConfig.days_of_week.includes(
-            Day.fromNumber(dayOfWeek),
-          );
-        }
-        if (habit.frequencyConfig.interval_days) {
-          const daysSinceStart = Math.floor(
-            (date.getTime() - habit.startDate.getTime()) /
-              (1000 * 60 * 60 * 24),
-          );
-          return daysSinceStart % habit.frequencyConfig.interval_days === 0;
-        }
-        return true;
-      }
-
-      case "monthly": {
-        if (habit.frequencyConfig.day_of_month) {
-          return date.getDate() === habit.frequencyConfig.day_of_month;
-        }
-        // Default to same day of month as start date
-        return date.getDate() === habit.startDate.getDate();
-      }
-
-      default:
-        return false;
-    }
-  },
-
-  /**
-   * Calculates the current streak for a habit.
-   */
-  calculateStreak(
-    habit: Habit,
-    completions: HabitCompletion[],
-    endDate: Date = today(),
-  ): number {
-    let streak = 0;
-    let currentDate = new Date(endDate);
-    currentDate.setHours(0, 0, 0, 0);
-
-    // Create a map of completion dates for faster lookup
-    const completionMap = new Map<string, boolean>();
-    for (const completion of completions) {
-      const dateStr = completion.completionDate.toISOString().split("T")[0];
-      completionMap.set(dateStr, completion.completed);
-    }
-
-    // Work backwards from endDate
-    while (currentDate >= habit.startDate) {
-      if (this.isDueOn(habit, currentDate)) {
-        const dateStr = currentDate.toISOString().split("T")[0];
-        const completed = completionMap.get(dateStr) ?? false;
-
-        if (completed) {
-          streak++;
-        } else {
-          // Streak broken
-          break;
-        }
-      }
-
-      // Move to previous day
-      currentDate = new Date(currentDate);
-      currentDate.setDate(currentDate.getDate() - 1);
-    }
-
-    return streak;
-  },
-
-  /**
-   * Calculates completion rate for a habit over a given period.
-   */
-  calculateCompletionRate(
-    habit: Habit,
-    completions: HabitCompletion[],
-    from: Date,
-    to: Date,
-  ): { completed: number; total: number; rate: number } {
-    let totalDue = 0;
-    let totalCompleted = 0;
-
-    // Create a map of completion dates
-    const completionMap = new Map<string, boolean>();
-    for (const completion of completions) {
-      const dateStr = completion.completionDate.toISOString().split("T")[0];
-      completionMap.set(dateStr, completion.completed);
-    }
-
-    // Check each day in the range
-    const currentDate = new Date(from);
-    currentDate.setHours(0, 0, 0, 0);
-    const endDate = new Date(to);
-    endDate.setHours(23, 59, 59, 999);
-
-    while (currentDate <= endDate) {
-      if (this.isDueOn(habit, currentDate)) {
-        totalDue++;
-        const dateStr = currentDate.toISOString().split("T")[0];
-        if (completionMap.get(dateStr) === true) {
-          totalCompleted++;
-        }
-      }
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-
-    return {
-      completed: totalCompleted,
-      total: totalDue,
-      rate: totalDue > 0 ? totalCompleted / totalDue : 0,
-    };
   },
 };

@@ -6,7 +6,9 @@ import {
   MeasurementService,
   MeasureRepository,
 } from "~/measurements";
-import { HabitRepository, HabitCompletionRepository, HabitService, HabitCompletion } from "~/habits";
+import { HabitCompletion } from "~/modules/habits/domain/entity";
+import { HabitRepository, HabitCompletionRepository } from "~/modules/habits/infra/repository.server";
+import { HabitService } from "~/modules/habits/application/service";
 import { isSameDay, today } from "~/time";
 import type { Route } from "./+types/index";
 import { Form, useLoaderData } from "react-router";

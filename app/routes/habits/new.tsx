@@ -2,7 +2,8 @@ import { Form, redirect, useActionData, Link } from "react-router";
 import "./new.css";
 import { data } from "react-router";
 import type { Route } from "./+types/new";
-import { HabitRepository, Habit as HabitEntity } from "../../habits";
+import { Habit as HabitEntity } from "../../modules/habits/domain/entity";
+import { HabitRepository } from "../../modules/habits/infra/repository.server";
 import * as React from "react";
 
 export async function action({ request }: Route.ActionArgs) {

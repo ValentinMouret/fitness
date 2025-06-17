@@ -17,7 +17,7 @@ const AppLayout: React.FC = () => {
           </li>
           <li>
             {/** For some reason, NavLink or Link does not work here. */}
-            <a href="/habits">Habits</a>
+            <NavLink to="/habits">Habits</NavLink>
           </li>
           <li>
             <NavLink to="/nutrition">Nutrition</NavLink>

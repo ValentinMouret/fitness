@@ -1,11 +1,8 @@
 import { data, Form, Link, useActionData, useNavigation } from "react-router";
 import HabitCheckbox from "../../components/HabitCheckbox";
-import {
-  HabitCompletion,
-  HabitCompletionRepository,
-  HabitRepository,
-  HabitService,
-} from "../../habits";
+import { HabitCompletion } from "../../modules/habits/domain/entity";
+import { HabitCompletionRepository, HabitRepository } from "../../modules/habits/infra/repository.server";
+import { HabitService } from "../../modules/habits/application/service";
 import { Day, today } from "../../time";
 import type { Route } from "./+types/index";
 import "./index.css";

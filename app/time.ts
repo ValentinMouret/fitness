@@ -12,7 +12,7 @@ export type Day = (typeof allDays)[number];
 
 export const Day = {
   sortDays(days: Day[]): Day[] {
-    return days.sort((a, b) => allDays.indexOf(a) - allDays.indexOf(b));
+    return days.toSorted((a, b) => allDays.indexOf(a) - allDays.indexOf(b));
   },
 
   // From `Date.getDay()`
