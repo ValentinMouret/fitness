@@ -11,6 +11,7 @@ import { isSameDay, today } from "~/time";
 import type { Route } from "./+types/index";
 import { Form } from "react-router";
 import { coerceFloat, resultFromNullable } from "~/utils";
+import HabitCheckbox from "~/components/HabitCheckbox";
 
 export async function loader() {
   const now = new Date();
@@ -133,24 +134,13 @@ export default function DashboardPage({ loaderData }: Route.ComponentProps) {
               const isCompleted = completionMap.get(habit.id) ?? false;
               return (
                 <li key={habit.id} className="mb-2">
-                  <Form method="post" className="habit-form checkbox-wrapper">
-                    <input type="hidden" name="intent" value="toggle-habit" />
-                    <input type="hidden" name="habitId" value={habit.id} />
-                    <input type="hidden" name="completed" value={String(isCompleted)} />
-                    <button
-                      type="submit"
-                      className={`checkbox-button ${isCompleted ? 'checked' : ''}`}
-                    >
-                      {isCompleted && "✓"}
-                    </button>
-                    <span className={`checkbox-label ${isCompleted ? 'checked' : ''}`}>
-                      {habit.name}
-                    </span>
-                    {habit.description && (
-                      <span className="habit-description text-small text-muted">
-                        - {habit.description}
-                      </span>
-                    )}
+                  <Form method="post" className="habit-form">
+                    <HabitCheckbox
+                      habitId={habit.id}
+                      habitName={habit.name}
+                      habitDescription={habit.description}
+                      isCompleted={isCompleted}
+                    />
                   </Form>
                 </li>
               );

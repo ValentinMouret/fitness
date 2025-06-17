@@ -14,7 +14,8 @@ import {
   HabitService,
   HabitCompletion,
 } from "../../habits";
-import { today } from "../../time";
+import { Day, today } from "../../time";
+import HabitCheckbox from "../../components/HabitCheckbox";
 
 export async function loader() {
   const habits = await HabitRepository.fetchActive();
@@ -109,36 +110,19 @@ export default function HabitsPage() {
                 const isCompleted = completionMap.get(habit.id) ?? false;
 
                 return (
-                  <Form method="post" key={habit.id} className="habit-form mb-1">
-                    <input
-                      type="hidden"
-                      name="intent"
-                      value="toggle-completion"
+                  <Form
+                    method="post"
+                    key={habit.id}
+                    className="habit-form mb-1"
+                  >
+                    <HabitCheckbox
+                      habitId={habit.id}
+                      habitName={habit.name}
+                      habitDescription={habit.description}
+                      isCompleted={isCompleted}
+                      isSubmitting={isSubmitting}
+                      intent="toggle-completion"
                     />
-                    <input type="hidden" name="habitId" value={habit.id} />
-                    <input
-                      type="hidden"
-                      name="completed"
-                      value={String(isCompleted)}
-                    />
-
-                    <div className="checkbox-wrapper">
-                      <button
-                        type="submit"
-                        className={`checkbox-button ${isCompleted ? 'checked' : ''}`}
-                        disabled={isSubmitting}
-                      >
-                        {isCompleted && "✓"}
-                      </button>
-                      <span className={`checkbox-label ${isCompleted ? 'checked' : ''}`}>
-                        {habit.name}
-                      </span>
-                      {habit.description && (
-                        <span className="habit-description text-small text-muted">
-                          - {habit.description}
-                        </span>
-                      )}
-                    </div>
                   </Form>
                 );
               })
@@ -177,25 +161,26 @@ export default function HabitsPage() {
                           {habit.frequencyConfig.days_of_week.length} days/week
                           <span className="days-detail">
                             {" "}
-                            ({habit.frequencyConfig.days_of_week
-                              .sort((a, b) => a - b)
-                              .map((d) => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d])
-                              .join(", ")})
+                            (
+                            {Day.sortDays(habit.frequencyConfig.days_of_week)
+                              .map(Day.toShort)
+                              .join(", ")}
+                            )
                           </span>
                         </>
                       )}
                     {habit.frequencyType === "monthly" && "Monthly"}
-                    {habit.frequencyType === "custom" && 
+                    {habit.frequencyType === "custom" &&
                       habit.frequencyConfig.days_of_week && (
                         <>
-                          Custom: {habit.frequencyConfig.days_of_week
-                            .sort((a, b) => a - b)
-                            .map((d) => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d])
+                          Custom:{" "}
+                          {Day.sortDays(habit.frequencyConfig.days_of_week)
+                            .map(Day.toShort)
                             .join(", ")}
                         </>
                       )}
-                    {habit.frequencyType === "custom" && 
-                      !habit.frequencyConfig.days_of_week && 
+                    {habit.frequencyType === "custom" &&
+                      !habit.frequencyConfig.days_of_week &&
                       "Custom schedule"}
                   </span>
                 </div>
@@ -204,7 +189,6 @@ export default function HabitsPage() {
           )}
         </div>
       </section>
-
     </div>
   );
 }

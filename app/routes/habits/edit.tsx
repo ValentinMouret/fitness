@@ -1,13 +1,24 @@
-import { Form, redirect, useActionData, Link, useLoaderData } from "react-router";
+import {
+  Form,
+  redirect,
+  useActionData,
+  Link,
+  useLoaderData,
+} from "react-router";
 import "./edit.css";
 import { data } from "react-router";
 import type { Route } from "./+types/edit";
-import { HabitRepository, type Habit as HabitEntity, type Habit } from "../../habits";
+import {
+  HabitRepository,
+  type Habit as HabitEntity,
+  type Habit,
+} from "../../habits";
 import * as React from "react";
+import { allDays } from "~/time";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const result = await HabitRepository.fetchById(params.id);
-  
+
   if (result.isErr()) {
     throw data({ error: "Habit not found" }, { status: 404 });
   }
@@ -17,14 +28,20 @@ export async function loader({ params }: Route.LoaderArgs) {
 
 export async function action({ request, params }: Route.ActionArgs) {
   const formData = await request.formData();
-  
+
   const name = formData.get("name") as string;
   const description = formData.get("description") as string | undefined;
-  const frequencyType = formData.get("frequencyType") as HabitEntity["frequencyType"];
-  
-  const frequencyConfig: { days_of_week?: number[]; interval_days?: number; day_of_month?: number; } = {};
+  const frequencyType = formData.get(
+    "frequencyType",
+  ) as HabitEntity["frequencyType"];
+
+  const frequencyConfig: {
+    days_of_week?: string[];
+    interval_days?: number;
+    day_of_month?: number;
+  } = {};
   if (frequencyType === "custom" || frequencyType === "weekly") {
-    const daysOfWeek = formData.getAll("daysOfWeek").map(Number);
+    const daysOfWeek = formData.getAll("daysOfWeek").map((s) => s.toString());
     if (daysOfWeek.length > 0) {
       frequencyConfig.days_of_week = daysOfWeek;
     }
@@ -44,7 +61,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   };
 
   const result = await HabitRepository.save(updatedHabit);
-  
+
   if (result.isErr()) {
     return data({ error: "Failed to update habit" }, { status: 500 });
   }
@@ -55,17 +72,9 @@ export async function action({ request, params }: Route.ActionArgs) {
 export default function EditHabit() {
   const { habit } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const [frequencyType, setFrequencyType] = React.useState<string>(habit.frequencyType);
-
-  const daysOfWeek = [
-    { value: 0, label: "Sunday" },
-    { value: 1, label: "Monday" },
-    { value: 2, label: "Tuesday" },
-    { value: 3, label: "Wednesday" },
-    { value: 4, label: "Thursday" },
-    { value: 5, label: "Friday" },
-    { value: 6, label: "Saturday" },
-  ];
+  const [frequencyType, setFrequencyType] = React.useState<string>(
+    habit.frequencyType,
+  );
 
   return (
     <div className="edit-habit-page">
@@ -74,7 +83,9 @@ export default function EditHabit() {
       </header>
 
       {"error" in (actionData ?? {}) && (
-        <div className="error-message">{(actionData as { error: string }).error}</div>
+        <div className="error-message">
+          {(actionData as { error: string }).error}
+        </div>
       )}
 
       <Form method="post" className="habit-form">
@@ -102,9 +113,9 @@ export default function EditHabit() {
 
         <div className="form-group">
           <label htmlFor="frequencyType">Frequency</label>
-          <select 
-            id="frequencyType" 
-            name="frequencyType" 
+          <select
+            id="frequencyType"
+            name="frequencyType"
             required
             value={frequencyType}
             onChange={(e) => setFrequencyType(e.target.value)}
@@ -120,18 +131,17 @@ export default function EditHabit() {
           <div className="form-group">
             <div className="days-label">Days of the Week</div>
             <div className="days-of-week">
-              {daysOfWeek.map((day) => (
-                <label 
-                  key={day.value} 
-                  className="day-checkbox"
-                >
+              {allDays.map((day) => (
+                <label key={day} className="day-checkbox">
                   <input
                     type="checkbox"
                     name="daysOfWeek"
-                    value={day.value}
-                    defaultChecked={habit.frequencyConfig.days_of_week?.includes(day.value)}
+                    value={day}
+                    defaultChecked={habit.frequencyConfig.days_of_week?.includes(
+                      day,
+                    )}
                   />
-                  <span>{day.label}</span>
+                  <span>{day}</span>
                 </label>
               ))}
             </div>
@@ -147,7 +157,6 @@ export default function EditHabit() {
           </button>
         </div>
       </Form>
-
     </div>
   );
 }

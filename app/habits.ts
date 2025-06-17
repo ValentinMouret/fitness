@@ -4,20 +4,27 @@
  * A habit completion tracks whether you completed the habit on a specific date.
  */
 
-import { Result, ResultAsync, ok, err } from "neverthrow";
+import {
+  and,
+  between,
+  desc,
+  eq,
+  lte,
+  type InferSelectModel,
+} from "drizzle-orm";
+import { Result, ResultAsync, err, ok } from "neverthrow";
+import { db } from "./db";
+import { habit_completions, habits } from "./db/schema";
 import {
   executeQuery,
   fetchSingleRecord,
   type ErrRepository,
   type ErrValidation,
 } from "./repository";
-import { db } from "./db";
-import { habits, habit_completions } from "./db/schema";
-import { and, between, desc, eq, lte, gte, type InferSelectModel } from "drizzle-orm";
-import { today } from "./time";
+import { Day, today } from "./time";
 
 export interface FrequencyConfig {
-  days_of_week?: number[]; // 0-6, where 0 is Sunday
+  days_of_week?: Day[];
   interval_days?: number;
   day_of_month?: number;
 }
@@ -115,11 +122,7 @@ export const HabitRepository = {
   },
 
   fetchById(id: string): ResultAsync<Habit, ErrRepository> {
-    const query = db
-      .select()
-      .from(habits)
-      .where(eq(habits.id, id))
-      .limit(1);
+    const query = db.select().from(habits).where(eq(habits.id, id)).limit(1);
 
     return executeQuery(query, "fetchById")
       .andThen(fetchSingleRecord)
@@ -189,7 +192,7 @@ export const HabitCompletion = {
 export const HabitCompletionRepository = {
   save(completion: HabitCompletion) {
     const dateStr = completion.completionDate.toISOString().split("T")[0];
-    
+
     return ResultAsync.fromPromise(
       db
         .insert(habit_completions)
@@ -200,7 +203,10 @@ export const HabitCompletionRepository = {
           notes: completion.notes,
         })
         .onConflictDoUpdate({
-          target: [habit_completions.habit_id, habit_completions.completion_date],
+          target: [
+            habit_completions.habit_id,
+            habit_completions.completion_date,
+          ],
           set: {
             completed: completion.completed,
             notes: completion.notes,
@@ -232,7 +238,9 @@ export const HabitCompletionRepository = {
 
     return executeQuery(query, "fetchByHabitAndDate").andThen((records) =>
       records.length > 0
-        ? recordToHabitCompletion(records[0]).map((r) => r as HabitCompletion | null)
+        ? recordToHabitCompletion(records[0]).map(
+            (r) => r as HabitCompletion | null,
+          )
         : ok(null),
     );
   },
@@ -244,7 +252,7 @@ export const HabitCompletionRepository = {
   ): ResultAsync<HabitCompletion[], ErrRepository> {
     const fromStr = from.toISOString().split("T")[0];
     const toStr = to.toISOString().split("T")[0];
-    
+
     const query = db
       .select()
       .from(habit_completions)
@@ -267,7 +275,7 @@ export const HabitCompletionRepository = {
   ): ResultAsync<HabitCompletion[], ErrRepository> {
     const fromStr = from.toISOString().split("T")[0];
     const toStr = to.toISOString().split("T")[0];
-    
+
     const query = db
       .select()
       .from(habit_completions)
@@ -296,11 +304,14 @@ export const HabitService = {
       case "custom": {
         const dayOfWeek = date.getDay();
         if (habit.frequencyConfig.days_of_week) {
-          return habit.frequencyConfig.days_of_week.includes(dayOfWeek);
+          return habit.frequencyConfig.days_of_week.includes(
+            Day.fromNumber(dayOfWeek),
+          );
         }
         if (habit.frequencyConfig.interval_days) {
           const daysSinceStart = Math.floor(
-            (date.getTime() - habit.startDate.getTime()) / (1000 * 60 * 60 * 24),
+            (date.getTime() - habit.startDate.getTime()) /
+              (1000 * 60 * 60 * 24),
           );
           return daysSinceStart % habit.frequencyConfig.interval_days === 0;
         }
@@ -344,7 +355,7 @@ export const HabitService = {
       if (this.isDueOn(habit, currentDate)) {
         const dateStr = currentDate.toISOString().split("T")[0];
         const completed = completionMap.get(dateStr) ?? false;
-        
+
         if (completed) {
           streak++;
         } else {
