@@ -17,8 +17,10 @@ export const Day = {
 
   // From `Date.getDay()`
   fromNumber(num: number): Day {
-    if (num < 0 || num >= allDays.length) throw new Error("Invalid day number");
-    return allDays[num];
+    // Sunday is 0 in JS, but Sunday is at index 6 in our array
+    const adjustedNum = num === 0 ? 6 : num - 1;
+    if (adjustedNum < 0 || adjustedNum >= allDays.length) throw new Error("Invalid day number");
+    return allDays[adjustedNum];
   },
 
   toShort(day: Day): string {

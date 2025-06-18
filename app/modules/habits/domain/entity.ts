@@ -4,7 +4,7 @@
  * A habit completion tracks whether you completed the habit on a specific date.
  */
 
-import { Day } from "../../../time";
+import type { Day } from "../../../time";
 
 export interface FrequencyConfig {
   days_of_week?: Day[];

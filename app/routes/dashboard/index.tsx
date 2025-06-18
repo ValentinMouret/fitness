@@ -14,6 +14,7 @@ import type { Route } from "./+types/index";
 import { Form, useLoaderData } from "react-router";
 import { coerceFloat, resultFromNullable } from "~/utils";
 import HabitCheckbox from "~/components/HabitCheckbox";
+import WeightChart from "~/components/WeightChart";
 
 export async function loader() {
   const now = new Date();
@@ -21,11 +22,12 @@ export async function loader() {
 
   const result = await ResultAsync.combine([
     MeasureRepository.fetchByMeasurementName("weight", 1),
+    MeasureRepository.fetchByMeasurementName("weight", 200), // Fetch more data for chart
     MeasurementRepository.fetchByName("weight"),
     MeasurementService.fetchStreak("weight"),
     HabitRepository.fetchActive(),
     HabitCompletionRepository.fetchByDateRange(todayDate, todayDate),
-  ]).map(([weights, weight, streak, habits, completions]) => {
+  ]).map(([weights, weightData, weight, streak, habits, completions]) => {
     // Filter habits that are due today
     const todayHabits = habits.filter(h => HabitService.isDueOn(h, todayDate));
     
@@ -38,6 +40,7 @@ export async function loader() {
       weight,
       streak,
       lastWeight: weights?.[0],
+      weightData,
       loggedToday: weights?.[0] && isSameDay(weights?.[0].t, now),
       todayHabits,
       completionMap,
@@ -128,7 +131,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function DashboardPage() {
-  const { weight, lastWeight, loggedToday, streak, todayHabits, completionMap, habitStreaks } = useLoaderData<typeof loader>();
+  const { weight, lastWeight, weightData, loggedToday, streak, todayHabits, completionMap, habitStreaks } = useLoaderData<typeof loader>();
 
   return (
     <div className="page dashboard-page">
@@ -155,6 +158,13 @@ export default function DashboardPage() {
         </Form>
       )}
       </section>
+      
+      {/* Weight Chart Section */}
+      {weightData.length > 0 && (
+        <section className="dashboard-section">
+          <WeightChart data={weightData} unit={weight.unit} />
+        </section>
+      )}
       
       {/* Habits Section */}
       {todayHabits.length > 0 && (

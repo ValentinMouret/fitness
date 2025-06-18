@@ -58,8 +58,9 @@ export const HabitService = {
     endDate: Date = today(),
   ): number {
     let streak = 0;
-    let currentDate = new Date(endDate);
-    currentDate.setHours(0, 0, 0, 0);
+    // Create a new date from the endDate's date string to ensure we start from the correct day
+    const endDateStr = endDate.toISOString().split("T")[0];
+    let currentDate = new Date(endDateStr + "T00:00:00.000Z");
 
     // Create a map of completion dates for faster lookup
     const completionMap = new Map<string, boolean>();
@@ -69,24 +70,29 @@ export const HabitService = {
     }
 
     // Work backwards from endDate
-    while (currentDate >= habit.startDate) {
+    const habitStartDateStr = habit.startDate.toISOString().split("T")[0];
+    const habitStartDate = new Date(habitStartDateStr + "T00:00:00.000Z");
+    
+    while (currentDate >= habitStartDate) {
+      const dateStr = currentDate.toISOString().split("T")[0];
+      
       if (this.isDueOn(habit, currentDate)) {
-        const dateStr = currentDate.toISOString().split("T")[0];
         const completed = completionMap.get(dateStr) ?? false;
 
         if (completed) {
           streak++;
         } else {
-          // Streak broken
-          break;
+          // Only break if we've started counting and found an incomplete day
+          // If we haven't started counting yet, keep looking backwards
+          if (streak > 0) {
+            break;
+          }
         }
       }
 
-      // Move to previous day
-      currentDate = new Date(currentDate);
-      currentDate.setDate(currentDate.getDate() - 1);
+      // Move to previous day in UTC
+      currentDate = new Date(currentDate.getTime() - 24 * 60 * 60 * 1000);
     }
-
     return streak;
   },
 
