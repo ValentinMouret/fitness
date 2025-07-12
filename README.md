@@ -8,3 +8,7 @@ Challenges for the data model:
 - **integrations**: some data will come from extracts (Whoop, Strong, MyFitnessPal?)
 - **backfill**: for example, habits. I can log them on the day, but I also want to retro-actively log habits.
 - **historisation**: I have a weight at some point in time, but it can change. I want to keep the history and easily find the latest value.
+
+Would it make sense to pipe the activity log of the application to an LLM that can activate levers throughout the app to keep the data consistent? For instance, it sees my habit to log my weight, then it can ask me what my weight was, and log it in the DB?
+
+  -> let’s keep thinngs simple for now

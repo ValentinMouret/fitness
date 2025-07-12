@@ -4,18 +4,18 @@ import type { Route } from "./+types/new";
 import { Habit as HabitEntity } from "../../modules/habits/domain/entity";
 import { HabitRepository } from "../../modules/habits/infra/repository.server";
 import * as React from "react";
-import { 
-  Box, 
-  Heading, 
-  TextField, 
-  TextArea, 
-  Select, 
-  Button, 
-  Text, 
-  Flex, 
+import {
+  Box,
+  Heading,
+  TextField,
+  TextArea,
+  Select,
+  Button,
+  Text,
+  Flex,
   Callout,
   Checkbox,
-  Grid
+  Grid,
 } from "@radix-ui/themes";
 
 export async function action({ request }: Route.ActionArgs) {
@@ -74,16 +74,20 @@ export default function NewHabit() {
 
       {"error" in (actionData ?? {}) && (
         <Callout.Root color="red" mb="4">
-          <Callout.Text>
-            {(actionData as { error: string }).error}
-          </Callout.Text>
+          <Callout.Text>{(actionData as { error: string }).error}</Callout.Text>
         </Callout.Root>
       )}
 
       <Form method="post">
         <Flex direction="column" gap="4">
           <Box>
-            <Text as="label" size="2" weight="medium" mb="2" style={{ display: "block" }}>
+            <Text
+              as="label"
+              size="2"
+              weight="medium"
+              mb="2"
+              style={{ display: "block" }}
+            >
               Name
             </Text>
             <TextField.Root
@@ -94,7 +98,13 @@ export default function NewHabit() {
           </Box>
 
           <Box>
-            <Text as="label" size="2" weight="medium" mb="2" style={{ display: "block" }}>
+            <Text
+              as="label"
+              size="2"
+              weight="medium"
+              mb="2"
+              style={{ display: "block" }}
+            >
               Description (optional)
             </Text>
             <TextArea
@@ -105,7 +115,13 @@ export default function NewHabit() {
           </Box>
 
           <Box>
-            <Text as="label" size="2" weight="medium" mb="2" style={{ display: "block" }}>
+            <Text
+              as="label"
+              size="2"
+              weight="medium"
+              mb="2"
+              style={{ display: "block" }}
+            >
               Frequency
             </Text>
             <Select.Root
@@ -126,7 +142,12 @@ export default function NewHabit() {
 
           {(frequencyType === "weekly" || frequencyType === "custom") && (
             <Box>
-              <Text size="2" weight="medium" mb="3" style={{ display: "block" }}>
+              <Text
+                size="2"
+                weight="medium"
+                mb="3"
+                style={{ display: "block" }}
+              >
                 Days of the Week
               </Text>
               <Grid columns="2" gap="2">

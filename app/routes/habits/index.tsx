@@ -8,16 +8,16 @@ import {
 import { HabitService } from "../../modules/habits/application/service";
 import { Day, today } from "../../time";
 import type { Route } from "./+types/index";
-import { 
-  Box, 
-  Heading, 
-  Button, 
-  Text, 
-  Flex, 
+import {
+  Box,
+  Heading,
+  Button,
+  Text,
+  Flex,
   Card,
   Grid,
   Callout,
-  Badge
+  Badge,
 } from "@radix-ui/themes";
 import { PlusIcon, Pencil1Icon } from "@radix-ui/react-icons";
 
@@ -108,7 +108,9 @@ export default function HabitsPage({
 
   const isSubmitting = navigation.state === "submitting";
 
-  const getStreakColor = (streak: number): "blue" | "red" | "orange" | "gray" => {
+  const getStreakColor = (
+    streak: number,
+  ): "blue" | "red" | "orange" | "gray" => {
     if (streak >= 90) return "blue";
     if (streak >= 30) return "red";
     if (streak >= 7) return "orange";
@@ -129,14 +131,14 @@ export default function HabitsPage({
 
       {"error" in (actionData ?? {}) && (
         <Callout.Root color="red" mb="4">
-          <Callout.Text>
-            {(actionData as { error: string }).error}
-          </Callout.Text>
+          <Callout.Text>{(actionData as { error: string }).error}</Callout.Text>
         </Callout.Root>
       )}
 
       <Box mb="8">
-        <Heading size="5" mb="4">Today's Habits</Heading>
+        <Heading size="5" mb="4">
+          Today's Habits
+        </Heading>
         <Flex direction="column" gap="2">
           {habits.filter((habit) => HabitService.isDueOn(habit, today()))
             .length === 0 ? (
@@ -152,10 +154,7 @@ export default function HabitsPage({
                 const habitStreak = habitStreaks.get(habit.id) ?? 0;
 
                 return (
-                  <Form
-                    method="post"
-                    key={habit.id}
-                  >
+                  <Form method="post" key={habit.id}>
                     <HabitCheckbox
                       habitId={habit.id}
                       habitName={habit.name}
@@ -173,12 +172,20 @@ export default function HabitsPage({
       </Box>
 
       <Box>
-        <Heading size="5" mb="4">All Habits</Heading>
+        <Heading size="5" mb="4">
+          All Habits
+        </Heading>
         {habits.length === 0 ? (
           <Card size="4" style={{ textAlign: "center" }}>
-            <Text size="6" mb="4">📝</Text>
-            <Heading size="4" mb="2">No habits yet</Heading>
-            <Text color="gray" mb="4">Start building better habits by creating your first one.</Text>
+            <Text size="6" mb="4">
+              📝
+            </Text>
+            <Heading size="4" mb="2">
+              No habits yet
+            </Heading>
+            <Text color="gray" mb="4">
+              Start building better habits by creating your first one.
+            </Text>
             <Button asChild>
               <Link to="/habits/new">Create Your First Habit</Link>
             </Button>
@@ -194,7 +201,10 @@ export default function HabitsPage({
                     <Heading size="4">{habit.name}</Heading>
                     <Flex gap="2" align="center">
                       {habitStreak > 0 && (
-                        <Badge color={getStreakColor(habitStreak)} variant="soft">
+                        <Badge
+                          color={getStreakColor(habitStreak)}
+                          variant="soft"
+                        >
                           🔥 {habitStreak} {habitStreak === 1 ? "day" : "days"}
                         </Badge>
                       )}
@@ -205,29 +215,37 @@ export default function HabitsPage({
                       </Button>
                     </Flex>
                   </Flex>
-                  
+
                   {habit.description && (
-                    <Text color="gray" size="2" mb="3" style={{ display: "block" }}>
+                    <Text
+                      color="gray"
+                      size="2"
+                      mb="3"
+                      style={{ display: "block" }}
+                    >
                       {habit.description}
                     </Text>
                   )}
-                  
+
                   <Text size="2" color="gray">
                     {habit.frequencyType === "daily" && "Every day"}
                     {habit.frequencyType === "weekly" &&
                       habit.frequencyConfig.days_of_week && (
                         <>
                           {habit.frequencyConfig.days_of_week.length} days/week{" "}
-                          ({Day.sortDays(habit.frequencyConfig.days_of_week)
+                          (
+                          {Day.sortDays(habit.frequencyConfig.days_of_week)
                             .map(Day.toShort)
-                            .join(", ")})
+                            .join(", ")}
+                          )
                         </>
                       )}
                     {habit.frequencyType === "monthly" && "Monthly"}
                     {habit.frequencyType === "custom" &&
                       habit.frequencyConfig.days_of_week && (
                         <>
-                          Custom: {Day.sortDays(habit.frequencyConfig.days_of_week)
+                          Custom:{" "}
+                          {Day.sortDays(habit.frequencyConfig.days_of_week)
                             .map(Day.toShort)
                             .join(", ")}
                         </>

@@ -1,18 +1,25 @@
 import type React from "react";
 import { useState, useEffect } from "react";
 import { NavLink, Outlet, Form } from "react-router";
-import { Flex, Container, Box, Button, IconButton, Text, Heading } from "@radix-ui/themes";
-import { 
-  HamburgerMenuIcon, 
-  ChevronLeftIcon, 
+import {
+  Flex,
+  Container,
+  Box,
+  Button,
+  IconButton,
+  Text,
+  Heading,
+} from "@radix-ui/themes";
+import {
+  HamburgerMenuIcon,
+  ChevronLeftIcon,
   ChevronRightIcon,
   DashboardIcon,
   CheckboxIcon,
   CounterClockwiseClockIcon,
   ReaderIcon,
-  ExitIcon
+  ExitIcon,
 } from "@radix-ui/react-icons";
-
 
 const AppLayout: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -59,7 +66,11 @@ const AppLayout: React.FC = () => {
     { path: "/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
     { path: "/habits", label: "Habits", icon: <CheckboxIcon /> },
     { path: "/nutrition", label: "Nutrition", icon: <ReaderIcon /> },
-    { path: "/workouts", label: "Workouts", icon: <CounterClockwiseClockIcon /> },
+    {
+      path: "/workouts",
+      label: "Workouts",
+      icon: <CounterClockwiseClockIcon />,
+    },
   ];
 
   return (
@@ -92,7 +103,8 @@ const AppLayout: React.FC = () => {
           left: 0,
           height: "100vh",
           zIndex: 40,
-          transform: isMobile && !isMobileOpen ? "translateX(-100%)" : "translateX(0)",
+          transform:
+            isMobile && !isMobileOpen ? "translateX(-100%)" : "translateX(0)",
         }}
       >
         <Flex direction="column" height="100%" p="3">
@@ -102,7 +114,7 @@ const AppLayout: React.FC = () => {
               <Text size="5">{String.fromCodePoint(0x1f49a)}</Text>
               {!isCollapsed && <Heading size="4">fitness</Heading>}
             </Flex>
-            
+
             {!isMobile && (
               <IconButton
                 variant="ghost"
@@ -115,47 +127,81 @@ const AppLayout: React.FC = () => {
           </Flex>
 
           {/* Navigation */}
-          <Flex direction="column" gap="1" flexGrow="1">
+          <Flex
+            direction="column"
+            gap="1"
+            flexGrow="1"
+            style={{ overflow: "hidden" }}
+          >
             {navItems.map(({ path, label, icon }) => (
-              <NavLink
-                key={path}
-                to={path}
-                onClick={() => setIsMobileOpen(false)}
-                style={{ textDecoration: "none" }}
-              >
-                {({ isActive }) => (
-                  <Button
-                    variant={isActive ? "solid" : "ghost"}
-                    size="3"
-                    style={{
-                      width: "100%",
-                      justifyContent: isCollapsed ? "center" : "flex-start",
-                    }}
-                  >
-                    {icon}
-                    {!isCollapsed && <Text ml="2">{label}</Text>}
-                  </Button>
-                )}
-              </NavLink>
+              <Box key={path} px="1">
+                <NavLink
+                  to={path}
+                  onClick={() => setIsMobileOpen(false)}
+                  style={{ textDecoration: "none" }}
+                >
+                  {({ isActive }) => (
+                    <Button
+                      variant={isActive ? "solid" : "ghost"}
+                      size="3"
+                      style={{
+                        width: "100%",
+                        justifyContent: "flex-start",
+                        padding: "8px 12px",
+                        margin: "0",
+                        border: "none",
+                        boxShadow: "none",
+                        borderRadius: "6px",
+                      }}
+                    >
+                      <Flex
+                        align="center"
+                        gap={isCollapsed ? "0" : "3"}
+                        justify={isCollapsed ? "center" : "start"}
+                        style={{ width: "100%" }}
+                      >
+                        {icon}
+                        {!isCollapsed && <Text size="2">{label}</Text>}
+                      </Flex>
+                    </Button>
+                  )}
+                </NavLink>
+              </Box>
             ))}
           </Flex>
 
           {/* Logout */}
-          <Form method="post" action="/logout">
-            <Button
-              type="submit"
-              variant="ghost"
-              size="3"
-              color="red"
-              style={{
-                width: "100%",
-                justifyContent: isCollapsed ? "center" : "flex-start",
-              }}
-            >
-              <ExitIcon />
-              {!isCollapsed && <Text ml="2">Logout</Text>}
-            </Button>
-          </Form>
+          <Box mt="4" px="1">
+            <Form method="post" action="/logout">
+              <Button
+                type="submit"
+                variant="soft"
+                size="3"
+                color="red"
+                style={{
+                  width: "100%",
+                  justifyContent: "center",
+                  padding: "8px 12px",
+                  margin: "0",
+                  borderRadius: "6px",
+                }}
+              >
+                <Flex
+                  align="center"
+                  gap={isCollapsed ? "0" : "2"}
+                  justify="center"
+                  style={{ width: "100%" }}
+                >
+                  <ExitIcon />
+                  {!isCollapsed && (
+                    <Text size="2" weight="medium">
+                      Logout
+                    </Text>
+                  )}
+                </Flex>
+              </Button>
+            </Form>
+          </Box>
         </Flex>
       </Box>
 
@@ -176,12 +222,12 @@ const AppLayout: React.FC = () => {
       )}
 
       {/* Main content */}
-      <Box 
-        flexGrow="1" 
-        style={{ 
+      <Box
+        flexGrow="1"
+        style={{
           overflow: "auto",
-          marginLeft: isMobile ? "0" : (isCollapsed ? "60px" : "240px"),
-          transition: "margin-left 0.2s ease"
+          marginLeft: isMobile ? "0" : isCollapsed ? "60px" : "240px",
+          transition: "margin-left 0.2s ease",
         }}
       >
         <Container size="4" p="4">

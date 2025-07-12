@@ -1,7 +1,15 @@
 import { Form, redirect, useSearchParams } from "react-router";
 import type { Route } from "./+types/login";
 import { authenticate } from "~/auth";
-import { Container, Card, Heading, Text, TextField, Button, Callout } from "@radix-ui/themes";
+import {
+  Container,
+  Card,
+  Heading,
+  Text,
+  TextField,
+  Button,
+  Callout,
+} from "@radix-ui/themes";
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
@@ -53,21 +61,29 @@ export default function Login({ actionData }: Route.ComponentProps) {
   const redirectTo = searchParams.get("redirectTo") || "/dashboard";
 
   return (
-    <Container 
-      size="1" 
-      style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        minHeight: "100vh" 
+    <Container
+      size="1"
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "100vh",
       }}
     >
       <Card size="4" style={{ width: "100%", maxWidth: "400px" }}>
-        <Heading as="h1" size="6" align="center" mb="6">Login</Heading>
+        <Heading as="h1" size="6" align="center" mb="6">
+          Login
+        </Heading>
         <Form method="post">
           <input type="hidden" name="redirectTo" value={redirectTo} />
 
-          <Text as="label" size="2" weight="medium" mb="2" style={{ display: "block" }}>
+          <Text
+            as="label"
+            size="2"
+            weight="medium"
+            mb="2"
+            style={{ display: "block" }}
+          >
             Username
           </Text>
           <TextField.Root
@@ -77,7 +93,13 @@ export default function Login({ actionData }: Route.ComponentProps) {
             placeholder="Enter your username"
           />
 
-          <Text as="label" size="2" weight="medium" mb="2" style={{ display: "block" }}>
+          <Text
+            as="label"
+            size="2"
+            weight="medium"
+            mb="2"
+            style={{ display: "block" }}
+          >
             Password
           </Text>
           <TextField.Root

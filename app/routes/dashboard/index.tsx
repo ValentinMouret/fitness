@@ -17,15 +17,15 @@ import { Form, useLoaderData } from "react-router";
 import { coerceFloat, resultFromNullable } from "~/utils";
 import HabitCheckbox from "~/components/HabitCheckbox";
 import WeightChart from "~/components/WeightChart";
-import { 
-  Box, 
-  Heading, 
-  Text, 
-  TextField, 
-  Button, 
+import {
+  Box,
+  Heading,
+  Text,
+  TextField,
+  Button,
   Flex,
   Card,
-  Badge
+  Badge,
 } from "@radix-ui/themes";
 
 export async function loader() {
@@ -161,18 +161,25 @@ export default function DashboardPage() {
 
   return (
     <Box>
-      <Heading size="7" mb="6">Today</Heading>
+      <Heading size="7" mb="6">
+        Today
+      </Heading>
 
       {/* Weight Section */}
       <Card size="3" mb="6">
-        <Heading size="4" mb="4">Weight</Heading>
+        <Heading size="4" mb="4">
+          Weight
+        </Heading>
         {loggedToday ? (
           <Flex direction="column" gap="2">
             <Text size="3">
-              Weight: {lastWeight.value}{weight.unit}
+              Weight: {lastWeight.value}
+              {weight.unit}
             </Text>
             <Flex align="center" gap="2">
-              <Text size="2" color="gray">Streak:</Text>
+              <Text size="2" color="gray">
+                Streak:
+              </Text>
               <Badge variant="soft" color="green">
                 {streak} days
               </Badge>
@@ -181,10 +188,18 @@ export default function DashboardPage() {
         ) : (
           <Form method="post">
             <Flex direction="column" gap="3">
-              <Text size="2" color="gray">You have not logged today's weight</Text>
+              <Text size="2" color="gray">
+                You have not logged today's weight
+              </Text>
               <Flex gap="2" align="end">
                 <Box flexGrow="1">
-                  <Text as="label" size="2" weight="medium" mb="1" style={{ display: "block" }}>
+                  <Text
+                    as="label"
+                    size="2"
+                    weight="medium"
+                    mb="1"
+                    style={{ display: "block" }}
+                  >
                     Weight:
                   </Text>
                   <TextField.Root
@@ -212,7 +227,9 @@ export default function DashboardPage() {
       {/* Habits Section */}
       {todayHabits.length > 0 && (
         <Card size="3">
-          <Heading size="4" mb="4">Today's Habits</Heading>
+          <Heading size="4" mb="4">
+            Today's Habits
+          </Heading>
           <Flex direction="column" gap="2">
             {todayHabits.map((habit) => {
               const isCompleted = completionMap.get(habit.id) ?? false;

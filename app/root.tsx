@@ -71,10 +71,17 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
   return (
     <Container size="3" style={{ paddingTop: "4rem" }}>
-      <Heading as="h1" size="8" mb="4">{message}</Heading>
-      <Text as="p" size="4" mb="4">{details}</Text>
+      <Heading as="h1" size="8" mb="4">
+        {message}
+      </Heading>
+      <Text as="p" size="4" mb="4">
+        {details}
+      </Text>
       {stack && (
-        <Code variant="soft" style={{ display: "block", padding: "1rem", overflow: "auto" }}>
+        <Code
+          variant="soft"
+          style={{ display: "block", padding: "1rem", overflow: "auto" }}
+        >
           {stack}
         </Code>
       )}

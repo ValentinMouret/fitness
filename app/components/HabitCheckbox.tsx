@@ -20,7 +20,9 @@ export default function HabitCheckbox({
   intent = "toggle-habit",
   streak = 0,
 }: HabitCheckboxProps) {
-  const getStreakColor = (streak: number): "blue" | "red" | "orange" | "gray" => {
+  const getStreakColor = (
+    streak: number,
+  ): "blue" | "red" | "orange" | "gray" => {
     if (streak >= 90) return "blue";
     if (streak >= 30) return "red";
     if (streak >= 7) return "orange";
@@ -28,38 +30,43 @@ export default function HabitCheckbox({
   };
 
   return (
-    <Flex align="center" gap="3" p="3" style={{ 
-      borderRadius: "var(--radius-3)", 
-      border: "1px solid var(--gray-6)",
-      backgroundColor: "var(--color-surface)"
-    }}>
+    <Flex
+      align="center"
+      gap="3"
+      p="3"
+      style={{
+        borderRadius: "var(--radius-3)",
+        border: "1px solid var(--gray-6)",
+        backgroundColor: "var(--color-surface)",
+      }}
+    >
       <input type="hidden" name="intent" value={intent} />
       <input type="hidden" name="habitId" value={habitId} />
       <input type="hidden" name="completed" value={String(isCompleted)} />
-      
+
       <Button
         type="submit"
         variant={isCompleted ? "solid" : "outline"}
         color={isCompleted ? "green" : "gray"}
         size="2"
-        style={{ 
-          width: "28px", 
-          height: "28px", 
+        style={{
+          width: "28px",
+          height: "28px",
           flexShrink: 0,
-          padding: 0 
+          padding: 0,
         }}
         disabled={isSubmitting}
       >
         {isCompleted && <CheckIcon />}
       </Button>
-      
+
       <Flex direction="column" flexGrow="1">
-        <Text 
-          size="3" 
-          weight="medium" 
-          style={{ 
+        <Text
+          size="3"
+          weight="medium"
+          style={{
             textDecoration: isCompleted ? "line-through" : "none",
-            color: isCompleted ? "var(--gray-9)" : "var(--gray-12)"
+            color: isCompleted ? "var(--gray-9)" : "var(--gray-12)",
           }}
         >
           {habitName}
@@ -70,7 +77,7 @@ export default function HabitCheckbox({
           </Text>
         )}
       </Flex>
-      
+
       {streak > 0 && (
         <Badge color={getStreakColor(streak)} variant="soft">
           🔥 {streak} {streak === 1 ? "day" : "days"}
