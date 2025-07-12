@@ -18,6 +18,13 @@ export function coerceFloat(v: string): Result<number, ErrValidation> {
   return Number.isNaN(parsed) ? err("validation_error") : ok(parsed);
 }
 
+export function expect<T>(v: T | undefined | null): T {
+  if (v === undefined || v === null) {
+    throw new Error("Expected value, got nil");
+  }
+  return v;
+}
+
 export function pprint(o: object) {
   console.dir(o, { depth: null });
 }
