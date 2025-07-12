@@ -5,7 +5,7 @@ import type { InferInsertModel } from "drizzle-orm";
 
 export const db = drizzle({
   connection: {
-    connectionString: process.env.DATABASE_URL!,
+    connectionString: process.env.DATABASE_URL ?? "",
   },
 });
 

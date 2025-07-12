@@ -1,7 +1,7 @@
 import { Form, redirect, useSearchParams } from "react-router";
 import type { Route } from "./+types/login";
 import { authenticate } from "~/auth";
-import "./login.css";
+import { Container, Card, Heading, Text, TextField, Button, Callout } from "@radix-ui/themes";
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
@@ -53,47 +53,52 @@ export default function Login({ actionData }: Route.ComponentProps) {
   const redirectTo = searchParams.get("redirectTo") || "/dashboard";
 
   return (
-    <div className="login-page">
-      <div className="login-container">
-        <h1>Login</h1>
-        <Form method="post" className="login-form">
+    <Container 
+      size="1" 
+      style={{ 
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center", 
+        minHeight: "100vh" 
+      }}
+    >
+      <Card size="4" style={{ width: "100%", maxWidth: "400px" }}>
+        <Heading as="h1" size="6" align="center" mb="6">Login</Heading>
+        <Form method="post">
           <input type="hidden" name="redirectTo" value={redirectTo} />
 
-          <div className="form-group">
-            <label htmlFor="username" className="form-label">
-              Username
-            </label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              className="form-input"
-              required
-            />
-          </div>
+          <Text as="label" size="2" weight="medium" mb="2" style={{ display: "block" }}>
+            Username
+          </Text>
+          <TextField.Root
+            name="username"
+            required
+            mb="4"
+            placeholder="Enter your username"
+          />
 
-          <div className="form-group">
-            <label htmlFor="password" className="form-label">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              className="form-input"
-              required
-            />
-          </div>
+          <Text as="label" size="2" weight="medium" mb="2" style={{ display: "block" }}>
+            Password
+          </Text>
+          <TextField.Root
+            name="password"
+            type="password"
+            required
+            mb="4"
+            placeholder="Enter your password"
+          />
 
           {actionData?.error && (
-            <div className="error-message">{actionData.error}</div>
+            <Callout.Root color="red" mb="4">
+              <Callout.Text>{actionData.error}</Callout.Text>
+            </Callout.Root>
           )}
 
-          <button type="submit" className="button button-primary">
+          <Button type="submit" size="3" style={{ width: "100%" }}>
             Login
-          </button>
+          </Button>
         </Form>
-      </div>
-    </div>
+      </Card>
+    </Container>
   );
 }

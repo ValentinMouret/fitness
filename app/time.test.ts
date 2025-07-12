@@ -109,7 +109,7 @@ describe("time module", () => {
     it("should reset time to midnight UTC", () => {
       const input = new Date("2023-10-15T14:30:45.123Z");
       const result = toDate(input);
-      
+
       expect(result.getUTCHours()).toBe(0);
       expect(result.getUTCMinutes()).toBe(0);
       expect(result.getUTCSeconds()).toBe(0);
@@ -131,7 +131,7 @@ describe("time module", () => {
     it("should return today's date with time reset to midnight UTC", () => {
       const result = today();
       const now = new Date();
-      
+
       expect(result.getUTCHours()).toBe(0);
       expect(result.getUTCMinutes()).toBe(0);
       expect(result.getUTCSeconds()).toBe(0);
@@ -144,7 +144,7 @@ describe("time module", () => {
     it("should add one day to date", () => {
       const input = new Date("2023-10-15T10:30:00");
       const result = addOneDay(input);
-      
+
       expect(result.getDate()).toBe(16);
       expect(result.getMonth()).toBe(input.getMonth());
       expect(result.getFullYear()).toBe(input.getFullYear());
@@ -153,7 +153,7 @@ describe("time module", () => {
     it("should handle month boundary", () => {
       const input = new Date("2023-10-31T10:30:00");
       const result = addOneDay(input);
-      
+
       expect(result.getDate()).toBe(1);
       expect(result.getMonth()).toBe(10); // November
       expect(result.getFullYear()).toBe(2023);
@@ -162,7 +162,7 @@ describe("time module", () => {
     it("should handle year boundary", () => {
       const input = new Date("2023-12-31T10:30:00");
       const result = addOneDay(input);
-      
+
       expect(result.getDate()).toBe(1);
       expect(result.getMonth()).toBe(0); // January
       expect(result.getFullYear()).toBe(2024);
@@ -180,7 +180,7 @@ describe("time module", () => {
     it("should remove one day from date", () => {
       const input = new Date("2023-10-15T10:30:00");
       const result = removeOneDay(input);
-      
+
       expect(result.getDate()).toBe(14);
       expect(result.getMonth()).toBe(input.getMonth());
       expect(result.getFullYear()).toBe(input.getFullYear());
@@ -189,7 +189,7 @@ describe("time module", () => {
     it("should handle month boundary", () => {
       const input = new Date("2023-11-01T10:30:00");
       const result = removeOneDay(input);
-      
+
       expect(result.getDate()).toBe(31);
       expect(result.getMonth()).toBe(9); // October
       expect(result.getFullYear()).toBe(2023);
@@ -198,7 +198,7 @@ describe("time module", () => {
     it("should handle year boundary", () => {
       const input = new Date("2024-01-01T10:30:00");
       const result = removeOneDay(input);
-      
+
       expect(result.getDate()).toBe(31);
       expect(result.getMonth()).toBe(11); // December
       expect(result.getFullYear()).toBe(2023);

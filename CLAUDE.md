@@ -36,11 +36,7 @@ pnpm db:seed
 - Base things around fundamental datastructures (like with the Clojure philosophy: arrays, maps, sets, ...)
 
 ## Style
-- No Tailwind CSS
-- Vanilla CSS only
-- NEVER use inline styles (`style={}` props) or `<style>` tags in components
-- ALWAYS create separate `.css` files next to components and import them
-- Use global classes from `app/app.css` when possible (buttons, forms, layout, utilities)
+- Use Radix UI and basic styling
 
 ## Design
 - Light, minimalist
@@ -59,6 +55,5 @@ pnpm db:seed
   - `style={}` props
   - `<style>` tags
   - Any inline CSS
-  - If found, move styles to separate `.css` files and use global classes where possible
 - If you need to run some QA with the app interface, please ask the human to do so and tell them which actions to perform.
 - Limit your comments to chunks of code, no one comment per line of code

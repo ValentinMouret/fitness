@@ -5,13 +5,28 @@ import {
   Link,
   useLoaderData,
 } from "react-router";
-import "./edit.css";
 import { data } from "react-router";
 import type { Route } from "./+types/edit";
-import type { Habit as HabitEntity, Habit } from "../../modules/habits/domain/entity";
+import type {
+  Habit as HabitEntity,
+  Habit,
+} from "../../modules/habits/domain/entity";
 import { HabitRepository } from "../../modules/habits/infra/repository.server";
 import * as React from "react";
 import { allDays } from "~/time";
+import { 
+  Box, 
+  Heading, 
+  TextField, 
+  TextArea, 
+  Select, 
+  Button, 
+  Text, 
+  Flex, 
+  Callout,
+  Checkbox,
+  Grid
+} from "@radix-ui/themes";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const result = await HabitRepository.fetchById(params.id);
@@ -74,86 +89,95 @@ export default function EditHabit() {
   );
 
   return (
-    <div className="edit-habit-page">
-      <header className="page-header">
-        <h1>Edit Habit</h1>
-      </header>
+    <Box>
+      <Flex justify="between" align="center" mb="6">
+        <Heading size="7">Edit Habit</Heading>
+      </Flex>
 
       {"error" in (actionData ?? {}) && (
-        <div className="error-message">
-          {(actionData as { error: string }).error}
-        </div>
+        <Callout.Root color="red" mb="4">
+          <Callout.Text>
+            {(actionData as { error: string }).error}
+          </Callout.Text>
+        </Callout.Root>
       )}
 
-      <Form method="post" className="habit-form">
-        <div className="form-group">
-          <label htmlFor="name">Name</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            required
-            defaultValue={habit.name}
-            placeholder="e.g., Go to gym"
-          />
-        </div>
+      <Form method="post">
+        <Flex direction="column" gap="4">
+          <Box>
+            <Text as="label" size="2" weight="medium" mb="2" style={{ display: "block" }}>
+              Name
+            </Text>
+            <TextField.Root
+              name="name"
+              required
+              defaultValue={habit.name}
+              placeholder="e.g., Go to gym"
+            />
+          </Box>
 
-        <div className="form-group">
-          <label htmlFor="description">Description (optional)</label>
-          <textarea
-            id="description"
-            name="description"
-            defaultValue={habit.description}
-            placeholder="e.g., Weight training and cardio"
-          />
-        </div>
+          <Box>
+            <Text as="label" size="2" weight="medium" mb="2" style={{ display: "block" }}>
+              Description (optional)
+            </Text>
+            <TextArea
+              name="description"
+              defaultValue={habit.description}
+              placeholder="e.g., Weight training and cardio"
+              rows={3}
+            />
+          </Box>
 
-        <div className="form-group">
-          <label htmlFor="frequencyType">Frequency</label>
-          <select
-            id="frequencyType"
-            name="frequencyType"
-            required
-            value={frequencyType}
-            onChange={(e) => setFrequencyType(e.target.value)}
-          >
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly (specific days)</option>
-            <option value="monthly">Monthly</option>
-            <option value="custom">Custom</option>
-          </select>
-        </div>
+          <Box>
+            <Text as="label" size="2" weight="medium" mb="2" style={{ display: "block" }}>
+              Frequency
+            </Text>
+            <Select.Root
+              name="frequencyType"
+              value={frequencyType}
+              onValueChange={setFrequencyType}
+              required
+            >
+              <Select.Trigger />
+              <Select.Content>
+                <Select.Item value="daily">Daily</Select.Item>
+                <Select.Item value="weekly">Weekly (specific days)</Select.Item>
+                <Select.Item value="monthly">Monthly</Select.Item>
+                <Select.Item value="custom">Custom</Select.Item>
+              </Select.Content>
+            </Select.Root>
+          </Box>
 
-        {(frequencyType === "weekly" || frequencyType === "custom") && (
-          <div className="form-group">
-            <div className="days-label">Days of the Week</div>
-            <div className="days-of-week">
-              {allDays.map((day) => (
-                <label key={day} className="day-checkbox">
-                  <input
-                    type="checkbox"
-                    name="daysOfWeek"
-                    value={day}
-                    defaultChecked={habit.frequencyConfig.days_of_week?.includes(
-                      day,
-                    )}
-                  />
-                  <span>{day}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
+          {(frequencyType === "weekly" || frequencyType === "custom") && (
+            <Box>
+              <Text size="2" weight="medium" mb="3" style={{ display: "block" }}>
+                Days of the Week
+              </Text>
+              <Grid columns="2" gap="2">
+                {allDays.map((day) => (
+                  <Text as="label" key={day} size="2">
+                    <Flex gap="2" align="center">
+                      <Checkbox 
+                        name="daysOfWeek" 
+                        value={day}
+                        defaultChecked={habit.frequencyConfig.days_of_week?.includes(day)}
+                      />
+                      {day}
+                    </Flex>
+                  </Text>
+                ))}
+              </Grid>
+            </Box>
+          )}
 
-        <div className="form-actions">
-          <Link to="/habits" className="button button-secondary">
-            Cancel
-          </Link>
-          <button type="submit" className="button button-primary">
-            Save Changes
-          </button>
-        </div>
+          <Flex gap="3" mt="4">
+            <Button asChild variant="soft" color="gray">
+              <Link to="/habits">Cancel</Link>
+            </Button>
+            <Button type="submit">Save Changes</Button>
+          </Flex>
+        </Flex>
       </Form>
-    </div>
+    </Box>
   );
 }

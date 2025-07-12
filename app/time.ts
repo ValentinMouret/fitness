@@ -19,7 +19,8 @@ export const Day = {
   fromNumber(num: number): Day {
     // Sunday is 0 in JS, but Sunday is at index 6 in our array
     const adjustedNum = num === 0 ? 6 : num - 1;
-    if (adjustedNum < 0 || adjustedNum >= allDays.length) throw new Error("Invalid day number");
+    if (adjustedNum < 0 || adjustedNum >= allDays.length)
+      throw new Error("Invalid day number");
     return allDays[adjustedNum];
   },
 

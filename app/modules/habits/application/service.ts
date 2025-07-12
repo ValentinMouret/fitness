@@ -72,10 +72,10 @@ export const HabitService = {
     // Work backwards from endDate
     const habitStartDateStr = habit.startDate.toISOString().split("T")[0];
     const habitStartDate = new Date(habitStartDateStr + "T00:00:00.000Z");
-    
+
     while (currentDate >= habitStartDate) {
       const dateStr = currentDate.toISOString().split("T")[0];
-      
+
       if (this.isDueOn(habit, currentDate)) {
         const completed = completionMap.get(dateStr) ?? false;
 

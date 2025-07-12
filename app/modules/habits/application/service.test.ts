@@ -16,10 +16,7 @@ const createHabit = (overrides?: Partial<Habit>): Habit => ({
   ...overrides,
 });
 
-const createCompletion = (
-  date: string,
-  completed = true,
-): HabitCompletion => ({
+const createCompletion = (date: string, completed = true): HabitCompletion => ({
   habitId: "habit-1",
   completionDate: new Date(date + "T00:00:00.000Z"),
   completed,
@@ -28,7 +25,6 @@ const createCompletion = (
 
 describe("HabitService", () => {
   describe("calculateStreak", () => {
-
     it("should return 0 when no completions", () => {
       const habit = createHabit();
       const completions: HabitCompletion[] = [];
@@ -143,14 +139,14 @@ describe("HabitService", () => {
         startDate: new Date("2024-12-01T00:00:00.000Z"), // Start earlier to ensure all 30 days are after start
       });
       const completions: HabitCompletion[] = [];
-      
+
       // Create 30 days of completions
       for (let i = 0; i < 30; i++) {
         const date = new Date("2025-01-10T00:00:00.000Z");
         date.setDate(date.getDate() - i);
         completions.push(createCompletion(date.toISOString().split("T")[0]));
       }
-      
+
       const endDate = new Date("2025-01-10T00:00:00.000Z");
       const streak = HabitService.calculateStreak(habit, completions, endDate);
       expect(streak).toBe(30);
@@ -163,7 +159,7 @@ describe("HabitService", () => {
           days_of_week: ["Monday", "Wednesday", "Friday"],
         },
       });
-      
+
       // Completions on scheduled days
       const completions = [
         createCompletion("2025-01-06"), // Monday
@@ -183,7 +179,7 @@ describe("HabitService", () => {
           days_of_week: ["Monday", "Wednesday", "Friday"],
         },
       });
-      
+
       const completions = [
         createCompletion("2025-01-06"), // Monday
         // Missing Wednesday (2025-01-08)
@@ -202,7 +198,11 @@ describe("HabitService", () => {
 
       // Should not throw and return 0
       expect(() => {
-        const streak = HabitService.calculateStreak(habit, completions, endDate);
+        const streak = HabitService.calculateStreak(
+          habit,
+          completions,
+          endDate,
+        );
         expect(streak).toBe(0);
       }).not.toThrow();
     });
@@ -212,12 +212,12 @@ describe("HabitService", () => {
       const habit = createHabit({
         startDate: new Date("2025-06-17T00:00:00.000Z"),
       });
-      
+
       const completions = [
         createCompletion("2025-06-17"),
         createCompletion("2025-06-18"),
       ];
-      
+
       // End date as it would come from today() function
       const endDate = new Date("2025-06-18T00:00:00.000Z");
 
@@ -230,7 +230,7 @@ describe("HabitService", () => {
     it("should return true for daily habits", () => {
       const habit = createHabit({ frequencyType: "daily" });
       const date = new Date("2025-01-10");
-      
+
       expect(HabitService.isDueOn(habit, date)).toBe(true);
     });
 
@@ -239,7 +239,7 @@ describe("HabitService", () => {
         startDate: new Date("2025-01-10"),
       });
       const date = new Date("2025-01-09");
-      
+
       expect(HabitService.isDueOn(habit, date)).toBe(false);
     });
 
@@ -248,7 +248,7 @@ describe("HabitService", () => {
         endDate: new Date("2025-01-10"),
       });
       const date = new Date("2025-01-11");
-      
+
       expect(HabitService.isDueOn(habit, date)).toBe(false);
     });
 
@@ -259,7 +259,7 @@ describe("HabitService", () => {
           days_of_week: ["Monday", "Wednesday", "Friday"],
         },
       });
-      
+
       // 2025-01-06 is a Monday
       expect(HabitService.isDueOn(habit, new Date("2025-01-06"))).toBe(true);
       // 2025-01-07 is a Tuesday
@@ -276,7 +276,7 @@ describe("HabitService", () => {
         },
         startDate: new Date("2025-01-01"),
       });
-      
+
       // Every 3 days from start
       expect(HabitService.isDueOn(habit, new Date("2025-01-01"))).toBe(true);
       expect(HabitService.isDueOn(habit, new Date("2025-01-02"))).toBe(false);
@@ -291,7 +291,7 @@ describe("HabitService", () => {
           day_of_month: 15,
         },
       });
-      
+
       expect(HabitService.isDueOn(habit, new Date("2025-01-15"))).toBe(true);
       expect(HabitService.isDueOn(habit, new Date("2025-01-14"))).toBe(false);
       expect(HabitService.isDueOn(habit, new Date("2025-01-16"))).toBe(false);
@@ -308,12 +308,17 @@ describe("HabitService", () => {
         createCompletion("2025-01-04"),
         createCompletion("2025-01-05"),
       ];
-      
+
       const from = new Date("2025-01-01T00:00:00.000Z");
       const to = new Date("2025-01-05T00:00:00.000Z");
-      
-      const result = HabitService.calculateCompletionRate(habit, completions, from, to);
-      
+
+      const result = HabitService.calculateCompletionRate(
+        habit,
+        completions,
+        from,
+        to,
+      );
+
       // Due to timezone handling, the range counts 4 days (Jan 1-4)
       // Jan 5 is not included because endDate.setHours(23,59,59,999) in local time
       // may still be Jan 4 in the comparison
@@ -329,17 +334,16 @@ describe("HabitService", () => {
           days_of_week: ["Monday"],
         },
       });
-      
+
       // Date range with no Mondays
       const from = new Date("2025-01-07"); // Tuesday
       const to = new Date("2025-01-11"); // Saturday
-      
+
       const result = HabitService.calculateCompletionRate(habit, [], from, to);
-      
+
       expect(result.total).toBe(0);
       expect(result.completed).toBe(0);
       expect(result.rate).toBe(0);
     });
   });
 });
-

@@ -26,8 +26,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserState(currentUser);
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   const setUser = (newUser: User | null) => {

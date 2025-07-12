@@ -1,11 +1,25 @@
 import { data, Form, Link, useActionData, useNavigation } from "react-router";
 import HabitCheckbox from "../../components/HabitCheckbox";
 import { HabitCompletion } from "../../modules/habits/domain/entity";
-import { HabitCompletionRepository, HabitRepository } from "../../modules/habits/infra/repository.server";
+import {
+  HabitCompletionRepository,
+  HabitRepository,
+} from "../../modules/habits/infra/repository.server";
 import { HabitService } from "../../modules/habits/application/service";
 import { Day, today } from "../../time";
 import type { Route } from "./+types/index";
-import "./index.css";
+import { 
+  Box, 
+  Heading, 
+  Button, 
+  Text, 
+  Flex, 
+  Card,
+  Grid,
+  Callout,
+  Badge
+} from "@radix-ui/themes";
+import { PlusIcon, Pencil1Icon } from "@radix-ui/react-icons";
 
 export async function loader() {
   const habits = await HabitRepository.fetchActive();
@@ -94,30 +108,42 @@ export default function HabitsPage({
 
   const isSubmitting = navigation.state === "submitting";
 
+  const getStreakColor = (streak: number): "blue" | "red" | "orange" | "gray" => {
+    if (streak >= 90) return "blue";
+    if (streak >= 30) return "red";
+    if (streak >= 7) return "orange";
+    return "gray";
+  };
+
   return (
-    <div className="page habits-page">
-      <header className="page-header">
-        <h1>Habits</h1>
-        <Link to="/habits/new" className="button button-primary">
-          New Habit
-        </Link>
-      </header>
+    <Box>
+      <Flex justify="between" align="center" mb="6">
+        <Heading size="7">Habits</Heading>
+        <Button asChild>
+          <Link to="/habits/new">
+            <PlusIcon />
+            New Habit
+          </Link>
+        </Button>
+      </Flex>
 
       {"error" in (actionData ?? {}) && (
-        <div className="error-message">
-          {(actionData as { error: string }).error}
-        </div>
+        <Callout.Root color="red" mb="4">
+          <Callout.Text>
+            {(actionData as { error: string }).error}
+          </Callout.Text>
+        </Callout.Root>
       )}
 
-      <section className="today-habits">
-        <h2>Today's Habits</h2>
-        <div className="habit-list">
+      <Box mb="8">
+        <Heading size="5" mb="4">Today's Habits</Heading>
+        <Flex direction="column" gap="2">
           {habits.filter((habit) => HabitService.isDueOn(habit, today()))
             .length === 0 ? (
-            <div className="empty-state">
-              <p>No habits scheduled for today.</p>
-              <p>Create your first habit to get started!</p>
-            </div>
+            <Box p="6" style={{ textAlign: "center" }}>
+              <Text color="gray">No habits scheduled for today.</Text>
+              <Text color="gray">Create your first habit to get started!</Text>
+            </Box>
           ) : (
             habits
               .filter((habit) => HabitService.isDueOn(habit, today()))
@@ -129,7 +155,6 @@ export default function HabitsPage({
                   <Form
                     method="post"
                     key={habit.id}
-                    className="habit-form mb-1"
                   >
                     <HabitCheckbox
                       habitId={habit.id}
@@ -144,91 +169,79 @@ export default function HabitsPage({
                 );
               })
           )}
-        </div>
-      </section>
+        </Flex>
+      </Box>
 
-      <section className="all-habits">
-        <h2>All Habits</h2>
-        <div className="grid habit-grid">
-          {habits.length === 0 ? (
-            <div className="empty-state-full">
-              <div className="empty-icon">📝</div>
-              <h3>No habits yet</h3>
-              <p>Start building better habits by creating your first one.</p>
-              <Link to="/habits/new" className="button button-primary">
-                Create Your First Habit
-              </Link>
-            </div>
-          ) : (
-            habits.map((habit) => {
+      <Box>
+        <Heading size="5" mb="4">All Habits</Heading>
+        {habits.length === 0 ? (
+          <Card size="4" style={{ textAlign: "center" }}>
+            <Text size="6" mb="4">📝</Text>
+            <Heading size="4" mb="2">No habits yet</Heading>
+            <Text color="gray" mb="4">Start building better habits by creating your first one.</Text>
+            <Button asChild>
+              <Link to="/habits/new">Create Your First Habit</Link>
+            </Button>
+          </Card>
+        ) : (
+          <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="4">
+            {habits.map((habit) => {
               const habitStreak = habitStreaks.get(habit.id) ?? 0;
-              const getStreakColorClass = (streak: number): string => {
-                if (streak >= 90) return "streak-blue";
-                if (streak >= 30) return "streak-red";
-                if (streak >= 7) return "streak-orange";
-                return "streak-gray";
-              };
 
               return (
-                <div key={habit.id} className="card habit-card">
-                  <div className="card-header habit-card-header">
-                    <h3>{habit.name}</h3>
-                    <div className="card-header-right">
+                <Card key={habit.id} size="3">
+                  <Flex justify="between" align="start" mb="2">
+                    <Heading size="4">{habit.name}</Heading>
+                    <Flex gap="2" align="center">
                       {habitStreak > 0 && (
-                        <span
-                          className={`streak-counter ${getStreakColorClass(habitStreak)}`}
-                        >
+                        <Badge color={getStreakColor(habitStreak)} variant="soft">
                           🔥 {habitStreak} {habitStreak === 1 ? "day" : "days"}
-                        </span>
+                        </Badge>
                       )}
-                      <Link
-                        to={`/habits/${habit.id}/edit`}
-                        className="edit-link"
-                      >
-                        Edit
-                      </Link>
-                    </div>
-                  </div>
-                  {habit.description && <p>{habit.description}</p>}
-                  <div className="habit-meta">
-                    <span className="frequency">
-                      {habit.frequencyType === "daily" && "Every day"}
-                      {habit.frequencyType === "weekly" &&
-                        habit.frequencyConfig.days_of_week && (
-                          <>
-                            {habit.frequencyConfig.days_of_week.length}{" "}
-                            days/week
-                            <span className="days-detail">
-                              {" "}
-                              (
-                              {Day.sortDays(habit.frequencyConfig.days_of_week)
-                                .map(Day.toShort)
-                                .join(", ")}
-                              )
-                            </span>
-                          </>
-                        )}
-                      {habit.frequencyType === "monthly" && "Monthly"}
-                      {habit.frequencyType === "custom" &&
-                        habit.frequencyConfig.days_of_week && (
-                          <>
-                            Custom:{" "}
-                            {Day.sortDays(habit.frequencyConfig.days_of_week)
-                              .map(Day.toShort)
-                              .join(", ")}
-                          </>
-                        )}
-                      {habit.frequencyType === "custom" &&
-                        !habit.frequencyConfig.days_of_week &&
-                        "Custom schedule"}
-                    </span>
-                  </div>
-                </div>
+                      <Button asChild variant="ghost" size="1">
+                        <Link to={`/habits/${habit.id}/edit`}>
+                          <Pencil1Icon />
+                        </Link>
+                      </Button>
+                    </Flex>
+                  </Flex>
+                  
+                  {habit.description && (
+                    <Text color="gray" size="2" mb="3" style={{ display: "block" }}>
+                      {habit.description}
+                    </Text>
+                  )}
+                  
+                  <Text size="2" color="gray">
+                    {habit.frequencyType === "daily" && "Every day"}
+                    {habit.frequencyType === "weekly" &&
+                      habit.frequencyConfig.days_of_week && (
+                        <>
+                          {habit.frequencyConfig.days_of_week.length} days/week{" "}
+                          ({Day.sortDays(habit.frequencyConfig.days_of_week)
+                            .map(Day.toShort)
+                            .join(", ")})
+                        </>
+                      )}
+                    {habit.frequencyType === "monthly" && "Monthly"}
+                    {habit.frequencyType === "custom" &&
+                      habit.frequencyConfig.days_of_week && (
+                        <>
+                          Custom: {Day.sortDays(habit.frequencyConfig.days_of_week)
+                            .map(Day.toShort)
+                            .join(", ")}
+                        </>
+                      )}
+                    {habit.frequencyType === "custom" &&
+                      !habit.frequencyConfig.days_of_week &&
+                      "Custom schedule"}
+                  </Text>
+                </Card>
               );
-            })
-          )}
-        </div>
-      </section>
-    </div>
+            })}
+          </Grid>
+        )}
+      </Box>
+    </Box>
   );
 }

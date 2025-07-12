@@ -1,4 +1,5 @@
-import "./HabitCheckbox.css";
+import { Flex, Button, Text, Badge } from "@radix-ui/themes";
+import { CheckIcon } from "@radix-ui/react-icons";
 
 interface HabitCheckboxProps {
   readonly habitId: string;
@@ -19,40 +20,62 @@ export default function HabitCheckbox({
   intent = "toggle-habit",
   streak = 0,
 }: HabitCheckboxProps) {
-  const getStreakColorClass = (streak: number): string => {
-    if (streak >= 90) return "streak-blue";
-    if (streak >= 30) return "streak-red";
-    if (streak >= 7) return "streak-orange";
-    return "streak-gray";
+  const getStreakColor = (streak: number): "blue" | "red" | "orange" | "gray" => {
+    if (streak >= 90) return "blue";
+    if (streak >= 30) return "red";
+    if (streak >= 7) return "orange";
+    return "gray";
   };
 
   return (
-    <div className="checkbox-wrapper">
+    <Flex align="center" gap="3" p="3" style={{ 
+      borderRadius: "var(--radius-3)", 
+      border: "1px solid var(--gray-6)",
+      backgroundColor: "var(--color-surface)"
+    }}>
       <input type="hidden" name="intent" value={intent} />
       <input type="hidden" name="habitId" value={habitId} />
       <input type="hidden" name="completed" value={String(isCompleted)} />
-      <button
+      
+      <Button
         type="submit"
-        className={`checkbox-button ${isCompleted ? 'checked' : ''}`}
+        variant={isCompleted ? "solid" : "outline"}
+        color={isCompleted ? "green" : "gray"}
+        size="2"
+        style={{ 
+          width: "28px", 
+          height: "28px", 
+          flexShrink: 0,
+          padding: 0 
+        }}
         disabled={isSubmitting}
       >
-        {isCompleted && "✓"}
-      </button>
-      <div className="habit-content">
-        <span className={`checkbox-label ${isCompleted ? 'checked' : ''}`}>
+        {isCompleted && <CheckIcon />}
+      </Button>
+      
+      <Flex direction="column" flexGrow="1">
+        <Text 
+          size="3" 
+          weight="medium" 
+          style={{ 
+            textDecoration: isCompleted ? "line-through" : "none",
+            color: isCompleted ? "var(--gray-9)" : "var(--gray-12)"
+          }}
+        >
           {habitName}
-        </span>
+        </Text>
         {habitDescription && (
-          <span className="habit-description text-small text-muted">
-            - {habitDescription}
-          </span>
+          <Text size="2" color="gray">
+            {habitDescription}
+          </Text>
         )}
-      </div>
+      </Flex>
+      
       {streak > 0 && (
-        <span className={`streak-counter ${getStreakColorClass(streak)}`}>
-          🔥 {streak} {streak === 1 ? 'day' : 'days'}
-        </span>
+        <Badge color={getStreakColor(streak)} variant="soft">
+          🔥 {streak} {streak === 1 ? "day" : "days"}
+        </Badge>
       )}
-    </div>
+    </Flex>
   );
 }
