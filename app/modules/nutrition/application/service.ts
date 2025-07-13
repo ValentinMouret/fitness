@@ -22,4 +22,8 @@ export const TargetService = {
       return result.value;
     });
   },
+
+  async currentTargets() {
+    return TargetRepository.listAllActive();
+  },
 };
