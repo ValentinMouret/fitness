@@ -13,6 +13,7 @@ import {
   fetchSingleRecord,
   type ErrRepository,
   type ErrValidation,
+  type Transaction,
 } from "./repository";
 import { addOneDay, isSameDay, removeOneDay, today } from "./time";
 
@@ -45,9 +46,9 @@ export const MeasurementRepository = {
       .andThen((record) => recordToMeasurement(record));
   },
 
-  save(self: Measurement) {
+  save(self: Measurement, tx?: Transaction) {
     return ResultAsync.fromPromise(
-      db
+      (tx ?? db)
         .insert(measurements)
         .values(self)
         .onConflictDoUpdate({
@@ -191,5 +192,13 @@ export const MeasurementService = {
         return ok(streak);
       });
     });
+  },
+};
+
+export const baseMeasurements: Record<string, Measurement> = {
+  dailyCalorieIntake: {
+    name: "daily_calorie_intake",
+    unit: "Cal",
+    description: "Average daily calories to eat.",
   },
 };

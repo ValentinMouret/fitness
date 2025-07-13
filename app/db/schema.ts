@@ -1,5 +1,7 @@
+import { isNull } from "drizzle-orm";
 import {
   boolean,
+  check,
   date,
   doublePrecision,
   integer,
@@ -8,6 +10,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -61,4 +64,21 @@ export const habit_completions = pgTable(
     ...timestampColumns(),
   },
   (table) => [primaryKey({ columns: [table.habit_id, table.completion_date] })],
+);
+
+export const targets = pgTable(
+  "targets",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    measurement_name: text()
+      .references(() => measurements.name)
+      .notNull(),
+    value: doublePrecision().notNull(),
+    ...timestampColumns(),
+  },
+  (table) => [
+    uniqueIndex("idx_targets_measurement_active")
+      .on(table.measurement_name)
+      .where(isNull(table.deleted_at)),
+  ],
 );

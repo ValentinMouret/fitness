@@ -1,10 +1,13 @@
 import { err, ok, type Result, ResultAsync } from "neverthrow";
+import type { db } from "./db";
 
 export type ErrDatabase = "database_error";
 export type ErrNotFound = "not_found";
 export type ErrValidation = "validation_error";
 
 export type ErrRepository = ErrDatabase | ErrNotFound | ErrValidation;
+
+export type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 export const executeQuery = <T>(
   queryPromise: Promise<T>,
