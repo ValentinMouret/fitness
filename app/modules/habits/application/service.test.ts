@@ -18,7 +18,7 @@ const createHabit = (overrides?: Partial<Habit>): Habit => ({
 
 const createCompletion = (date: string, completed = true): HabitCompletion => ({
   habitId: "habit-1",
-  completionDate: new Date(date + "T00:00:00.000Z"),
+  completionDate: new Date(`${date}T00:00:00.000Z`),
   completed,
   notes: undefined,
 });

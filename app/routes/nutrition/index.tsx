@@ -1,4 +1,5 @@
 import {
+  AlertDialog,
   Badge,
   Button,
   Card,
@@ -11,6 +12,7 @@ import {
   TextField,
 } from "@radix-ui/themes";
 import { Result } from "neverthrow";
+import { useState } from "react";
 import { Form } from "react-router";
 import MacrosChart from "~/components/MacrosChart";
 import { Age, Height, Weight } from "~/modules/core/domain/measurements";
@@ -62,7 +64,12 @@ export async function loader({ request }: Route.LoaderArgs) {
     .unwrapOr(undefined);
 }
 
-export default function NutritionPage({ loaderData }: Route.ComponentProps) {
+export default function NutritionPage({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
+  const [modalClosed, setModalClosed] = useState(false);
+
   return (
     <Container size="3" p="6">
       <Heading size="8" mb="6">
@@ -260,6 +267,26 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
           </Flex>
         </>
       )}
+
+      <AlertDialog.Root
+        open={!!actionData?.success && !modalClosed}
+        onOpenChange={(open) => !open && setModalClosed(true)}
+      >
+        <AlertDialog.Content>
+          <AlertDialog.Title>Success!</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            Your nutrition target has been saved successfully.
+          </AlertDialog.Description>
+
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Close
+              </Button>
+            </AlertDialog.Cancel>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </Container>
   );
 }
@@ -295,5 +322,5 @@ export async function action({ request }: Route.ActionArgs) {
     throw new Error(result.error);
   }
 
-  return;
+  return { success: true };
 }

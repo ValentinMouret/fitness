@@ -60,7 +60,7 @@ export const HabitService = {
     let streak = 0;
     // Create a new date from the endDate's date string to ensure we start from the correct day
     const endDateStr = endDate.toISOString().split("T")[0];
-    let currentDate = new Date(endDateStr + "T00:00:00.000Z");
+    let currentDate = new Date(`${endDateStr}T00:00:00.000Z`);
 
     // Create a map of completion dates for faster lookup
     const completionMap = new Map<string, boolean>();
@@ -71,7 +71,7 @@ export const HabitService = {
 
     // Work backwards from endDate
     const habitStartDateStr = habit.startDate.toISOString().split("T")[0];
-    const habitStartDate = new Date(habitStartDateStr + "T00:00:00.000Z");
+    const habitStartDate = new Date(`${habitStartDateStr}T00:00:00.000Z`);
 
     while (currentDate >= habitStartDate) {
       const dateStr = currentDate.toISOString().split("T")[0];
