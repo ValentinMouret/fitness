@@ -8,8 +8,6 @@ import {
   Flex,
   Grid,
   Heading,
-  Text,
-  TextField,
 } from "@radix-ui/themes";
 import { Result } from "neverthrow";
 import { useState } from "react";
@@ -21,8 +19,9 @@ import { NutritionService } from "~/modules/nutrition/domain/nutrition-service";
 import { coerceFloat, coerceInt, expect } from "~/utils";
 import type { Route } from "./+types";
 import { Target } from "~/modules/core/domain/target";
-import { baseMeasurements, type Measurement } from "~/measurements";
+import { baseMeasurements } from "~/measurements";
 import { TargetService } from "~/modules/nutrition/application/service";
+import MaintenanceForm from "./MaintenanceForm";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -76,98 +75,13 @@ export default function NutritionPage({
         Nutrition
       </Heading>
 
-      <Card size="3" mb="6">
-        <Heading size="5" mb="4">
-          Calculate Maintenance Calories
-        </Heading>
-
-        <Form>
-          <Flex direction="column" gap="4">
-            <Flex direction="column" gap="2">
-              <Text as="label" size="2" weight="medium">
-                Age
-              </Text>
-              <TextField.Root
-                name="age"
-                type="number"
-                defaultValue={loaderData?.age ?? 30}
-                min={10}
-                step={1}
-                placeholder="30"
-              />
-            </Flex>
-
-            <Flex direction="column" gap="2">
-              <Text as="label" size="2" weight="medium">
-                Height (cm)
-              </Text>
-              <TextField.Root
-                name="height"
-                type="number"
-                defaultValue={loaderData?.height ?? 180}
-                min={0}
-                step={1}
-                placeholder="180"
-              />
-            </Flex>
-
-            <Flex direction="column" gap="2">
-              <Text as="label" size="2" weight="medium">
-                Weight (kg)
-              </Text>
-              <TextField.Root
-                name="weight"
-                type="number"
-                defaultValue={loaderData?.weight ?? 70}
-                min={0}
-                step={1}
-                placeholder="70"
-              />
-            </Flex>
-
-            <Flex direction="column" gap="2">
-              <Text as="label" size="2" weight="medium">
-                Activity Level
-              </Text>
-              <TextField.Root
-                name="activity"
-                type="number"
-                defaultValue={loaderData?.activity ?? 1.4}
-                step={0.1}
-                min={0.8}
-                max={2.0}
-                placeholder="1.4"
-              />
-              <Text size="1" color="gray">
-                Sedentary: 1.2 • Light activity: 1.4 • Moderate: 1.6 • Very
-                active: 1.8
-              </Text>
-            </Flex>
-
-            <Flex direction="column" gap="2">
-              <Text as="label" size="2" weight="medium">
-                Target Deficit/Surplus (%)
-              </Text>
-              <TextField.Root
-                name="delta"
-                type="number"
-                defaultValue={loaderData?.delta ?? 0}
-                min={-15}
-                max={15}
-                step={1}
-                placeholder="0"
-              />
-              <Text size="1" color="gray">
-                Negative for weight loss (e.g., -10%), positive for weight gain
-              </Text>
-            </Flex>
-
-            <Button type="submit" size="3" mt="2">
-              Calculate
-            </Button>
-          </Flex>
-        </Form>
-      </Card>
+      <MaintenanceForm
+        age={loaderData?.age}
+        height={loaderData?.height}
+        weight={loaderData?.weight}
+        activity={loaderData?.activity}
+        delta={loaderData?.delta}
+      />
 
       {loaderData?.maintenance && (
         <>
