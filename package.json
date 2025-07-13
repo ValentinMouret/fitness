@@ -10,7 +10,7 @@
     "db:seed": "tsx app/db/index.ts",
     "dev": "react-router dev",
     "fmt": "biome format --write",
-    "lint": "biome lint --write",
+    "lint": "biome lint --write ./app",
     "start": "react-router-serve ./build/server/index.js",
     "tc": "pnpm run typecheck",
     "tc:watch": "nodemon --exec 'pnpm tc' --watch src --ext ts,tsx,js,jsx",
