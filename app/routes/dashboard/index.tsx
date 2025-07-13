@@ -1,4 +1,4 @@
-import { ok, ResultAsync } from "neverthrow";
+import { ResultAsync } from "neverthrow";
 import {
   Measure,
   MeasurementRepository,
