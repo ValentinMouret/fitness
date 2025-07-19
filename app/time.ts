@@ -15,7 +15,6 @@ export const Day = {
     return days.toSorted((a, b) => allDays.indexOf(a) - allDays.indexOf(b));
   },
 
-  // From `Date.getDay()`
   fromNumber(num: number): Day {
     // Sunday is 0 in JS, but Sunday is at index 6 in our array
     const adjustedNum = num === 0 ? 6 : num - 1;
