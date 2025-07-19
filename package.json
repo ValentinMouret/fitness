@@ -50,5 +50,8 @@
     "vite": "^6.3.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.2"
+  },
+  "engines": {
+    "node": ">22.0.0"
   }
 }
