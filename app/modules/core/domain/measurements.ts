@@ -1,3 +1,9 @@
+export interface Measurement {
+  readonly name: string;
+  readonly unit: string;
+  readonly description?: string;
+}
+
 // Weight throughout the app should be in kg.
 export const Weight = {
   kg(input: number): number {
@@ -25,5 +31,13 @@ export const Age = {
     }
 
     return input;
+  },
+};
+
+export const baseMeasurements: Record<string, Measurement> = {
+  dailyCalorieIntake: {
+    name: "daily_calorie_intake",
+    unit: "Cal",
+    description: "Average daily calories to eat.",
   },
 };

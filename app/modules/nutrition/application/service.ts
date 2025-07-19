@@ -1,5 +1,6 @@
 import { db } from "~/db";
-import { baseMeasurements, MeasurementRepository } from "~/measurements";
+import { baseMeasurements } from "~/modules/core/domain/measurements";
+import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
 import type { Target } from "~/modules/core/domain/target";
 import { TargetRepository } from "~/modules/core/infra/repository";
 

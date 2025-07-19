@@ -9,11 +9,8 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
-import {
-  executeQuery,
-  type ErrValidation,
-  type Transaction,
-} from "~/repository";
+import type { ErrValidation } from "~/repository";
+import { executeQuery, type Transaction } from "~/repository.server";
 
 export const TargetRepository = {
   save(target: Target, tx?: Transaction) {

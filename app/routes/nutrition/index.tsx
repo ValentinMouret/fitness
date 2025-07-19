@@ -1,8 +1,8 @@
 import { Container, Heading, Link as RadixLink } from "@radix-ui/themes";
 import { TargetService } from "~/modules/nutrition/application/service";
 import type { Route } from "./+types";
-import { baseMeasurements } from "~/measurements";
 import { Link as RouterLink } from "react-router";
+import { baseMeasurements } from "~/modules/core/domain/measurements";
 
 export async function loader() {
   const activeTargets = await TargetService.currentTargets();

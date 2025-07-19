@@ -1,10 +1,6 @@
 import { ResultAsync } from "neverthrow";
-import {
-  Measure,
-  MeasurementRepository,
-  MeasurementService,
-  MeasureRepository,
-} from "~/measurements";
+import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
+import { Measure } from "~/modules/core/domain/measure";
 import { HabitCompletion } from "~/modules/habits/domain/entity";
 import {
   HabitRepository,
@@ -27,6 +23,8 @@ import {
   Card,
   Badge,
 } from "@radix-ui/themes";
+import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
+import { MeasurementService } from "~/modules/core/application/measurement-service";
 
 export async function loader() {
   const now = new Date();

@@ -22,7 +22,7 @@ import MacrosChart from "~/components/MacrosChart";
 import { Form, Link } from "react-router";
 import { useState } from "react";
 import { Target } from "~/modules/core/domain/target";
-import { baseMeasurements } from "~/measurements";
+import { baseMeasurements } from "~/modules/core/domain/measurements";
 import { TargetService } from "~/modules/nutrition/application/service";
 
 export async function loader({ request }: Route.LoaderArgs) {

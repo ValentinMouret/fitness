@@ -13,12 +13,8 @@ import {
 import { Result, ResultAsync, err, ok } from "neverthrow";
 import { db } from "../../../db";
 import { habit_completions, habits } from "../../../db/schema";
-import {
-  executeQuery,
-  fetchSingleRecord,
-  type ErrRepository,
-  type ErrValidation,
-} from "../../../repository";
+import type { ErrRepository, ErrValidation } from "../../../repository";
+import { executeQuery, fetchSingleRecord } from "../../../repository.server";
 import { today } from "../../../time";
 import type { Habit, HabitCompletion } from "../domain/entity";
 
