@@ -28,3 +28,11 @@ export function expect<T>(v: T | undefined | null): T {
 export function pprint(o: object) {
   console.dir(o, { depth: null });
 }
+
+export function isClient(): boolean {
+  return typeof document !== "undefined";
+}
+
+export function isServer(): boolean {
+  return !isClient();
+}

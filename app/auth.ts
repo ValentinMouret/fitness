@@ -1,4 +1,5 @@
 import { redirect } from "react-router";
+import { isServer } from "./utils";
 
 export interface User {
   readonly username: string;
@@ -8,7 +9,7 @@ const SESSION_KEY = "fitness-rr-auth";
 const COOKIE_NAME = "fitness-rr-session";
 
 function getCookie(name: string, cookieString?: string): string | null {
-  if (typeof document === "undefined" && !cookieString) {
+  if (isServer() && !cookieString) {
     return null;
   }
 
@@ -23,56 +24,54 @@ function getCookie(name: string, cookieString?: string): string | null {
 }
 
 function setCookie(name: string, value: string, days = 7): void {
-  if (typeof document !== "undefined") {
-    const expires = new Date(
-      Date.now() + days * 24 * 60 * 60 * 1000,
-    ).toUTCString();
-    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Strict`;
+  if (isServer()) {
+    return;
   }
+
+  const expires = new Date(
+    Date.now() + days * 24 * 60 * 60 * 1000,
+  ).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Strict`;
 }
 
 function deleteCookie(name: string): void {
-  if (typeof document !== "undefined") {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-  }
+  if (isServer()) return;
+
+  document.cookie = `${name}=; expires=0; path=/;`;
 }
 
 export function getUser(request?: Request): User | null {
   const cookieHeader = request?.headers.get("Cookie");
-  const sessionCookie = getCookie(COOKIE_NAME, cookieHeader || undefined);
+  const sessionCookie = getCookie(COOKIE_NAME, cookieHeader ?? undefined);
 
   if (sessionCookie) {
     try {
       return JSON.parse(sessionCookie);
-    } catch {
-      // Invalid cookie data
+    } catch (err) {
+      console.error("Failed to parse session cookie", err);
     }
   }
 
-  // Fallback to sessionStorage (client-side only)
-  if (typeof window !== "undefined") {
-    const stored = sessionStorage.getItem(SESSION_KEY);
-    return stored ? JSON.parse(stored) : null;
-  }
+  if (isServer()) return null;
 
-  return null;
+  const stored = sessionStorage.getItem(SESSION_KEY);
+  return stored ? JSON.parse(stored) : null;
 }
 
 export function setUser(user: User): void {
-  // Set both cookie and sessionStorage
   setCookie(COOKIE_NAME, JSON.stringify(user));
 
-  if (typeof window !== "undefined") {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
-  }
+  if (isServer()) return;
+
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
 }
 
 export function clearUser(): void {
   deleteCookie(COOKIE_NAME);
 
-  if (typeof window !== "undefined") {
-    sessionStorage.removeItem(SESSION_KEY);
-  }
+  if (isServer()) return;
+
+  sessionStorage.removeItem(SESSION_KEY);
 }
 
 export function authenticate(username: string, password: string): boolean {
