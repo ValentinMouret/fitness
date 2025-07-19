@@ -18,6 +18,11 @@ export default [
         "routes/nutrition/calculate-targets/index.tsx",
       ),
       route("workouts", "routes/workouts/index.tsx"),
+      route("workouts/exercises", "routes/workouts/exercises/index.tsx"),
+      route(
+        "workouts/exercises/create",
+        "routes/workouts/exercises/create.tsx",
+      ),
       route("habits", "routes/habits/index.tsx"),
       route("habits/new", "routes/habits/new.tsx"),
       route("habits/:id/edit", "routes/habits/edit.tsx"),
