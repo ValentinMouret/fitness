@@ -74,11 +74,11 @@ export default function CalculateTargetsPage({
   return (
     <Container size="3" p="6">
       <Flex align="center" gap="4" mb="6">
-        <Link to="/nutrition">
-          <IconButton size="3" variant="ghost">
+        <IconButton asChild size="3" variant="ghost">
+          <Link to="/nutrition">
             <ArrowLeftIcon />
-          </IconButton>
-        </Link>
+          </Link>
+        </IconButton>
         <Heading size="8">Nutrition</Heading>
       </Flex>
 

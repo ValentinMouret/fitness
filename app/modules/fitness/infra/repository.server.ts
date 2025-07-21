@@ -4,6 +4,7 @@ import {
   ExerciseMuscleGroupsAggregate,
   type Exercise,
   type ExerciseMuscleGroups,
+  type ExerciseType,
   type MuscleGroupSplit,
 } from "../domain/workout";
 import { exerciseMuscleGroups, exercises } from "~/db/schema";
@@ -50,6 +51,11 @@ function exerciseRecordToDomain(
   };
 }
 
+interface Filters {
+  type?: ExerciseType;
+  q?: string;
+}
+
 export const ExerciseMuscleGroupsRepository = {
   save({ exercise, muscleGroupSplits }: ExerciseMuscleGroups) {
     return ResultAsync.fromPromise(
@@ -91,7 +97,10 @@ export const ExerciseMuscleGroupsRepository = {
       },
     );
   },
-  listAll(): ResultAsync<ExerciseMuscleGroups[], ErrRepository> {
+  // TODO(vm): move conditional filter to query
+  listAll(
+    filters: Filters = {},
+  ): ResultAsync<ExerciseMuscleGroups[], ErrRepository> {
     const query = db
       .select()
       .from(exercises)
@@ -119,6 +128,17 @@ export const ExerciseMuscleGroupsRepository = {
         })
         .values()
         .filter((v) => v !== undefined)
+        .filter((v) => {
+          if (filters.type) {
+            return v.exercise.type === filters.type;
+          }
+          if (filters.q) {
+            return v.exercise.name
+              .toLocaleLowerCase()
+              .includes(filters.q.toLocaleLowerCase());
+          }
+          return true;
+        })
         .value(),
     );
   },
