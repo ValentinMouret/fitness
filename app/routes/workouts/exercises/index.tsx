@@ -1,6 +1,5 @@
 import {
   Button,
-  Card,
   Container,
   Flex,
   Heading,
@@ -13,10 +12,9 @@ import type { Route } from "./+types";
 import {
   exerciseTypes,
   parseExerciseType,
-  type ExerciseMuscleGroups,
 } from "~/modules/fitness/domain/workout";
 import { Form, Link, useSearchParams } from "react-router";
-import ExerciseTypeBadge from "~/components/ExerciseTypeBadge";
+import ExerciseCard from "~/components/ExerciseCard";
 import { humanFormatting } from "~/strings";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 
@@ -40,35 +38,6 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 };
 
 export const action = () => {};
-
-interface ExerciseCardProps {
-  readonly exerciseMuscleGroup: ExerciseMuscleGroups;
-}
-
-export function ExerciseCard({
-  exerciseMuscleGroup: { exercise, muscleGroupSplits },
-}: ExerciseCardProps) {
-  return (
-    <Card>
-      <Flex direction="column">
-        <Flex gap="2" align="center">
-          <ExerciseTypeBadge type={exercise.type} />
-          <Text weight="bold">{exercise.name}</Text>
-        </Flex>
-        <Text color="gray">{exercise.description ?? "No description yet"}</Text>
-        <Flex direction="row" gap="3">
-          {muscleGroupSplits
-            .toSorted((a, b) => b.split - a.split)
-            .map(({ muscleGroup, split }) => (
-              <Text key={muscleGroup}>
-                {humanFormatting(muscleGroup)} ({split}%)
-              </Text>
-            ))}
-        </Flex>
-      </Flex>
-    </Card>
-  );
-}
 
 export default function ExercisesIndexPage({
   loaderData,
