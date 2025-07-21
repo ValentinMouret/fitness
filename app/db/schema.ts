@@ -88,19 +88,28 @@ export const targets = pgTable(
 // Workouts
 export const exerciseType = pgEnum("exercise_type", exerciseTypes);
 
-export const exercises = pgTable("exercises", {
-  name: text().primaryKey(),
-  description: text(),
-  type: exerciseType().notNull(),
-  ...timestampColumns(),
-});
+export const exercises = pgTable(
+  "exercises",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    name: text().notNull(),
+    description: text(),
+    type: exerciseType().notNull(),
+    ...timestampColumns(),
+  },
+  (table) => [
+    uniqueIndex("exercises_name_type_unique_idx")
+      .on(table.name, table.type)
+      .where(isNull(table.deleted_at)),
+  ],
+);
 
 export const muscleGroupsEnum = pgEnum("muscle_group", muscleGroups);
 export const exerciseMuscleGroups = pgTable(
   "exercise_muscle_groups",
   {
-    exercise: text()
-      .references(() => exercises.name)
+    exercise: uuid()
+      .references(() => exercises.id)
       .notNull(),
     muscle_group: muscleGroupsEnum().notNull(),
     split: integer().notNull(),
@@ -129,8 +138,8 @@ export const workoutSets = pgTable(
     workout: uuid()
       .references(() => workouts.id)
       .notNull(),
-    exercise: text()
-      .references(() => exercises.name)
+    exercise: uuid()
+      .references(() => exercises.id)
       .notNull(),
     set: integer().notNull(),
     targetReps: integer(),

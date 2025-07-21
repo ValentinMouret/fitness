@@ -15,8 +15,8 @@ export const ExerciseService = {
 
     return ResultAsync.fromPromise(
       db.transaction(async (tx) => {
-        const deleteResult = await ExerciseMuscleGroupsRepository.delete(
-          oldExercise.exercise.name,
+        const deleteResult = await ExerciseMuscleGroupsRepository.deleteById(
+          oldExercise.exercise.id,
         );
         if (deleteResult.isErr()) {
           throw new Error("Failed to delete old exercise");

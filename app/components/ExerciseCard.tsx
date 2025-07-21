@@ -55,9 +55,7 @@ export default function ExerciseCard({
               asChild
               onClick={(e) => e.stopPropagation()}
             >
-              <Link
-                to={`/workouts/exercises/${encodeURIComponent(exercise.name)}/edit`}
-              >
+              <Link to={`/workouts/exercises/${exercise.id}/edit`}>
                 <Pencil1Icon />
               </Link>
             </IconButton>
@@ -127,7 +125,7 @@ export default function ExerciseCard({
               </Button>
             </AlertDialog.Cancel>
             <fetcher.Form method="post" action="/workouts/exercises">
-              <input type="hidden" name="exerciseName" value={exercise.name} />
+              <input type="hidden" name="exerciseId" value={exercise.id} />
               <Button
                 type="submit"
                 color="red"

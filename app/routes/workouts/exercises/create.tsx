@@ -58,7 +58,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
   }
 
   const exercise: Exercise = {
-    name: `${humanFormatting(exerciseName)} (${humanFormatting(exerciseType.value)})`,
+    name: humanFormatting(exerciseName),
     type: exerciseType.value,
     description: coerceEmpty(exerciseDescription ?? ""),
   };

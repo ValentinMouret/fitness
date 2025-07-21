@@ -60,6 +60,7 @@ export function parseExerciseType(
 }
 
 export interface Exercise {
+  readonly id: string;
   readonly name: string;
   readonly type: ExerciseType;
   readonly description?: string;

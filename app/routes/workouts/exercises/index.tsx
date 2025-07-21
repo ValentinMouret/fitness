@@ -39,13 +39,13 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 
 export const action = async ({ request }: Route.ActionArgs) => {
   const formData = await request.formData();
-  const exerciseName = formData.get("exerciseName")?.toString();
+  const exerciseId = formData.get("exerciseId")?.toString();
 
-  if (!exerciseName) {
-    throw new Error("Exercise name is required");
+  if (!exerciseId) {
+    throw new Error("Exercise ID is required");
   }
 
-  const result = await ExerciseMuscleGroupsRepository.delete(exerciseName);
+  const result = await ExerciseMuscleGroupsRepository.deleteById(exerciseId);
 
   if (result.isErr()) {
     throw new Error("Failed to delete exercise");
@@ -110,7 +110,7 @@ export default function ExercisesIndexPage({
         <Flex direction="column" pt="4" gap="2">
           {allExercises.map((exercise) => (
             <ExerciseCard
-              key={exercise.exercise.name}
+              key={exercise.exercise.id}
               exerciseMuscleGroup={exercise}
             />
           ))}

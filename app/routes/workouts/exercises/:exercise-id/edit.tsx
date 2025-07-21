@@ -15,15 +15,14 @@ import { coerceInt } from "~/utils";
 import type { Route } from "./+types/edit";
 
 export const loader = async ({ params }: Route.LoaderArgs) => {
-  const exerciseName = params["exercise-name"];
+  const exerciseId = params["exercise-id"];
 
-  if (!exerciseName) {
-    throw new Error("Exercise name is required");
+  if (!exerciseId) {
+    throw new Error("Exercise ID is required");
   }
 
-  const decodedName = decodeURIComponent(exerciseName);
   const exerciseResult =
-    await ExerciseMuscleGroupsRepository.findByName(decodedName);
+    await ExerciseMuscleGroupsRepository.findById(exerciseId);
 
   if (exerciseResult.isErr()) {
     throw new Error("Error fetching exercise");
@@ -39,15 +38,14 @@ export const loader = async ({ params }: Route.LoaderArgs) => {
 };
 
 export const action = async ({ request, params }: Route.ActionArgs) => {
-  const exerciseName = params["exercise-name"];
+  const exerciseId = params["exercise-id"];
 
-  if (!exerciseName) {
-    throw new Error("Exercise name is required");
+  if (!exerciseId) {
+    throw new Error("Exercise ID is required");
   }
 
-  const decodedName = decodeURIComponent(exerciseName);
   const oldExerciseResult =
-    await ExerciseMuscleGroupsRepository.findByName(decodedName);
+    await ExerciseMuscleGroupsRepository.findById(exerciseId);
 
   if (oldExerciseResult.isErr()) {
     throw new Error("Error fetching original exercise");
@@ -101,7 +99,7 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
   }
 
   const exercise: Exercise = {
-    name: `${humanFormatting(exerciseNameForm)} (${humanFormatting(exerciseType.value)})`,
+    name: humanFormatting(exerciseNameForm),
     type: exerciseType.value,
     description: coerceEmpty(exerciseDescription ?? ""),
   };

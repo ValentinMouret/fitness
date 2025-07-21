@@ -11,7 +11,7 @@ import { exerciseMuscleGroups, exercises } from "~/db/schema";
 import { ResultAsync } from "neverthrow";
 import type { ErrDatabase, ErrRepository } from "~/repository";
 import { executeQuery } from "~/repository.server";
-import { eq, sql, type InferSelectModel } from "drizzle-orm";
+import { and, eq, type InferSelectModel } from "drizzle-orm";
 
 export const ExerciseRepository = {
   listAll(): ResultAsync<ReadonlyArray<Exercise>, ErrDatabase> {
@@ -27,7 +27,7 @@ export const ExerciseRepository = {
         .insert(exercises)
         .values(exercise)
         .onConflictDoUpdate({
-          target: exercises.name,
+          target: [exercises.name, exercises.type],
           set: {
             updated_at: new Date(),
             description: exercise.description ?? null,
@@ -45,6 +45,7 @@ function exerciseRecordToDomain(
   record: InferSelectModel<typeof exercises>,
 ): Exercise {
   return {
+    id: record.id,
     name: record.name,
     type: record.type,
     description: record.description ?? undefined,
@@ -57,17 +58,54 @@ interface Filters {
 }
 
 export const ExerciseMuscleGroupsRepository = {
-  findByName(
-    name: string,
+  findById(
+    id: string,
   ): ResultAsync<ExerciseMuscleGroups | null, ErrRepository> {
     const query = db
       .select()
       .from(exercises)
       .innerJoin(
         exerciseMuscleGroups,
-        eq(exercises.name, exerciseMuscleGroups.exercise),
+        eq(exercises.id, exerciseMuscleGroups.exercise),
       )
-      .where(eq(exercises.name, name));
+      .where(eq(exercises.id, id));
+
+    return executeQuery(query, "findById").map((records) => {
+      if (records.length === 0) {
+        return null;
+      }
+
+      const exercise: Exercise = exerciseRecordToDomain(records[0].exercises);
+      const muscleGroupSplits = records.map((row) =>
+        muscleGroupRecordToDomain(row.exercise_muscle_groups),
+      );
+
+      const result = ExerciseMuscleGroupsAggregate.create(
+        exercise,
+        muscleGroupSplits,
+      );
+
+      if (result.isErr()) {
+        console.error("Error deserializing exercise", result);
+        return null;
+      }
+
+      return result.value;
+    });
+  },
+
+  findByNameAndType(
+    name: string,
+    type: ExerciseType,
+  ): ResultAsync<ExerciseMuscleGroups | null, ErrRepository> {
+    const query = db
+      .select()
+      .from(exercises)
+      .innerJoin(
+        exerciseMuscleGroups,
+        eq(exercises.id, exerciseMuscleGroups.exercise),
+      )
+      .where(and(eq(exercises.name, name), eq(exercises.type, type)));
 
     return executeQuery(query, "findByName").map((records) => {
       if (records.length === 0) {
@@ -93,13 +131,51 @@ export const ExerciseMuscleGroupsRepository = {
     });
   },
 
-  delete(exerciseName: string): ResultAsync<void, ErrRepository> {
+  deleteById(exerciseId: string): ResultAsync<void, ErrRepository> {
     return ResultAsync.fromPromise(
       db.transaction(async (tx) => {
         await tx
           .delete(exerciseMuscleGroups)
-          .where(eq(exerciseMuscleGroups.exercise, exerciseName));
-        await tx.delete(exercises).where(eq(exercises.name, exerciseName));
+          .where(eq(exerciseMuscleGroups.exercise, exerciseId));
+        await tx.delete(exercises).where(eq(exercises.id, exerciseId));
+      }),
+      (err) => {
+        console.error(err);
+        return "database_error";
+      },
+    );
+  },
+
+  delete(
+    exerciseName: string,
+    exerciseType: ExerciseType,
+  ): ResultAsync<void, ErrRepository> {
+    return ResultAsync.fromPromise(
+      db.transaction(async (tx) => {
+        // First find the exercise ID by name and type
+        const exerciseRecord = await tx
+          .select({ id: exercises.id })
+          .from(exercises)
+          .where(
+            and(
+              eq(exercises.name, exerciseName),
+              eq(exercises.type, exerciseType),
+            ),
+          )
+          .limit(1);
+
+        if (exerciseRecord.length === 0) {
+          throw new Error(
+            `Exercise not found: ${exerciseName} (${exerciseType})`,
+          );
+        }
+
+        const exerciseId = exerciseRecord[0].id;
+
+        await tx
+          .delete(exerciseMuscleGroups)
+          .where(eq(exerciseMuscleGroups.exercise, exerciseId));
+        await tx.delete(exercises).where(eq(exercises.id, exerciseId));
       }),
       (err) => {
         console.error(err);
@@ -114,36 +190,54 @@ export const ExerciseMuscleGroupsRepository = {
   }: ExerciseMuscleGroups): ResultAsync<void, ErrRepository> {
     return ResultAsync.fromPromise(
       db.transaction(async (tx) => {
-        await tx
-          .insert(exercises)
-          .values(exercise)
-          .onConflictDoUpdate({
-            target: exercises.name,
-            set: {
-              ...exercise,
-              updated_at: new Date(),
-            },
-          });
+        // First try to find existing exercise
+        const exerciseResult = await tx
+          .select({ id: exercises.id })
+          .from(exercises)
+          .where(
+            and(
+              eq(exercises.name, exercise.name),
+              eq(exercises.type, exercise.type),
+            ),
+          )
+          .limit(1);
 
+        let exerciseId: string;
+
+        if (exerciseResult.length > 0) {
+          // Update existing exercise
+          exerciseId = exerciseResult[0].id;
+          await tx
+            .update(exercises)
+            .set({
+              description: exercise.description,
+              updated_at: new Date(),
+            })
+            .where(eq(exercises.id, exerciseId));
+        } else {
+          // Insert new exercise
+          const insertResult = await tx
+            .insert(exercises)
+            .values(exercise)
+            .returning({ id: exercises.id });
+          exerciseId = insertResult[0].id;
+        }
+
+        // Delete existing muscle group mappings for this exercise
         await tx
-          .insert(exerciseMuscleGroups)
-          .values(
+          .delete(exerciseMuscleGroups)
+          .where(eq(exerciseMuscleGroups.exercise, exerciseId));
+
+        // Insert new muscle group mappings
+        if (muscleGroupSplits.length > 0) {
+          await tx.insert(exerciseMuscleGroups).values(
             muscleGroupSplits.map(({ muscleGroup, split }) => ({
-              exercise: exercise.name,
+              exercise: exerciseId,
               muscle_group: muscleGroup,
               split,
             })),
-          )
-          .onConflictDoUpdate({
-            target: [
-              exerciseMuscleGroups.exercise,
-              exerciseMuscleGroups.muscle_group,
-            ],
-            set: {
-              split: sql.raw(`excluded.${exerciseMuscleGroups.split.name}`),
-              updated_at: sql`current_timestamp`,
-            },
-          });
+          );
+        }
       }),
       (err) => {
         console.error(err);
@@ -160,11 +254,11 @@ export const ExerciseMuscleGroupsRepository = {
       .from(exercises)
       .innerJoin(
         exerciseMuscleGroups,
-        eq(exercises.name, exerciseMuscleGroups.exercise),
+        eq(exercises.id, exerciseMuscleGroups.exercise),
       );
     return executeQuery(query, "ListAll").map((records) =>
       _(records)
-        .groupBy((record) => record.exercises.name)
+        .groupBy((record) => record.exercises.id)
         .mapValues((rows) => {
           const exercise: Exercise = exerciseRecordToDomain(rows[0].exercises);
           const muscleGroupSplits = rows.map((row) =>
