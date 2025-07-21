@@ -1,5 +1,5 @@
 # Fitness
-An app that centralises nutrition, fitness, and habits.
+Fitness is an app that centralises nutrition, fitness, and habits.
 
 ## Stack
 - React Router v7 (framework mode, _à la_ Remix)
@@ -26,6 +26,10 @@ pnpm db:generate # once done developing DB changes, creates a migration
 pnpm db:migrate # run migrations
 pnpm db:seed
 ```
+
+## React-router v7
+The framework we use here is react-router v7.
+Once a route is defined in `app/routes.ts` and this generates types 
 
 ## Code style
 - Follow react-router v7 patterns (`loader`, `clientLoader`, `action`)
