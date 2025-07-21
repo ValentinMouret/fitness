@@ -98,10 +98,9 @@ insert into workouts
 create table workout_sets (
   workout     uuid references workouts (id) not null
 , exercise    text references exercises (name) not null
-, target_set  int  not null check (set > 0)
-, target_reps int  check (set > 0)
-, set         int  not null check (set > 0)
-, reps        int  check (set > 0)
+, set         int  not null (check set > 0),
+, target_reps int  check (target_reps is null or target_reps > 0)
+, done_reps   int  check (done_reps is null or done_reps > 0)
   -- assisted exercises could be modeled with negative weights
   -- not sure it would make sense though
 , weight      int  check (weight is null or weight > 0)
@@ -117,6 +116,41 @@ insert into workout_sets
      values ('81af5a91-e228-4a02-a940-4f4af2831f58'
            , '');
 ```
+
+## Workout feature
+I want to work on a feature where people can create workouts. 
+
+On the `/workouts` (index) page, there should be a link to «start a new workout».
+
+This creates an empty workout in «in progress» state (we can determine this because the workout has a start date but no stop date) and navigates to `workouts/$id`.
+
+On the workout page (`workouts/$id`), people can see the workout.
+For an ongoing workout, users can add exercises using an `Add exercise` button at the bottom.
+
+  When an exercise is added, this creates a card on the page showing the sets for the exercise.
+  For a given set, I can set the weight and reps, and there is a button to validate the set and a button to delete the set.
+  At the bottom of the card for the exercise, there is a button to add a set.
+  (The UI is inspired by the Strong app).
+  
+These changes are «synced» with the backend using `useFetcher.Form` forms that don’t cause navigation and with optimistic UI.
+
+`workouts/create`
+Page to create a workout
+  Name
+  Start (from current time)
+  
+  Add exercise
+    Adds an exercise to the current workout
+      Add a set
+      Delete a set
+    For a given set, set the target reps, number of reps (actually, this does not leave the page, it’s a simple form). But a «Complete» button uses a `fetcher.Form` to post updates.
+  Complete workout
+  Cancel workout
+
+When I create the workout, I should be able to add/remove exercises.
+By default, this should add three sets of this exercise.
+
+- [ ] Templates
 
 ## Open questions
 * What’s the right way to model something like:

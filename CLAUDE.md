@@ -38,9 +38,21 @@ pnpm db:seed
 - Use Radix components
 - Keep styling minimal and centralised in the Radix theme
 
+## Patterns
+I use `neverthrow` to have errors as value.
+Always bubble up domain and application layer errors to the infrastructure layer.
+The infrastructure layer then decides how to handle the errors, potentially by returning an HTTP error.
 ## Design
 - Light, minimalist
 
+## Routes
+The routes are managed by the file `app/routes.ts`. The content follows React-Router v7 patterns.
+
+The convention we adopt in the repo is to have the folder structure follow the routes structures.
+Examples:
+- `/workout` ->`routes/workout/index.tsx`.
+- `/workout/edit` -> `routes/workout/edit.tsx`
+- `workout/exerice/edit` -> `routes/workout/exercise/edit.tsx`
 ## Other resources
 - database instructions: `docs/database.md` (read this before working on the database or modelisation)
 - frontend instructions: `docs/frontend.md` (read this before working on the frontend)
