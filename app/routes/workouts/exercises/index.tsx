@@ -13,7 +13,7 @@ import {
   exerciseTypes,
   parseExerciseType,
 } from "~/modules/fitness/domain/workout";
-import { Form, Link, useSearchParams } from "react-router";
+import { Form, Link, useSearchParams, redirect } from "react-router";
 import ExerciseCard from "~/components/ExerciseCard";
 import { humanFormatting } from "~/strings";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
@@ -37,7 +37,22 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   };
 };
 
-export const action = () => {};
+export const action = async ({ request }: Route.ActionArgs) => {
+  const formData = await request.formData();
+  const exerciseName = formData.get("exerciseName")?.toString();
+
+  if (!exerciseName) {
+    throw new Error("Exercise name is required");
+  }
+
+  const result = await ExerciseMuscleGroupsRepository.delete(exerciseName);
+
+  if (result.isErr()) {
+    throw new Error("Failed to delete exercise");
+  }
+
+  return redirect("/workouts/exercises");
+};
 
 export default function ExercisesIndexPage({
   loaderData,

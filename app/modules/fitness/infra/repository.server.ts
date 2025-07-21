@@ -108,7 +108,10 @@ export const ExerciseMuscleGroupsRepository = {
     );
   },
 
-  save({ exercise, muscleGroupSplits }: ExerciseMuscleGroups): ResultAsync<void, ErrRepository> {
+  save({
+    exercise,
+    muscleGroupSplits,
+  }: ExerciseMuscleGroups): ResultAsync<void, ErrRepository> {
     return ResultAsync.fromPromise(
       db.transaction(async (tx) => {
         await tx

@@ -1,7 +1,14 @@
-import { useState } from "react";
-import { Card, Flex, Text, IconButton } from "@radix-ui/themes";
-import { ChevronDownIcon, Pencil1Icon } from "@radix-ui/react-icons";
-import { Link } from "react-router";
+import { useState, useEffect } from "react";
+import {
+  Card,
+  Flex,
+  Text,
+  IconButton,
+  AlertDialog,
+  Button,
+} from "@radix-ui/themes";
+import { ChevronDownIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
+import { Link, useFetcher } from "react-router";
 import type { ExerciseMuscleGroups } from "~/modules/fitness/domain/workout";
 import ExerciseTypeBadge from "~/components/ExerciseTypeBadge";
 import { humanFormatting } from "~/strings";
@@ -14,10 +21,18 @@ export default function ExerciseCard({
   exerciseMuscleGroup: { exercise, muscleGroupSplits },
 }: ExerciseCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const fetcher = useFetcher();
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
   };
+
+  useEffect(() => {
+    if (fetcher.state === "idle" && fetcher.data && showDeleteDialog) {
+      setShowDeleteDialog(false);
+    }
+  }, [fetcher.state, fetcher.data, showDeleteDialog]);
 
   return (
     <Card>
@@ -45,6 +60,17 @@ export default function ExerciseCard({
               >
                 <Pencil1Icon />
               </Link>
+            </IconButton>
+            <IconButton
+              variant="ghost"
+              size="1"
+              color="red"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteDialog(true);
+              }}
+            >
+              <TrashIcon />
             </IconButton>
             <IconButton
               variant="ghost"
@@ -83,6 +109,36 @@ export default function ExerciseCard({
           </Flex>
         </div>
       </Flex>
+
+      <AlertDialog.Root
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+      >
+        <AlertDialog.Content>
+          <AlertDialog.Title>Delete Exercise</AlertDialog.Title>
+          <AlertDialog.Description>
+            Are you sure you want to delete "{exercise.name}"? This action
+            cannot be undone.
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Cancel
+              </Button>
+            </AlertDialog.Cancel>
+            <fetcher.Form method="post" action="/workouts/exercises">
+              <input type="hidden" name="exerciseName" value={exercise.name} />
+              <Button
+                type="submit"
+                color="red"
+                disabled={fetcher.state === "submitting"}
+              >
+                {fetcher.state === "submitting" ? "Deleting..." : "Delete"}
+              </Button>
+            </fetcher.Form>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </Card>
   );
 }
