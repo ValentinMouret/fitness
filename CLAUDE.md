@@ -1,8 +1,8 @@
-# Back-office
-«Back-office for your life».
+# Fitness
+An app that centralises nutrition, fitness, and habits.
 
 ## Stack
-- React Router v7 (framework mode)
+- React Router v7 (framework mode, _à la_ Remix)
 - TypeScript
 - Drizzle
 - PostgreSQL
@@ -28,15 +28,15 @@ pnpm db:seed
 ```
 
 ## Code style
-- Follow react-router v7 patterns (loader, clientLoader, actions)
-  - If interactivity is needed without navigation, use `useFetcher`.
+- Follow react-router v7 patterns (`loader`, `clientLoader`, `action`)
+  - ALWAYS use `useFetcher` if interactivity is needed WITHOUT navigation.
 - Adopt a functional approach.
   - Unless it would have a significant impact on performance or readability.
 - Use `readonly` types
-- Base things around fundamental datastructures (like with the Clojure philosophy: arrays, maps, sets, ...)
 
 ## Style
-- Use Radix UI and basic styling
+- Use Radix components
+- Keep styling minimal and centralised in the Radix theme
 
 ## Design
 - Light, minimalist
@@ -47,13 +47,8 @@ pnpm db:seed
 - ddd instructions: `docs/domain-driven-development.md` (read this before working on the features)
 
 ## Agent
-- When you work on stuff, think about regularly running type checking, then linting, then tests.
-  - Fix what’s broken as you go.
+- An instance of the server is already running in dev mode. NEVER try to boot another instance. ALWAYS ask me to check logs and things like that.
+- Once done with changes, run linting, formatting, and build
 - Start by the domain modelling, then move on to infrastructure topics.
 - If at any point you need more information, please ask your questions before moving forward.
-- STYLING ENFORCEMENT: Before completing any frontend work, check that NO components use:
-  - `style={}` props
-  - `<style>` tags
-  - Any inline CSS
-- If you need to run some QA with the app interface, please ask the human to do so and tell them which actions to perform.
-- Limit your comments to chunks of code, no one comment per line of code
+- Limit comments to the bear minimum. Like in Go, around data structures and the main functions.
