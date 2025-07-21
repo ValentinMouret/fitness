@@ -7,6 +7,28 @@ I expect my workout agent to know:
 It can analyse my workouts, provide feedback, and adjustments.
 
 ## Features
+### Create a workout
+A workout is a sequence of exercises with sets and weights that occurs on a given time.
+
+Example:
+Exercise 1: Push-ups
+  |- 1: Target: 20; Done: 18
+  |- Rest: 2:00
+  |- 2: 20
+  |- Rest: 2:00
+  |- 3: 20
+Exercise 2: Chest-press
+  |- 1: 14x60kg
+  |- Rest: 2:30
+  |- 2: 12x60kg
+  |- Rest: 2:00
+  |- 3: 10x60kg
+
+Data model:
+```
+
+```
+
 ### Workout parsing
 I can dump my workout from the Strong app (random format), the AI parses it into a known format, and adds it to the database.
 
@@ -74,15 +96,17 @@ insert into workouts
            , '2025-07-19T09:31:28.410194+02');
 
 create table workout_sets (
-  workout  uuid references workouts (id) not null
-, exercise text references exercises (name) not null
-, set      int  not null check (set > 0)
-, reps     int check (set > 0)
+  workout     uuid references workouts (id) not null
+, exercise    text references exercises (name) not null
+, target_set  int  not null check (set > 0)
+, target_reps int  check (set > 0)
+, set         int  not null check (set > 0)
+, reps        int  check (set > 0)
   -- assisted exercises could be modeled with negative weights
   -- not sure it would make sense though
-, weight   int  check (weight is null or weight > 0)
-, note     text,
-, failure  boolean default false
+, weight      int  check (weight is null or weight > 0)
+, note        text,
+, failure     boolean default false
 );
 
 insert into workout_sets
