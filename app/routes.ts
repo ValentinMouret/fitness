@@ -23,6 +23,10 @@ export default [
         "workouts/exercises/create",
         "routes/workouts/exercises/create.tsx",
       ),
+      route(
+        "workouts/exercises/:exercise-name/edit",
+        "routes/workouts/exercises/:exercise-name/edit.tsx",
+      ),
       route("habits", "routes/habits/index.tsx"),
       route("habits/new", "routes/habits/new.tsx"),
       route("habits/:id/edit", "routes/habits/edit.tsx"),

@@ -57,7 +57,58 @@ interface Filters {
 }
 
 export const ExerciseMuscleGroupsRepository = {
-  save({ exercise, muscleGroupSplits }: ExerciseMuscleGroups) {
+  findByName(
+    name: string,
+  ): ResultAsync<ExerciseMuscleGroups | null, ErrRepository> {
+    const query = db
+      .select()
+      .from(exercises)
+      .innerJoin(
+        exerciseMuscleGroups,
+        eq(exercises.name, exerciseMuscleGroups.exercise),
+      )
+      .where(eq(exercises.name, name));
+
+    return executeQuery(query, "findByName").map((records) => {
+      if (records.length === 0) {
+        return null;
+      }
+
+      const exercise: Exercise = exerciseRecordToDomain(records[0].exercises);
+      const muscleGroupSplits = records.map((row) =>
+        muscleGroupRecordToDomain(row.exercise_muscle_groups),
+      );
+
+      const result = ExerciseMuscleGroupsAggregate.create(
+        exercise,
+        muscleGroupSplits,
+      );
+
+      if (result.isErr()) {
+        console.error("Error deserializing exercise", result);
+        return null;
+      }
+
+      return result.value;
+    });
+  },
+
+  delete(exerciseName: string): ResultAsync<void, ErrRepository> {
+    return ResultAsync.fromPromise(
+      db.transaction(async (tx) => {
+        await tx
+          .delete(exerciseMuscleGroups)
+          .where(eq(exerciseMuscleGroups.exercise, exerciseName));
+        await tx.delete(exercises).where(eq(exercises.name, exerciseName));
+      }),
+      (err) => {
+        console.error(err);
+        return "database_error";
+      },
+    );
+  },
+
+  save({ exercise, muscleGroupSplits }: ExerciseMuscleGroups): ResultAsync<void, ErrRepository> {
     return ResultAsync.fromPromise(
       db.transaction(async (tx) => {
         await tx
@@ -93,7 +144,7 @@ export const ExerciseMuscleGroupsRepository = {
       }),
       (err) => {
         console.error(err);
-        return "err_database";
+        return "database_error";
       },
     );
   },

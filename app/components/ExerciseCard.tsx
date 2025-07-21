@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, Flex, Text, IconButton } from "@radix-ui/themes";
-import { ChevronDownIcon } from "@radix-ui/react-icons";
+import { ChevronDownIcon, Pencil1Icon } from "@radix-ui/react-icons";
+import { Link } from "react-router";
 import type { ExerciseMuscleGroups } from "~/modules/fitness/domain/workout";
 import ExerciseTypeBadge from "~/components/ExerciseTypeBadge";
 import { humanFormatting } from "~/strings";
@@ -32,16 +33,30 @@ export default function ExerciseCard({
             <ExerciseTypeBadge type={exercise.type} />
             <Text weight="bold">{exercise.name}</Text>
           </Flex>
-          <IconButton
-            variant="ghost"
-            size="1"
-            style={{
-              transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-            }}
-          >
-            <ChevronDownIcon />
-          </IconButton>
+          <Flex gap="1" align="center">
+            <IconButton
+              variant="ghost"
+              size="1"
+              asChild
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Link
+                to={`/workouts/exercises/${encodeURIComponent(exercise.name)}/edit`}
+              >
+                <Pencil1Icon />
+              </Link>
+            </IconButton>
+            <IconButton
+              variant="ghost"
+              size="1"
+              style={{
+                transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
+            >
+              <ChevronDownIcon />
+            </IconButton>
+          </Flex>
         </Flex>
         <div
           style={{
