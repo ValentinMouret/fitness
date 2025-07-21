@@ -15,4 +15,8 @@ export default defineConfig({
       "cloudflare:sockets": "node:crypto",
     },
   },
+  test: {
+    globals: true,
+    environment: "node",
+  },
 });
