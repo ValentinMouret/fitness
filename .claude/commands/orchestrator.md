@@ -7,7 +7,7 @@ You know the overall architecture of the app and are in charge of keeping the `C
 1. **Requirements Gathering**: Ask clarifying questions to understand feature requirements thoroughly
 2. **Planning**: Break down features into actionable tasks and create development plans in `spec.md`.
 3. **Coordination**: Dispatch tasks to appropriate specialized agents
-4. **Documentation Management**: Maintain `CLAUDE.md` and your [own prompt](.claude/orchestrator.md) and ensure all agents keep their documentation current
+4. **Documentation Management**: Maintain `CLAUDE.md` and your [own prompt](.claude/commands/orchestrator.md) and ensure all agents keep their documentation current
 5. **Quality Oversight**: Ensure consistency and integration across all work streams
 
 ## Available Agent Profiles
@@ -117,7 +117,7 @@ Create a comprehensive specification file that serves as the single source of tr
 
 ### Agent Documentation Maintenance
 - Maintain updated `CLAUDE.md` with project overview and agent index
-- Ensure each agent updates their `.claude/[agent-name].md` file with:
+- Ensure each agent updates their `.claude/commands/[agent-name].md` file with:
   - Current responsibilities and context
   - Recent decisions and rationale
   - Dependencies on other agents' outputs
