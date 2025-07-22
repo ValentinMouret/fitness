@@ -107,19 +107,21 @@ export interface Workout {
   readonly name: string;
   readonly start: Date;
   readonly stop?: Date;
+  readonly notes?: string;
 }
 
 interface WorkoutCreateInput {
-  readonly id: string;
   readonly name: string;
   readonly start?: Date;
+  readonly notes?: string;
 }
 
 export const Workout = {
-  create(input: WorkoutCreateInput): Workout {
+  create(input: WorkoutCreateInput): Omit<Workout, "id"> {
     return {
-      ...input,
+      name: input.name,
       start: input.start ?? new Date(),
+      notes: input.notes,
     };
   },
   stop(this: Workout): Workout {
@@ -129,12 +131,13 @@ export const Workout = {
 
 export interface WorkoutSet {
   readonly workoutId: Workout["id"];
-  readonly exerciseName: Exercise | Exercise["name"];
+  readonly exerciseId: Exercise["id"];
   readonly set: number;
   readonly targetReps?: number;
   readonly reps?: number;
   readonly weight?: number;
   readonly note?: string;
+  readonly isCompleted: boolean;
   readonly isFailure: boolean;
 }
 
@@ -146,7 +149,8 @@ interface WorkoutSetCreateInput {
   readonly reps?: number;
   readonly weight?: number;
   readonly note?: string;
-  readonly isFailure: boolean;
+  readonly isCompleted?: boolean;
+  readonly isFailure?: boolean;
 }
 
 type ErrInvalidSet = "Invalid set";
@@ -166,8 +170,8 @@ export const WorkoutSet = {
     const workoutId =
       typeof input.workout === "string" ? input.workout : input.workout.id;
 
-    const exerciseName =
-      typeof input.exercise === "string" ? input.exercise : input.exercise.name;
+    const exerciseId =
+      typeof input.exercise === "string" ? input.exercise : input.exercise.id;
 
     if (input.set <= 0) {
       console.error("Set number should be positive", { set: input.set });
@@ -197,13 +201,133 @@ export const WorkoutSet = {
 
     return ok({
       workoutId,
-      exerciseName,
+      exerciseId,
       set: input.set,
       targetReps: input.targetReps,
       reps: input.reps,
       weight: input.weight,
       note: input.note,
-      isFailure: input.isFailure,
+      isCompleted: input.isCompleted ?? false,
+      isFailure: input.isFailure ?? false,
     });
+  },
+};
+
+export interface WorkoutExercise {
+  readonly workoutId: Workout["id"];
+  readonly exerciseId: Exercise["id"];
+  readonly orderIndex: number;
+  readonly notes?: string;
+}
+
+export interface WorkoutExerciseGroup {
+  readonly exercise: Exercise;
+  readonly sets: ReadonlyArray<WorkoutSet>;
+  readonly notes?: string;
+  readonly orderIndex: number;
+}
+
+export interface WorkoutSession {
+  readonly workout: Workout;
+  readonly exerciseGroups: ReadonlyArray<WorkoutExerciseGroup>;
+}
+
+interface WorkoutSessionCreateInput {
+  readonly workout: Workout;
+  readonly exercises: ReadonlyArray<{
+    readonly exercise: Exercise;
+    readonly orderIndex: number;
+    readonly notes?: string;
+  }>;
+}
+
+export const WorkoutSession = {
+  create(input: WorkoutSessionCreateInput): WorkoutSession {
+    return {
+      workout: input.workout,
+      exerciseGroups: input.exercises.map(
+        ({ exercise, orderIndex, notes }) => ({
+          exercise,
+          sets: [],
+          notes,
+          orderIndex,
+        }),
+      ),
+    };
+  },
+
+  addExercise(
+    this: WorkoutSession,
+    exercise: Exercise,
+    notes?: string,
+  ): WorkoutSession {
+    const maxOrder = Math.max(
+      ...this.exerciseGroups.map((g) => g.orderIndex),
+      -1,
+    );
+    const newGroup: WorkoutExerciseGroup = {
+      exercise,
+      sets: [],
+      notes,
+      orderIndex: maxOrder + 1,
+    };
+
+    return {
+      ...this,
+      exerciseGroups: [...this.exerciseGroups, newGroup],
+    };
+  },
+
+  removeExercise(
+    this: WorkoutSession,
+    exerciseId: Exercise["id"],
+  ): WorkoutSession {
+    return {
+      ...this,
+      exerciseGroups: this.exerciseGroups.filter(
+        (group) => group.exercise.id !== exerciseId,
+      ),
+    };
+  },
+
+  addSet(
+    this: WorkoutSession,
+    exerciseId: Exercise["id"],
+    set: Omit<WorkoutSet, "workoutId" | "exerciseId">,
+  ): WorkoutSession {
+    return {
+      ...this,
+      exerciseGroups: this.exerciseGroups.map((group) =>
+        group.exercise.id === exerciseId
+          ? {
+              ...group,
+              sets: [
+                ...group.sets,
+                { ...set, workoutId: this.workout.id, exerciseId },
+              ],
+            }
+          : group,
+      ),
+    };
+  },
+
+  completeSet(
+    this: WorkoutSession,
+    exerciseId: Exercise["id"],
+    setNumber: number,
+  ): WorkoutSession {
+    return {
+      ...this,
+      exerciseGroups: this.exerciseGroups.map((group) =>
+        group.exercise.id === exerciseId
+          ? {
+              ...group,
+              sets: group.sets.map((s) =>
+                s.set === setNumber ? { ...s, isCompleted: true } : s,
+              ),
+            }
+          : group,
+      ),
+    };
   },
 };

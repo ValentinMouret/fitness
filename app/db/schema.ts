@@ -129,8 +129,34 @@ export const workouts = pgTable("workouts", {
   name: text().notNull(),
   start: timestamp().defaultNow(),
   stop: timestamp(),
+  notes: text(),
   ...timestampColumns(),
 });
+
+export const workoutExercises = pgTable(
+  "workout_exercises",
+  {
+    workout_id: uuid()
+      .references(() => workouts.id)
+      .notNull(),
+    exercise_id: uuid()
+      .references(() => exercises.id)
+      .notNull(),
+    order_index: integer().notNull(),
+    notes: text(),
+    ...timestampColumns(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.workout_id, table.exercise_id] }),
+    check("order_index_positive", sql`${table.order_index} >= 0`),
+    uniqueIndex("workout_exercises_active_unique_idx")
+      .on(table.workout_id, table.exercise_id)
+      .where(isNull(table.deleted_at)),
+    uniqueIndex("workout_exercises_order_unique_idx")
+      .on(table.workout_id, table.order_index)
+      .where(isNull(table.deleted_at)),
+  ],
+);
 
 export const workoutSets = pgTable(
   "workout_sets",
@@ -146,10 +172,12 @@ export const workoutSets = pgTable(
     reps: integer(),
     weight: doublePrecision(),
     note: text(),
-    isFailure: boolean(),
+    isCompleted: boolean().notNull().default(false),
+    isFailure: boolean().notNull().default(false),
     ...timestampColumns(),
   },
   (table) => [
+    primaryKey({ columns: [table.workout, table.exercise, table.set] }),
     check("set_is_positive", sql`${table.set} > 0`),
     check(
       "target_reps_is_null_or_positive",
