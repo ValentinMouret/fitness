@@ -9,6 +9,12 @@ Fitness is an app that centralises nutrition, fitness, and habits.
 - Biome
 - pnpm
 - zod
+- Radix UI (components & icons)
+- Lucide React (additional icons)
+- Tailwind CSS (styling utility)
+- Recharts (data visualization)
+- neverthrow (error handling)
+- OpenAI (AI integration)
 
 ## Useful commands
 ```shell
@@ -18,7 +24,7 @@ pnpm dev # run the project in watch/dev mode. Don’t run this as the server is 
 pnpm fmt # format
 pnpm lint # lint
 pnpm tc # typecheck + generate react-router types
-pnpm tc:watch # typecheck in watch mode
+pnpm tc:watch # typecheck in watch mode (watches app/ directory)
 pnpm test # run tests
 
 pnpm db:dev # updates the database with schema changes (command to run in dev only)
@@ -39,7 +45,8 @@ Once a route is defined in `app/routes.ts` and this generates types
 - Use `readonly` types
 
 ## Style
-- Use Radix components
+- Use Radix components as primary UI library
+- Tailwind CSS available for utility styling when needed
 - Keep styling minimal and centralised in the Radix theme
 
 ## Patterns
@@ -54,13 +61,22 @@ The routes are managed by the file `app/routes.ts`. The content follows React-Ro
 
 The convention we adopt in the repo is to have the folder structure follow the routes structures.
 Examples:
-- `/workout` ->`routes/workout/index.tsx`.
-- `/workout/edit` -> `routes/workout/edit.tsx`
-- `workout/exerice/edit` -> `routes/workout/exercise/edit.tsx`
+- `/workouts` -> `routes/workouts/index.tsx`
+- `/workouts/create` -> `routes/workouts/create.tsx` 
+- `/workouts/exercises/create` -> `routes/workouts/exercises/create.tsx`
+- `/habits/new` -> `routes/habits/new.tsx`
 ## Other resources
 - database instructions: `docs/database.md` (read this before working on the database or modelisation)
 - frontend instructions: `docs/frontend.md` (read this before working on the frontend)
 - ddd instructions: `docs/domain-driven-development.md` (read this before working on the features)
+
+## Architecture
+The codebase follows a modular architecture with Domain-Driven Design principles:
+- `modules/` contains feature modules (core, fitness, habits, nutrition)
+- Each module follows DDD layers: `domain/`, `application/`, `infra/`
+- Domain layer contains entities and business logic
+- Application layer contains services and use cases
+- Infrastructure layer handles data persistence and external integrations
 
 ## Agent
 - An instance of the server is already running in dev mode. NEVER try to boot another instance. ALWAYS ask me to check logs and things like that.

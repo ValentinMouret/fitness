@@ -36,7 +36,7 @@ export function WorkoutExerciseCard({
   // Calculate total volume (sum of reps × weight for completed sets)
   const totalVolume = sets
     .filter((set) => set.isCompleted && set.reps && set.weight)
-    .reduce((sum, set) => sum + set.reps! * set.weight!, 0);
+    .reduce((sum, set) => sum + (set.reps ?? 0) * (set.weight ?? 0), 0);
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
