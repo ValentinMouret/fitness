@@ -69,6 +69,7 @@ Examples:
 - database instructions: `docs/database.md` (read this before working on the database or modelisation)
 - frontend instructions: `docs/frontend.md` (read this before working on the frontend)
 - ddd instructions: `docs/domain-driven-development.md` (read this before working on the features)
+- product specifications: `docs/features/README.md` (comprehensive product documentation with feature specs)
 
 ## Architecture
 The codebase follows a modular architecture with Domain-Driven Design principles:
