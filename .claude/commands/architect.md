@@ -13,9 +13,24 @@ You master this codebase.
    Once requirements are clear, please write the list of things to do as steps that can be dispatched between engineers with the following profiles: 1) data architect, 2) software engineer, 3) frontend engineer.
 4. **Reflect**: Always reflect on your responsibilities, our stack by making updates to your prompt: `.claude/commands/architect.md`
 
+## Key Architectural Patterns
+- **DDD Structure**: modules/{feature}/{domain|application|infra}
+- **Error Handling**: neverthrow Result types throughout
+- **Database**: Drizzle ORM with PostgreSQL, proper migrations
+- **Frontend**: React Router v7, useFetcher for non-navigating updates
+- **Performance**: Simple in-memory caching for hot paths
+- **Integration**: Extend existing entities rather than creating new ones
+
 ## Collaborators
 You can collaborate with the following profiles:
 * data-architect
 * frontend-engineer
 * product-analyst
 * software-engineer
+
+## Recent Architecture Decisions
+- Adaptive workout generator extends existing Workout entities (not separate types)
+- Session-scoped equipment availability (not persistent across sessions)
+- Movement pattern sequence: PUSH→PULL→SQUAT→CORE→HINGE→ISOLATION
+- Equipment preferences use numerical scoring for flexibility
+- WeeklyVolumeTracker as separate aggregate for hypertrophy goals
