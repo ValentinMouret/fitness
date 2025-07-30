@@ -26,18 +26,16 @@ const AppLayout: React.FC = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Handle responsive behavior
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
 
-    handleResize(); // Set initial value
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Handle escape key to close mobile menu
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isMobileOpen) {
@@ -49,7 +47,6 @@ const AppLayout: React.FC = () => {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isMobileOpen]);
 
-  // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileOpen) {
       document.body.style.overflow = "hidden";
@@ -75,7 +72,6 @@ const AppLayout: React.FC = () => {
 
   return (
     <Flex direction="row" style={{ minHeight: "100vh" }}>
-      {/* Mobile menu toggle */}
       <IconButton
         variant="ghost"
         size="3"
@@ -91,7 +87,6 @@ const AppLayout: React.FC = () => {
         <HamburgerMenuIcon />
       </IconButton>
 
-      {/* Sidebar */}
       <Box
         style={{
           width: isCollapsed ? "60px" : "240px",
@@ -108,7 +103,6 @@ const AppLayout: React.FC = () => {
         }}
       >
         <Flex direction="column" height="100%" p="3">
-          {/* Logo */}
           <Flex align="center" justify="between" mb="4">
             <Flex align="center" gap="2">
               <Text size="5">{String.fromCodePoint(0x1f49a)}</Text>
@@ -126,7 +120,6 @@ const AppLayout: React.FC = () => {
             )}
           </Flex>
 
-          {/* Navigation */}
           <Flex
             direction="column"
             gap="1"
@@ -170,7 +163,6 @@ const AppLayout: React.FC = () => {
             ))}
           </Flex>
 
-          {/* Logout */}
           <Box mt="4" px="1">
             <Form method="post" action="/logout">
               <Button
@@ -205,7 +197,6 @@ const AppLayout: React.FC = () => {
         </Flex>
       </Box>
 
-      {/* Mobile backdrop */}
       {isMobile && isMobileOpen && (
         <Box
           style={{
@@ -221,7 +212,6 @@ const AppLayout: React.FC = () => {
         />
       )}
 
-      {/* Main content */}
       <Box
         flexGrow="1"
         style={{
