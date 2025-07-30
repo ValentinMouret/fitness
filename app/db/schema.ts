@@ -14,7 +14,11 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { exerciseTypes, muscleGroups } from "~/modules/fitness/domain/workout";
+import {
+  exerciseTypes,
+  muscleGroups,
+  movementPatterns,
+} from "~/modules/fitness/domain/workout";
 
 export const timestampColumns = () => ({
   created_at: timestamp().notNull().defaultNow(),
@@ -87,6 +91,7 @@ export const targets = pgTable(
 
 // Workouts
 export const exerciseType = pgEnum("exercise_type", exerciseTypes);
+export const movementPattern = pgEnum("movement_pattern", movementPatterns);
 
 export const exercises = pgTable(
   "exercises",
@@ -95,12 +100,22 @@ export const exercises = pgTable(
     name: text().notNull(),
     description: text(),
     type: exerciseType().notNull(),
+    movement_pattern: movementPattern().notNull(),
+    setup_time_seconds: integer().notNull().default(30),
+    complexity_score: integer().notNull().default(1),
+    equipment_sharing_friendly: boolean().notNull().default(false),
+    requires_spotter: boolean().notNull().default(false),
     ...timestampColumns(),
   },
   (table) => [
     uniqueIndex("exercises_name_type_unique_idx")
       .on(table.name, table.type)
       .where(isNull(table.deleted_at)),
+    check("setup_time_positive", sql`${table.setup_time_seconds} >= 0`),
+    check(
+      "complexity_score_range",
+      sql`${table.complexity_score} >= 1 and ${table.complexity_score} <= 5`,
+    ),
   ],
 );
 
@@ -155,6 +170,99 @@ export const workoutExercises = pgTable(
     uniqueIndex("workout_exercises_order_unique_idx")
       .on(table.workout_id, table.order_index)
       .where(isNull(table.deleted_at)),
+  ],
+);
+
+// Adaptive Workout Generator Schema
+export const gymFloors = pgTable(
+  "gym_floors",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    name: text().notNull(),
+    floor_number: integer().notNull(),
+    description: text(),
+    ...timestampColumns(),
+  },
+  (table) => [
+    uniqueIndex("gym_floors_number_unique_idx")
+      .on(table.floor_number)
+      .where(isNull(table.deleted_at)),
+    check("floor_number_positive", sql`${table.floor_number} > 0`),
+  ],
+);
+
+export const equipmentInstances = pgTable(
+  "equipment_instances",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    exercise_type: exerciseType().notNull(),
+    gym_floor_id: uuid()
+      .references(() => gymFloors.id)
+      .notNull(),
+    name: text().notNull(),
+    capacity: integer().notNull().default(1),
+    is_available: boolean().notNull().default(true),
+    ...timestampColumns(),
+  },
+  (table) => [
+    uniqueIndex("equipment_instances_name_floor_unique_idx")
+      .on(table.name, table.gym_floor_id)
+      .where(isNull(table.deleted_at)),
+    check("capacity_positive", sql`${table.capacity} > 0`),
+  ],
+);
+
+export const equipmentPreferences = pgTable(
+  "equipment_preferences",
+  {
+    muscle_group: muscleGroupsEnum().notNull(),
+    exercise_type: exerciseType().notNull(),
+    preference_score: integer().notNull(),
+    ...timestampColumns(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.muscle_group, table.exercise_type] }),
+    check(
+      "preference_score_range",
+      sql`${table.preference_score} >= 1 and ${table.preference_score} <= 10`,
+    ),
+  ],
+);
+
+export const exerciseSubstitutions = pgTable(
+  "exercise_substitutions",
+  {
+    primary_exercise_id: uuid()
+      .references(() => exercises.id)
+      .notNull(),
+    substitute_exercise_id: uuid()
+      .references(() => exercises.id)
+      .notNull(),
+    similarity_score: doublePrecision().notNull(),
+    muscle_overlap_percentage: integer().notNull(),
+    difficulty_difference: integer().notNull().default(0),
+    ...timestampColumns(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.primary_exercise_id, table.substitute_exercise_id],
+    }),
+    check(
+      "similarity_score_range",
+      sql`${table.similarity_score} >= 0 and ${table.similarity_score} <= 1`,
+    ),
+    check(
+      "muscle_overlap_percentage_range",
+      sql`${table.muscle_overlap_percentage} >= 0 and ${table.muscle_overlap_percentage} <= 100`,
+    ),
+    check(
+      "difficulty_difference_range",
+      sql`${table.difficulty_difference} >= -5 and ${table.difficulty_difference} <= 5`,
+    ),
+    check(
+      "not_self_substitute",
+      sql`${table.primary_exercise_id} != ${table.substitute_exercise_id}`,
+    ),
   ],
 );
 

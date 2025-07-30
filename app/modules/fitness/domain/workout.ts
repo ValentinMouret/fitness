@@ -59,10 +59,30 @@ export function parseExerciseType(
   return ok(s as ExerciseType);
 }
 
+export const movementPatterns = [
+  "push",
+  "pull",
+  "squat",
+  "hinge",
+  "core",
+  "isolation",
+  "rotation",
+  "gait",
+] as const;
+export type MovementPattern = (typeof movementPatterns)[number];
+export function parseMovementPattern(
+  s: string,
+): Result<MovementPattern, ErrValidation> {
+  if (!movementPatterns.includes(s as MovementPattern))
+    return err("validation_error");
+  return ok(s as MovementPattern);
+}
+
 export interface Exercise {
   readonly id: string;
   readonly name: string;
   readonly type: ExerciseType;
+  readonly movementPattern: MovementPattern;
   readonly description?: string;
 }
 
