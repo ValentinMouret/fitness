@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { formatStartedAgo } from "~/time";
 
 interface UseLiveDurationProps {
   readonly startTime: Date;
@@ -42,5 +43,6 @@ export function useLiveDuration({ startTime, endTime }: UseLiveDurationProps) {
   return {
     duration,
     formattedDuration: formatDuration(duration),
+    startedAgo: formatStartedAgo(duration),
   };
 }

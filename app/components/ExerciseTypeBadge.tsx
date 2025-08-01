@@ -8,5 +8,7 @@ interface Props {
 }
 
 export default function ExerciseTypeBadge({ type }: Props) {
-  return <Badge color={semanticColors.exerciseTypes[type]}>{capitalize(type)}</Badge>;
+  return (
+    <Badge color={semanticColors.exerciseTypes[type]}>{capitalize(type)}</Badge>
+  );
 }

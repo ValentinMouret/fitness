@@ -61,3 +61,41 @@ export function removeOneDay(t: Date): Date {
   n.setDate(t.getDate() - 1);
   return n;
 }
+
+export function getOrdinalSuffix(day: number): string {
+  if (day > 3 && day < 21) return "th";
+  switch (day % 10) {
+    case 1:
+      return "st";
+    case 2:
+      return "nd";
+    case 3:
+      return "rd";
+    default:
+      return "th";
+  }
+}
+
+export function formatStartedAgo(minutes: number): string {
+  if (minutes === 0) {
+    return "Started just now";
+  }
+  if (minutes === 1) {
+    return "Started 1 min ago";
+  }
+  if (minutes < 60) {
+    return `Started ${minutes} min ago`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (hours === 1 && remainingMinutes === 0) {
+    return "Started 1 hour ago";
+  }
+  if (remainingMinutes === 0) {
+    return `Started ${hours} hours ago`;
+  }
+  if (hours === 1) {
+    return `Started 1 hour ${remainingMinutes} min ago`;
+  }
+  return `Started ${hours} hours ${remainingMinutes} min ago`;
+}

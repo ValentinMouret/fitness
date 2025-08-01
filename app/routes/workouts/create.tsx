@@ -1,10 +1,17 @@
-import type { Route } from "./+types";
 import { redirect } from "react-router";
 import { Workout } from "~/modules/fitness/domain/workout";
 import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
+import { getOrdinalSuffix } from "~/time";
 
-export async function action({ request }: Route.ActionArgs) {
-  const workoutName = `Workout ${new Date().toLocaleDateString()}`;
+export async function action() {
+  const now = new Date();
+
+  const weekday = now.toLocaleDateString("en-US", { weekday: "long" });
+
+  const date = now.getDate();
+  const ordinalSuffix = getOrdinalSuffix(date);
+
+  const workoutName = `${weekday}, ${date}${ordinalSuffix}`;
 
   const workout = Workout.create({
     name: workoutName,

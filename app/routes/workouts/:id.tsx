@@ -6,9 +6,10 @@ import {
 } from "~/modules/fitness/infra/workout.repository.server";
 import { ExerciseRepository } from "~/modules/fitness/infra/repository.server";
 import { WorkoutSet } from "~/modules/fitness/domain/workout";
-import { Box, Heading, Button, Flex, Text } from "@radix-ui/themes";
-import { useState } from "react";
+import { Box, Heading, Button, Flex, Text, TextField } from "@radix-ui/themes";
+import { useState, useRef, useEffect } from "react";
 import { WorkoutExerciseCard } from "~/components/workout/WorkoutExerciseCard";
+import { useFetcher } from "react-router";
 import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
 import { CompletionModal } from "~/components/workout/CompletionModal";
 import { CancelConfirmationDialog } from "~/components/workout/CancelConfirmationDialog";
@@ -52,6 +53,28 @@ export async function action({ request, params }: Route.ActionArgs) {
 
   try {
     switch (intent) {
+      case "update-name": {
+        const name = formData.get("name")?.toString();
+
+        if (!name || !name.trim()) {
+          return { error: "Name is required" };
+        }
+
+        const workoutResult = await WorkoutRepository.findById(id);
+        if (workoutResult.isErr() || !workoutResult.value) {
+          return { error: "Workout not found" };
+        }
+
+        const updatedWorkout = { ...workoutResult.value, name: name.trim() };
+        const result = await WorkoutRepository.save(updatedWorkout);
+
+        if (result.isErr()) {
+          return { error: "Failed to update workout name" };
+        }
+
+        return { success: true };
+      }
+
       case "add-exercise": {
         const exerciseId = formData.get("exerciseId")?.toString();
         const notes = formData.get("notes")?.toString();
@@ -349,21 +372,67 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
 
-  const { formattedDuration } = useLiveDuration({
+  const fetcher = useFetcher();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const optimisticName =
+    fetcher.formData?.get("name")?.toString() || workoutSession.workout.name;
+
+  const { startedAgo } = useLiveDuration({
     startTime: workoutSession.workout.start,
     endTime: workoutSession.workout.stop,
   });
+
+  useEffect(() => {
+    if (isEditingName && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditingName]);
+
+  const handleNameSubmit = (name: string) => {
+    if (name.trim() && name !== workoutSession.workout.name) {
+      fetcher.submit(
+        { intent: "update-name", name: name.trim() },
+        { method: "post" },
+      );
+    }
+    setIsEditingName(false);
+  };
 
   return (
     <Box p="4">
       {/* Workout Header */}
       <Flex justify="between" align="center" mb="6">
         <Box>
-          <Heading size="7">{workoutSession.workout.name}</Heading>
+          {isEditingName ? (
+            <TextField.Root
+              ref={inputRef}
+              defaultValue={optimisticName}
+              size="3"
+              onBlur={(e) => handleNameSubmit(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleNameSubmit(e.currentTarget.value);
+                } else if (e.key === "Escape") {
+                  setIsEditingName(false);
+                }
+              }}
+              style={{ fontSize: "var(--font-size-7)", fontWeight: "bold" }}
+            />
+          ) : (
+            <Heading
+              size="7"
+              onClick={() => setIsEditingName(true)}
+              style={{ cursor: "pointer" }}
+            >
+              {optimisticName}
+            </Heading>
+          )}
           <Text size="3" color="gray">
-            Duration: {formattedDuration} | Started:{" "}
-            {workoutSession.workout.start.toLocaleTimeString()}
+            {startedAgo}
           </Text>
         </Box>
         <Flex gap="2">

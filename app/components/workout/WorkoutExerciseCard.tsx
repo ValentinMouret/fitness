@@ -274,7 +274,8 @@ function EditableSetRow({ set, exerciseId }: EditableSetRowProps) {
                 backgroundColor: "transparent",
               }}
               onFocus={(e) => {
-                e.target.style.backgroundColor = designTokens.interactions.hover;
+                e.target.style.backgroundColor =
+                  designTokens.interactions.hover;
               }}
               onBlur={(e) => {
                 e.target.style.backgroundColor = "transparent";
@@ -311,7 +312,8 @@ function EditableSetRow({ set, exerciseId }: EditableSetRowProps) {
                 backgroundColor: "transparent",
               }}
               onFocus={(e) => {
-                e.target.style.backgroundColor = designTokens.interactions.hover;
+                e.target.style.backgroundColor =
+                  designTokens.interactions.hover;
               }}
               onBlur={(e) => {
                 e.target.style.backgroundColor = "transparent";
@@ -347,7 +349,8 @@ function EditableSetRow({ set, exerciseId }: EditableSetRowProps) {
                 backgroundColor: "transparent",
               }}
               onFocus={(e) => {
-                e.target.style.backgroundColor = designTokens.interactions.hover;
+                e.target.style.backgroundColor =
+                  designTokens.interactions.hover;
               }}
               onBlur={(e) => {
                 e.target.style.backgroundColor = "transparent";

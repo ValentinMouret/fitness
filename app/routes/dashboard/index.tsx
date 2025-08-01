@@ -57,12 +57,15 @@ const motivationalQuotes = [
   "Focus on being healthy, not skinny.",
   "Self-care is not selfish. You cannot serve from an empty vessel.",
   "Champions don't become champions in the ring. They become champions in their training.",
-  "The strongest people are forged by trials they thought would break them."
+  "The strongest people are forged by trials they thought would break them.",
 ];
 
 function getDailyQuote(): string {
   const today = new Date();
-  const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+  const dayOfYear = Math.floor(
+    (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) /
+      (1000 * 60 * 60 * 24),
+  );
   return motivationalQuotes[dayOfYear % motivationalQuotes.length];
 }
 
@@ -206,9 +209,19 @@ export default function DashboardPage() {
       </Heading>
 
       {/* Daily Quote Section */}
-      <Card size="3" mb="6" style={{ background: "var(--gray-2)", border: "1px solid var(--gray-6)" }}>
+      <Card
+        size="3"
+        mb="6"
+        style={{
+          background: "var(--gray-2)",
+          border: "1px solid var(--gray-6)",
+        }}
+      >
         <Flex align="center" gap="3">
-          <Text size="4" style={{ fontStyle: "italic", color: "var(--gray-11)" }}>
+          <Text
+            size="4"
+            style={{ fontStyle: "italic", color: "var(--gray-11)" }}
+          >
             "{dailyQuote}"
           </Text>
         </Flex>

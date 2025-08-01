@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { ResultAsync, } from "neverthrow";
+import { ResultAsync } from "neverthrow";
 import { AdaptiveWorkoutService } from "./adaptive-workout-service.server";
 import type {
   AdaptiveWorkoutRequest,

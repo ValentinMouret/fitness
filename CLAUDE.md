@@ -79,6 +79,33 @@ The codebase follows a modular architecture with Domain-Driven Design principles
 - Application layer contains services and use cases
 - Infrastructure layer handles data persistence and external integrations
 
+## Utility Files
+The codebase includes several utility modules for common operations:
+
+### `app/time.ts`
+Date and time utilities including:
+- `Day` - Day of week utilities (sorting, converting from numbers, short format)
+- `isSameDay()` - Check if two dates are on the same day
+- `toDate()` - Reset time to midnight UTC
+- `today()` - Get today's date with time reset
+- `addOneDay()` / `removeOneDay()` - Date arithmetic
+- `getOrdinalSuffix()` - Get ordinal suffix for numbers (1st, 2nd, 3rd, etc.)
+- `formatStartedAgo()` - Format duration as "Started X min/hours ago"
+
+### `app/strings.ts`
+String manipulation utilities:
+- `capitalize()` - Capitalize first letter
+- `snakeCaseToHuman()` - Convert snake_case to human readable
+- `humanFormatting()` - Combined snake_case to human readable with capitalization
+- `coerceEmpty()` - Convert empty strings to undefined
+
+### When to Use/Update Utilities
+- Extract common functionality when used in 2+ places
+- Keep utilities pure and focused on single responsibility
+- Add comprehensive tests for all utility functions
+- Document complex utilities with examples
+- Consider performance implications for frequently used utilities
+
 ## Agent
 - An instance of the server is already running in dev mode. NEVER try to boot another instance. ALWAYS ask me to check logs and things like that.
 - Once done with changes, run linting, formatting, and build

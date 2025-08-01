@@ -7,6 +7,8 @@ import {
   today,
   addOneDay,
   removeOneDay,
+  getOrdinalSuffix,
+  formatStartedAgo,
 } from "./time";
 
 describe("time module", () => {
@@ -209,6 +211,97 @@ describe("time module", () => {
       const originalTime = original.getTime();
       removeOneDay(original);
       expect(original.getTime()).toBe(originalTime);
+    });
+  });
+
+  describe("getOrdinalSuffix", () => {
+    it("should return correct suffix for numbers ending in 1 (except 11)", () => {
+      expect(getOrdinalSuffix(1)).toBe("st");
+      expect(getOrdinalSuffix(21)).toBe("st");
+      expect(getOrdinalSuffix(31)).toBe("st");
+      expect(getOrdinalSuffix(101)).toBe("st");
+    });
+
+    it("should return correct suffix for numbers ending in 2 (except 12)", () => {
+      expect(getOrdinalSuffix(2)).toBe("nd");
+      expect(getOrdinalSuffix(22)).toBe("nd");
+      expect(getOrdinalSuffix(32)).toBe("nd");
+      expect(getOrdinalSuffix(102)).toBe("nd");
+    });
+
+    it("should return correct suffix for numbers ending in 3 (except 13)", () => {
+      expect(getOrdinalSuffix(3)).toBe("rd");
+      expect(getOrdinalSuffix(23)).toBe("rd");
+      expect(getOrdinalSuffix(33)).toBe("rd");
+      expect(getOrdinalSuffix(103)).toBe("rd");
+    });
+
+    it("should return 'th' for numbers 11-20", () => {
+      expect(getOrdinalSuffix(11)).toBe("th");
+      expect(getOrdinalSuffix(12)).toBe("th");
+      expect(getOrdinalSuffix(13)).toBe("th");
+      expect(getOrdinalSuffix(14)).toBe("th");
+      expect(getOrdinalSuffix(15)).toBe("th");
+      expect(getOrdinalSuffix(16)).toBe("th");
+      expect(getOrdinalSuffix(17)).toBe("th");
+      expect(getOrdinalSuffix(18)).toBe("th");
+      expect(getOrdinalSuffix(19)).toBe("th");
+      expect(getOrdinalSuffix(20)).toBe("th");
+    });
+
+    it("should return 'th' for other numbers", () => {
+      expect(getOrdinalSuffix(4)).toBe("th");
+      expect(getOrdinalSuffix(5)).toBe("th");
+      expect(getOrdinalSuffix(6)).toBe("th");
+      expect(getOrdinalSuffix(7)).toBe("th");
+      expect(getOrdinalSuffix(8)).toBe("th");
+      expect(getOrdinalSuffix(9)).toBe("th");
+      expect(getOrdinalSuffix(10)).toBe("th");
+      expect(getOrdinalSuffix(24)).toBe("th");
+      expect(getOrdinalSuffix(25)).toBe("th");
+      expect(getOrdinalSuffix(26)).toBe("th");
+      expect(getOrdinalSuffix(100)).toBe("th");
+    });
+  });
+
+  describe("formatStartedAgo", () => {
+    it("should format 0 minutes as 'Started just now'", () => {
+      expect(formatStartedAgo(0)).toBe("Started just now");
+    });
+
+    it("should format 1 minute correctly", () => {
+      expect(formatStartedAgo(1)).toBe("Started 1 min ago");
+    });
+
+    it("should format minutes less than 60", () => {
+      expect(formatStartedAgo(2)).toBe("Started 2 min ago");
+      expect(formatStartedAgo(15)).toBe("Started 15 min ago");
+      expect(formatStartedAgo(30)).toBe("Started 30 min ago");
+      expect(formatStartedAgo(45)).toBe("Started 45 min ago");
+      expect(formatStartedAgo(59)).toBe("Started 59 min ago");
+    });
+
+    it("should format exactly 1 hour", () => {
+      expect(formatStartedAgo(60)).toBe("Started 1 hour ago");
+    });
+
+    it("should format hours with no minutes", () => {
+      expect(formatStartedAgo(120)).toBe("Started 2 hours ago");
+      expect(formatStartedAgo(180)).toBe("Started 3 hours ago");
+      expect(formatStartedAgo(240)).toBe("Started 4 hours ago");
+    });
+
+    it("should format 1 hour with minutes", () => {
+      expect(formatStartedAgo(61)).toBe("Started 1 hour 1 min ago");
+      expect(formatStartedAgo(75)).toBe("Started 1 hour 15 min ago");
+      expect(formatStartedAgo(90)).toBe("Started 1 hour 30 min ago");
+    });
+
+    it("should format multiple hours with minutes", () => {
+      expect(formatStartedAgo(121)).toBe("Started 2 hours 1 min ago");
+      expect(formatStartedAgo(135)).toBe("Started 2 hours 15 min ago");
+      expect(formatStartedAgo(150)).toBe("Started 2 hours 30 min ago");
+      expect(formatStartedAgo(195)).toBe("Started 3 hours 15 min ago");
     });
   });
 });
