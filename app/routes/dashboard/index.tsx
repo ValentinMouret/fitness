@@ -208,26 +208,14 @@ export default function DashboardPage() {
         Today
       </Heading>
 
-      {/* Daily Quote Section */}
-      <Card
-        size="3"
-        mb="6"
-        style={{
-          background: "var(--gray-2)",
-          border: "1px solid var(--gray-6)",
-        }}
-      >
+      <Card size="3" mb="6">
         <Flex align="center" gap="3">
-          <Text
-            size="4"
-            style={{ fontStyle: "italic", color: "var(--gray-11)" }}
-          >
+          <Text color="gray" size="4">
             "{dailyQuote}"
           </Text>
         </Flex>
       </Card>
 
-      {/* Weight Section */}
       <Card size="3" mb="6">
         <Heading size="4" mb="4">
           Weight
@@ -255,13 +243,7 @@ export default function DashboardPage() {
               </Text>
               <Flex gap="2" align="end">
                 <Box flexGrow="1">
-                  <Text
-                    as="label"
-                    size="2"
-                    weight="medium"
-                    mb="1"
-                    style={{ display: "block" }}
-                  >
+                  <Text as="label" size="2" weight="medium" mb="1">
                     Weight:
                   </Text>
                   <TextField.Root

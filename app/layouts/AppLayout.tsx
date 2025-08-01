@@ -122,7 +122,7 @@ const AppLayout: React.FC = () => {
 
           <Flex
             direction="column"
-            gap="1"
+            gap="0.5"
             flexGrow="1"
             style={{ overflow: "hidden" }}
           >
@@ -135,16 +135,13 @@ const AppLayout: React.FC = () => {
                 >
                   {({ isActive }) => (
                     <Button
-                      variant={isActive ? "solid" : "ghost"}
+                      variant="soft"
+                      color={isActive ? "accent" : undefined}
                       size="3"
                       style={{
                         width: "100%",
                         justifyContent: "flex-start",
-                        padding: "8px 12px",
-                        margin: "0",
-                        border: "none",
-                        boxShadow: "none",
-                        borderRadius: "6px",
+                        backgroundColor: isActive ? undefined : "transparent",
                       }}
                     >
                       <Flex
@@ -154,7 +151,14 @@ const AppLayout: React.FC = () => {
                         style={{ width: "100%" }}
                       >
                         {icon}
-                        {!isCollapsed && <Text size="2">{label}</Text>}
+                        {!isCollapsed && (
+                          <Text
+                            size="2"
+                            weight={isActive ? "medium" : "regular"}
+                          >
+                            {label}
+                          </Text>
+                        )}
                       </Flex>
                     </Button>
                   )}
