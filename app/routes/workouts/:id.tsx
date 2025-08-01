@@ -160,7 +160,12 @@ export async function action({ request, params }: Route.ActionArgs) {
 
         const workoutSetResult = WorkoutSet.create({
           workout: id,
-          exercise: { id: exerciseId, name: "", type: "barbell" },
+          exercise: {
+            id: exerciseId,
+            name: "",
+            type: "barbell",
+            movementPattern: "push",
+          },
           set: setNumber,
           reps,
           weight,

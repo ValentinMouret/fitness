@@ -310,6 +310,21 @@ export const WorkoutSession = {
     };
   },
 
+  replaceExercise(
+    this: WorkoutSession,
+    exerciseId: Exercise["id"],
+    newExercise: Exercise,
+  ): WorkoutSession {
+    return {
+      ...this,
+      exerciseGroups: this.exerciseGroups.map((group) =>
+        group.exercise.id === exerciseId
+          ? { ...group, exercise: newExercise }
+          : group,
+      ),
+    };
+  },
+
   addSet(
     this: WorkoutSession,
     exerciseId: Exercise["id"],
@@ -348,6 +363,183 @@ export const WorkoutSession = {
             }
           : group,
       ),
+    };
+  },
+};
+
+// Adaptive Workout Generation Domain
+
+export interface EquipmentInstance {
+  readonly id: string;
+  readonly exerciseType: ExerciseType;
+  readonly gymFloorId: string;
+  readonly name: string;
+  readonly capacity: number;
+  readonly isAvailable: boolean;
+}
+
+export interface AdaptiveWorkoutRequest {
+  readonly availableEquipment: ReadonlyArray<EquipmentInstance>;
+  readonly targetDuration: number;
+  readonly preferredFloor?: number;
+  readonly volumeNeeds?: ReadonlyMap<MuscleGroup, number>;
+}
+
+export interface AdaptiveWorkoutResult {
+  readonly workout: WorkoutSession;
+  readonly alternatives: ReadonlyMap<Exercise["id"], ReadonlyArray<Exercise>>;
+  readonly floorSwitches: number;
+  readonly estimatedDuration: number;
+}
+
+export interface VolumeTarget {
+  readonly muscleGroup: MuscleGroup;
+  readonly minSets: number;
+  readonly maxSets: number;
+}
+
+export interface WeeklyVolumeTracker {
+  readonly weekStart: Date;
+  readonly targets: ReadonlyArray<VolumeTarget>;
+  readonly currentVolume: ReadonlyMap<MuscleGroup, number>;
+  readonly remainingVolume: ReadonlyMap<MuscleGroup, number>;
+}
+
+export const OPTIMAL_MOVEMENT_SEQUENCE: ReadonlyArray<MovementPattern> = [
+  "push",
+  "pull",
+  "squat",
+  "core",
+  "hinge",
+  "isolation",
+] as const;
+
+export interface SequenceRecommendation {
+  readonly nextPattern: MovementPattern;
+  readonly confidence: number;
+  readonly reasoning: string;
+}
+
+export const DEFAULT_VOLUME_TARGETS: ReadonlyArray<VolumeTarget> = [
+  { muscleGroup: "pecs", minSets: 12, maxSets: 16 },
+  { muscleGroup: "lats", minSets: 14, maxSets: 18 },
+  { muscleGroup: "trapezes", minSets: 14, maxSets: 18 },
+  { muscleGroup: "delts", minSets: 12, maxSets: 16 },
+  { muscleGroup: "biceps", minSets: 8, maxSets: 12 },
+  { muscleGroup: "triceps", minSets: 8, maxSets: 12 },
+  { muscleGroup: "quads", minSets: 12, maxSets: 16 },
+  { muscleGroup: "armstrings", minSets: 12, maxSets: 16 },
+  { muscleGroup: "glutes", minSets: 12, maxSets: 16 },
+  { muscleGroup: "calves", minSets: 8, maxSets: 12 },
+  { muscleGroup: "abs", minSets: 6, maxSets: 10 },
+] as const;
+
+interface WeeklyVolumeTrackerCreateInput {
+  readonly weekStart?: Date;
+  readonly targets?: ReadonlyArray<VolumeTarget>;
+  readonly currentVolume?: ReadonlyMap<MuscleGroup, number>;
+}
+
+export const WeeklyVolumeTracker = {
+  create(input: WeeklyVolumeTrackerCreateInput = {}): WeeklyVolumeTracker {
+    const weekStart = input.weekStart ?? new Date();
+    const targets = input.targets ?? DEFAULT_VOLUME_TARGETS;
+    const currentVolume = input.currentVolume ?? new Map();
+
+    const remainingVolume = new Map<MuscleGroup, number>();
+    for (const target of targets) {
+      const current = currentVolume.get(target.muscleGroup) ?? 0;
+      const remaining = Math.max(0, target.minSets - current);
+      remainingVolume.set(target.muscleGroup, remaining);
+    }
+
+    return {
+      weekStart,
+      targets,
+      currentVolume,
+      remainingVolume,
+    };
+  },
+
+  updateVolume(
+    this: WeeklyVolumeTracker,
+    muscleGroupVolumes: ReadonlyMap<MuscleGroup, number>,
+  ): WeeklyVolumeTracker {
+    const newCurrentVolume = new Map(this.currentVolume);
+
+    for (const [muscleGroup, volume] of muscleGroupVolumes) {
+      const current = newCurrentVolume.get(muscleGroup) ?? 0;
+      newCurrentVolume.set(muscleGroup, current + volume);
+    }
+
+    return WeeklyVolumeTracker.create({
+      weekStart: this.weekStart,
+      targets: this.targets,
+      currentVolume: newCurrentVolume,
+    });
+  },
+
+  getVolumeNeeds(this: WeeklyVolumeTracker): ReadonlyMap<MuscleGroup, number> {
+    return this.remainingVolume;
+  },
+};
+
+export const MovementPatternSequencer = {
+  getNextPattern(
+    currentSequence: ReadonlyArray<MovementPattern>,
+  ): SequenceRecommendation {
+    if (currentSequence.length === 0) {
+      return {
+        nextPattern: OPTIMAL_MOVEMENT_SEQUENCE[0],
+        confidence: 1.0,
+        reasoning: "Starting with first pattern in optimal sequence",
+      };
+    }
+
+    const lastPattern = currentSequence[currentSequence.length - 1];
+    const currentIndex = OPTIMAL_MOVEMENT_SEQUENCE.indexOf(lastPattern);
+
+    if (currentIndex === -1) {
+      return {
+        nextPattern: OPTIMAL_MOVEMENT_SEQUENCE[0],
+        confidence: 0.7,
+        reasoning: "Previous pattern not in optimal sequence, restarting",
+      };
+    }
+
+    const nextIndex = (currentIndex + 1) % OPTIMAL_MOVEMENT_SEQUENCE.length;
+    const nextPattern = OPTIMAL_MOVEMENT_SEQUENCE[nextIndex];
+
+    return {
+      nextPattern,
+      confidence: 0.9,
+      reasoning: `Following optimal sequence after ${lastPattern}`,
+    };
+  },
+
+  validateSequence(sequence: ReadonlyArray<MovementPattern>): {
+    isOptimal: boolean;
+    score: number;
+  } {
+    if (sequence.length === 0) {
+      return { isOptimal: true, score: 1.0 };
+    }
+
+    let score = 0;
+    for (let i = 0; i < sequence.length; i++) {
+      const pattern = sequence[i];
+      const expectedIndex = i % OPTIMAL_MOVEMENT_SEQUENCE.length;
+      const expectedPattern = OPTIMAL_MOVEMENT_SEQUENCE[expectedIndex];
+
+      if (pattern === expectedPattern) {
+        score += 1;
+      }
+    }
+
+    const finalScore = score / sequence.length;
+    return {
+      isOptimal: finalScore >= 0.8,
+      score: finalScore,
     };
   },
 };

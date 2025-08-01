@@ -25,12 +25,19 @@ export const ExerciseRepository = {
     return ResultAsync.fromPromise(
       db
         .insert(exercises)
-        .values(exercise)
+        .values({
+          id: exercise.id,
+          name: exercise.name,
+          type: exercise.type,
+          movement_pattern: exercise.movementPattern,
+          description: exercise.description ?? null,
+        })
         .onConflictDoUpdate({
           target: [exercises.name, exercises.type],
           set: {
             updated_at: new Date(),
             description: exercise.description ?? null,
+            movement_pattern: exercise.movementPattern,
           },
         }),
       (err) => {
@@ -48,6 +55,7 @@ function exerciseRecordToDomain(
     id: record.id,
     name: record.name,
     type: record.type,
+    movementPattern: record.movement_pattern,
     description: record.description ?? undefined,
   };
 }
@@ -218,7 +226,12 @@ export const ExerciseMuscleGroupsRepository = {
           // Insert new exercise
           const insertResult = await tx
             .insert(exercises)
-            .values(exercise)
+            .values({
+              name: exercise.name,
+              type: exercise.type,
+              movement_pattern: exercise.movementPattern,
+              description: exercise.description ?? null,
+            })
             .returning({ id: exercises.id });
           exerciseId = insertResult[0].id;
         }

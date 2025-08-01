@@ -86,7 +86,6 @@ When working on `routes/` with the frontend engineer:
 - Always run `pnpm fmt`, `pnpm lint`, and `pnpm tc` before completion
 - Use `?.toString()` instead of `as string` for form data access
 - Use `Number.isNaN()` instead of global `isNaN()`
-- Avoid non-null assertions (`!`) - use proper null checks and early returns
 - Handle undefined/null cases explicitly rather than forcing types
 
 ## Success Criteria

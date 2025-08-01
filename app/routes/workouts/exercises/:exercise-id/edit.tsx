@@ -7,6 +7,7 @@ import {
   ExerciseMuscleGroupsAggregate,
   parseExerciseType,
   parseMuscleGroup,
+  parseMovementPattern,
   type Exercise,
   type MuscleGroupSplit,
 } from "~/modules/fitness/domain/workout";
@@ -58,6 +59,7 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
   const form = await request.formData();
   const exerciseNameForm = form.get("name")?.toString();
   const exerciseTypeString = form.get("type")?.toString();
+  const movementPatternString = form.get("movementPattern")?.toString();
   const exerciseDescription = form.get("description")?.toString();
 
   if (exerciseNameForm === undefined) {
@@ -69,6 +71,14 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
   const exerciseType = parseExerciseType(exerciseTypeString);
   if (exerciseType.isErr()) {
     throw new Error("Invalid exercise: invalid exercise type");
+  }
+
+  if (movementPatternString === undefined) {
+    throw new Error("Invalid exercise: no movement pattern");
+  }
+  const movementPattern = parseMovementPattern(movementPatternString);
+  if (movementPattern.isErr()) {
+    throw new Error("Invalid exercise: invalid movement pattern");
   }
 
   const muscleGroupSplits: MuscleGroupSplit[] = [];
@@ -99,8 +109,10 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
   }
 
   const exercise: Exercise = {
+    id: exerciseId,
     name: humanFormatting(exerciseNameForm),
     type: exerciseType.value,
+    movementPattern: movementPattern.value,
     description: coerceEmpty(exerciseDescription ?? ""),
   };
   const newExerciseMuscleGroup = ExerciseMuscleGroupsAggregate.create(

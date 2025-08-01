@@ -423,6 +423,7 @@ function exerciseRecordToDomain(
     id: record.id,
     name: record.name,
     type: record.type,
+    movementPattern: record.movement_pattern,
     description: record.description ?? undefined,
   };
 }

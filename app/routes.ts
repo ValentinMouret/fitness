@@ -19,7 +19,12 @@ export default [
       ),
       route("workouts", "routes/workouts/index.tsx"),
       route("workouts/create", "routes/workouts/create.tsx"),
+      route("workouts/generate", "routes/workouts/generate.tsx"),
       route("workouts/:id", "routes/workouts/:id.tsx"),
+      route(
+        "workouts/:id/substitute/:exerciseId",
+        "routes/workouts/substitute.tsx",
+      ),
       route("workouts/exercises", "routes/workouts/exercises/index.tsx"),
       route(
         "workouts/exercises/create",

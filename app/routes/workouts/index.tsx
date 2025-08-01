@@ -30,6 +30,13 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
           <RadixLink asChild>
             <Link to="/workouts/exercises">Manage Exercises</Link>
           </RadixLink>
+          <RadixLink asChild>
+            <Link to="/workouts/generate">
+              <Button variant="outline" size="3">
+                Generate Smart Workout
+              </Button>
+            </Link>
+          </RadixLink>
           <Form action="/workouts/create" method="post">
             <Button type="submit" size="3">
               Create Workout

@@ -30,6 +30,7 @@ You can collaborate with the following profiles:
 
 ## Recent Architecture Decisions
 - Adaptive workout generator extends existing Workout entities (not separate types)
+- **Workout generation creates standard Workout entity and redirects to /workouts/:id**
 - Session-scoped equipment availability (not persistent across sessions)
 - Movement pattern sequence: PUSH→PULL→SQUAT→CORE→HINGE→ISOLATION
 - Equipment preferences use numerical scoring for flexibility

@@ -12,6 +12,7 @@ import { Link, useFetcher } from "react-router";
 import type { ExerciseMuscleGroups } from "~/modules/fitness/domain/workout";
 import ExerciseTypeBadge from "~/components/ExerciseTypeBadge";
 import { humanFormatting } from "~/strings";
+import { designTokens } from "~/design-system";
 
 interface ExerciseCardProps {
   readonly exerciseMuscleGroup: ExerciseMuscleGroups;
@@ -75,7 +76,7 @@ export default function ExerciseCard({
               size="1"
               style={{
                 transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                transition: `transform ${designTokens.transitions.normal}`,
               }}
             >
               <ChevronDownIcon />
@@ -87,8 +88,7 @@ export default function ExerciseCard({
             maxHeight: isExpanded ? "500px" : "0px",
             opacity: isExpanded ? 1 : 0,
             overflow: "hidden",
-            transition:
-              "max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+            transition: `max-height ${designTokens.transitions.normal}, opacity ${designTokens.transitions.normal}`,
           }}
         >
           <Flex direction="column" gap="2" pt="2">

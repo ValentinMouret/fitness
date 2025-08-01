@@ -26,6 +26,46 @@ import {
 import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
 import { MeasurementService } from "~/modules/core/application/measurement-service";
 
+const motivationalQuotes = [
+  "The groundwork for all happiness is good health.",
+  "Take care of your body. It's the only place you have to live.",
+  "Health is not about the weight you lose, but about the life you gain.",
+  "Your body can do it. It's your mind you need to convince.",
+  "Progress, not perfection.",
+  "Every workout is a step closer to your goals.",
+  "Strength doesn't come from what you can do. It comes from overcoming the things you once thought you couldn't.",
+  "The only bad workout is the one that didn't happen.",
+  "You are stronger than your excuses.",
+  "Health is a relationship between you and your body.",
+  "Small daily improvements lead to staggering yearly results.",
+  "Your future self will thank you for the healthy choices you make today.",
+  "Consistency is what transforms average into excellence.",
+  "The first wealth is health.",
+  "Don't wait for motivation. Create discipline.",
+  "Every step forward is a step toward achieving something bigger and better.",
+  "Your health is an investment, not an expense.",
+  "The journey of a thousand miles begins with a single step.",
+  "Be patient with yourself. Self-growth is tender; it's holy ground.",
+  "You don't have to be perfect, you just have to be consistent.",
+  "Believe in yourself and all that you are capable of achieving.",
+  "Success is the sum of small efforts repeated day in and day out.",
+  "Your only limit is you.",
+  "Make yourself a priority.",
+  "Healthy habits are learned in the same way as unhealthy ones - through practice.",
+  "The body achieves what the mind believes.",
+  "You are worth the investment in your health.",
+  "Focus on being healthy, not skinny.",
+  "Self-care is not selfish. You cannot serve from an empty vessel.",
+  "Champions don't become champions in the ring. They become champions in their training.",
+  "The strongest people are forged by trials they thought would break them."
+];
+
+function getDailyQuote(): string {
+  const today = new Date();
+  const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+  return motivationalQuotes[dayOfYear % motivationalQuotes.length];
+}
+
 export async function loader() {
   const now = new Date();
   const todayDate = today();
@@ -57,6 +97,7 @@ export async function loader() {
         loggedToday: weights?.[0] && isSameDay(weights?.[0].t, now),
         todayHabits,
         completionMap,
+        dailyQuote: getDailyQuote(),
       };
     })
     .andThen((data) => {
@@ -155,6 +196,7 @@ export default function DashboardPage() {
     todayHabits,
     completionMap,
     habitStreaks,
+    dailyQuote,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -162,6 +204,15 @@ export default function DashboardPage() {
       <Heading size="7" mb="6">
         Today
       </Heading>
+
+      {/* Daily Quote Section */}
+      <Card size="3" mb="6" style={{ background: "var(--gray-2)", border: "1px solid var(--gray-6)" }}>
+        <Flex align="center" gap="3">
+          <Text size="4" style={{ fontStyle: "italic", color: "var(--gray-11)" }}>
+            "{dailyQuote}"
+          </Text>
+        </Flex>
+      </Card>
 
       {/* Weight Section */}
       <Card size="3" mb="6">
