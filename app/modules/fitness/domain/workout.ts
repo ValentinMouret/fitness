@@ -147,6 +147,9 @@ export const Workout = {
   stop(this: Workout): Workout {
     return { ...this, stop: new Date() };
   },
+  isComplete(this: Workout): boolean {
+    return this.stop !== undefined;
+  },
 };
 
 export interface WorkoutSet {

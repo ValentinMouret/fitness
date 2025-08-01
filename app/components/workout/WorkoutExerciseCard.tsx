@@ -27,10 +27,12 @@ import { designTokens } from "~/design-system";
 
 interface WorkoutExerciseCardProps {
   readonly exerciseGroup: WorkoutExerciseGroup;
+  readonly isWorkoutComplete?: boolean;
 }
 
 export function WorkoutExerciseCard({
   exerciseGroup,
+  isWorkoutComplete = false,
 }: WorkoutExerciseCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const fetcher = useFetcher();
@@ -80,44 +82,42 @@ export function WorkoutExerciseCard({
               </Flex>
             </Flex>
 
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger>
-                <IconButton
-                  variant="ghost"
-                  size="2"
-                  style={{ marginLeft: "8px" }}
-                >
-                  <DotsVerticalIcon />
-                </IconButton>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content>
-                <DropdownMenu.Item
-                  color="red"
-                  onSelect={() => {
-                    const form = document.createElement("form");
-                    form.method = "post";
-                    form.style.display = "none";
+            {!isWorkoutComplete && (
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger>
+                  <IconButton variant="ghost" size="2">
+                    <DotsVerticalIcon />
+                  </IconButton>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content>
+                  <DropdownMenu.Item
+                    color="red"
+                    onSelect={() => {
+                      const form = document.createElement("form");
+                      form.method = "post";
+                      form.style.display = "none";
 
-                    const intentInput = document.createElement("input");
-                    intentInput.type = "hidden";
-                    intentInput.name = "intent";
-                    intentInput.value = "remove-exercise";
+                      const intentInput = document.createElement("input");
+                      intentInput.type = "hidden";
+                      intentInput.name = "intent";
+                      intentInput.value = "remove-exercise";
 
-                    const exerciseIdInput = document.createElement("input");
-                    exerciseIdInput.type = "hidden";
-                    exerciseIdInput.name = "exerciseId";
-                    exerciseIdInput.value = exercise.id;
+                      const exerciseIdInput = document.createElement("input");
+                      exerciseIdInput.type = "hidden";
+                      exerciseIdInput.name = "exerciseId";
+                      exerciseIdInput.value = exercise.id;
 
-                    form.appendChild(intentInput);
-                    form.appendChild(exerciseIdInput);
-                    document.body.appendChild(form);
-                    form.submit();
-                  }}
-                >
-                  <TrashIcon /> Delete Exercise
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
+                      form.appendChild(intentInput);
+                      form.appendChild(exerciseIdInput);
+                      document.body.appendChild(form);
+                      form.submit();
+                    }}
+                  >
+                    <TrashIcon /> Delete Exercise
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+            )}
           </Flex>
 
           <Box
@@ -141,37 +141,18 @@ export function WorkoutExerciseCard({
               )}
             </Box>
 
-            <Box
-              mb="4"
-              style={{
-                border: "1px solid var(--gray-6)",
-                borderRadius: "8px",
-                overflow: "hidden",
-              }}
-            >
-              <Table.Root>
+            <Box mb="4">
+              <Table.Root variant="surface">
                 <Table.Header>
-                  <Table.Row style={{ backgroundColor: "var(--gray-2)" }}>
-                    <Table.ColumnHeaderCell
-                      style={{ textAlign: "right", padding: "12px" }}
-                    >
+                  <Table.Row>
+                    <Table.ColumnHeaderCell justify="end">
                       Reps
                     </Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell
-                      style={{ textAlign: "right", padding: "12px" }}
-                    >
+                    <Table.ColumnHeaderCell justify="end">
                       Weight (kg)
                     </Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell style={{ padding: "12px" }}>
-                      Note
-                    </Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell
-                      style={{
-                        textAlign: "center",
-                        padding: "12px",
-                        width: "60px",
-                      }}
-                    >
+                    <Table.ColumnHeaderCell>Note</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell justify="center">
                       Actions
                     </Table.ColumnHeaderCell>
                   </Table.Row>
@@ -182,40 +163,38 @@ export function WorkoutExerciseCard({
                       key={`${exercise.id}-${set.set}`}
                       set={set}
                       exerciseId={exercise.id}
+                      isWorkoutComplete={isWorkoutComplete}
                     />
                   ))}
                 </Table.Body>
               </Table.Root>
             </Box>
 
-            <fetcher.Form method="post">
-              <input type="hidden" name="intent" value="add-set" />
-              <input type="hidden" name="exerciseId" value={exercise.id} />
-              <input
-                type="hidden"
-                name="reps"
-                value={lastSet?.reps?.toString() ?? ""}
-              />
-              <input
-                type="hidden"
-                name="weight"
-                value={lastSet?.weight?.toString() ?? ""}
-              />
-              <Button
-                type="submit"
-                size="3"
-                variant="soft"
-                style={{
-                  width: "100%",
-                  borderTopLeftRadius: 0,
-                  borderTopRightRadius: 0,
-                  marginTop: "-1px",
-                }}
-                disabled={fetcher.state !== "idle"}
-              >
-                {fetcher.state === "submitting" ? "Adding..." : "Add Set"}
-              </Button>
-            </fetcher.Form>
+            {!isWorkoutComplete && (
+              <fetcher.Form method="post">
+                <input type="hidden" name="intent" value="add-set" />
+                <input type="hidden" name="exerciseId" value={exercise.id} />
+                <input
+                  type="hidden"
+                  name="reps"
+                  value={lastSet?.reps?.toString() ?? ""}
+                />
+                <input
+                  type="hidden"
+                  name="weight"
+                  value={lastSet?.weight?.toString() ?? ""}
+                />
+                <Button
+                  type="submit"
+                  size="3"
+                  variant="soft"
+                  style={{ width: "100%" }}
+                  disabled={fetcher.state !== "idle"}
+                >
+                  {fetcher.state === "submitting" ? "Adding..." : "Add Set"}
+                </Button>
+              </fetcher.Form>
+            )}
           </Box>
         </Flex>
       </Box>
@@ -226,9 +205,14 @@ export function WorkoutExerciseCard({
 interface EditableSetRowProps {
   readonly set: WorkoutSet;
   readonly exerciseId: string;
+  readonly isWorkoutComplete?: boolean;
 }
 
-function EditableSetRow({ set, exerciseId }: EditableSetRowProps) {
+function EditableSetRow({
+  set,
+  exerciseId,
+  isWorkoutComplete = false,
+}: EditableSetRowProps) {
   const [localReps, setLocalReps] = useState(set.reps?.toString() ?? "");
   const [localWeight, setLocalWeight] = useState(set.weight?.toString() ?? "");
   const [localNote, setLocalNote] = useState(set.note ?? "");
@@ -243,12 +227,12 @@ function EditableSetRow({ set, exerciseId }: EditableSetRowProps) {
   return (
     <Table.Row
       style={{
-        backgroundColor: set.isCompleted ? "var(--green-2)" : undefined,
-        minHeight: "48px",
+        backgroundColor: set.isCompleted ? "var(--green-2)" : "transparent",
+        opacity: set.isCompleted ? 1 : 0.9,
       }}
     >
-      <Table.Cell style={{ textAlign: "right", padding: "12px" }}>
-        {set.isCompleted ? (
+      <Table.Cell justify="end">
+        {set.isCompleted || isWorkoutComplete ? (
           <Text weight="medium">{set.reps ?? "—"}</Text>
         ) : (
           <fetcher.Form
@@ -268,25 +252,17 @@ function EditableSetRow({ set, exerciseId }: EditableSetRowProps) {
               size="2"
               variant="surface"
               style={{
-                width: "60px",
                 textAlign: "right",
-                border: "none",
-                backgroundColor: "transparent",
-              }}
-              onFocus={(e) => {
-                e.target.style.backgroundColor =
-                  designTokens.interactions.hover;
-              }}
-              onBlur={(e) => {
-                e.target.style.backgroundColor = "transparent";
+                maxWidth: "80px",
+                marginLeft: "auto",
               }}
             />
           </fetcher.Form>
         )}
       </Table.Cell>
 
-      <Table.Cell style={{ textAlign: "right", padding: "12px" }}>
-        {set.isCompleted ? (
+      <Table.Cell justify="end">
+        {set.isCompleted || isWorkoutComplete ? (
           <Text weight="medium">{set.weight ?? "—"}</Text>
         ) : (
           <fetcher.Form
@@ -306,25 +282,17 @@ function EditableSetRow({ set, exerciseId }: EditableSetRowProps) {
               size="2"
               variant="surface"
               style={{
-                width: "80px",
                 textAlign: "right",
-                border: "none",
-                backgroundColor: "transparent",
-              }}
-              onFocus={(e) => {
-                e.target.style.backgroundColor =
-                  designTokens.interactions.hover;
-              }}
-              onBlur={(e) => {
-                e.target.style.backgroundColor = "transparent";
+                maxWidth: "80px",
+                marginLeft: "auto",
               }}
             />
           </fetcher.Form>
         )}
       </Table.Cell>
 
-      <Table.Cell style={{ padding: "12px" }}>
-        {set.isCompleted ? (
+      <Table.Cell>
+        {set.isCompleted || isWorkoutComplete ? (
           <Text>{set.note ?? "—"}</Text>
         ) : (
           <fetcher.Form
@@ -340,29 +308,18 @@ function EditableSetRow({ set, exerciseId }: EditableSetRowProps) {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setLocalNote(e.target.value)
               }
-              placeholder="Note"
+              placeholder="Add note..."
               size="2"
               variant="surface"
-              style={{
-                width: "120px",
-                border: "none",
-                backgroundColor: "transparent",
-              }}
-              onFocus={(e) => {
-                e.target.style.backgroundColor =
-                  designTokens.interactions.hover;
-              }}
-              onBlur={(e) => {
-                e.target.style.backgroundColor = "transparent";
-              }}
+              style={{ minWidth: "120px" }}
             />
           </fetcher.Form>
         )}
       </Table.Cell>
 
-      <Table.Cell style={{ textAlign: "center", padding: "12px" }}>
-        <Flex gap="2" justify="center">
-          {!set.isCompleted && (
+      <Table.Cell justify="center">
+        <Flex gap="2" justify="center" align="center">
+          {!set.isCompleted && !isWorkoutComplete && (
             <fetcher.Form method="post">
               <input type="hidden" name="intent" value="complete-set" />
               <input type="hidden" name="exerciseId" value={exerciseId} />
@@ -373,28 +330,28 @@ function EditableSetRow({ set, exerciseId }: EditableSetRowProps) {
                 variant="soft"
                 color="green"
                 disabled={fetcher.state !== "idle"}
-                style={{ minHeight: "32px", minWidth: "32px" }}
               >
                 ✓
               </IconButton>
             </fetcher.Form>
           )}
 
-          <fetcher.Form method="post">
-            <input type="hidden" name="intent" value="remove-set" />
-            <input type="hidden" name="exerciseId" value={exerciseId} />
-            <input type="hidden" name="setNumber" value={set.set} />
-            <IconButton
-              type="submit"
-              size="2"
-              variant="ghost"
-              color="red"
-              disabled={fetcher.state !== "idle"}
-              style={{ minHeight: "32px", minWidth: "32px" }}
-            >
-              <TrashIcon />
-            </IconButton>
-          </fetcher.Form>
+          {!isWorkoutComplete && (
+            <fetcher.Form method="post">
+              <input type="hidden" name="intent" value="remove-set" />
+              <input type="hidden" name="exerciseId" value={exerciseId} />
+              <input type="hidden" name="setNumber" value={set.set} />
+              <IconButton
+                type="submit"
+                size="2"
+                variant="ghost"
+                color="red"
+                disabled={fetcher.state !== "idle"}
+              >
+                <TrashIcon />
+              </IconButton>
+            </fetcher.Form>
+          )}
         </Flex>
       </Table.Cell>
     </Table.Row>

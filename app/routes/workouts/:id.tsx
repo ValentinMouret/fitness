@@ -5,14 +5,24 @@ import {
   WorkoutSessionRepository,
 } from "~/modules/fitness/infra/workout.repository.server";
 import { ExerciseRepository } from "~/modules/fitness/infra/repository.server";
-import { WorkoutSet } from "~/modules/fitness/domain/workout";
-import { Box, Heading, Button, Flex, Text, TextField } from "@radix-ui/themes";
+import { WorkoutSet, Workout } from "~/modules/fitness/domain/workout";
+import {
+  Box,
+  Heading,
+  Button,
+  Flex,
+  Text,
+  TextField,
+  IconButton,
+} from "@radix-ui/themes";
+import { ArrowLeftIcon } from "@radix-ui/react-icons";
 import { useState, useRef, useEffect } from "react";
 import { WorkoutExerciseCard } from "~/components/workout/WorkoutExerciseCard";
-import { useFetcher } from "react-router";
+import { useFetcher, Link } from "react-router";
 import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
 import { CompletionModal } from "~/components/workout/CompletionModal";
 import { CancelConfirmationDialog } from "~/components/workout/CancelConfirmationDialog";
+import { DeleteConfirmationDialog } from "~/components/workout/DeleteConfirmationDialog";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -354,6 +364,16 @@ export async function action({ request, params }: Route.ActionArgs) {
         return redirect("/workouts");
       }
 
+      case "delete-workout": {
+        const result = await WorkoutRepository.delete(id);
+
+        if (result.isErr()) {
+          return { error: "Failed to delete workout" };
+        }
+
+        return redirect("/workouts");
+      }
+
       default:
         return { error: "Unknown intent" };
     }
@@ -372,7 +392,9 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const fetcher = useFetcher();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -384,6 +406,16 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     startTime: workoutSession.workout.start,
     endTime: workoutSession.workout.stop,
   });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (isEditingName && inputRef.current) {
@@ -403,66 +435,109 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <Box p="4">
-      {/* Workout Header */}
-      <Flex justify="between" align="center" mb="6">
-        <Box>
-          {isEditingName ? (
-            <TextField.Root
-              ref={inputRef}
-              defaultValue={optimisticName}
-              size="3"
-              onBlur={(e) => handleNameSubmit(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleNameSubmit(e.currentTarget.value);
-                } else if (e.key === "Escape") {
-                  setIsEditingName(false);
-                }
-              }}
-              style={{ fontSize: "var(--font-size-7)", fontWeight: "bold" }}
-            />
-          ) : (
-            <Heading
-              size="7"
-              onClick={() => setIsEditingName(true)}
-              style={{ cursor: "pointer" }}
-            >
-              {optimisticName}
-            </Heading>
-          )}
-          <Text size="3" color="gray">
-            {startedAgo}
-          </Text>
-        </Box>
-        <Flex gap="2">
-          <Button onClick={() => setShowCompletionModal(true)} size="3">
-            Complete Workout
-          </Button>
-          <Button
-            variant="soft"
-            color="red"
-            size="3"
-            onClick={() => setShowCancelDialog(true)}
-          >
-            Cancel
-          </Button>
-        </Flex>
-      </Flex>
-
-      {/* Exercise Cards */}
-      {workoutSession.exerciseGroups.map((group) => (
-        <WorkoutExerciseCard key={group.exercise.id} exerciseGroup={group} />
-      ))}
-
-      {/* Add Exercise Button */}
-      <Button
-        onClick={() => setShowExerciseSelector(true)}
-        size="3"
-        style={{ width: "100%" }}
+    <>
+      {/* Fixed Header */}
+      <Box
+        style={{
+          position: "fixed",
+          top: 0,
+          left: isMobile ? 0 : "240px", // Account for sidebar on desktop
+          right: 0,
+          zIndex: 10,
+          backgroundColor: "var(--color-background)",
+          borderBottom: "1px solid var(--gray-a5)",
+        }}
       >
-        Add Exercise
-      </Button>
+        <Flex justify="between" align="center" p="4">
+          <Flex align="center" gap="3">
+            <IconButton asChild variant="ghost" size="3">
+              <Link to="/workouts">
+                <ArrowLeftIcon />
+              </Link>
+            </IconButton>
+            <Box>
+              {isEditingName ? (
+                <TextField.Root
+                  ref={inputRef}
+                  defaultValue={optimisticName}
+                  size="3"
+                  onBlur={(e) => handleNameSubmit(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleNameSubmit(e.currentTarget.value);
+                    } else if (e.key === "Escape") {
+                      setIsEditingName(false);
+                    }
+                  }}
+                  style={{ fontSize: "var(--font-size-7)", fontWeight: "bold" }}
+                />
+              ) : (
+                <Heading
+                  size="7"
+                  onClick={() => setIsEditingName(true)}
+                  style={{ cursor: "pointer" }}
+                >
+                  {optimisticName}
+                </Heading>
+              )}
+              <Text size="3" color="gray">
+                {Workout.isComplete.call(workoutSession.workout)
+                  ? `${workoutSession.workout.stop?.toISOString().split("T")[0]}, completed`
+                  : startedAgo}
+              </Text>
+            </Box>
+          </Flex>
+          <Flex gap="2">
+            {Workout.isComplete.call(workoutSession.workout) ? (
+              <Button
+                variant="soft"
+                color="red"
+                size="3"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                Delete
+              </Button>
+            ) : (
+              <>
+                <Button onClick={() => setShowCompletionModal(true)} size="3">
+                  Complete Workout
+                </Button>
+                <Button
+                  variant="soft"
+                  color="red"
+                  size="3"
+                  onClick={() => setShowCancelDialog(true)}
+                >
+                  Cancel
+                </Button>
+              </>
+            )}
+          </Flex>
+        </Flex>
+      </Box>
+
+      {/* Scrollable Content with top padding to account for fixed header */}
+      <Box p="4" style={{ paddingTop: "120px" }}>
+        {/* Exercise Cards */}
+        {workoutSession.exerciseGroups.map((group) => (
+          <WorkoutExerciseCard
+            key={group.exercise.id}
+            exerciseGroup={group}
+            isWorkoutComplete={Workout.isComplete.call(workoutSession.workout)}
+          />
+        ))}
+
+        {/* Add Exercise Button */}
+        {!Workout.isComplete.call(workoutSession.workout) && (
+          <Button
+            onClick={() => setShowExerciseSelector(true)}
+            size="3"
+            style={{ width: "100%" }}
+          >
+            Add Exercise
+          </Button>
+        )}
+      </Box>
 
       {/* Modals */}
       <ExerciseSelector
@@ -482,6 +557,14 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
         open={showCancelDialog}
         onOpenChange={setShowCancelDialog}
       />
-    </Box>
+
+      {Workout.isComplete.call(workoutSession.workout) && (
+        <DeleteConfirmationDialog
+          workoutSession={workoutSession}
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+        />
+      )}
+    </>
   );
 }
