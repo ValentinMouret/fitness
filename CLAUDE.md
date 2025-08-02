@@ -1,12 +1,13 @@
 # Fitness
 Fitness is an app that centralises nutrition, fitness, and habits.
+This is *solo-ware*: I am the sole user of this app.
 
 ## Stack
 - React Router v7 (framework mode, _à la_ Remix)
 - TypeScript
 - Drizzle
 - PostgreSQL
-- Biome
+- Biome (linter, formater)
 - pnpm
 - zod
 - Radix UI (components & icons)
@@ -14,7 +15,6 @@ Fitness is an app that centralises nutrition, fitness, and habits.
 - Tailwind CSS (styling utility)
 - Recharts (data visualization)
 - neverthrow (error handling)
-- OpenAI (AI integration)
 
 ## Useful commands
 ```shell
@@ -35,7 +35,8 @@ pnpm db:seed
 
 ## React-router v7
 The framework we use here is react-router v7.
-Once a route is defined in `app/routes.ts` and this generates types 
+Once a route is defined in `app/routes.ts` and this generates types .
+If you do work related to React-Router, please read: .claude/react-router.md.
 
 ## Code style
 - Follow react-router v7 patterns (`loader`, `clientLoader`, `action`)
@@ -50,11 +51,13 @@ Once a route is defined in `app/routes.ts` and this generates types
 - Keep styling minimal and centralised in the Radix theme
 
 ## Patterns
-I use `neverthrow` to have errors as value.
+Use `neverthrow` to have errors as value.
 Always bubble up domain and application layer errors to the infrastructure layer.
 The infrastructure layer then decides how to handle the errors, potentially by returning an HTTP error.
+Chain with `.map` or `.andThen`.
+
 ## Design
-- Light, minimalist
+Design system available in docs/design-system.md.
 
 ## Routes
 The routes are managed by the file `app/routes.ts`. The content follows React-Router v7 patterns.
