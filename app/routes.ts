@@ -17,6 +17,7 @@ export default [
         "nutrition/calculate-targets",
         "routes/nutrition/calculate-targets/index.tsx",
       ),
+      route("nutrition/meal-builder", "routes/nutrition/meal-builder.tsx"),
       route("workouts", "routes/workouts/index.tsx"),
       route("workouts/create", "routes/workouts/create.tsx"),
       route("workouts/generate", "routes/workouts/generate.tsx"),

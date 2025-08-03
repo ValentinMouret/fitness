@@ -19,6 +19,11 @@ import {
   muscleGroups,
   movementPatterns,
 } from "~/modules/fitness/domain/workout";
+import {
+  ingredientCategories,
+  textureCategories,
+} from "~/modules/nutrition/domain/ingredient";
+import { mealCategories } from "~/modules/nutrition/domain/meal-template";
 
 export const timestampColumns = () => ({
   created_at: timestamp().notNull().defaultNow(),
@@ -299,5 +304,87 @@ export const workoutSets = pgTable(
       "weight_is_null_or_positive",
       sql`${table.weight} is null or ${table.weight} > 0`,
     ),
+  ],
+);
+
+// Nutrition
+export const ingredientCategory = pgEnum(
+  "ingredient_category",
+  ingredientCategories,
+);
+export const textureCategory = pgEnum("texture_category", textureCategories);
+export const mealCategory = pgEnum("meal_category", mealCategories);
+
+export const ingredients = pgTable(
+  "ingredients",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    name: text().notNull(),
+    category: ingredientCategory().notNull(),
+    calories: doublePrecision().notNull(),
+    protein: doublePrecision().notNull(),
+    carbs: doublePrecision().notNull(),
+    fat: doublePrecision().notNull(),
+    fiber: doublePrecision().notNull(),
+    water_percentage: doublePrecision().notNull(),
+    energy_density: doublePrecision().notNull(),
+    texture: textureCategory().notNull(),
+    is_vegetarian: boolean().notNull().default(false),
+    is_vegan: boolean().notNull().default(false),
+    slider_min: integer().notNull(),
+    slider_max: integer().notNull(),
+    ...timestampColumns(),
+  },
+  (table) => [
+    uniqueIndex("ingredients_name_unique_idx")
+      .on(table.name)
+      .where(isNull(table.deleted_at)),
+    check("calories_positive", sql`${table.calories} >= 0`),
+    check(
+      "macros_positive",
+      sql`${table.protein} >= 0 and ${table.carbs} >= 0 and ${table.fat} >= 0 and ${table.fiber} >= 0`,
+    ),
+    check(
+      "water_percentage_range",
+      sql`${table.water_percentage} >= 0 and ${table.water_percentage} <= 100`,
+    ),
+    check("energy_density_positive", sql`${table.energy_density} >= 0`),
+    check(
+      "slider_range_valid",
+      sql`${table.slider_min} > 0 and ${table.slider_max} > ${table.slider_min}`,
+    ),
+  ],
+);
+
+export const mealTemplates = pgTable("meal_templates", {
+  id: uuid().primaryKey().defaultRandom(),
+  name: text().notNull(),
+  category: mealCategory().notNull(),
+  notes: text(),
+  total_calories: doublePrecision().notNull(),
+  total_protein: doublePrecision().notNull(),
+  total_carbs: doublePrecision().notNull(),
+  total_fat: doublePrecision().notNull(),
+  total_fiber: doublePrecision().notNull(),
+  satiety_score: doublePrecision().notNull(),
+  usage_count: integer().notNull().default(0),
+  ...timestampColumns(),
+});
+
+export const mealTemplateIngredients = pgTable(
+  "meal_template_ingredients",
+  {
+    meal_template_id: uuid()
+      .references(() => mealTemplates.id)
+      .notNull(),
+    ingredient_id: uuid()
+      .references(() => ingredients.id)
+      .notNull(),
+    quantity_grams: doublePrecision().notNull(),
+    ...timestampColumns(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.meal_template_id, table.ingredient_id] }),
+    check("quantity_positive", sql`${table.quantity_grams} > 0`),
   ],
 );
