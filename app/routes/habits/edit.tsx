@@ -1,10 +1,4 @@
-import {
-  Form,
-  redirect,
-  useActionData,
-  Link,
-  useLoaderData,
-} from "react-router";
+import { Form, redirect, useActionData, Link } from "react-router";
 import { data } from "react-router";
 import type { Route } from "./+types/edit";
 import type {
@@ -81,8 +75,9 @@ export async function action({ request, params }: Route.ActionArgs) {
   return redirect("/habits");
 }
 
-export default function EditHabit() {
-  const { habit } = useLoaderData<typeof loader>();
+export default function EditHabit({
+  loaderData: { habit },
+}: Route.ComponentProps) {
   const actionData = useActionData<typeof action>();
   const [frequencyType, setFrequencyType] = React.useState<string>(
     habit.frequencyType,

@@ -1,5 +1,9 @@
 import { z } from "zod";
-import type { IngredientWithQuantity, NutritionalTotals } from "./ingredient";
+import type {
+  IngredientWithQuantity,
+  NutritionalTotals,
+  TextureCategory,
+} from "./ingredient";
 import { Ingredient } from "./ingredient";
 
 export const mealCategories = [
@@ -50,14 +54,12 @@ export interface SatietyCalculationResult {
   readonly estimatedSatisfactionHours: { min: number; max: number };
 }
 
-const TEXTURE_MODIFIERS: Record<
-  import("./ingredient").TextureCategory,
-  number
-> = {
+const TEXTURE_MODIFIERS: Record<TextureCategory, number> = {
   liquid: 1.0,
   semi_liquid: 1.15,
   soft_solid: 1.25,
   firm_solid: 1.35,
+  powder: 1.4,
 };
 
 export function calculateSatietyScore(

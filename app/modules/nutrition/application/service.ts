@@ -4,15 +4,26 @@ import type {
   Ingredient,
   CreateIngredientInput,
   UpdateIngredientInput,
+  IngredientWithQuantity,
 } from "../domain/ingredient";
 import type {
   MealTemplate,
   MealTemplateWithIngredients,
   CreateMealTemplateInput,
   UpdateMealTemplateInput,
+  MealCategory,
 } from "../domain/meal-template";
+import type {
+  MealLog,
+  MealLogWithIngredients,
+  MealLogWithNutrition,
+  CreateMealLogInput,
+  UpdateMealLogInput,
+  MealLogSummary,
+} from "../domain/meal-log";
 import { IngredientRepository } from "../infra/ingredient.repository.server";
 import { MealTemplateRepository } from "../infra/meal-template.repository.server";
+import { MealLogRepository } from "../infra/meal-log.repository.server";
 
 export const NutritionService = {
   // Ingredient operations
@@ -87,5 +98,109 @@ export const NutritionService = {
   // Utility operations
   clearIngredientsCache(): void {
     IngredientRepository.clearCache();
+  },
+
+  // Meal log operations
+  getMealLogById(id: string): ResultAsync<MealLog, ErrRepository> {
+    return MealLogRepository.fetchById(id);
+  },
+
+  getMealLogWithIngredients(
+    id: string,
+  ): ResultAsync<MealLogWithIngredients, ErrRepository> {
+    return MealLogRepository.fetchWithIngredients(id);
+  },
+
+  getMealLogWithNutrition(
+    id: string,
+  ): ResultAsync<MealLogWithNutrition, ErrRepository> {
+    return MealLogRepository.fetchWithNutrition(id);
+  },
+
+  getMealLogByDateAndCategory(
+    date: Date,
+    category: MealCategory,
+  ): ResultAsync<MealLog | null, ErrRepository> {
+    return MealLogRepository.fetchByDateAndCategory(date, category);
+  },
+
+  getDailySummary(date: Date): ResultAsync<MealLogSummary, ErrRepository> {
+    return MealLogRepository.fetchDailySummary(date);
+  },
+
+  getMealLogsByDate(
+    date: Date,
+  ): ResultAsync<readonly MealLog[], ErrRepository> {
+    return MealLogRepository.fetchLogsByDate(date);
+  },
+
+  getMealLogsByDateRange(
+    startDate: Date,
+    endDate: Date,
+  ): ResultAsync<readonly MealLog[], ErrRepository> {
+    return MealLogRepository.fetchLogsByDateRange(startDate, endDate);
+  },
+
+  createMealLog(
+    input: CreateMealLogInput,
+  ): ResultAsync<MealLogWithIngredients, ErrRepository> {
+    return MealLogRepository.save(input);
+  },
+
+  createMealLogFromTemplate(
+    templateId: string,
+    mealCategory: MealCategory,
+    loggedDate: Date,
+    notes?: string,
+  ): ResultAsync<MealLogWithIngredients, ErrRepository> {
+    return MealTemplateRepository.fetchWithIngredients(templateId).andThen(
+      (template) => {
+        const input: CreateMealLogInput = {
+          mealCategory,
+          loggedDate,
+          notes,
+          mealTemplateId: templateId,
+          ingredients: template.ingredients,
+        };
+        return MealLogRepository.save(input);
+      },
+    );
+  },
+
+  updateMealLog(
+    id: string,
+    updates: UpdateMealLogInput,
+  ): ResultAsync<MealLog, ErrRepository> {
+    return MealLogRepository.update(id, updates);
+  },
+
+  addIngredientToMealLog(
+    logId: string,
+    ingredient: IngredientWithQuantity,
+  ): ResultAsync<void, ErrRepository> {
+    return MealLogRepository.addIngredient(logId, ingredient);
+  },
+
+  updateMealLogIngredientQuantity(
+    logId: string,
+    ingredientId: string,
+    quantityGrams: number,
+  ): ResultAsync<void, ErrRepository> {
+    return MealLogRepository.updateIngredientQuantity(
+      logId,
+      ingredientId,
+      quantityGrams,
+    );
+  },
+
+  removeIngredientFromMealLog(
+    logId: string,
+    ingredientId: string,
+  ): ResultAsync<void, ErrRepository> {
+    return MealLogRepository.removeIngredient(logId, ingredientId);
+  },
+
+  deleteMealLog(id: string): ResultAsync<void, ErrRepository> {
+    return MealLogRepository.delete(id);
   },
 };

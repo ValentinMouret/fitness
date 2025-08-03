@@ -9,7 +9,7 @@ import {
 import { HabitService } from "~/modules/habits/application/service";
 import { isSameDay, today } from "~/time";
 import type { Route } from "./+types/index";
-import { Form, useLoaderData } from "react-router";
+import { Form } from "react-router";
 import { coerceFloat, resultFromNullable } from "~/utils";
 import HabitCheckbox from "~/components/HabitCheckbox";
 import WeightChart from "~/components/WeightChart";
@@ -189,8 +189,8 @@ export async function action({ request }: Route.ActionArgs) {
   }
 }
 
-export default function DashboardPage() {
-  const {
+export default function DashboardPage({
+  loaderData: {
     weight,
     lastWeight,
     weightData,
@@ -200,8 +200,8 @@ export default function DashboardPage() {
     completionMap,
     habitStreaks,
     dailyQuote,
-  } = useLoaderData<typeof loader>();
-
+  },
+}: Route.ComponentProps) {
   return (
     <Box>
       <Heading size="7" mb="6">

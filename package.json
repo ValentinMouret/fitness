@@ -19,10 +19,7 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "pnpm fmt",
-      "pnpm lint"
-    ]
+    "*.{ts,tsx}": ["pnpm fmt", "pnpm lint"]
   },
   "dependencies": {
     "@radix-ui/react-icons": "^1.3.2",

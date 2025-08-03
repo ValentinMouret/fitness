@@ -1,12 +1,12 @@
-import { eq, and, isNull, sql, type InferSelectModel } from "drizzle-orm";
-import { Result, ResultAsync, ok } from "neverthrow";
+import { eq, and, isNull, sql } from "drizzle-orm";
+import { Result, ResultAsync } from "neverthrow";
 import { db } from "~/db/index";
 import {
   mealTemplates,
   mealTemplateIngredients,
   ingredients,
 } from "~/db/schema";
-import type { ErrRepository, ErrValidation } from "~/repository";
+import type { ErrRepository } from "~/repository";
 import {
   executeQuery,
   fetchSingleRecord,
@@ -19,6 +19,7 @@ import type {
   UpdateMealTemplateInput,
 } from "../domain/meal-template";
 import type { IngredientWithQuantity } from "../domain/ingredient";
+import { recordToIngredient, recordToMealTemplate } from "./record-mappers";
 
 export const MealTemplateRepository = {
   listAll(): ResultAsync<readonly MealTemplate[], ErrRepository> {
@@ -79,33 +80,12 @@ export const MealTemplateRepository = {
 
     return executeQuery(query, "fetchTemplateIngredients").andThen(
       (records) => {
-        const results = records.map((record) => {
-          const ingredientResult = ok({
-            id: record.ingredient.id,
-            name: record.ingredient.name,
-            category: record.ingredient.category,
-            calories: record.ingredient.calories,
-            protein: record.ingredient.protein,
-            carbs: record.ingredient.carbs,
-            fat: record.ingredient.fat,
-            fiber: record.ingredient.fiber,
-            waterPercentage: record.ingredient.water_percentage,
-            energyDensity: record.ingredient.energy_density,
-            texture: record.ingredient.texture,
-            isVegetarian: record.ingredient.is_vegetarian,
-            isVegan: record.ingredient.is_vegan,
-            sliderMin: record.ingredient.slider_min,
-            sliderMax: record.ingredient.slider_max,
-            createdAt: record.ingredient.created_at,
-            updatedAt: record.ingredient.updated_at,
-            deletedAt: record.ingredient.deleted_at,
-          });
-
-          return ingredientResult.map((ingredient) => ({
+        const results = records.map((record) =>
+          recordToIngredient(record.ingredient).map((ingredient) => ({
             ingredient,
             quantityGrams: record.quantity_grams,
-          }));
-        });
+          })),
+        );
         return Result.combine(results);
       },
     );
@@ -300,24 +280,3 @@ export const MealTemplateRepository = {
     ).map(() => undefined);
   },
 };
-
-function recordToMealTemplate(
-  record: InferSelectModel<typeof mealTemplates>,
-): Result<MealTemplate, ErrValidation> {
-  return ok({
-    id: record.id,
-    name: record.name,
-    category: record.category,
-    notes: record.notes,
-    totalCalories: record.total_calories,
-    totalProtein: record.total_protein,
-    totalCarbs: record.total_carbs,
-    totalFat: record.total_fat,
-    totalFiber: record.total_fiber,
-    satietyScore: record.satiety_score,
-    usageCount: record.usage_count,
-    createdAt: record.created_at,
-    updatedAt: record.updated_at,
-    deletedAt: record.deleted_at,
-  });
-}

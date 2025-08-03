@@ -389,3 +389,39 @@ export const mealTemplateIngredients = pgTable(
     check("quantity_positive", sql`${table.quantity_grams} > 0`),
   ],
 );
+
+export const mealLogs = pgTable(
+  "meal_logs",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    meal_category: mealCategory().notNull(),
+    logged_date: date().notNull(),
+    is_completed: boolean().notNull().default(false),
+    notes: text(),
+    meal_template_id: uuid().references(() => mealTemplates.id),
+    ...timestampColumns(),
+  },
+  (table) => [
+    uniqueIndex("meal_logs_category_date_unique_idx")
+      .on(table.meal_category, table.logged_date)
+      .where(isNull(table.deleted_at)),
+  ],
+);
+
+export const mealLogIngredients = pgTable(
+  "meal_log_ingredients",
+  {
+    meal_log_id: uuid()
+      .references(() => mealLogs.id)
+      .notNull(),
+    ingredient_id: uuid()
+      .references(() => ingredients.id)
+      .notNull(),
+    quantity_grams: doublePrecision().notNull(),
+    ...timestampColumns(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.meal_log_id, table.ingredient_id] }),
+    check("quantity_positive", sql`${table.quantity_grams} > 0`),
+  ],
+);

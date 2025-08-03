@@ -1,8 +1,8 @@
-import { eq, and, isNull, type InferSelectModel } from "drizzle-orm";
-import { Result, ResultAsync, ok } from "neverthrow";
+import { eq, and, isNull } from "drizzle-orm";
+import { Result, ResultAsync } from "neverthrow";
 import { db } from "~/db/index";
 import { ingredients } from "~/db/schema";
-import type { ErrRepository, ErrValidation } from "~/repository";
+import type { ErrRepository } from "~/repository";
 import {
   executeQuery,
   fetchSingleRecord,
@@ -13,6 +13,7 @@ import type {
   CreateIngredientInput,
   UpdateIngredientInput,
 } from "../domain/ingredient";
+import { recordToIngredient } from "./record-mappers";
 
 let ingredientsCache: Ingredient[] | null = null;
 
@@ -204,28 +205,3 @@ export const IngredientRepository = {
     ingredientsCache = null;
   },
 };
-
-function recordToIngredient(
-  record: InferSelectModel<typeof ingredients>,
-): Result<Ingredient, ErrValidation> {
-  return ok({
-    id: record.id,
-    name: record.name,
-    category: record.category,
-    calories: record.calories,
-    protein: record.protein,
-    carbs: record.carbs,
-    fat: record.fat,
-    fiber: record.fiber,
-    waterPercentage: record.water_percentage,
-    energyDensity: record.energy_density,
-    texture: record.texture,
-    isVegetarian: record.is_vegetarian,
-    isVegan: record.is_vegan,
-    sliderMin: record.slider_min,
-    sliderMax: record.slider_max,
-    createdAt: record.created_at,
-    updatedAt: record.updated_at,
-    deletedAt: record.deleted_at,
-  });
-}

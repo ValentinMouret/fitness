@@ -50,6 +50,10 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
         <RadixLink asChild>
           <RouterLink to="/nutrition/meal-builder">Meal Builder</RouterLink>
         </RadixLink>
+
+        <RadixLink asChild>
+          <RouterLink to="/nutrition/meals">Meal Logger</RouterLink>
+        </RadixLink>
       </Flex>
     </Container>
   );

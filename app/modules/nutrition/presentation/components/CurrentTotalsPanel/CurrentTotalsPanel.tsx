@@ -1,5 +1,5 @@
 import { Box, Card, Flex, Heading, Text } from "@radix-ui/themes";
-import type { Objectives } from "./ObjectivesPanel";
+import type { Objectives } from "../ObjectivesPanel";
 
 export interface NutritionTotals {
   readonly calories: number;

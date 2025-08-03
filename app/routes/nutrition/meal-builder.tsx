@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Box,
   Button,
@@ -24,10 +24,11 @@ import {
 } from "@radix-ui/react-icons";
 import {
   Link,
-  useLoaderData,
   useFetcher,
+  redirect,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
+  type Route,
 } from "react-router";
 import { NutritionService } from "~/modules/nutrition/application/service";
 import type { Ingredient } from "~/modules/nutrition/domain/ingredient";
@@ -36,21 +37,34 @@ import {
   Ingredient as IngredientDomain,
 } from "~/modules/nutrition/domain/ingredient";
 import type { CreateMealTemplateInput } from "~/modules/nutrition/domain/meal-template";
-import { calculateSatietyScore } from "~/modules/nutrition/domain/meal-template";
+import {
+  calculateSatietyScore,
+  mealCategories,
+  type MealCategory,
+} from "~/modules/nutrition/domain/meal-template";
 import {
   ObjectivesPanel,
-  type Objectives,
-} from "~/components/nutrition/meal-builder/ObjectivesPanel";
-import { CurrentTotalsPanel } from "~/components/nutrition/meal-builder/CurrentTotalsPanel";
-import {
+  CurrentTotalsPanel,
   IngredientCard,
+  type Objectives,
   type SelectedIngredient,
-} from "~/components/nutrition/meal-builder/IngredientCard";
+} from "~/modules/nutrition/presentation";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const searchTerm = url.searchParams.get("search") || undefined;
   const category = url.searchParams.get("category") || undefined;
+
+  // Meal logging mode parameters
+  const mealCategoryParam = url.searchParams.get("meal");
+  const mealCategory =
+    mealCategoryParam &&
+    mealCategories.includes(mealCategoryParam as MealCategory)
+      ? (mealCategoryParam as MealCategory)
+      : null;
+  const dateParam = url.searchParams.get("date");
+  const mealId = url.searchParams.get("mealId");
+  const returnTo = url.searchParams.get("returnTo");
 
   const [ingredientsResult, templatesResult] = await Promise.all([
     NutritionService.searchIngredients(searchTerm, category),
@@ -65,9 +79,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw new Error("Failed to load meal templates");
   }
 
+  // If in meal logging mode and editing an existing meal, fetch the meal data
+  let existingMeal = null;
+  if (mealId) {
+    const mealResult = await NutritionService.getMealLogWithIngredients(mealId);
+    if (mealResult.isOk()) {
+      existingMeal = mealResult.value;
+    }
+  }
+
   return {
     ingredients: ingredientsResult.value,
     mealTemplates: templatesResult.value,
+    // Meal logging context
+    mealLoggingMode: {
+      isEnabled: Boolean(mealCategory && dateParam && returnTo),
+      mealCategory,
+      date: dateParam,
+      returnTo,
+      existingMeal,
+    },
   };
 }
 
@@ -127,6 +158,71 @@ export async function action({ request }: ActionFunctionArgs) {
     }
   }
 
+  if (intent === "save-meal") {
+    const mealCategoryParam = formData.get("mealCategory")?.toString();
+    const mealCategory =
+      mealCategoryParam &&
+      mealCategories.includes(mealCategoryParam as MealCategory)
+        ? (mealCategoryParam as MealCategory)
+        : null;
+    const loggedDate = formData.get("loggedDate")?.toString();
+    const ingredientsJson = formData.get("ingredients")?.toString();
+    const returnTo = formData.get("returnTo")?.toString();
+    const mealId = formData.get("mealId")?.toString(); // For editing existing meals
+    const notes = formData.get("notes")?.toString();
+
+    if (!mealCategory || !loggedDate || !ingredientsJson) {
+      throw new Error("Missing required fields for meal logging");
+    }
+
+    try {
+      const ingredientsData = JSON.parse(ingredientsJson);
+      const parsedDate = new Date(loggedDate);
+
+      // Convert ingredient data back to domain objects
+      const ingredients = await Promise.all(
+        ingredientsData.map(async (item: { id: string; quantity: number }) => {
+          const ingredientResult = await NutritionService.getIngredientById(
+            item.id,
+          );
+          if (ingredientResult.isErr()) {
+            throw new Error(`Failed to find ingredient: ${item.id}`);
+          }
+          return {
+            ingredient: ingredientResult.value,
+            quantityGrams: item.quantity,
+          };
+        }),
+      );
+
+      let result;
+      if (mealId) {
+        // Update existing meal
+        result = await NutritionService.updateMealLog(mealId, {
+          ingredients,
+          notes,
+        });
+      } else {
+        // Create new meal
+        result = await NutritionService.createMealLog({
+          mealCategory,
+          loggedDate: parsedDate,
+          ingredients,
+          notes,
+        });
+      }
+
+      if (result.isErr()) {
+        throw new Error("Failed to save meal");
+      }
+
+      // Redirect back to the meal logger
+      return redirect(returnTo || "/nutrition/meals");
+    } catch (error) {
+      throw new Error("Invalid meal data");
+    }
+  }
+
   throw new Error("Invalid intent");
 }
 
@@ -166,8 +262,9 @@ function getIngredientIcon(name: string): string {
   return iconMap[name] || "🥘";
 }
 
-export default function MealBuilder() {
-  const { ingredients, mealTemplates } = useLoaderData<typeof loader>();
+export default function MealBuilder({
+  loaderData: { ingredients, mealTemplates, mealLoggingMode },
+}: Route.ComponentProps) {
   const fetcher = useFetcher();
 
   const [objectives, setObjectives] = useState<Objectives>({
@@ -184,6 +281,23 @@ export default function MealBuilder() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+
+  // Pre-populate ingredients when editing an existing meal
+  useEffect(() => {
+    if (mealLoggingMode.existingMeal?.ingredients) {
+      const convertedIngredients: SelectedIngredient[] =
+        mealLoggingMode.existingMeal.ingredients.map((item) => ({
+          ...item.ingredient,
+          quantity: item.quantityGrams,
+          defaultRange: [
+            item.ingredient.sliderMin,
+            item.ingredient.sliderMax,
+          ] as const,
+          unit: "g",
+        }));
+      setSelectedIngredients(convertedIngredients);
+    }
+  }, [mealLoggingMode.existingMeal]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -282,12 +396,22 @@ export default function MealBuilder() {
   return (
     <Container size="4">
       <Flex align="center" gap="3" mb="6">
-        <Link to="/nutrition">
+        <Link
+          to={
+            mealLoggingMode.isEnabled
+              ? mealLoggingMode.returnTo || "/nutrition/meals"
+              : "/nutrition"
+          }
+        >
           <IconButton variant="ghost" size="2">
             <ChevronLeftIcon width="16" height="16" />
           </IconButton>
         </Link>
-        <Heading size="6">Meal Builder</Heading>
+        <Heading size="6">
+          {mealLoggingMode.isEnabled
+            ? `${mealLoggingMode.existingMeal ? "Edit" : "Add"} ${mealLoggingMode.mealCategory?.charAt(0).toUpperCase()}${mealLoggingMode.mealCategory?.slice(1)}${mealLoggingMode.date ? ` for ${new Date(mealLoggingMode.date).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}` : ""}`
+            : "Meal Builder"}
+        </Heading>
       </Flex>
 
       <Grid columns="2" gap="4" mb="6">
@@ -345,22 +469,51 @@ export default function MealBuilder() {
           AI Suggest
         </Button>
 
-        <AlertDialog.Root
-          open={showSaveDialog}
-          onOpenChange={setShowSaveDialog}
-        >
-          <AlertDialog.Trigger>
-            <Button variant="outline">
-              <DownloadIcon width="16" height="16" />
-              Save Template
-            </Button>
-          </AlertDialog.Trigger>
-          <SaveTemplateDialog
-            onClose={() => setShowSaveDialog(false)}
-            selectedIngredients={selectedIngredients}
-            fetcher={fetcher}
-          />
-        </AlertDialog.Root>
+        {mealLoggingMode.isEnabled ? (
+          <Button
+            onClick={() => {
+              // Submit save-meal form
+              const ingredientsData = selectedIngredients.map((ing) => ({
+                id: ing.id,
+                quantity: ing.quantity,
+              }));
+
+              fetcher.submit(
+                {
+                  intent: "save-meal",
+                  mealCategory: mealLoggingMode.mealCategory!,
+                  loggedDate: mealLoggingMode.date!,
+                  returnTo: mealLoggingMode.returnTo!,
+                  mealId: mealLoggingMode.existingMeal?.id || "",
+                  ingredients: JSON.stringify(ingredientsData),
+                  notes: "", // TODO: Add notes field if needed
+                },
+                { method: "post" },
+              );
+            }}
+            disabled={selectedIngredients.length === 0}
+          >
+            <DownloadIcon width="16" height="16" />
+            {mealLoggingMode.existingMeal ? "Update Meal" : "Save Meal"}
+          </Button>
+        ) : (
+          <AlertDialog.Root
+            open={showSaveDialog}
+            onOpenChange={setShowSaveDialog}
+          >
+            <AlertDialog.Trigger>
+              <Button variant="outline">
+                <DownloadIcon width="16" height="16" />
+                Save Template
+              </Button>
+            </AlertDialog.Trigger>
+            <SaveTemplateDialog
+              onClose={() => setShowSaveDialog(false)}
+              selectedIngredients={selectedIngredients}
+              fetcher={fetcher}
+            />
+          </AlertDialog.Root>
+        )}
       </Flex>
 
       {showAISuggestions && (
@@ -392,12 +545,14 @@ function AddIngredientModal({
 
   return (
     <Dialog.Content size="3">
-      <Dialog.Title>Add Ingredient</Dialog.Title>
-      <Dialog.Close>
-        <IconButton variant="ghost">
-          <Cross2Icon />
-        </IconButton>
-      </Dialog.Close>
+      <Flex justify="between" align="center" mb="3">
+        <Dialog.Title>Add Ingredient</Dialog.Title>
+        <Dialog.Close>
+          <IconButton variant="ghost">
+            <Cross2Icon />
+          </IconButton>
+        </Dialog.Close>
+      </Flex>
 
       <Flex direction="column" gap="3">
         <TextField.Root
