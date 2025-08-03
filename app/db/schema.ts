@@ -339,8 +339,7 @@ export const ingredients = pgTable(
     uniqueIndex("ingredients_name_unique_idx")
       .on(table.name)
       .where(isNull(table.deleted_at)),
-    uniqueIndex("ingredients_name_simple_unique_idx")
-      .on(table.name),
+    uniqueIndex("ingredients_name_simple_unique_idx").on(table.name),
     check("calories_positive", sql`${table.calories} >= 0`),
     check(
       "macros_positive",
