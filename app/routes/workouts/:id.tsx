@@ -17,7 +17,10 @@ import {
 } from "@radix-ui/themes";
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
 import { useState, useRef, useEffect } from "react";
-import { WorkoutExerciseCard } from "~/components/workout/WorkoutExerciseCard";
+import {
+  WorkoutExerciseCard,
+  createWorkoutExerciseCardViewModel,
+} from "~/modules/fitness/presentation";
 import { useFetcher, Link } from "react-router";
 import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
 import { CompletionModal } from "~/components/workout/CompletionModal";
@@ -519,13 +522,18 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
       {/* Scrollable Content with top padding to account for fixed header */}
       <Box p="4" style={{ paddingTop: "120px" }}>
         {/* Exercise Cards */}
-        {workoutSession.exerciseGroups.map((group) => (
-          <WorkoutExerciseCard
-            key={group.exercise.id}
-            exerciseGroup={group}
-            isWorkoutComplete={Workout.isComplete.call(workoutSession.workout)}
-          />
-        ))}
+        {workoutSession.exerciseGroups.map((group) => {
+          const viewModel = createWorkoutExerciseCardViewModel(
+            group,
+            Workout.isComplete.call(workoutSession.workout),
+          );
+          return (
+            <WorkoutExerciseCard
+              key={group.exercise.id}
+              viewModel={viewModel}
+            />
+          );
+        })}
 
         {/* Add Exercise Button */}
         {!Workout.isComplete.call(workoutSession.workout) && (

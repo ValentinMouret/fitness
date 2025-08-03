@@ -1,0 +1,1 @@
+export { ExerciseTypeBadge } from "./ExerciseTypeBadge";
