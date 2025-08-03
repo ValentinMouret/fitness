@@ -99,3 +99,11 @@ export function formatStartedAgo(minutes: number): string {
   }
   return `Started ${hours} hours ${remainingMinutes} min ago`;
 }
+
+export function toDateString(date: Date): string {
+  return date.toISOString().split("T")[0];
+}
+
+export function fromDateString(dateString: string): Date {
+  return new Date(`${dateString}T00:00:00.000Z`);
+}

@@ -1,6 +1,7 @@
 import { eq, and, isNull, sql, gte, lte } from "drizzle-orm";
 import { Result, ResultAsync, ok } from "neverthrow";
 import { db } from "~/db/index";
+import { toDateString } from "~/time";
 import {
   mealLogs,
   mealLogIngredients,
@@ -66,7 +67,7 @@ export const MealLogRepository = {
     date: Date,
     category: MealCategory,
   ): ResultAsync<MealLog | null, ErrRepository> {
-    const dateString = date.toISOString().split("T")[0];
+    const dateString = toDateString(date);
     const query = db
       .select()
       .from(mealLogs)
@@ -96,7 +97,7 @@ export const MealLogRepository = {
   },
 
   fetchLogsByDate(date: Date): ResultAsync<readonly MealLog[], ErrRepository> {
-    const dateString = date.toISOString().split("T")[0];
+    const dateString = toDateString(date);
     const query = db
       .select()
       .from(mealLogs)
@@ -114,8 +115,8 @@ export const MealLogRepository = {
     startDate: Date,
     endDate: Date,
   ): ResultAsync<readonly MealLog[], ErrRepository> {
-    const startDateString = startDate.toISOString().split("T")[0];
-    const endDateString = endDate.toISOString().split("T")[0];
+    const startDateString = toDateString(startDate);
+    const endDateString = toDateString(endDate);
 
     const query = db
       .select()
@@ -174,7 +175,7 @@ export const MealLogRepository = {
 
     return ResultAsync.fromPromise(
       transaction.transaction(async (trx) => {
-        const dateString = input.loggedDate.toISOString().split("T")[0];
+        const dateString = toDateString(input.loggedDate);
 
         // Check if a log already exists for this date and meal category
         const existing = await trx

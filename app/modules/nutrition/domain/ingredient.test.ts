@@ -17,6 +17,8 @@ const createTestIngredient = (overrides?: Partial<Ingredient>): Ingredient => ({
   isVegan: false,
   sliderMin: 10,
   sliderMax: 200,
+  aiGenerated: false,
+  aiGeneratedAt: null,
   createdAt: new Date("2025-01-01T00:00:00.000Z"),
   updatedAt: null,
   deletedAt: null,

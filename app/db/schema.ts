@@ -333,6 +333,8 @@ export const ingredients = pgTable(
     is_vegan: boolean().notNull().default(false),
     slider_min: integer().notNull(),
     slider_max: integer().notNull(),
+    ai_generated: boolean().notNull().default(false),
+    ai_generated_at: timestamp(),
     ...timestampColumns(),
   },
   (table) => [

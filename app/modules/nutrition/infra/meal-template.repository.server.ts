@@ -19,6 +19,7 @@ import type {
   UpdateMealTemplateInput,
 } from "../domain/meal-template";
 import type { IngredientWithQuantity } from "../domain/ingredient";
+import { Ingredient } from "../domain/ingredient";
 import { recordToIngredient, recordToMealTemplate } from "./record-mappers";
 
 export const MealTemplateRepository = {
@@ -100,22 +101,7 @@ export const MealTemplateRepository = {
     return ResultAsync.fromPromise(
       transaction.transaction(async (trx) => {
         // Calculate totals and satiety from ingredients
-        const totals = input.ingredients.reduce(
-          (acc, { ingredient, quantityGrams }) => {
-            const factor = quantityGrams / 100;
-            return {
-              calories: acc.calories + ingredient.calories * factor,
-              protein: acc.protein + ingredient.protein * factor,
-              carbs: acc.carbs + ingredient.carbs * factor,
-              fat: acc.fat + ingredient.fat * factor,
-              fiber: acc.fiber + ingredient.fiber * factor,
-              volume:
-                acc.volume +
-                quantityGrams * (ingredient.waterPercentage / 100 + 0.5),
-            };
-          },
-          { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, volume: 0 },
-        );
+        const totals = Ingredient.calculateTotalNutrition(input.ingredients);
 
         // Calculate satiety score
         const { calculateSatietyScore } = await import(

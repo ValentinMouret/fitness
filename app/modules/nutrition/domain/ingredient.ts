@@ -44,6 +44,8 @@ export const IngredientSchema = z.object({
   isVegan: z.boolean(),
   sliderMin: z.number().positive(),
   sliderMax: z.number().positive(),
+  aiGenerated: z.boolean().default(false),
+  aiGeneratedAt: z.date().nullable(),
   createdAt: z.date(),
   updatedAt: z.date().nullable(),
   deletedAt: z.date().nullable(),
@@ -55,6 +57,11 @@ export type CreateIngredientInput = Omit<
   Ingredient,
   "id" | "createdAt" | "updatedAt" | "deletedAt"
 >;
+
+export type CreateAIIngredientInput = CreateIngredientInput & {
+  aiGenerated: true;
+  aiGeneratedAt: Date;
+};
 
 export type UpdateIngredientInput = Partial<CreateIngredientInput>;
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Box,
   Button,
@@ -46,9 +46,11 @@ import {
   ObjectivesPanel,
   CurrentTotalsPanel,
   IngredientCard,
+  AIIngredientReviewModal,
   type Objectives,
   type SelectedIngredient,
 } from "~/modules/nutrition/presentation";
+import type { CreateAIIngredientInput } from "~/modules/nutrition/domain/ingredient";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -108,17 +110,19 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (intent === "save-template") {
     const name = formData.get("name")?.toString();
-    const category = formData.get("category")?.toString() as
-      | "breakfast"
-      | "lunch"
-      | "dinner"
-      | "snack";
+    const categoryValue = formData.get("category")?.toString();
     const notes = formData.get("notes")?.toString();
     const ingredientsJson = formData.get("ingredients")?.toString();
 
-    if (!name || !category || !ingredientsJson) {
+    if (!name || !categoryValue || !ingredientsJson) {
       throw new Error("Missing required fields");
     }
+
+    if (!mealCategories.includes(categoryValue as MealCategory)) {
+      throw new Error("Invalid meal category");
+    }
+
+    const category = categoryValue as MealCategory;
 
     try {
       const ingredientsData = JSON.parse(ingredientsJson);
@@ -228,6 +232,45 @@ export async function action({ request }: ActionFunctionArgs) {
     }
   }
 
+  if (intent === "search-ai-ingredient") {
+    const query = formData.get("query")?.toString();
+    if (!query) {
+      throw new Error("Search query is required");
+    }
+
+    try {
+      const result = await NutritionService.searchIngredientWithAI(query);
+      return { aiIngredient: result };
+    } catch (error) {
+      console.error("AI ingredient search error:", error);
+      return {
+        error: "Failed to search ingredient with AI. Please try again.",
+      };
+    }
+  }
+
+  if (intent === "save-ai-ingredient") {
+    const ingredientDataJson = formData.get("ingredientData")?.toString();
+    if (!ingredientDataJson) {
+      throw new Error("Ingredient data is required");
+    }
+
+    try {
+      const ingredientData: CreateAIIngredientInput =
+        JSON.parse(ingredientDataJson);
+      const result = await NutritionService.createIngredient(ingredientData);
+
+      if (result.isErr()) {
+        throw new Error("Failed to save AI ingredient");
+      }
+
+      return { success: true, ingredient: result.value };
+    } catch (error) {
+      console.error("Save AI ingredient error:", error);
+      return { error: "Failed to save ingredient. Please try again." };
+    }
+  }
+
   throw new Error("Invalid intent");
 }
 
@@ -286,6 +329,13 @@ export default function MealBuilder({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+
+  // AI search state
+  const [isAISearching, setIsAISearching] = useState(false);
+  const [aiIngredientData, setAiIngredientData] =
+    useState<CreateAIIngredientInput | null>(null);
+  const [isAIReviewModalOpen, setIsAIReviewModalOpen] = useState(false);
+  const [aiSearchError, setAiSearchError] = useState<string | null>(null);
 
   // Pre-populate ingredients when editing an existing meal
   useEffect(() => {
@@ -374,10 +424,10 @@ export default function MealBuilder({
     return suggestions;
   }, [objectives, totals, satietyScore, ingredients]);
 
-  const handleAddIngredient = (ingredient: Ingredient) => {
+  const handleAddIngredient = useCallback((ingredient: Ingredient) => {
     const midpoint = (ingredient.sliderMin + ingredient.sliderMax) / 2;
-    setSelectedIngredients([
-      ...selectedIngredients,
+    setSelectedIngredients((prev) => [
+      ...prev,
       {
         ...ingredient,
         quantity: midpoint,
@@ -386,7 +436,7 @@ export default function MealBuilder({
       },
     ]);
     setIsAddModalOpen(false);
-  };
+  }, []);
 
   const handleUpdateQuantity = (id: string, quantity: number) => {
     setSelectedIngredients((prev) =>
@@ -397,6 +447,59 @@ export default function MealBuilder({
   const handleRemoveIngredient = (id: string) => {
     setSelectedIngredients((prev) => prev.filter((ing) => ing.id !== id));
   };
+
+  // AI search handlers
+  const handleAISearch = () => {
+    if (!searchQuery.trim()) return;
+
+    setIsAISearching(true);
+    setAiSearchError(null);
+
+    fetcher.submit(
+      {
+        intent: "search-ai-ingredient",
+        query: searchQuery.trim(),
+      },
+      { method: "post" },
+    );
+  };
+
+  const handleSaveAIIngredient = (ingredientData: CreateAIIngredientInput) => {
+    fetcher.submit(
+      {
+        intent: "save-ai-ingredient",
+        ingredientData: JSON.stringify(ingredientData),
+      },
+      { method: "post" },
+    );
+  };
+
+  // Handle fetcher responses
+  useEffect(() => {
+    if (fetcher.data) {
+      if (fetcher.data.aiIngredient) {
+        setIsAISearching(false);
+        const result = fetcher.data.aiIngredient;
+        if (result.found) {
+          setAiIngredientData(result.data);
+          setIsAIReviewModalOpen(true);
+        } else {
+          setAiSearchError(
+            "Ingredient not found by AI. Please try a different search term.",
+          );
+        }
+      } else if (fetcher.data.success && fetcher.data.ingredient) {
+        // Successfully saved AI ingredient, add it to selected ingredients
+        const newIngredient = fetcher.data.ingredient;
+        handleAddIngredient(newIngredient);
+        setIsAIReviewModalOpen(false);
+        setAiIngredientData(null);
+      } else if (fetcher.data.error) {
+        setIsAISearching(false);
+        setAiSearchError(fetcher.data.error);
+      }
+    }
+  }, [fetcher.data, handleAddIngredient]);
 
   return (
     <Container size="4">
@@ -463,6 +566,9 @@ export default function MealBuilder({
             setSearchQuery={setSearchQuery}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
+            onAISearch={handleAISearch}
+            isAISearching={isAISearching}
+            aiSearchError={aiSearchError}
           />
         </Dialog.Root>
 
@@ -527,6 +633,20 @@ export default function MealBuilder({
           onClose={() => setShowAISuggestions(false)}
         />
       )}
+
+      {aiIngredientData && (
+        <AIIngredientReviewModal
+          isOpen={isAIReviewModalOpen}
+          onClose={() => {
+            setIsAIReviewModalOpen(false);
+            setAiIngredientData(null);
+            setAiSearchError(null);
+          }}
+          aiIngredientData={aiIngredientData}
+          onSave={handleSaveAIIngredient}
+          isLoading={fetcher.state === "submitting"}
+        />
+      )}
     </Container>
   );
 }
@@ -538,6 +658,9 @@ function AddIngredientModal({
   setSearchQuery,
   selectedCategory,
   setSelectedCategory,
+  onAISearch,
+  isAISearching,
+  aiSearchError,
 }: {
   ingredients: readonly Ingredient[];
   onAdd: (ingredient: Ingredient) => void;
@@ -545,6 +668,9 @@ function AddIngredientModal({
   setSearchQuery: (query: string) => void;
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
+  onAISearch: () => void;
+  isAISearching: boolean;
+  aiSearchError: string | null;
 }) {
   const categories = ["all", ...ingredientCategories];
 
@@ -583,7 +709,40 @@ function AddIngredientModal({
         <Box style={{ height: "300px", overflow: "auto" }}>
           <Flex direction="column" gap="2">
             {ingredients.length === 0 ? (
-              <Text>No ingredients found</Text>
+              <Flex
+                direction="column"
+                gap="3"
+                align="center"
+                justify="center"
+                style={{ height: "200px" }}
+              >
+                <Text color="gray" size="2">
+                  No ingredients found
+                </Text>
+                {searchQuery && (
+                  <>
+                    <Button
+                      onClick={onAISearch}
+                      disabled={isAISearching || !searchQuery.trim()}
+                      variant="soft"
+                    >
+                      <MagicWandIcon width="16" height="16" />
+                      {isAISearching
+                        ? "Searching with AI..."
+                        : "Search with AI"}
+                    </Button>
+                    {aiSearchError && (
+                      <Text
+                        color="red"
+                        size="2"
+                        style={{ textAlign: "center" }}
+                      >
+                        {aiSearchError}
+                      </Text>
+                    )}
+                  </>
+                )}
+              </Flex>
             ) : (
               ingredients.map((ingredient: Ingredient) => (
                 <Card key={ingredient.id} size="1" asChild>

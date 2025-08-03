@@ -24,6 +24,10 @@ import type {
 import { IngredientRepository } from "../infra/ingredient.repository.server";
 import { MealTemplateRepository } from "../infra/meal-template.repository.server";
 import { MealLogRepository } from "../infra/meal-log.repository.server";
+import {
+  AIIngredientService,
+  type AIIngredientSearchResult,
+} from "../infra/ai-ingredient.service";
 
 export const NutritionService = {
   // Ingredient operations
@@ -93,6 +97,17 @@ export const NutritionService = {
 
   deleteMealTemplate(id: string): ResultAsync<void, ErrRepository> {
     return MealTemplateRepository.delete(id);
+  },
+
+  // AI operations
+  async searchIngredientWithAI(
+    query: string,
+  ): Promise<AIIngredientSearchResult> {
+    const result = await AIIngredientService.searchIngredient(query);
+    if (result.isErr()) {
+      throw result.error;
+    }
+    return result.value;
   },
 
   // Utility operations

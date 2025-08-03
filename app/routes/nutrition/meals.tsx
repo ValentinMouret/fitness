@@ -26,14 +26,12 @@ import {
   type ActionFunctionArgs,
   type Route,
 } from "react-router";
-import { addOneDay, removeOneDay, today, } from "~/time";
+import { addOneDay, removeOneDay, today, toDateString } from "~/time";
 import { NutritionService } from "~/modules/nutrition/application/service";
 import { TargetService } from "~/modules/core/application/measurement-service";
 import { baseMeasurements } from "~/modules/core/domain/measurements";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
-import type {
-  MealCategory,
-} from "~/modules/nutrition/domain/meal-template";
+import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import {
   MealCard,
   EmptyMealCard,
@@ -192,7 +190,7 @@ export default function MealLogger({
 
   const navigateToDate = (newDate: Date) => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.set("date", newDate.toISOString().split("T")[0]);
+    newParams.set("date", toDateString(newDate));
     setSearchParams(newParams);
   };
 
@@ -223,8 +221,8 @@ export default function MealLogger({
     mealType: MealCategory,
     meal?: MealLogWithNutrition | null,
   ) => {
-    const returnTo = `/nutrition/meals?date=${parsedCurrentDate.toISOString().split("T")[0]}`;
-    const baseUrl = `/nutrition/meal-builder?meal=${mealType}&date=${parsedCurrentDate.toISOString().split("T")[0]}&returnTo=${encodeURIComponent(returnTo)}`;
+    const returnTo = `/nutrition/meals?date=${toDateString(parsedCurrentDate)}`;
+    const baseUrl = `/nutrition/meal-builder?meal=${mealType}&date=${toDateString(parsedCurrentDate)}&returnTo=${encodeURIComponent(returnTo)}`;
 
     if (meal) {
       return `${baseUrl}&mealId=${meal.id}`;

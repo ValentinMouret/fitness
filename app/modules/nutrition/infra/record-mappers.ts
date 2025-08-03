@@ -25,6 +25,8 @@ export function recordToIngredient(
     isVegan: record.is_vegan,
     sliderMin: record.slider_min,
     sliderMax: record.slider_max,
+    aiGenerated: record.ai_generated,
+    aiGeneratedAt: record.ai_generated_at,
     createdAt: record.created_at,
     updatedAt: record.updated_at,
     deletedAt: record.deleted_at,
