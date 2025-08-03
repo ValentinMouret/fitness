@@ -12,6 +12,7 @@ export const ingredientCategories = [
   "herbs_spices",
   "condiments",
   "beverages",
+  "sweeteners",
   "other",
 ] as const;
 
@@ -22,6 +23,7 @@ export const textureCategories = [
   "semi_liquid",
   "soft_solid",
   "firm_solid",
+  "powder",
 ] as const;
 
 export type TextureCategory = (typeof textureCategories)[number];
