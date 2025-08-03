@@ -22,14 +22,68 @@ Actions work in a similar way.
 
 Submitting forms create a navigation. Sometimes, it’s desireable. Sometimes, it’s better for UX to use `useFetcher` to submit forms without navigation and have an optimistic UI.
 
-## Components
-UI components should be pure and have as little logic as possible.
-There should be one component per file.
+## Component Architecture
 
-If the component is general, reused accross the app, it should appear in `app/components`.
-If the component is local to a page, it should be next to said page, e.g. `app/routes/dashboard/Chart.tsx`
+### Component Categories
+1. **Shared Components** (`app/components/`): Generic, reusable UI components with zero domain knowledge
+   - Accept generic props only
+   - No imports from module domain/application layers
+   - Examples: `Button`, `Modal`, `Chart`, form primitives
 
-The style for the component should live next to it: `app/routes/dashboard/Chart.css`.
+2. **Feature Components** (`modules/{feature}/presentation/components/`): Domain-specific UI components
+   - Can import from same module's domain/application layers
+   - Use view models for data transformation
+   - Encapsulated within feature boundary
+   - Examples: `WorkoutExerciseCard`, `HabitCheckbox`, `NutritionCalculator`
+
+3. **Route Components** (`app/routes/`): Orchestration and navigation logic
+   - Import feature components from modules
+   - Handle React Router concerns (loaders, actions, navigation)
+   - Minimal UI logic - delegate to feature components
+   - Focus on data fetching and form submission
+
+### Component Organization Rules
+- UI components should be pure and have as little logic as possible
+- There should be one component per file
+- Feature-specific components belong in `modules/{feature}/presentation/components/`
+- Generic components belong in `app/components/`
+- Route-specific components can stay next to routes if they're simple orchestration only
+
+### View Model Pattern
+Feature components should accept view models instead of domain entities:
+
+```tsx
+// ❌ Bad: Direct domain entity usage
+interface WorkoutCardProps {
+  readonly workout: WorkoutSession; // Domain entity
+}
+
+// ✅ Good: View model usage
+interface WorkoutCardProps {
+  readonly viewModel: WorkoutCardViewModel; // UI-friendly data
+}
+```
+
+View model files should be named: `{feature-name}-{component}.view-model.ts`
+
+### Module Structure
+```
+modules/{feature}/presentation/
+├── components/
+│   ├── {FeatureName}Card/
+│   │   ├── index.tsx
+│   │   ├── {FeatureName}Card.tsx
+│   │   └── {FeatureName}Card.css
+│   └── index.ts (barrel export)
+├── view-models/
+│   ├── {feature-name}-card.view-model.ts
+│   └── index.ts
+└── hooks/
+    ├── use{FeatureName}.ts
+    └── index.ts
+```
+
+The style for the component should live next to it: `{FeatureName}Card.css`.
 
 ## Styling Rules (STRICT)
 **NEVER** put styles inside components:

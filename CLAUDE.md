@@ -77,10 +77,44 @@ Examples:
 ## Architecture
 The codebase follows a modular architecture with Domain-Driven Design principles:
 - `modules/` contains feature modules (core, fitness, habits, nutrition)
-- Each module follows DDD layers: `domain/`, `application/`, `infra/`
+- Each module follows DDD layers: `domain/`, `application/`, `infra/`, `presentation/`
 - Domain layer contains entities and business logic
 - Application layer contains services and use cases
 - Infrastructure layer handles data persistence and external integrations
+- Presentation layer contains UI components, view models, and hooks
+
+### Frontend Component Architecture
+Follow the modular frontend architecture defined in `docs/frontend-architecture-migration.md`:
+
+#### Component Categories
+1. **Shared Components** (`app/components/`): Generic, reusable UI with zero domain knowledge
+2. **Feature Components** (`modules/{feature}/presentation/components/`): Domain-specific UI components
+3. **Route Components** (`app/routes/`): Orchestration and navigation logic only
+
+#### Dependencies & Data Flow
+```
+Routes → Module Presentation → Application → Domain
+     ↓
+Shared Components ← Feature Components (composition)
+```
+
+#### View Model Pattern
+- Transform domain data into UI-friendly structures
+- Use view models in feature components instead of direct domain entities
+- File naming: `{feature-name}-{component}.view-model.ts`
+
+#### Module Structure
+```
+modules/{feature}/
+├── domain/           # Business entities & logic
+├── application/      # Use cases & services
+├── infra/           # Data persistence
+└── presentation/    # UI layer
+    ├── components/  # Feature-specific UI components
+    ├── hooks/       # Custom React hooks for this feature
+    ├── view-models/ # Data transformation layer
+    └── types/       # UI-specific TypeScript types
+```
 
 ## Utility Files
 The codebase includes several utility modules for common operations:

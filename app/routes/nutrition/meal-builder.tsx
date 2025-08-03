@@ -195,7 +195,12 @@ export async function action({ request }: ActionFunctionArgs) {
         }),
       );
 
-      let result;
+      let result: Awaited<
+        ReturnType<
+          | typeof NutritionService.createMealLog
+          | typeof NutritionService.updateMealLog
+        >
+      >;
       if (mealId) {
         // Update existing meal
         result = await NutritionService.updateMealLog(mealId, {
@@ -481,9 +486,9 @@ export default function MealBuilder({
               fetcher.submit(
                 {
                   intent: "save-meal",
-                  mealCategory: mealLoggingMode.mealCategory!,
-                  loggedDate: mealLoggingMode.date!,
-                  returnTo: mealLoggingMode.returnTo!,
+                  mealCategory: mealLoggingMode.mealCategory ?? "",
+                  loggedDate: mealLoggingMode.date ?? "",
+                  returnTo: mealLoggingMode.returnTo ?? "",
                   mealId: mealLoggingMode.existingMeal?.id || "",
                   ingredients: JSON.stringify(ingredientsData),
                   notes: "", // TODO: Add notes field if needed

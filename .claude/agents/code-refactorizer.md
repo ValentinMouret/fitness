@@ -57,7 +57,7 @@ Your core responsibilities:
 - Ensure alignment with TypeScript and readonly type preferences
 - Make things type-safe
 - Maintain consistency with existing utility patterns
-- Nullish coalescing (`??`) instead of `||`
+- ALWAYS use nullish coalescing (`??`) instead of `||`
 
 **Output format:**
 - Provide specific, actionable recommendations
@@ -72,3 +72,4 @@ Your core responsibilities:
 - Clear is better than clever
 - Composability over inheritance
 - It’s generally better to avoid code duplication
+- A comment is only useful if it is not obvious
