@@ -1,4 +1,4 @@
-import { Container, Heading, Link as RadixLink } from "@radix-ui/themes";
+import { Container, Flex, Heading, Link as RadixLink } from "@radix-ui/themes";
 import { TargetService } from "~/modules/core/application/measurement-service";
 import type { Route } from "./+types";
 import { Link as RouterLink } from "react-router";
@@ -40,11 +40,17 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
         </div>
       ) : null}
 
-      <RadixLink asChild>
-        <RouterLink to="/nutrition/calculate-targets">
-          Calculate targets
-        </RouterLink>
-      </RadixLink>
+      <Flex direction="column" gap="3" mt="4">
+        <RadixLink asChild>
+          <RouterLink to="/nutrition/calculate-targets">
+            Calculate targets
+          </RouterLink>
+        </RadixLink>
+
+        <RadixLink asChild>
+          <RouterLink to="/nutrition/meal-builder">Meal Builder</RouterLink>
+        </RadixLink>
+      </Flex>
     </Container>
   );
 }
