@@ -1,8 +1,8 @@
-export type Macros = "protein" | "lipids" | "glucides" | "alcool";
+export type Macros = "protein" | "fat" | "carbs" | "alcohol";
 
 export const macrosEnergyPerGram: Record<Macros, number> = {
-  glucides: 4,
+  carbs: 4,
   protein: 4,
-  lipids: 7,
-  alcool: 9,
+  fat: 9,
+  alcohol: 7,
 };

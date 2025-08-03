@@ -2,6 +2,8 @@ import { type ResultAsync, ok } from "neverthrow";
 import type { ErrRepository } from "~/repository";
 import { addOneDay, isSameDay, removeOneDay, today } from "~/time";
 import { MeasureRepository } from "../infra/measure.repository.server";
+import { TargetRepository } from "../infra/repository";
+import type { Target } from "../domain/target";
 
 export const MeasurementService = {
   fetchStreak(measurementName: string): ResultAsync<number, ErrRepository> {
@@ -30,5 +32,17 @@ export const MeasurementService = {
         return ok(streak);
       });
     });
+  },
+};
+
+export const TargetService = {
+  currentTargets(): ResultAsync<readonly Target[], ErrRepository> {
+    return TargetRepository.listAllActive();
+  },
+
+  setTarget(target: Target): ResultAsync<Target, ErrRepository> {
+    return TargetRepository.unsetTargetsByName(target.measurement).andThen(() =>
+      TargetRepository.save(target),
+    );
   },
 };

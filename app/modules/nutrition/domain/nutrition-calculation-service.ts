@@ -14,28 +14,27 @@ interface MacrosSplitInput {
 
 export interface MacrosSplit {
   protein: number;
-  glucides: number;
-  lipids: number;
+  carbs: number;
+  fat: number;
 }
 
-export const NutritionService = {
+export const NutritionCalculationService = {
   mifflinStJeor({ age, height, activity, weight }: MiflinStJeorInput): number {
     return activity * (10 * weight + 6.5 * height - 5 * age + 5);
   },
   macrosSplit({ weight, calories }: MacrosSplitInput): MacrosSplit {
     const protein = weight * 1.8;
-    const lipids = weight;
+    const fat = weight;
 
     const caloriesFromProtein = protein * macrosEnergyPerGram.protein;
-    const caloriesFromLipids = lipids * macrosEnergyPerGram.lipids;
-    const remainingCalories =
-      calories - caloriesFromLipids - caloriesFromProtein;
-    const glucides = remainingCalories / macrosEnergyPerGram.glucides;
+    const caloriesFromFat = fat * macrosEnergyPerGram.fat;
+    const remainingCalories = calories - caloriesFromFat - caloriesFromProtein;
+    const carbs = remainingCalories / macrosEnergyPerGram.carbs;
 
     return {
-      glucides: Math.round(glucides),
+      carbs: Math.round(carbs),
       protein: Math.round(protein),
-      lipids: Math.round(lipids),
+      fat: Math.round(fat),
     };
   },
 };

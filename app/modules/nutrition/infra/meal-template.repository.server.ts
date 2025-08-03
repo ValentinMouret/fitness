@@ -1,0 +1,323 @@
+import { eq, and, isNull, sql, type InferSelectModel } from "drizzle-orm";
+import { Result, ResultAsync, ok } from "neverthrow";
+import { db } from "~/db/index";
+import {
+  mealTemplates,
+  mealTemplateIngredients,
+  ingredients,
+} from "~/db/schema";
+import type { ErrRepository, ErrValidation } from "~/repository";
+import {
+  executeQuery,
+  fetchSingleRecord,
+  type Transaction,
+} from "~/repository.server";
+import type {
+  MealTemplate,
+  MealTemplateWithIngredients,
+  CreateMealTemplateInput,
+  UpdateMealTemplateInput,
+} from "../domain/meal-template";
+import type { IngredientWithQuantity } from "../domain/ingredient";
+
+export const MealTemplateRepository = {
+  listAll(): ResultAsync<readonly MealTemplate[], ErrRepository> {
+    const query = db
+      .select()
+      .from(mealTemplates)
+      .where(isNull(mealTemplates.deleted_at));
+
+    return executeQuery(query, "listAll").andThen((records) => {
+      const results = records.map(recordToMealTemplate);
+      return Result.combine(results);
+    });
+  },
+
+  fetchById(id: string): ResultAsync<MealTemplate, ErrRepository> {
+    const query = db
+      .select()
+      .from(mealTemplates)
+      .where(and(eq(mealTemplates.id, id), isNull(mealTemplates.deleted_at)))
+      .limit(1);
+
+    return executeQuery(query, "fetchById")
+      .andThen(fetchSingleRecord)
+      .andThen((record) => recordToMealTemplate(record));
+  },
+
+  fetchWithIngredients(
+    id: string,
+  ): ResultAsync<MealTemplateWithIngredients, ErrRepository> {
+    return this.fetchById(id).andThen((template) =>
+      this.fetchTemplateIngredients(id).map((ingredientsWithQuantity) => ({
+        ...template,
+        ingredients: ingredientsWithQuantity,
+      })),
+    );
+  },
+
+  fetchTemplateIngredients(
+    templateId: string,
+  ): ResultAsync<readonly IngredientWithQuantity[], ErrRepository> {
+    const query = db
+      .select({
+        quantity_grams: mealTemplateIngredients.quantity_grams,
+        ingredient: ingredients,
+      })
+      .from(mealTemplateIngredients)
+      .innerJoin(
+        ingredients,
+        eq(mealTemplateIngredients.ingredient_id, ingredients.id),
+      )
+      .where(
+        and(
+          eq(mealTemplateIngredients.meal_template_id, templateId),
+          isNull(mealTemplateIngredients.deleted_at),
+          isNull(ingredients.deleted_at),
+        ),
+      );
+
+    return executeQuery(query, "fetchTemplateIngredients").andThen(
+      (records) => {
+        const results = records.map((record) => {
+          const ingredientResult = ok({
+            id: record.ingredient.id,
+            name: record.ingredient.name,
+            category: record.ingredient.category,
+            calories: record.ingredient.calories,
+            protein: record.ingredient.protein,
+            carbs: record.ingredient.carbs,
+            fat: record.ingredient.fat,
+            fiber: record.ingredient.fiber,
+            waterPercentage: record.ingredient.water_percentage,
+            energyDensity: record.ingredient.energy_density,
+            texture: record.ingredient.texture,
+            isVegetarian: record.ingredient.is_vegetarian,
+            isVegan: record.ingredient.is_vegan,
+            sliderMin: record.ingredient.slider_min,
+            sliderMax: record.ingredient.slider_max,
+            createdAt: record.ingredient.created_at,
+            updatedAt: record.ingredient.updated_at,
+            deletedAt: record.ingredient.deleted_at,
+          });
+
+          return ingredientResult.map((ingredient) => ({
+            ingredient,
+            quantityGrams: record.quantity_grams,
+          }));
+        });
+        return Result.combine(results);
+      },
+    );
+  },
+
+  save(
+    input: CreateMealTemplateInput,
+    tx?: Transaction,
+  ): ResultAsync<MealTemplateWithIngredients, ErrRepository> {
+    const transaction = tx ?? db;
+
+    return ResultAsync.fromPromise(
+      transaction.transaction(async (trx) => {
+        // Calculate totals and satiety from ingredients
+        const totals = input.ingredients.reduce(
+          (acc, { ingredient, quantityGrams }) => {
+            const factor = quantityGrams / 100;
+            return {
+              calories: acc.calories + ingredient.calories * factor,
+              protein: acc.protein + ingredient.protein * factor,
+              carbs: acc.carbs + ingredient.carbs * factor,
+              fat: acc.fat + ingredient.fat * factor,
+              fiber: acc.fiber + ingredient.fiber * factor,
+              volume:
+                acc.volume +
+                quantityGrams * (ingredient.waterPercentage / 100 + 0.5),
+            };
+          },
+          { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, volume: 0 },
+        );
+
+        // Calculate satiety score
+        const { calculateSatietyScore } = await import(
+          "../domain/meal-template"
+        );
+        const satiety = calculateSatietyScore(input.ingredients, totals);
+
+        // Insert meal template
+        const templateValues = {
+          name: input.name,
+          category: input.category,
+          notes: input.notes || null,
+          total_calories: totals.calories,
+          total_protein: totals.protein,
+          total_carbs: totals.carbs,
+          total_fat: totals.fat,
+          total_fiber: totals.fiber,
+          satiety_score: satiety.score,
+          usage_count: 0,
+        };
+
+        const [templateRecord] = await trx
+          .insert(mealTemplates)
+          .values(templateValues)
+          .returning();
+
+        // Insert template ingredients
+        if (input.ingredients.length > 0) {
+          const ingredientValues = input.ingredients.map(
+            ({ ingredient, quantityGrams }) => ({
+              meal_template_id: templateRecord.id,
+              ingredient_id: ingredient.id,
+              quantity_grams: quantityGrams,
+            }),
+          );
+
+          await trx.insert(mealTemplateIngredients).values(ingredientValues);
+        }
+
+        return {
+          ...templateRecord,
+          ingredients: input.ingredients,
+        };
+      }),
+      (err) => {
+        console.error(err);
+        return "database_error" as const;
+      },
+    ).andThen((result) => {
+      const templateResult = recordToMealTemplate(result);
+      return templateResult.map((template) => ({
+        ...template,
+        ingredients: result.ingredients,
+      }));
+    });
+  },
+
+  update(
+    id: string,
+    updates: UpdateMealTemplateInput,
+    tx?: Transaction,
+  ): ResultAsync<MealTemplate, ErrRepository> {
+    const updateValues: Record<string, unknown> = {};
+
+    if (updates.name !== undefined) updateValues.name = updates.name;
+    if (updates.category !== undefined)
+      updateValues.category = updates.category;
+    if (updates.notes !== undefined) updateValues.notes = updates.notes;
+
+    // If ingredients are being updated, recalculate everything
+    if (updates.ingredients !== undefined) {
+      const totals = updates.ingredients.reduce(
+        (acc, { ingredient, quantityGrams }) => {
+          const factor = quantityGrams / 100;
+          return {
+            calories: acc.calories + ingredient.calories * factor,
+            protein: acc.protein + ingredient.protein * factor,
+            carbs: acc.carbs + ingredient.carbs * factor,
+            fat: acc.fat + ingredient.fat * factor,
+            fiber: acc.fiber + ingredient.fiber * factor,
+            volume:
+              acc.volume +
+              quantityGrams * (ingredient.waterPercentage / 100 + 0.5),
+          };
+        },
+        { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, volume: 0 },
+      );
+
+      const { calculateSatietyScore } = require("../domain/meal-template");
+      const satiety = calculateSatietyScore(updates.ingredients, totals);
+
+      updateValues.total_calories = totals.calories;
+      updateValues.total_protein = totals.protein;
+      updateValues.total_carbs = totals.carbs;
+      updateValues.total_fat = totals.fat;
+      updateValues.total_fiber = totals.fiber;
+      updateValues.satiety_score = satiety.score;
+    }
+
+    updateValues.updated_at = new Date();
+
+    return ResultAsync.fromPromise(
+      (tx ?? db)
+        .update(mealTemplates)
+        .set(updateValues)
+        .where(and(eq(mealTemplates.id, id), isNull(mealTemplates.deleted_at)))
+        .returning(),
+      (err) => {
+        console.error(err);
+        return "database_error" as const;
+      },
+    ).andThen((records) => {
+      if (records.length === 0) {
+        return ResultAsync.fromSafePromise(
+          Promise.reject("not_found" as const),
+        );
+      }
+      return recordToMealTemplate(records[0]);
+    });
+  },
+
+  incrementUsageCount(
+    id: string,
+    tx?: Transaction,
+  ): ResultAsync<void, ErrRepository> {
+    return ResultAsync.fromPromise(
+      (tx ?? db)
+        .update(mealTemplates)
+        .set({
+          usage_count: sql`${mealTemplates.usage_count} + 1`,
+          updated_at: new Date(),
+        })
+        .where(and(eq(mealTemplates.id, id), isNull(mealTemplates.deleted_at))),
+      (err) => {
+        console.error(err);
+        return "database_error" as const;
+      },
+    ).map(() => undefined);
+  },
+
+  delete(id: string, tx?: Transaction): ResultAsync<void, ErrRepository> {
+    return ResultAsync.fromPromise(
+      (tx ?? db).transaction(async (trx) => {
+        // Soft delete template ingredients first
+        await trx
+          .update(mealTemplateIngredients)
+          .set({ deleted_at: new Date() })
+          .where(eq(mealTemplateIngredients.meal_template_id, id));
+
+        // Soft delete template
+        await trx
+          .update(mealTemplates)
+          .set({ deleted_at: new Date() })
+          .where(
+            and(eq(mealTemplates.id, id), isNull(mealTemplates.deleted_at)),
+          );
+      }),
+      (err) => {
+        console.error(err);
+        return "database_error" as const;
+      },
+    ).map(() => undefined);
+  },
+};
+
+function recordToMealTemplate(
+  record: InferSelectModel<typeof mealTemplates>,
+): Result<MealTemplate, ErrValidation> {
+  return ok({
+    id: record.id,
+    name: record.name,
+    category: record.category,
+    notes: record.notes,
+    totalCalories: record.total_calories,
+    totalProtein: record.total_protein,
+    totalCarbs: record.total_carbs,
+    totalFat: record.total_fat,
+    totalFiber: record.total_fiber,
+    satietyScore: record.satiety_score,
+    usageCount: record.usage_count,
+    createdAt: record.created_at,
+    updatedAt: record.updated_at,
+    deletedAt: record.deleted_at,
+  });
+}

@@ -1,5 +1,5 @@
 import { Container, Heading, Link as RadixLink } from "@radix-ui/themes";
-import { TargetService } from "~/modules/nutrition/application/service";
+import { TargetService } from "~/modules/core/application/measurement-service";
 import type { Route } from "./+types";
 import { Link as RouterLink } from "react-router";
 import { baseMeasurements } from "~/modules/core/domain/measurements";
