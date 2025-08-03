@@ -98,3 +98,5 @@ When working on `routes/` with the frontend engineer:
 ## References
 - Read `.claude/typescript-guidelines.md` before coding in TypeScript
 - Read `.claude/react-router-v7.md` before coding React Router pages/components
+
+#$ARGUMENTS
