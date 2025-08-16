@@ -25,6 +25,7 @@ import {
 } from "@radix-ui/themes";
 import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
 import { MeasurementService } from "~/modules/core/application/measurement-service";
+import { createServerError, createValidationError } from "~/utils/errors";
 
 const motivationalQuotes = [
   "The groundwork for all happiness is good health.",
@@ -143,10 +144,7 @@ export async function loader() {
     return result.value;
   }
 
-  throw new Response(result.error, {
-    status: 500,
-    statusText: "Failed to fetch dashboard data",
-  });
+  throw createServerError("Failed to fetch dashboard data", 500, result.error);
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -162,10 +160,7 @@ export async function action({ request }: Route.ActionArgs) {
     const result = await HabitCompletionRepository.save(completion);
 
     if (result.isErr()) {
-      throw new Response(result.error, {
-        status: 500,
-        statusText: "Failed to toggle habit",
-      });
+      throw createServerError("Failed to toggle habit", 500, result.error);
     }
 
     return null;
@@ -182,10 +177,14 @@ export async function action({ request }: Route.ActionArgs) {
     );
 
   if (result.isErr()) {
-    throw new Response(result.error, {
-      status: 500,
-      statusText: "Failed to save weight",
-    });
+    const isValidationError = result.error === "validation_error";
+    if (isValidationError) {
+      throw createValidationError(
+        "Invalid weight value provided",
+        result.error,
+      );
+    }
+    throw createServerError("Failed to save weight", 500, result.error);
   }
 }
 

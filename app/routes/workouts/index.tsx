@@ -11,11 +11,12 @@ import {
 import { Link, Form } from "react-router";
 import type { Route } from "./+types/index";
 import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
+import { handleResultError } from "~/utils/errors";
 
 export const loader = async () => {
   const result = await WorkoutRepository.findAll();
   if (result.isErr()) {
-    throw new Error("Failed to load workouts");
+    handleResultError(result, "Failed to load workouts");
   }
   return { workouts: result.value };
 };

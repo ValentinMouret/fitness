@@ -3,12 +3,13 @@ import { TargetService } from "~/modules/core/application/measurement-service";
 import type { Route } from "./+types";
 import { Link as RouterLink } from "react-router";
 import { baseMeasurements } from "~/modules/core/domain/measurements";
+import { handleResultError } from "~/utils/errors";
 
 export async function loader() {
   const activeTargets = await TargetService.currentTargets();
 
   if (activeTargets.isErr()) {
-    throw new Error(activeTargets.error);
+    handleResultError(activeTargets, "Failed to load nutrition targets");
   }
 
   const dailyCalorieIntake = activeTargets.value.find(

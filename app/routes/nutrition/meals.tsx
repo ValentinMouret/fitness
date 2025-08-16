@@ -41,6 +41,7 @@ import {
   createMealCardViewModel,
   createTemplateSelectionViewModel,
 } from "~/modules/nutrition/presentation";
+import { handleResultError } from "~/utils/errors";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -61,11 +62,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const activeTargets = await TargetService.currentTargets();
 
   if (dailySummaryResult.isErr()) {
-    throw new Error("Failed to load daily summary");
+    handleResultError(dailySummaryResult, "Failed to load daily summary");
   }
 
   if (mealTemplatesResult.isErr()) {
-    throw new Error("Failed to load meal templates");
+    handleResultError(mealTemplatesResult, "Failed to load meal templates");
   }
 
   // Extract daily calorie target (for now, we'll just use this one target)

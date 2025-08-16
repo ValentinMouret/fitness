@@ -27,6 +27,7 @@ import { CompletionModal } from "~/components/workout/CompletionModal";
 import { CancelConfirmationDialog } from "~/components/workout/CancelConfirmationDialog";
 import { DeleteConfirmationDialog } from "~/components/workout/DeleteConfirmationDialog";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
+import { handleResultError, createNotFoundError } from "~/utils/errors";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { id } = params;
@@ -34,19 +35,17 @@ export async function loader({ params }: Route.LoaderArgs) {
   const workoutSessionResult = await WorkoutSessionRepository.findById(id);
 
   if (workoutSessionResult.isErr()) {
-    console.error("Error loading workout session:", workoutSessionResult.error);
-    throw new Error("Failed to load workout");
+    handleResultError(workoutSessionResult, "Failed to load workout");
   }
 
   if (!workoutSessionResult.value) {
-    throw new Response("Workout not found", { status: 404 });
+    throw createNotFoundError("Workout");
   }
 
   const exercisesResult = await ExerciseRepository.listAll();
 
   if (exercisesResult.isErr()) {
-    console.error("Error loading exercises:", exercisesResult.error);
-    throw new Error("Failed to load exercises");
+    handleResultError(exercisesResult, "Failed to load exercises");
   }
 
   return {

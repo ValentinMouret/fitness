@@ -20,12 +20,13 @@ import {
   Badge,
 } from "@radix-ui/themes";
 import { PlusIcon, Pencil1Icon } from "@radix-ui/react-icons";
+import { handleResultError } from "~/utils/errors";
 
 export async function loader() {
   const habits = await HabitRepository.fetchActive();
 
   if (habits.isErr()) {
-    throw new Response("Failed to load habits", { status: 500 });
+    handleResultError(habits, "Failed to load habits");
   }
 
   const todayCompletions = await HabitCompletionRepository.fetchByDateRange(
@@ -34,7 +35,7 @@ export async function loader() {
   );
 
   if (todayCompletions.isErr()) {
-    throw new Response("Failed to load completions", { status: 500 });
+    handleResultError(todayCompletions, "Failed to load completions");
   }
 
   // Calculate streaks for each habit
