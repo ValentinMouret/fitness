@@ -26,6 +26,7 @@ export const WorkoutRepository = {
       start: workout.start,
       stop: workout.stop ?? null,
       notes: workout.notes ?? null,
+      imported_from_strong: workout.importedFromStrong ?? false,
     };
 
     if ("id" in workout) {
@@ -194,9 +195,9 @@ export const WorkoutSessionRepository = {
           );
 
           if (!existingSet) {
-            exerciseData.sets.push(
-              workoutSetRecordToDomain(record.workout_sets),
-            );
+            const workoutSet = workoutSetRecordToDomain(record.workout_sets);
+            // console.log(`[Workout Repository] Retrieved set from database...`);
+            exerciseData.sets.push(workoutSet);
           }
         }
       }
@@ -245,6 +246,7 @@ export const WorkoutSessionRepository = {
           note: null,
           isCompleted: false,
           isFailure: false,
+          isWarmup: false,
         });
       }),
       (err) => {
@@ -291,19 +293,36 @@ export const WorkoutSessionRepository = {
 
   addSet(workoutSet: WorkoutSet): ResultAsync<void, ErrRepository> {
     return ResultAsync.fromPromise(
-      db.insert(workoutSets).values({
-        workout: workoutSet.workoutId,
-        exercise: workoutSet.exerciseId,
-        set: workoutSet.set,
-        targetReps: workoutSet.targetReps ?? null,
-        reps: workoutSet.reps ?? null,
-        weight: workoutSet.weight ?? null,
-        note: workoutSet.note ?? null,
-        isCompleted: workoutSet.isCompleted,
-        isFailure: workoutSet.isFailure,
-      }),
+      db
+        .insert(workoutSets)
+        .values({
+          workout: workoutSet.workoutId,
+          exercise: workoutSet.exerciseId,
+          set: workoutSet.set,
+          targetReps: workoutSet.targetReps ?? null,
+          reps: workoutSet.reps ?? null,
+          weight: workoutSet.weight ?? null,
+          note: workoutSet.note ?? null,
+          isCompleted: workoutSet.isCompleted,
+          isFailure: workoutSet.isFailure,
+          isWarmup: workoutSet.isWarmup,
+        })
+        .onConflictDoUpdate({
+          target: [workoutSets.workout, workoutSets.exercise, workoutSets.set],
+          set: {
+            targetReps: workoutSet.targetReps ?? null,
+            reps: workoutSet.reps ?? null,
+            weight: workoutSet.weight ?? null,
+            note: workoutSet.note ?? null,
+            isCompleted: workoutSet.isCompleted,
+            isFailure: workoutSet.isFailure,
+            isWarmup: workoutSet.isWarmup,
+            updated_at: new Date(),
+            deleted_at: null, // Restore if it was soft deleted
+          },
+        }),
       (err) => {
-        console.error("Error adding set:", err);
+        console.error("Error adding/updating set:", err);
         return "database_error" as const;
       },
     ).map(() => undefined);
@@ -349,7 +368,13 @@ export const WorkoutSessionRepository = {
     updates: Partial<
       Pick<
         WorkoutSet,
-        "targetReps" | "reps" | "weight" | "note" | "isCompleted" | "isFailure"
+        | "targetReps"
+        | "reps"
+        | "weight"
+        | "note"
+        | "isCompleted"
+        | "isFailure"
+        | "isWarmup"
       >
     >,
   ): ResultAsync<void, ErrRepository> {
@@ -363,6 +388,7 @@ export const WorkoutSessionRepository = {
           note: updates.note ?? undefined,
           isCompleted: updates.isCompleted ?? undefined,
           isFailure: updates.isFailure ?? undefined,
+          isWarmup: updates.isWarmup ?? undefined,
           updated_at: new Date(),
         })
         .where(
@@ -413,6 +439,7 @@ function workoutRecordToDomain(
     start: record.start ?? new Date(),
     stop: record.stop ?? undefined,
     notes: record.notes ?? undefined,
+    importedFromStrong: record.imported_from_strong ?? false,
   };
 }
 
@@ -441,5 +468,6 @@ function workoutSetRecordToDomain(
     note: record.note ?? undefined,
     isCompleted: record.isCompleted,
     isFailure: record.isFailure,
+    isWarmup: record.isWarmup,
   };
 }

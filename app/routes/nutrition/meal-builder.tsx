@@ -28,7 +28,6 @@ import {
   redirect,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
-  type Route,
 } from "react-router";
 import { NutritionService } from "~/modules/nutrition/application/service";
 import type { Ingredient } from "~/modules/nutrition/domain/ingredient";
@@ -51,6 +50,7 @@ import {
   type SelectedIngredient,
 } from "~/modules/nutrition/presentation";
 import type { CreateAIIngredientInput } from "~/modules/nutrition/domain/ingredient";
+import type { Route } from "./+types/meal-builder";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -274,13 +274,6 @@ export async function action({ request }: ActionFunctionArgs) {
   throw new Error("Invalid intent");
 }
 
-const TEXTURE_LABELS = {
-  liquid: "💧 Liquid",
-  semi_liquid: "🥤 Semi-liquid",
-  soft_solid: "🍮 Soft solid",
-  firm_solid: "🥩 Firm solid",
-};
-
 function getIngredientIcon(name: string): string {
   const iconMap: Record<string, string> = {
     "Chicken Breast": "🍗",
@@ -311,7 +304,7 @@ function getIngredientIcon(name: string): string {
 }
 
 export default function MealBuilder({
-  loaderData: { ingredients, mealTemplates, mealLoggingMode },
+  loaderData: { ingredients, mealLoggingMode },
 }: Route.ComponentProps) {
   const fetcher = useFetcher();
 
@@ -341,15 +334,17 @@ export default function MealBuilder({
   useEffect(() => {
     if (mealLoggingMode.existingMeal?.ingredients) {
       const convertedIngredients: SelectedIngredient[] =
-        mealLoggingMode.existingMeal.ingredients.map((item) => ({
-          ...item.ingredient,
-          quantity: item.quantityGrams,
-          defaultRange: [
-            item.ingredient.sliderMin,
-            item.ingredient.sliderMax,
-          ] as const,
-          unit: "g",
-        }));
+        mealLoggingMode.existingMeal.ingredients.map(
+          (item: { ingredient: Ingredient; quantityGrams: number }) => ({
+            ...item.ingredient,
+            quantity: item.quantityGrams,
+            defaultRange: [
+              item.ingredient.sliderMin,
+              item.ingredient.sliderMax,
+            ] as const,
+            unit: "g",
+          }),
+        );
       setSelectedIngredients(convertedIngredients);
     }
   }, [mealLoggingMode.existingMeal]);
@@ -358,19 +353,23 @@ export default function MealBuilder({
 
   // Calculate totals using domain methods
   const totals = useMemo(() => {
-    const ingredientsWithQuantity = selectedIngredients.map((ing) => ({
-      ingredient: ing,
-      quantityGrams: ing.quantity,
-    }));
+    const ingredientsWithQuantity = selectedIngredients.map(
+      (ing: SelectedIngredient) => ({
+        ingredient: ing,
+        quantityGrams: ing.quantity,
+      }),
+    );
     return IngredientDomain.calculateTotalNutrition(ingredientsWithQuantity);
   }, [selectedIngredients]);
 
   // Calculate satiety using domain method
   const satietyCalculation = useMemo(() => {
-    const ingredientsWithQuantity = selectedIngredients.map((ing) => ({
-      ingredient: ing,
-      quantityGrams: ing.quantity,
-    }));
+    const ingredientsWithQuantity = selectedIngredients.map(
+      (ing: SelectedIngredient) => ({
+        ingredient: ing,
+        quantityGrams: ing.quantity,
+      }),
+    );
     return calculateSatietyScore(ingredientsWithQuantity, totals);
   }, [selectedIngredients, totals]);
 
@@ -394,7 +393,9 @@ export default function MealBuilder({
 
     if (objectives.protein && totals.protein < objectives.protein) {
       const deficit = objectives.protein - totals.protein;
-      const greekYogurt = ingredients.find((i) => i.name === "Greek Yogurt");
+      const greekYogurt = ingredients.find(
+        (i: Ingredient) => i.name === "Greek Yogurt",
+      );
       if (greekYogurt) {
         const quantity = Math.round((deficit / greekYogurt.protein) * 100);
         suggestions.push({

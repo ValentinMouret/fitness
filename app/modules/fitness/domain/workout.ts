@@ -128,12 +128,14 @@ export interface Workout {
   readonly start: Date;
   readonly stop?: Date;
   readonly notes?: string;
+  readonly importedFromStrong?: boolean;
 }
 
 interface WorkoutCreateInput {
   readonly name: string;
   readonly start?: Date;
   readonly notes?: string;
+  readonly importedFromStrong?: boolean;
 }
 
 export const Workout = {
@@ -142,6 +144,7 @@ export const Workout = {
       name: input.name,
       start: input.start ?? new Date(),
       notes: input.notes,
+      importedFromStrong: input.importedFromStrong ?? false,
     };
   },
   stop(this: Workout): Workout {
@@ -162,6 +165,7 @@ export interface WorkoutSet {
   readonly note?: string;
   readonly isCompleted: boolean;
   readonly isFailure: boolean;
+  readonly isWarmup: boolean;
 }
 
 interface WorkoutSetCreateInput {
@@ -174,6 +178,7 @@ interface WorkoutSetCreateInput {
   readonly note?: string;
   readonly isCompleted?: boolean;
   readonly isFailure?: boolean;
+  readonly isWarmup?: boolean;
 }
 
 type ErrInvalidSet = "Invalid set";
@@ -232,6 +237,7 @@ export const WorkoutSet = {
       note: input.note,
       isCompleted: input.isCompleted ?? false,
       isFailure: input.isFailure ?? false,
+      isWarmup: input.isWarmup ?? false,
     });
   },
 };

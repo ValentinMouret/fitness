@@ -24,7 +24,6 @@ import {
   useFetcher,
   type LoaderFunctionArgs,
   type ActionFunctionArgs,
-  type Route,
 } from "react-router";
 import { addOneDay, removeOneDay, today, toDateString } from "~/time";
 import { NutritionService } from "~/modules/nutrition/application/service";
@@ -42,6 +41,7 @@ import {
   createTemplateSelectionViewModel,
 } from "~/modules/nutrition/presentation";
 import { handleResultError } from "~/utils/errors";
+import type { Route } from "./+types/meals";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -165,9 +165,8 @@ function getMealDisplayName(mealType: MealCategory): string {
   return names[mealType];
 }
 
-export default function MealLogger({
-  loaderData: { dailySummary, mealTemplates, targets, currentDate },
-}: Route.ComponentProps) {
+export default function MealLogger({ loaderData }: Route.ComponentProps) {
+  const { mealTemplates, dailySummary, targets, currentDate } = loaderData;
   const [searchParams, setSearchParams] = useSearchParams();
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [currentMealType, setCurrentMealType] = useState<MealCategory | null>(
@@ -175,19 +174,15 @@ export default function MealLogger({
   );
   const fetcher = useFetcher();
 
-  // Create template selection view model
   const templateSelectionViewModel = currentMealType
     ? createTemplateSelectionViewModel(currentMealType, mealTemplates)
     : null;
 
-  // Parse current date from loader data
   const parsedCurrentDate = new Date(currentDate);
 
-  // Use daily totals from the summary
   const dailyTotals = dailySummary.dailyTotals;
 
-  // Use targets from loader or defaults
-  const dailyTargets = targets || defaultTargets;
+  const dailyTargets = targets ?? defaultTargets;
 
   const navigateToDate = (newDate: Date) => {
     const newParams = new URLSearchParams(searchParams);
@@ -412,7 +407,6 @@ export default function MealLogger({
         )}
       </Flex>
 
-      {/* Template Selection Modal */}
       <TemplateSelectionModal
         isOpen={showTemplateModal}
         onClose={() => {

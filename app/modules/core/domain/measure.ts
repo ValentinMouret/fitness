@@ -7,11 +7,11 @@ export interface Measure {
 }
 
 export const Measure = {
-  create(measurementName: string, value: number): Measure {
+  create(measurementName: string, value: number, date?: Date): Measure {
     return {
       measurementName,
       value,
-      t: new Date(),
+      t: date ?? new Date(),
     };
   },
 };

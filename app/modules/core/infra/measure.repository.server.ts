@@ -76,6 +76,26 @@ export const MeasureRepository = {
       Result.combine(records.map(recordToMeasure)),
     );
   },
+
+  delete(
+    measurementName: string,
+    date: Date,
+  ): ResultAsync<void, ErrRepository> {
+    return ResultAsync.fromPromise(
+      db
+        .delete(measures)
+        .where(
+          and(
+            eq(measures.measurement_name, measurementName),
+            eq(measures.t, date),
+          ),
+        ),
+      (err) => {
+        console.error(err);
+        return "database_error" as const;
+      },
+    ).map(() => undefined);
+  },
 };
 
 function recordToMeasure(

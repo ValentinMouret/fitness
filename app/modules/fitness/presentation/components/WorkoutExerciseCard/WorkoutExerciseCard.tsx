@@ -199,6 +199,7 @@ export function WorkoutExerciseCard({
               <Table.Root variant="surface">
                 <Table.Header>
                   <Table.Row>
+                    <Table.ColumnHeaderCell>Set</Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell justify="end">
                       Reps
                     </Table.ColumnHeaderCell>
@@ -299,10 +300,20 @@ function EditableSetRow({
   return (
     <Table.Row
       style={{
-        backgroundColor: set.isCompleted ? "var(--green-2)" : "transparent",
+        backgroundColor: set.isCompleted
+          ? "var(--green-2)"
+          : set.isWarmup
+            ? "var(--orange-2)"
+            : "transparent",
         opacity: set.isCompleted ? 1 : 0.9,
       }}
     >
+      <Table.Cell>
+        <Text weight="medium" color={set.isWarmup ? "orange" : undefined}>
+          {set.isWarmup ? `W${set.set}` : `Set ${set.set}`}
+        </Text>
+      </Table.Cell>
+
       <Table.Cell justify="end">
         {set.isCompleted || !canEdit ? (
           <Text weight="medium">{set.repsDisplay}</Text>

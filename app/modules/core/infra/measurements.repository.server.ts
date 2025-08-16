@@ -1,5 +1,5 @@
 import { eq, type InferSelectModel } from "drizzle-orm";
-import { type Result, ResultAsync, ok } from "neverthrow";
+import { Result, ResultAsync, ok } from "neverthrow";
 import { db } from "~/db/index";
 import { measurements } from "~/db/schema";
 import type { ErrRepository, ErrValidation } from "~/repository";
@@ -21,6 +21,14 @@ export const MeasurementRepository = {
     return executeQuery(query, "fetchByName")
       .andThen(fetchSingleRecord)
       .andThen((record) => recordToMeasurement(record));
+  },
+
+  fetchAll(): ResultAsync<Measurement[], ErrRepository> {
+    const query = db.select().from(measurements);
+
+    return executeQuery(query, "fetchAll").andThen((records) =>
+      Result.combine(records.map(recordToMeasurement)),
+    );
   },
 
   save(self: Measurement, tx?: Transaction) {

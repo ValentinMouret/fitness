@@ -11,6 +11,7 @@ export interface WorkoutSetViewModel {
   readonly note?: string;
   readonly isCompleted: boolean;
   readonly isFailure: boolean;
+  readonly isWarmup: boolean;
   readonly repsDisplay: string;
   readonly weightDisplay: string;
   readonly noteDisplay: string;
@@ -37,6 +38,7 @@ function createWorkoutSetViewModel(set: WorkoutSet): WorkoutSetViewModel {
     note: set.note,
     isCompleted: set.isCompleted,
     isFailure: set.isFailure,
+    isWarmup: set.isWarmup,
     repsDisplay: set.reps?.toString() ?? "—",
     weightDisplay: set.weight?.toString() ?? "—",
     noteDisplay: set.note ?? "—",
@@ -55,6 +57,8 @@ export function createWorkoutExerciseCardViewModel(
   exerciseGroup: WorkoutExerciseGroup,
   isWorkoutComplete = false,
 ): WorkoutExerciseCardViewModel {
+  // console.log(`[View Model] Creating view model...`);
+
   const setViewModels = exerciseGroup.sets.map(createWorkoutSetViewModel);
   const lastSet = setViewModels[setViewModels.length - 1];
   const hasCompletedSets = exerciseGroup.sets.some((set) => set.isCompleted);

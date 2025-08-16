@@ -40,4 +40,9 @@ export const baseMeasurements: Record<string, Measurement> = {
     unit: "Cal",
     description: "Average daily calories to eat.",
   },
+  weight: {
+    name: "weight",
+    unit: "kg",
+    description: "Body weight measurement.",
+  },
 };

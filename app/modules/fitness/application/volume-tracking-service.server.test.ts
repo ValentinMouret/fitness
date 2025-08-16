@@ -54,6 +54,7 @@ const createSet = (overrides?: { isCompleted?: boolean }): WorkoutSet => ({
   weight: 50,
   isCompleted: overrides?.isCompleted ?? true,
   isFailure: false,
+  isWarmup: false,
 });
 
 const createExerciseGroup = (

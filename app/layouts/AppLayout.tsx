@@ -18,6 +18,7 @@ import {
   CheckboxIcon,
   CounterClockwiseClockIcon,
   ReaderIcon,
+  RulerSquareIcon,
   ExitIcon,
 } from "@radix-ui/react-icons";
 
@@ -68,6 +69,7 @@ const AppLayout: React.FC = () => {
       label: "Workouts",
       icon: <CounterClockwiseClockIcon />,
     },
+    { path: "/measurements", label: "Measurements", icon: <RulerSquareIcon /> },
   ];
 
   return (
@@ -136,7 +138,7 @@ const AppLayout: React.FC = () => {
                   {({ isActive }) => (
                     <Button
                       variant="soft"
-                      color={isActive ? "accent" : undefined}
+                      color={isActive ? "blue" : undefined}
                       size="3"
                       style={{
                         width: "100%",

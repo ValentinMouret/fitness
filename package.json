@@ -15,6 +15,7 @@
     "tc": "pnpm run typecheck",
     "tc:watch": "nodemon --exec 'pnpm tc' --watch src --ext ts,tsx,js,jsx",
     "test": "vitest",
+    "test:debug": "vitest --reporter=verbose --silent=false",
     "typecheck": "react-router typegen && tsc",
     "prepare": "husky"
   },

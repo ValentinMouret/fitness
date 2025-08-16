@@ -8,17 +8,22 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import type { Measure } from "~/measurements";
+import type { Measure } from "~/modules/core/domain/measure";
 import "./WeightChart.css";
 
 export type TimePeriod = "week" | "month" | "3months";
 
-interface WeightChartProps {
+interface MeasurementChartProps {
   readonly data: readonly Measure[];
   readonly unit: string;
+  readonly measurementName: string;
 }
 
-export default function WeightChart({ data, unit }: WeightChartProps) {
+export default function MeasurementChart({
+  data,
+  unit,
+  measurementName,
+}: MeasurementChartProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("month");
 
   const filterDataByPeriod = (period: TimePeriod) => {
@@ -44,17 +49,21 @@ export default function WeightChart({ data, unit }: WeightChartProps) {
 
   const chartData = filteredData
     .map((measure) => ({
-      date: measure.t.toISOString().split("T")[0],
-      weight: measure.value,
+      timestamp: measure.t.getTime(),
+      value: measure.value,
       fullDate: measure.t.toLocaleDateString(),
     }))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  const displayName = measurementName
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
 
   if (chartData.length === 0) {
     return (
       <div className="weight-chart">
         <div className="weight-chart-header">
-          <h3>Weight Evolution</h3>
+          <h3>{displayName} Evolution</h3>
           <div className="period-selector">
             <button
               type="button"
@@ -80,7 +89,10 @@ export default function WeightChart({ data, unit }: WeightChartProps) {
           </div>
         </div>
         <div className="weight-chart-empty">
-          <p>No weight data available for the selected period.</p>
+          <p>
+            No {measurementName.replace(/_/g, " ")} data available for the
+            selected period.
+          </p>
         </div>
       </div>
     );
@@ -89,7 +101,7 @@ export default function WeightChart({ data, unit }: WeightChartProps) {
   return (
     <div className="weight-chart">
       <div className="weight-chart-header">
-        <h3>Weight Evolution</h3>
+        <h3>{displayName} Evolution</h3>
         <div className="period-selector">
           <button
             type="button"
@@ -126,7 +138,10 @@ export default function WeightChart({ data, unit }: WeightChartProps) {
               vertical={false}
             />
             <XAxis
-              dataKey="date"
+              dataKey="timestamp"
+              type="number"
+              scale="time"
+              domain={["dataMin", "dataMax"]}
               tickFormatter={(value) => new Date(value).toLocaleDateString()}
               stroke="#999"
               fontSize={12}
@@ -140,7 +155,7 @@ export default function WeightChart({ data, unit }: WeightChartProps) {
               tickLine={false}
               axisLine={false}
               label={{
-                value: `Weight (${unit})`,
+                value: `${displayName} (${unit})`,
                 angle: -90,
                 position: "insideLeft",
                 style: { textAnchor: "middle", fill: "#666" },
@@ -148,7 +163,7 @@ export default function WeightChart({ data, unit }: WeightChartProps) {
             />
             <Tooltip
               labelFormatter={(label) => new Date(label).toLocaleDateString()}
-              formatter={(value: number) => [`${value} ${unit}`, "Weight"]}
+              formatter={(value: number) => [`${value} ${unit}`, displayName]}
               contentStyle={{
                 backgroundColor: "white",
                 border: "1px solid #e0e0e0",
@@ -158,7 +173,7 @@ export default function WeightChart({ data, unit }: WeightChartProps) {
             />
             <Line
               type="linear"
-              dataKey="weight"
+              dataKey="value"
               stroke="#333"
               strokeWidth={2}
               dot={{ fill: "#333", strokeWidth: 0, r: 3 }}

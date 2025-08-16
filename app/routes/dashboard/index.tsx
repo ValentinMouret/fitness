@@ -12,7 +12,7 @@ import type { Route } from "./+types/index";
 import { Form } from "react-router";
 import { coerceFloat, resultFromNullable } from "~/utils";
 import HabitCheckbox from "~/components/HabitCheckbox";
-import WeightChart from "~/components/WeightChart";
+import MeasurementChart from "~/components/MeasurementChart";
 import {
   Box,
   Heading,
@@ -263,7 +263,11 @@ export default function DashboardPage({
       {/* Weight Chart Section */}
       {weightData.length > 0 && (
         <Card size="3" mb="6">
-          <WeightChart data={weightData} unit={weight.unit} />
+          <MeasurementChart
+            data={weightData}
+            unit={weight.unit}
+            measurementName="weight"
+          />
         </Card>
       )}
 

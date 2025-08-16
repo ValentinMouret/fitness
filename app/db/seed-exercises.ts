@@ -7,6 +7,7 @@ import {
   exerciseSubstitutions,
   equipmentPreferences,
 } from "./schema";
+import type { MuscleGroup } from "~/modules/fitness/domain/workout";
 
 export const db = drizzle({
   connection: {
@@ -587,7 +588,7 @@ async function main() {
     console.log("Seeding exercise muscle groups...");
     const muscleGroupMappings: Array<{
       exerciseName: string;
-      muscleGroups: Array<{ muscle_group: string; split: number }>;
+      muscleGroups: Array<{ muscle_group: MuscleGroup; split: number }>;
     }> = [
       // Chest exercises
       {

@@ -20,6 +20,7 @@ export default [
       route("nutrition/meal-builder", "routes/nutrition/meal-builder.tsx"),
       route("nutrition/meals", "routes/nutrition/meals.tsx"),
       route("workouts", "routes/workouts/index.tsx"),
+      route("workouts/import", "routes/workouts/import.tsx"),
       route("workouts/create", "routes/workouts/create.tsx"),
       route("workouts/generate", "routes/workouts/generate.tsx"),
       route("workouts/:id", "routes/workouts/:id.tsx"),
@@ -39,6 +40,8 @@ export default [
       route("habits", "routes/habits/index.tsx"),
       route("habits/new", "routes/habits/new.tsx"),
       route("habits/:id/edit", "routes/habits/edit.tsx"),
+      route("measurements", "routes/measurements/index.tsx"),
+      route("measurements/:name", "routes/measurements/name.tsx"),
     ]),
   ]),
 ] satisfies RouteConfig;

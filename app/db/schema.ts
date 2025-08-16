@@ -150,6 +150,7 @@ export const workouts = pgTable("workouts", {
   start: timestamp().defaultNow(),
   stop: timestamp(),
   notes: text(),
+  imported_from_strong: boolean().notNull().default(false),
   ...timestampColumns(),
 });
 
@@ -287,6 +288,7 @@ export const workoutSets = pgTable(
     note: text(),
     isCompleted: boolean().notNull().default(false),
     isFailure: boolean().notNull().default(false),
+    isWarmup: boolean().notNull().default(false),
     ...timestampColumns(),
   },
   (table) => [

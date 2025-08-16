@@ -7,6 +7,7 @@ import {
   Box,
   Card,
   Text,
+  Badge,
 } from "@radix-ui/themes";
 import { Link, Form } from "react-router";
 import type { Route } from "./+types/index";
@@ -30,6 +31,13 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
         <Flex gap="3" align="center">
           <RadixLink asChild>
             <Link to="/workouts/exercises">Manage Exercises</Link>
+          </RadixLink>
+          <RadixLink asChild>
+            <Link to="/workouts/import">
+              <Button variant="outline" size="3">
+                Import from Strong
+              </Button>
+            </Link>
           </RadixLink>
           <RadixLink asChild>
             <Link to="/workouts/generate">
@@ -60,7 +68,14 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
               >
                 <Flex justify="between" align="center" p="4">
                   <Box>
-                    <Heading size="4">{workout.name}</Heading>
+                    <Flex align="center" gap="2" mb="1">
+                      <Heading size="4">{workout.name}</Heading>
+                      {workout.importedFromStrong && (
+                        <Badge size="1" color="blue" variant="soft">
+                          Strong
+                        </Badge>
+                      )}
+                    </Flex>
                     <Text size="2" color="gray">
                       {workout.start.toLocaleDateString()} at{" "}
                       {workout.start.toLocaleTimeString([], {

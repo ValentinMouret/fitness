@@ -1,4 +1,4 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
+import type { ActionFunctionArgs } from "react-router";
 import { Form, redirect } from "react-router";
 import type { Route } from "./+types/generate";
 import { AdaptiveWorkoutService } from "~/modules/fitness/application/adaptive-workout-service.server";
@@ -22,7 +22,6 @@ import {
   Text,
   Heading,
   Box,
-  Separator,
 } from "@radix-ui/themes";
 import {
   CheckCircledIcon,
@@ -33,7 +32,7 @@ import {
 } from "@radix-ui/react-icons";
 import { Dumbbell, Activity } from "lucide-react";
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader() {
   const availableEquipmentResult =
     await AdaptiveWorkoutRepository.getAvailableEquipment();
   const volumeNeedsResult = await VolumeTrackingService.getVolumeNeeds();
@@ -73,25 +72,21 @@ export async function action({ request }: ActionFunctionArgs) {
     return { error: "Please provide a valid target duration" };
   }
 
-  // Get all available equipment
   const availableEquipmentResult =
     await AdaptiveWorkoutRepository.getAvailableEquipment();
   if (availableEquipmentResult.isErr()) {
     return { error: "Failed to load equipment data" };
   }
 
-  // Filter to only selected equipment
   const selectedEquipmentInstances = availableEquipmentResult.value.filter(
     (equipment) => selectedEquipment.includes(equipment.id),
   );
 
-  // Get current volume needs
   const volumeNeedsResult = await VolumeTrackingService.getVolumeNeeds();
   if (volumeNeedsResult.isErr()) {
     return { error: "Failed to load volume needs" };
   }
 
-  // Generate adaptive workout
   const workoutResult = await AdaptiveWorkoutService.generateWorkout({
     availableEquipment: selectedEquipmentInstances,
     targetDuration,
@@ -110,7 +105,6 @@ export async function action({ request }: ActionFunctionArgs) {
     };
   }
 
-  // Save the generated workout to database (remove temp ID)
   const { id, ...workoutWithoutId } = workoutResult.value.workout.workout;
   const savedWorkoutResult = await WorkoutRepository.save(workoutWithoutId);
   if (savedWorkoutResult.isErr()) {
@@ -119,7 +113,6 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const savedWorkout = savedWorkoutResult.value;
 
-  // Save workout exercises
   for (const [
     index,
     exerciseGroup,
@@ -137,7 +130,6 @@ export async function action({ request }: ActionFunctionArgs) {
     }
   }
 
-  // Redirect to the workout page
   throw redirect(`/workouts/${savedWorkout.id}`);
 }
 
@@ -146,6 +138,7 @@ export default function GenerateWorkout({
   actionData,
 }: Route.ComponentProps) {
   const { availableEquipment, volumeNeeds, weeklyProgress } = loaderData;
+  actionData;
 
   return (
     <Box className="mx-auto max-w-4xl p-6">
@@ -334,64 +327,6 @@ export default function GenerateWorkout({
           </Callout.Icon>
           <Callout.Text>{actionData.error}</Callout.Text>
         </Callout.Root>
-      )}
-
-      {actionData?.success && actionData.workout && (
-        <Card size="3" mt="6">
-          <Callout.Root color="green" size="2" mb="4">
-            <Callout.Icon>
-              <CheckCircledIcon />
-            </Callout.Icon>
-            <Callout.Text>{actionData.message}</Callout.Text>
-          </Callout.Root>
-
-          <Grid columns={{ initial: "1", md: "2" }} gap="4" mb="4">
-            <Flex align="center" gap="2">
-              <StopwatchIcon width="16" height="16" />
-              <Text size="2">
-                <Text weight="medium">Estimated Duration:</Text>{" "}
-                {actionData.workout.estimatedDuration} minutes
-              </Text>
-            </Flex>
-            <Flex align="center" gap="2">
-              <TargetIcon width="16" height="16" />
-              <Text size="2">
-                <Text weight="medium">Floor Switches:</Text>{" "}
-                {actionData.workout.floorSwitches}
-              </Text>
-            </Flex>
-          </Grid>
-
-          <Separator size="4" mb="4" />
-
-          <Box>
-            <Heading size="4" mb="3">
-              Generated Exercises
-            </Heading>
-            <Grid gap="2">
-              {actionData.workout.workout.exerciseGroups.map((group, index) => (
-                <Card key={group.exercise.id} size="1">
-                  <Flex justify="between" align="center">
-                    <Flex align="center" gap="3">
-                      <Badge size="1" color="gray">
-                        {index + 1}
-                      </Badge>
-                      <Text size="2" weight="medium">
-                        {group.exercise.name}
-                      </Text>
-                      <Badge size="1" color="blue">
-                        {group.exercise.type}
-                      </Badge>
-                    </Flex>
-                    <Badge size="1" color="green" className="capitalize">
-                      {group.exercise.movementPattern}
-                    </Badge>
-                  </Flex>
-                </Card>
-              ))}
-            </Grid>
-          </Box>
-        </Card>
       )}
     </Box>
   );

@@ -24,6 +24,7 @@ describe("WorkoutExerciseCardViewModel", () => {
       note: "Warm up",
       isCompleted: true,
       isFailure: false,
+      isWarmup: true,
     },
     {
       workoutId: "w-1",
@@ -34,6 +35,7 @@ describe("WorkoutExerciseCardViewModel", () => {
       note: "",
       isCompleted: true,
       isFailure: false,
+      isWarmup: false,
     },
     {
       workoutId: "w-1",
@@ -44,6 +46,7 @@ describe("WorkoutExerciseCardViewModel", () => {
       note: undefined,
       isCompleted: false,
       isFailure: false,
+      isWarmup: false,
     },
   ];
 
