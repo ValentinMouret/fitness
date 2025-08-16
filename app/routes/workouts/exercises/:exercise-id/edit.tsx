@@ -1,5 +1,6 @@
-import { Heading } from "@radix-ui/themes";
-import { redirect } from "react-router";
+import { Heading, Flex, IconButton } from "@radix-ui/themes";
+import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import { Link, redirect } from "react-router";
 import ExerciseForm from "~/components/ExerciseForm";
 import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 import { ExerciseService } from "~/modules/fitness/application/service.server";
@@ -141,7 +142,14 @@ export default function EditExercisePage({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <Heading size="7">Edit exercise</Heading>
+      <Flex align="center" gap="4" mb="6">
+        <IconButton asChild size="3" variant="ghost">
+          <Link to="/workouts/exercises">
+            <ArrowLeftIcon />
+          </Link>
+        </IconButton>
+        <Heading size="7">Edit exercise</Heading>
+      </Flex>
       <ExerciseForm
         initialExercise={exercise.exercise}
         initialSplits={exercise.muscleGroupSplits}
