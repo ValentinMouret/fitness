@@ -1,0 +1,30 @@
+module.exports = {
+  apps: [
+    {
+      name: "fitness",
+      script: "./build/server/index.js",
+      instances: 2,
+      exec_mode: "cluster",
+      env: {
+        NODE_ENV: "production",
+        PORT: 3000,
+      },
+      error_file: "/var/log/fitness/error.log",
+      out_file: "/var/log/fitness/out.log",
+      merge_logs: true,
+      time: true,
+      max_memory_restart: "500M",
+      min_uptime: "10s",
+      max_restarts: 5,
+      kill_timeout: 5000,
+      wait_ready: true,
+      listen_timeout: 10000,
+      reload_delay: 1000,
+      autorestart: true,
+      watch: false,
+      ignore_watch: ["node_modules", "logs", ".git"],
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+      source_map_support: true,
+    },
+  ],
+};

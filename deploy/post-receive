@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Fitness App - Git Post-Receive Hook
+# This script is triggered when you push to the production git repository
+# Place this file at: /home/deploy/fitness.git/hooks/post-receive
+# Make it executable: chmod +x /home/deploy/fitness.git/hooks/post-receive
+
+set -e
+
+# Read the push information
+while read oldrev newrev refname; do
+    # Only deploy on push to main branch
+    if [[ $refname == "refs/heads/main" ]]; then
+        echo "🚀 Received push to main branch"
+        echo "📝 Old revision: $oldrev"
+        echo "📝 New revision: $newrev"
+
+        # Run the deployment script
+        echo "🏃‍♂️ Starting deployment..."
+        /home/deploy/fitness-rr/deploy/deploy.sh
+
+        if [ $? -eq 0 ]; then
+            echo "✅ Deployment completed successfully!"
+        else
+            echo "❌ Deployment failed!"
+            exit 1
+        fi
+    else
+        echo "ℹ️  Push to $refname ignored (only main branch triggers deployment)"
+    fi
+done

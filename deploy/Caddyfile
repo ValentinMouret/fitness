@@ -1,0 +1,84 @@
+# Fitness App - Caddy Configuration
+# Place this file at: /etc/caddy/Caddyfile
+# Reload with: sudo systemctl reload caddy
+
+fitness.valentinmouret.io {
+	# Reverse proxy to PM2 cluster
+	reverse_proxy localhost:3000 {
+		# Load balancing between PM2 instances
+		lb_policy round_robin
+
+		# Health checks
+		health_uri /health
+		health_interval 10s
+		health_timeout 5s
+		health_status 200
+
+		# Retry configuration
+		lb_retry_match method GET
+		lb_try_duration 5s
+		lb_retries 3
+
+		# Headers for better proxying
+		header_up Host {upstream_hostport}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+
+	# Compression
+	encode gzip
+
+	# Security headers
+	header {
+		# HSTS
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+		# Content type sniffing protection
+		X-Content-Type-Options "nosniff"
+
+		# Clickjacking protection
+		X-Frame-Options "DENY"
+
+		# XSS protection
+		X-XSS-Protection "1; mode=block"
+
+		# Referrer policy
+		Referrer-Policy "strict-origin-when-cross-origin"
+
+		# Content Security Policy (adjust as needed)
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https:; connect-src 'self'"
+
+		# Remove server information
+		-Server
+	}
+
+	# Logging
+	log {
+		output file /var/log/caddy/fitness.log {
+			roll_size 100MB
+			roll_keep 5
+			roll_keep_for 168h
+		}
+		format json
+		level INFO
+	}
+
+	# Error pages (optional - customize as needed)
+	handle_errors {
+		@5xx expression {http.error.status_code} >= 500
+		handle @5xx {
+			respond "Server Error - We're working on it!" 500
+		}
+
+		@4xx expression {http.error.status_code} >= 400
+		handle @4xx {
+			respond "Page Not Found" 404
+		}
+	}
+}
+
+# Optional: Redirect www to non-www
+www.fitness.valentinmouret.io {
+	redir https://fitness.valentinmouret.io{uri} permanent
+}
