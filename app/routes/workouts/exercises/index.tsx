@@ -13,7 +13,7 @@ import {
   exerciseTypes,
   parseExerciseType,
 } from "~/modules/fitness/domain/workout";
-import { Form, Link, useSearchParams, redirect } from "react-router";
+import { Form, Link, useSearchParams } from "react-router";
 import ExerciseCard from "~/components/ExerciseCard";
 import { humanFormatting } from "~/strings";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
@@ -51,7 +51,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
     throw new Error("Failed to delete exercise");
   }
 
-  return redirect("/workouts/exercises");
+  return { success: true };
 };
 
 export default function ExercisesIndexPage({
