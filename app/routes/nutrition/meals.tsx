@@ -322,7 +322,8 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
             <Flex justify="between" mb="2">
               <Text size="2">Calories</Text>
               <Text size="2" weight="medium">
-                {dailyTotals.calories} / {dailyTargets.calories} kcal (
+                {Math.round(dailyTotals.calories)} / {dailyTargets.calories}{" "}
+                kcal (
                 {Math.round(
                   (dailyTotals.calories / dailyTargets.calories) * 100,
                 )}

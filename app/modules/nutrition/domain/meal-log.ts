@@ -106,7 +106,7 @@ export function removeIngredient(
 export function calculateDailyTotals(
   meals: readonly MealLogWithNutrition[],
 ): NutritionalTotals {
-  return meals.reduce(
+  const totals = meals.reduce(
     (acc, meal) => ({
       calories: acc.calories + meal.totals.calories,
       protein: acc.protein + meal.totals.protein,
@@ -124,6 +124,15 @@ export function calculateDailyTotals(
       volume: 0,
     },
   );
+
+  return {
+    calories: Math.round(totals.calories * 100) / 100,
+    protein: Math.round(totals.protein * 100) / 100,
+    carbs: Math.round(totals.carbs * 100) / 100,
+    fat: Math.round(totals.fat * 100) / 100,
+    fiber: Math.round(totals.fiber * 100) / 100,
+    volume: Math.round(totals.volume * 100) / 100,
+  };
 }
 
 export function createDailySummary(
