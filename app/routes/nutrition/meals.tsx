@@ -1,4 +1,9 @@
-import { useState } from "react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  DotsHorizontalIcon,
+  PlusIcon,
+} from "@radix-ui/react-icons";
 import {
   Box,
   Button,
@@ -12,34 +17,27 @@ import {
   Progress,
   Text,
 } from "@radix-ui/themes";
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  PlusIcon,
-  DotsHorizontalIcon,
-} from "@radix-ui/react-icons";
+import { useState } from "react";
 import {
   Link,
-  useSearchParams,
   useFetcher,
-  type LoaderFunctionArgs,
+  useSearchParams,
   type ActionFunctionArgs,
+  type LoaderFunctionArgs,
 } from "react-router";
-import { addOneDay, removeOneDay, today, toDateString } from "~/time";
-import { NutritionService } from "~/modules/nutrition/application/service";
 import { TargetService } from "~/modules/core/application/measurement-service";
 import { baseMeasurements } from "~/modules/core/domain/measurements";
+import { NutritionService } from "~/modules/nutrition/application/service";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import {
-  MealCard,
-  EmptyMealCard,
-  TemplateSelectionModal,
-} from "~/modules/nutrition/presentation";
-import {
   createMealCardViewModel,
   createTemplateSelectionViewModel,
+  EmptyMealCard,
+  MealCard,
+  TemplateSelectionModal,
 } from "~/modules/nutrition/presentation";
+import { addOneDay, removeOneDay, toDateString, today } from "~/time";
 import { handleResultError } from "~/utils/errors";
 import type { Route } from "./+types/meals";
 
@@ -206,11 +204,28 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
     const isYesterday = date.toDateString() === yesterday.toDateString();
     if (isYesterday) return "Yesterday";
 
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-    });
+    const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ] as const;
+
+    const weekday = weekdays[date.getDay()];
+    const day = date.getDate().toString().padStart(2, " ");
+    const month = months[date.getMonth()];
+    const year = date.getFullYear().toString().slice(-2);
+
+    return `${weekday} ${day} ${month} ${year}`;
   };
 
   const getMealBuilderUrl = (
@@ -261,21 +276,33 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
   return (
     <Container size="4">
       {/* Header with date navigation */}
-      <Flex align="center" justify="between" mb="6">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "auto 1fr auto",
+          alignItems: "center",
+          gap: "16px",
+          marginBottom: "24px",
+        }}
+      >
         <Link to="/nutrition">
           <IconButton variant="ghost" size="2">
             <ChevronLeftIcon width="16" height="16" />
           </IconButton>
         </Link>
 
-        <Flex align="center" gap="3">
-          <IconButton variant="ghost" onClick={previousDay}>
+        <Flex align="center" justify="center" gap="2">
+          <IconButton
+            variant="ghost"
+            onClick={previousDay}
+            aria-label="Previous day"
+          >
             <ChevronLeftIcon width="16" height="16" />
           </IconButton>
 
           <Heading size="5">{formatDate(parsedCurrentDate)}</Heading>
 
-          <IconButton variant="ghost" onClick={nextDay}>
+          <IconButton variant="ghost" onClick={nextDay} aria-label="Next day">
             <ChevronRightIcon width="16" height="16" />
           </IconButton>
         </Flex>
@@ -283,9 +310,8 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
         <Button variant="outline" size="2" onClick={goToToday}>
           Today
         </Button>
-      </Flex>
+      </div>
 
-      {/* Daily Progress Summary */}
       <Card size="3" mb="6">
         <Heading size="4" mb="4">
           Daily Progress
