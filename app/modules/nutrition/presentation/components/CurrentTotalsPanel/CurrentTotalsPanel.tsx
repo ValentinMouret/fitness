@@ -79,9 +79,8 @@ export function CurrentTotalsPanel({
             size={size === "large" ? "3" : "2"}
             weight={size === "large" ? "medium" : "regular"}
           >
-            {target
-              ? formatProgress(current, target)
-              : `${label}: ${Math.round(current)}`}{" "}
+            {label}:{" "}
+            {target ? formatProgress(current, target) : Math.round(current)}{" "}
             {unit}
           </Text>
           {target && <Text size="2">{Math.round(progress)}%</Text>}
