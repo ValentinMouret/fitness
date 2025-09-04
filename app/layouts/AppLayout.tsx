@@ -138,7 +138,7 @@ const AppLayout: React.FC = () => {
                   {({ isActive }) => (
                     <Button
                       variant="soft"
-                      color={isActive ? "blue" : undefined}
+                      color={isActive ? "green" : undefined}
                       size="3"
                       style={{
                         width: "100%",
