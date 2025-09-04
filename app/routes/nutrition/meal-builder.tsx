@@ -10,6 +10,7 @@ import {
   Heading,
   IconButton,
   RadioGroup,
+  Spinner,
   Tabs,
   Text,
   TextField,
@@ -724,6 +725,7 @@ function AddIngredientModal({
                       disabled={isAISearching || !searchQuery.trim()}
                       variant="soft"
                     >
+                      {isAISearching && <Spinner size="1" />}
                       <MagicWandIcon width="16" height="16" />
                       {isAISearching
                         ? "Searching with AI..."
