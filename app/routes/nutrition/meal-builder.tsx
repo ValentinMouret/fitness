@@ -51,6 +51,7 @@ import {
 } from "~/modules/nutrition/presentation";
 import type { CreateAIIngredientInput } from "~/modules/nutrition/domain/ingredient";
 import type { Route } from "./+types/meal-builder";
+import { humanFormatting } from "~/strings";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -696,12 +697,8 @@ function AddIngredientModal({
         <Tabs.Root value={selectedCategory} onValueChange={setSelectedCategory}>
           <Tabs.List>
             {categories.map((cat) => (
-              <Tabs.Trigger
-                key={cat}
-                value={cat}
-                style={{ textTransform: "capitalize" }}
-              >
-                {cat}
+              <Tabs.Trigger key={cat} value={cat}>
+                {cat === "all" ? "All" : humanFormatting(cat)}
               </Tabs.Trigger>
             ))}
           </Tabs.List>
