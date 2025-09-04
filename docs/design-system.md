@@ -7,7 +7,7 @@ The Fitness app design system provides a cohesive foundation for building consis
 ### Light & Minimalist
 The design prioritizes clarity and simplicity, reducing cognitive load while maintaining visual hierarchy and functionality.
 
-### Consistent Interactions  
+### Consistent Interactions
 All interactive elements follow predictable patterns for expanding content, inline editing, and state feedback.
 
 ### Semantic Color Usage
