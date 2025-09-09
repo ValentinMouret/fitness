@@ -150,3 +150,4 @@ String manipulation utilities:
 - If at any point you need more information, please ask your questions before moving forward.
 - Limit comments to the bear minimum. Like in Go, around data structures and the main functions.
 - After making changes to frontend code, run the frontend engineer to see if changes are simple enough, fit the guidelines, or could be improve
+- Use Playwright MCP to test your UI changes

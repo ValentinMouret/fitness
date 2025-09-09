@@ -29,6 +29,22 @@ Prefer simple routes and handle different actions with an `intent` input in the 
 - Use `Link` components for navigation (GET requests)
 - Index pages should provide clear entry points to create new resources
 
+## URL Search Parameters
+- Use `useSearchParams()` from "react-router" to read and write URL query string
+- Returns a tuple: `[searchParams, setSearchParams]`
+- `searchParams` is a URLSearchParams object with methods like `.get("key")`
+- `setSearchParams()` accepts an object to update parameters: `setSearchParams({ page: "2" })`
+- The searchParams object has a stable reference, safe for useEffect dependencies
+- Example:
+  ```tsx
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = searchParams.get("page") || "1";
+
+  const handlePageChange = (newPage: number) => {
+    setSearchParams({ page: newPage.toString() });
+  };
+  ```
+
 ## Error Handling
 - Handle loader/action errors gracefully with try/catch
 - Return user-friendly error messages from actions
