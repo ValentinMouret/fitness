@@ -90,7 +90,7 @@ export const WorkoutRepository = {
       .select()
       .from(workouts)
       .where(isNull(workouts.deleted_at))
-      .orderBy(desc(workouts.created_at));
+      .orderBy(desc(workouts.start));
 
     return executeQuery(query, "findAllWorkouts").map((records) =>
       records.map(workoutRecordToDomain),
