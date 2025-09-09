@@ -1,29 +1,57 @@
 import {
+  Badge,
+  Box,
+  Button,
+  Card,
   Container,
+  Flex,
   Heading,
   Link as RadixLink,
-  Button,
-  Flex,
-  Box,
-  Card,
   Text,
-  Badge,
 } from "@radix-ui/themes";
-import { Link, Form } from "react-router";
-import type { Route } from "./+types/index";
+import { Form, Link, useSearchParams } from "react-router";
+import { Pagination } from "~/components/Pagination";
 import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { handleResultError } from "~/utils/errors";
+import type { Route } from "./+types/index";
 
-export const loader = async () => {
-  const result = await WorkoutRepository.findAll();
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const url = new URL(request.url);
+  const page = Number.parseInt(url.searchParams.get("page") ?? "1", 10);
+  const limit = Number.parseInt(url.searchParams.get("limit") ?? "20", 10);
+
+  const validPage = Math.max(1, page);
+  const validLimit = Math.min(Math.max(1, limit), 10);
+
+  const result = await WorkoutRepository.findAllWithPagination(
+    validPage,
+    validLimit,
+  );
   if (result.isErr()) {
     handleResultError(result, "Failed to load workouts");
   }
-  return { workouts: result.value };
+
+  const { workouts, totalCount } = result.value;
+  const totalPages = Math.ceil(totalCount / validLimit);
+
+  return {
+    workouts,
+    pagination: {
+      currentPage: validPage,
+      totalPages,
+      totalCount,
+      limit: validLimit,
+    },
+  };
 };
 
 export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
-  const { workouts } = loaderData;
+  const { workouts, pagination } = loaderData;
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const handlePageChange = (page: number) => {
+    setSearchParams({ page: page.toString() });
+  };
   return (
     <Container>
       <Flex justify="between" align="center" mb="6">
@@ -101,6 +129,12 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
           ))
         )}
       </Flex>
+
+      <Pagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        onPageChange={handlePageChange}
+      />
     </Container>
   );
 }

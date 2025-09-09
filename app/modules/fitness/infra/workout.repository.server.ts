@@ -1,20 +1,20 @@
+import { and, desc, eq, isNull, sql, type InferSelectModel } from "drizzle-orm";
+import { ResultAsync } from "neverthrow";
 import { db } from "~/db";
 import {
-  workouts,
-  workoutExercises,
-  workoutSets,
   exercises,
+  workoutExercises,
+  workouts,
+  workoutSets,
 } from "~/db/schema";
-import { ResultAsync } from "neverthrow";
 import type { ErrRepository } from "~/repository";
 import { executeQuery } from "~/repository.server";
-import { and, eq, type InferSelectModel, isNull, desc } from "drizzle-orm";
 import type {
-  Workout,
-  WorkoutSet,
-  WorkoutSession,
-  WorkoutExerciseGroup,
   Exercise,
+  Workout,
+  WorkoutExerciseGroup,
+  WorkoutSession,
+  WorkoutSet,
 } from "../domain/workout";
 
 export const WorkoutRepository = {
@@ -95,6 +95,34 @@ export const WorkoutRepository = {
     return executeQuery(query, "findAllWorkouts").map((records) =>
       records.map(workoutRecordToDomain),
     );
+  },
+
+  findAllWithPagination(
+    page = 1,
+    limit = 10,
+  ): ResultAsync<{ workouts: Workout[]; totalCount: number }, ErrRepository> {
+    const offset = (page - 1) * limit;
+
+    const workoutsQuery = db
+      .select()
+      .from(workouts)
+      .where(isNull(workouts.deleted_at))
+      .orderBy(desc(workouts.start))
+      .limit(limit)
+      .offset(offset);
+
+    const countQuery = db
+      .select({ count: sql<number>`count(*)` })
+      .from(workouts)
+      .where(isNull(workouts.deleted_at));
+
+    return ResultAsync.combine([
+      executeQuery(workoutsQuery, "findWorkoutsWithPagination"),
+      executeQuery(countQuery, "countWorkouts"),
+    ]).map(([workoutRecords, countRecords]) => ({
+      workouts: workoutRecords.map(workoutRecordToDomain),
+      totalCount: countRecords[0]?.count ?? 0,
+    }));
   },
 
   delete(id: string): ResultAsync<void, ErrRepository> {
