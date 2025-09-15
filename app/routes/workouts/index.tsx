@@ -9,11 +9,16 @@ import {
   Link as RadixLink,
   Text,
 } from "@radix-ui/themes";
-import { Form, Link, useSearchParams } from "react-router";
+import { Form, Link, useSearchParams, useFetcher } from "react-router";
+import { useState } from "react";
 import { Pagination } from "~/components/Pagination";
 import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
+import { WorkoutAnalysisService } from "~/modules/fitness/application/workout-analysis.service.server";
+import { AIFitnessCoachService } from "~/modules/fitness/infra/ai-fitness-coach.service";
+import { AIFeedbackModal } from "~/modules/fitness/presentation/components";
 import { handleResultError } from "~/utils/errors";
 import type { Route } from "./+types/index";
+import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const url = new URL(request.url);
@@ -45,12 +50,64 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   };
 };
 
+export const action = async ({ request }: Route.ActionArgs) => {
+  const formData = await request.formData();
+  const intent = formData.get("intent");
+
+  if (intent === "get-ai-feedback") {
+    try {
+      const analysisDataResult =
+        await WorkoutAnalysisService.generateAnalysisData();
+
+      if (analysisDataResult.isErr()) {
+        return {
+          error:
+            analysisDataResult.error === "insufficient_data"
+              ? "Not enough workout data for analysis. Complete at least 5 workouts to get AI feedback."
+              : "Failed to analyze workout data. Please try again.",
+        };
+      }
+
+      const aiResult = await AIFitnessCoachService.analyzeWorkouts(
+        analysisDataResult.value,
+      );
+
+      if (aiResult.isErr()) {
+        return {
+          error: "Failed to generate AI feedback. Please try again later.",
+        };
+      }
+
+      return {
+        aiFeedback: aiResult.value,
+      };
+    } catch (error) {
+      console.error("AI feedback error:", error);
+      return {
+        error: "An unexpected error occurred while generating feedback.",
+      };
+    }
+  }
+
+  return { error: "Invalid action" };
+};
+
 export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
   const { workouts, pagination } = loaderData;
   const [searchParams, setSearchParams] = useSearchParams();
+  const [showAIModal, setShowAIModal] = useState(false);
+  const aiFetcher = useFetcher<{
+    aiFeedback?: AIFitnessCoachResult;
+    error?: string;
+  }>();
 
   const handlePageChange = (page: number) => {
     setSearchParams({ page: page.toString() });
+  };
+
+  const handleAIFeedback = () => {
+    setShowAIModal(true);
+    aiFetcher.submit({ intent: "get-ai-feedback" }, { method: "POST" });
   };
   return (
     <Container>
@@ -60,6 +117,14 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
           <RadixLink asChild>
             <Link to="/workouts/exercises">Manage Exercises</Link>
           </RadixLink>
+          <Button
+            variant="outline"
+            size="3"
+            onClick={handleAIFeedback}
+            disabled={aiFetcher.state === "submitting" || workouts.length < 5}
+          >
+            🤖 Get AI Feedback
+          </Button>
           <RadixLink asChild>
             <Link to="/workouts/import">
               <Button variant="outline" size="3">
@@ -134,6 +199,14 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
         currentPage={pagination.currentPage}
         totalPages={pagination.totalPages}
         onPageChange={handlePageChange}
+      />
+
+      <AIFeedbackModal
+        open={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        feedback={aiFetcher.data?.aiFeedback || null}
+        loading={aiFetcher.state === "submitting"}
+        error={aiFetcher.data?.error}
       />
     </Container>
   );
