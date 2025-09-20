@@ -14,15 +14,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const currentUser = getUser();
-    setUserState(currentUser);
-    setIsLoading(false);
+    const loadUser = async () => {
+      const currentUser = await getUser();
+      setUserState(currentUser);
+      setIsLoading(false);
+    };
+    loadUser();
   }, []);
 
   // Listen for storage changes to sync auth state
   useEffect(() => {
-    const handleStorageChange = () => {
-      const currentUser = getUser();
+    const handleStorageChange = async () => {
+      const currentUser = await getUser();
       setUserState(currentUser);
     };
 

@@ -79,7 +79,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   return null;
 }
 
-export default function MeasurementPage({ params }: Route.ComponentProps) {
+export default function MeasurementPage(_: Route.ComponentProps) {
   const { measurement, measures } = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
   const addFetcher = useFetcher();

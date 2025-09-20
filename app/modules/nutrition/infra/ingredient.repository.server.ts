@@ -198,6 +198,7 @@ export const IngredientRepository = {
     ).map(() => {
       // Invalidate cache when ingredient is deleted
       ingredientsCache = null;
+      return undefined;
     });
   },
 

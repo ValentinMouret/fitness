@@ -9,7 +9,7 @@ export function resultFromNullable<T, E>(
 }
 
 export function coerceInt(v: string): Result<number, ErrValidation> {
-  const parsed = Number.parseInt(v);
+  const parsed = Number.parseInt(v, 10);
   return Number.isNaN(parsed) ? err("validation_error") : ok(parsed);
 }
 

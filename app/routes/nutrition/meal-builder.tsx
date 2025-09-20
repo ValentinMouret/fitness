@@ -159,7 +159,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       return { success: true, template: result.value };
-    } catch (error) {
+    } catch (_error) {
       throw new Error("Invalid ingredient data");
     }
   }
@@ -229,7 +229,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
       // Redirect back to the meal logger
       return redirect(returnTo || "/nutrition/meals");
-    } catch (error) {
+    } catch (_error) {
       throw new Error("Invalid meal data");
     }
   }

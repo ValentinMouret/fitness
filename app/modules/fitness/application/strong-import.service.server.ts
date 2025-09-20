@@ -318,7 +318,7 @@ async function saveWorkoutSession(
 /**
  * Get exercise by ID
  */
-async function getExerciseById(
+async function _getExerciseById(
   id: string,
 ): Promise<Result<Exercise, ErrRepository>> {
   const query = db.select().from(exercises).where(eq(exercises.id, id));
@@ -520,17 +520,17 @@ function parseDateTime(dateTimeStr: string): Result<Date, ErrStrongImport> {
         }
 
         const date = new Date(
-          Number.parseInt(year),
+          Number.parseInt(year, 10),
           monthNum,
-          Number.parseInt(day),
-          Number.parseInt(hour),
-          Number.parseInt(minute),
+          Number.parseInt(day, 10),
+          Number.parseInt(hour, 10),
+          Number.parseInt(minute, 10),
         );
 
         if (!Number.isNaN(date.getTime())) {
           return ok(date);
         }
-      } catch (e) {
+      } catch (_e) {
         // Continue to next format
       }
     }
@@ -629,10 +629,10 @@ function parseSet(
     let setType: StrongSetType;
 
     if (warmupSetNum) {
-      setNumber = Number.parseInt(warmupSetNum);
+      setNumber = Number.parseInt(warmupSetNum, 10);
       setType = "warmup";
     } else if (regularSetNum) {
-      setNumber = Number.parseInt(regularSetNum);
+      setNumber = Number.parseInt(regularSetNum, 10);
       setType = "regular";
     } else {
       setNumber = defaultSetNumber;
@@ -645,7 +645,7 @@ function parseSet(
 
     const normalizedWeightStr = weightStr.replace(",", ".");
     const weight = Number.parseFloat(normalizedWeightStr);
-    const reps = Number.parseInt(repsStr);
+    const reps = Number.parseInt(repsStr, 10);
 
     if (Number.isNaN(weight) || Number.isNaN(reps)) {
       return err("invalid_strong_format");
@@ -671,10 +671,10 @@ function parseSet(
     let setType: StrongSetType;
 
     if (warmupSetNum) {
-      setNumber = Number.parseInt(warmupSetNum);
+      setNumber = Number.parseInt(warmupSetNum, 10);
       setType = "warmup";
     } else if (regularSetNum) {
-      setNumber = Number.parseInt(regularSetNum);
+      setNumber = Number.parseInt(regularSetNum, 10);
       setType = "regular";
     } else {
       setNumber = defaultSetNumber;
@@ -685,7 +685,7 @@ function parseSet(
       setType = "failure";
     }
 
-    const reps = Number.parseInt(repsStr);
+    const reps = Number.parseInt(repsStr, 10);
 
     if (Number.isNaN(reps)) {
       return err("invalid_strong_format");

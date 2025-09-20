@@ -103,7 +103,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
 };
 
 export default function WorkoutImportPage() {
-  const handleImportSuccess = (result: unknown) => {
+  const handleImportSuccess = (_result: unknown) => {
     // This will be called by the form component on successful import
     // The form will handle navigation or display success message
   };

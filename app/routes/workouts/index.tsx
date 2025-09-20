@@ -94,7 +94,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
 
 export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
   const { workouts, pagination } = loaderData;
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [_searchParams, setSearchParams] = useSearchParams();
   const [showAIModal, setShowAIModal] = useState(false);
   const aiFetcher = useFetcher<{
     aiFeedback?: AIFitnessCoachResult;

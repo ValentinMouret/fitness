@@ -68,8 +68,8 @@ export const VolumeTrackingRepository = {
 
   recordWorkoutVolume(
     workoutId: string,
-    muscleGroupVolumes: ReadonlyMap<MuscleGroup, number>,
-    weekStart: Date,
+    _muscleGroupVolumes: ReadonlyMap<MuscleGroup, number>,
+    _weekStart: Date,
   ): ResultAsync<void, ErrRepository> {
     // In a real implementation, this might store workout volume summaries
     // For now, we'll just validate that the workout exists and return success

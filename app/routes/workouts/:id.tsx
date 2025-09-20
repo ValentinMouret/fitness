@@ -386,11 +386,6 @@ export async function action({ request, params }: Route.ActionArgs) {
 }
 
 export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
-  if (!loaderData) {
-    return <div>Loading...</div>;
-  }
-
-  const { workoutSession, exercises } = loaderData;
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -401,12 +396,9 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const optimisticName =
-    fetcher.formData?.get("name")?.toString() || workoutSession.workout.name;
-
   const { startedAgo } = useLiveDuration({
-    startTime: workoutSession.workout.start,
-    endTime: workoutSession.workout.stop,
+    startTime: loaderData?.workoutSession.workout.start || new Date(),
+    endTime: loaderData?.workoutSession.workout.stop || undefined,
   });
 
   useEffect(() => {
@@ -425,6 +417,15 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
       inputRef.current.select();
     }
   }, [isEditingName]);
+
+  if (!loaderData) {
+    return <div>Loading...</div>;
+  }
+
+  const { workoutSession, exercises } = loaderData;
+
+  const optimisticName =
+    fetcher.formData?.get("name")?.toString() || workoutSession.workout.name;
 
   const handleNameSubmit = (name: string) => {
     if (name.trim() && name !== workoutSession.workout.name) {

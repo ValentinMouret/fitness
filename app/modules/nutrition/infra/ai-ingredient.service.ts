@@ -29,8 +29,6 @@ const AIIngredientResponseSchema = z
     path: ["sliderMax"],
   });
 
-type AIIngredientResponse = z.infer<typeof AIIngredientResponseSchema>;
-
 export interface AIIngredientSearchResult {
   found: boolean;
   data: CreateIngredientInput & {

@@ -105,6 +105,7 @@ export async function action({ request }: ActionFunctionArgs) {
     };
   }
 
+  // biome-ignore lint/correctness/noUnusedVariables: id is intentionally extracted to exclude it from workoutWithoutId
   const { id, ...workoutWithoutId } = workoutResult.value.workout.workout;
   const savedWorkoutResult = await WorkoutRepository.save(workoutWithoutId);
   if (savedWorkoutResult.isErr()) {

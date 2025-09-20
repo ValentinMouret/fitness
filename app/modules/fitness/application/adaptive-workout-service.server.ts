@@ -92,7 +92,7 @@ export const AdaptiveWorkoutService = {
   },
 
   replaceExercise(
-    workoutId: string,
+    _workoutId: string,
     exerciseId: string,
     availableEquipment: ReadonlyArray<EquipmentInstance>,
   ): ResultAsync<Exercise, ErrSubstitution | ErrRepository> {
@@ -342,7 +342,10 @@ export const AdaptiveWorkoutService = {
     ]);
   },
 
-  compareSubstitutes(a: ExerciseMuscleGroups, b: ExerciseMuscleGroups): number {
+  compareSubstitutes(
+    _a: ExerciseMuscleGroups,
+    _b: ExerciseMuscleGroups,
+  ): number {
     // Placeholder for substitute comparison logic
     // In a real implementation, this would use similarity scores from the database
     return Math.random() - 0.5; // Random for now

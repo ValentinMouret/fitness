@@ -1,7 +1,7 @@
 import { redirect } from "react-router";
 import type { Route } from "./+types/logout";
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action(_: Route.ActionArgs) {
   // Clear cookie by setting it to expire in the past
   const clearCookie = "fitness-rr-session=; Path=/; Max-Age=0; SameSite=Strict";
 

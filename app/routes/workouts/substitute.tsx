@@ -85,8 +85,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
 export default function SubstituteExercise({
   loaderData,
 }: Route.ComponentProps) {
-  const { workoutId, exerciseId, availableEquipment, potentialSubstitutes } =
-    loaderData;
+  const { workoutId, availableEquipment, potentialSubstitutes } = loaderData;
 
   return (
     <div className="mx-auto max-w-2xl p-6">

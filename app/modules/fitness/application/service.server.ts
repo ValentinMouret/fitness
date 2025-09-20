@@ -10,11 +10,13 @@ export const ExerciseService = {
     newExercise: ExerciseMuscleGroups,
   ): ResultAsync<void, ErrRepository> {
     if (oldExercise.exercise.name === newExercise.exercise.name) {
-      return ExerciseMuscleGroupsRepository.save(newExercise).map(() => {});
+      return ExerciseMuscleGroupsRepository.save(newExercise).map(
+        () => undefined,
+      );
     }
 
     return ResultAsync.fromPromise(
-      db.transaction(async (tx) => {
+      db.transaction(async (_tx) => {
         const deleteResult = await ExerciseMuscleGroupsRepository.deleteById(
           oldExercise.exercise.id,
         );

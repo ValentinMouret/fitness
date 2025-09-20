@@ -8,41 +8,52 @@ export interface User {
 const SESSION_KEY = "fitness-rr-auth";
 const COOKIE_NAME = "fitness-rr-session";
 
-function getCookie(name: string, cookieString?: string): string | null {
+async function getCookie(
+  name: string,
+  cookieString?: string,
+): Promise<string | null> {
   if (isServer() && !cookieString) {
     return null;
   }
 
-  const cookies = (cookieString ?? document.cookie).split(";");
-  for (const cookie of cookies) {
-    const [key, value] = cookie.trim().split("=");
-    if (key === name) {
-      return decodeURIComponent(value);
+  if (cookieString) {
+    const cookies = cookieString.split(";");
+    for (const cookie of cookies) {
+      const [key, value] = cookie.trim().split("=");
+      if (key === name) {
+        return decodeURIComponent(value);
+      }
     }
+    return null;
   }
-  return null;
+
+  const cookie = await cookieStore.get(name);
+  return cookie?.value ?? null;
 }
 
-function setCookie(name: string, value: string, days = 7): void {
+async function setCookie(name: string, value: string, days = 7): Promise<void> {
   if (isServer()) {
     return;
   }
 
-  const expires = new Date(
-    Date.now() + days * 24 * 60 * 60 * 1000,
-  ).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Strict`;
+  await cookieStore.set({
+    name,
+    value: encodeURIComponent(value),
+    expires: Date.now() + days * 24 * 60 * 60 * 1000,
+    path: "/",
+    sameSite: "strict",
+  });
 }
 
-function deleteCookie(name: string): void {
+async function deleteCookie(name: string): Promise<void> {
   if (isServer()) return;
 
-  document.cookie = `${name}=; expires=0; path=/;`;
+  await cookieStore.delete(name);
 }
 
-export function getUser(request?: Request): User | null {
+export async function getUser(request?: Request): Promise<User | null> {
   const cookieHeader = request?.headers.get("Cookie");
-  const sessionCookie = getCookie(COOKIE_NAME, cookieHeader ?? undefined);
+  const sessionCookie = await getCookie(COOKIE_NAME, cookieHeader ?? undefined);
 
   if (sessionCookie) {
     try {
@@ -58,16 +69,16 @@ export function getUser(request?: Request): User | null {
   return stored ? JSON.parse(stored) : null;
 }
 
-export function setUser(user: User): void {
-  setCookie(COOKIE_NAME, JSON.stringify(user));
+export async function setUser(user: User): Promise<void> {
+  await setCookie(COOKIE_NAME, JSON.stringify(user));
 
   if (isServer()) return;
 
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
 }
 
-export function clearUser(): void {
-  deleteCookie(COOKIE_NAME);
+export async function clearUser(): Promise<void> {
+  await deleteCookie(COOKIE_NAME);
 
   if (isServer()) return;
 
@@ -87,8 +98,8 @@ export function authenticate(username: string, password: string): boolean {
   return username === expectedUsername && password === expectedPassword;
 }
 
-export function requireAuth(request?: Request): User {
-  const user = getUser(request);
+export async function requireAuth(request?: Request): Promise<User> {
+  const user = await getUser(request);
 
   if (!user) {
     const url = request ? new URL(request.url) : null;
@@ -101,6 +112,6 @@ export function requireAuth(request?: Request): User {
 }
 
 export async function logout(): Promise<Response> {
-  clearUser();
+  await clearUser();
   return redirect("/login");
 }
