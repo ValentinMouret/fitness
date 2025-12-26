@@ -32,5 +32,6 @@ export default defineConfig({
     environment: "node",
     silent: true,
     logHeapUsage: false,
+    setupFiles: ["./vitest.setup.ts"],
   },
 });

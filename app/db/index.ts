@@ -9,7 +9,11 @@ export const db = drizzle({
   },
 });
 
+let connectionClosed = false;
+
 export async function closeConnections() {
+  if (connectionClosed) return;
+  connectionClosed = true;
   await db.$client.end();
 }
 
