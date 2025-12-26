@@ -1,5 +1,14 @@
 import { Link } from "react-router";
-import { Box, Heading, Text, Flex, Card, Grid, Badge } from "@radix-ui/themes";
+import {
+  Box,
+  Heading,
+  Text,
+  Flex,
+  Card,
+  Grid,
+  Badge,
+  Button,
+} from "@radix-ui/themes";
 import { RulerSquareIcon } from "@radix-ui/react-icons";
 import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
 import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
@@ -42,6 +51,9 @@ export default function MeasurementsPage({ loaderData }: Route.ComponentProps) {
     <Box>
       <Flex justify="between" align="center" mb="6">
         <Heading size="7">Measurements</Heading>
+        <Button asChild>
+          <Link to="/measurements/new">New Measurement</Link>
+        </Button>
       </Flex>
 
       {measurements.length === 0 ? (

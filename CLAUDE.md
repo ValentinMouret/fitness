@@ -8,7 +8,7 @@ This is *solo-ware*: I am the sole user of this app.
 - Drizzle
 - PostgreSQL
 - Biome (linter, formater)
-- pnpm
+- bun
 - zod
 - Radix UI (components & icons)
 - Lucide React (additional icons)
@@ -18,19 +18,19 @@ This is *solo-ware*: I am the sole user of this app.
 
 ## Useful commands
 ```shell
-pnpm i # install dependencies
-pnpm build # build the project
-pnpm dev # run the project in watch/dev mode. Don’t run this as the server is already running.
-pnpm fmt # format
-pnpm lint # lint
-pnpm tc # typecheck + generate react-router types
-pnpm tc:watch # typecheck in watch mode (watches app/ directory)
-pnpm test # run tests
+bun i # install dependencies
+bun build # build the project
+bun dev # run the project in watch/dev mode. Don’t run this as the server is already running.
+bun fmt # format
+bun lint # lint
+bun tc # typecheck + generate react-router types
+bun tc:watch # typecheck in watch mode (watches app/ directory)
+bun test # run tests
 
-pnpm db:dev # updates the database with schema changes (command to run in dev only)
-pnpm db:generate # once done developing DB changes, creates a migration
-pnpm db:migrate # run migrations
-pnpm db:seed
+bun db:dev # updates the database with schema changes (command to run in dev only)
+bun db:generate # once done developing DB changes, creates a migration
+bun db:migrate # run migrations
+bun db:seed
 ```
 
 ## React-router v7
@@ -65,7 +65,7 @@ The routes are managed by the file `app/routes.ts`. The content follows React-Ro
 The convention we adopt in the repo is to have the folder structure follow the routes structures.
 Examples:
 - `/workouts` -> `routes/workouts/index.tsx`
-- `/workouts/create` -> `routes/workouts/create.tsx` 
+- `/workouts/create` -> `routes/workouts/create.tsx`
 - `/workouts/exercises/create` -> `routes/workouts/exercises/create.tsx`
 - `/habits/new` -> `routes/habits/new.tsx`
 ## Other resources

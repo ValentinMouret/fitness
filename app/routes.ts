@@ -41,6 +41,7 @@ export default [
       route("habits/new", "routes/habits/new.tsx"),
       route("habits/:id/edit", "routes/habits/edit.tsx"),
       route("measurements", "routes/measurements/index.tsx"),
+      route("measurements/new", "routes/measurements/new.tsx"),
       route("measurements/:name", "routes/measurements/name.tsx"),
     ]),
   ]),

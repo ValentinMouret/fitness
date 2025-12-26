@@ -1,31 +1,31 @@
-import { ResultAsync } from "neverthrow";
-import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
-import { Measure } from "~/modules/core/domain/measure";
-import { HabitCompletion } from "~/modules/habits/domain/entity";
 import {
-  HabitRepository,
-  HabitCompletionRepository,
-} from "~/modules/habits/infra/repository.server";
-import { HabitService } from "~/modules/habits/application/service";
-import { isSameDay, today } from "~/time";
-import type { Route } from "./+types/index";
-import { Form } from "react-router";
-import { coerceFloat, resultFromNullable } from "~/utils";
-import HabitCheckbox from "~/components/HabitCheckbox";
-import MeasurementChart from "~/components/MeasurementChart";
-import {
+  Badge,
   Box,
+  Button,
+  Card,
+  Flex,
   Heading,
   Text,
   TextField,
-  Button,
-  Flex,
-  Card,
-  Badge,
 } from "@radix-ui/themes";
-import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
+import { ResultAsync } from "neverthrow";
+import { Form } from "react-router";
+import HabitCheckbox from "~/components/HabitCheckbox";
+import MeasurementChart from "~/components/MeasurementChart";
 import { MeasurementService } from "~/modules/core/application/measurement-service";
+import { Measure } from "~/modules/core/domain/measure";
+import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
+import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
+import { HabitService } from "~/modules/habits/application/service";
+import { HabitCompletion } from "~/modules/habits/domain/entity";
+import {
+  HabitCompletionRepository,
+  HabitRepository,
+} from "~/modules/habits/infra/repository.server";
+import { isSameDay, today } from "~/time";
+import { coerceFloat, resultFromNullable } from "~/utils";
 import { createServerError, createValidationError } from "~/utils/errors";
+import type { Route } from "./+types/index";
 
 const motivationalQuotes = [
   "The groundwork for all happiness is good health.",
@@ -59,7 +59,7 @@ const motivationalQuotes = [
   "Self-care is not selfish. You cannot serve from an empty vessel.",
   "Champions don't become champions in the ring. They become champions in their training.",
   "The strongest people are forged by trials they thought would break them.",
-];
+] as const;
 
 function getDailyQuote(): string {
   const today = new Date();
