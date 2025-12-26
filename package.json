@@ -13,7 +13,7 @@
     "lint": "biome lint --write ./app",
     "start": "react-router-serve ./build/server/index.js",
     "tc": "bun typecheck",
-    "tc:watch": "nodemon --exec 'pnpm tc' --watch src --ext ts,tsx,js,jsx",
+    "tc:watch": "nodemon --exec 'bun tc' --watch src --ext ts,tsx,js,jsx",
     "test": "vitest",
     "test:debug": "vitest --reporter=verbose --silent=false",
     "typecheck": "react-router typegen && tsc",
