@@ -1,4 +1,5 @@
 import { redirect } from "react-router";
+import { Cookies } from "./cookies";
 import { isServer } from "./utils";
 
 export interface User {
@@ -8,52 +9,12 @@ export interface User {
 const SESSION_KEY = "fitness-rr-auth";
 const COOKIE_NAME = "fitness-rr-session";
 
-async function getCookie(
-  name: string,
-  cookieString?: string,
-): Promise<string | null> {
-  if (isServer() && !cookieString) {
-    return null;
-  }
-
-  if (cookieString) {
-    const cookies = cookieString.split(";");
-    for (const cookie of cookies) {
-      const [key, value] = cookie.trim().split("=");
-      if (key === name) {
-        return decodeURIComponent(value);
-      }
-    }
-    return null;
-  }
-
-  const cookie = await cookieStore.get(name);
-  return cookie?.value ?? null;
-}
-
-async function setCookie(name: string, value: string, days = 7): Promise<void> {
-  if (isServer()) {
-    return;
-  }
-
-  await cookieStore.set({
-    name,
-    value: encodeURIComponent(value),
-    expires: Date.now() + days * 24 * 60 * 60 * 1000,
-    path: "/",
-    sameSite: "strict",
-  });
-}
-
-async function deleteCookie(name: string): Promise<void> {
-  if (isServer()) return;
-
-  await cookieStore.delete(name);
-}
-
 export async function getUser(request?: Request): Promise<User | null> {
   const cookieHeader = request?.headers.get("Cookie");
-  const sessionCookie = await getCookie(COOKIE_NAME, cookieHeader ?? undefined);
+  const sessionCookie = await Cookies.get(
+    COOKIE_NAME,
+    cookieHeader ?? undefined,
+  );
 
   if (sessionCookie) {
     try {
@@ -70,7 +31,7 @@ export async function getUser(request?: Request): Promise<User | null> {
 }
 
 export async function setUser(user: User): Promise<void> {
-  await setCookie(COOKIE_NAME, JSON.stringify(user));
+  await Cookies.set(COOKIE_NAME, JSON.stringify(user));
 
   if (isServer()) return;
 
@@ -78,7 +39,7 @@ export async function setUser(user: User): Promise<void> {
 }
 
 export async function clearUser(): Promise<void> {
-  await deleteCookie(COOKIE_NAME);
+  await Cookies.delete(COOKIE_NAME);
 
   if (isServer()) return;
 
