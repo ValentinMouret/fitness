@@ -1,13 +1,17 @@
 import "dotenv/config";
+import type { InferInsertModel } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { measurements } from "./schema";
-import type { InferInsertModel } from "drizzle-orm";
 
 export const db = drizzle({
   connection: {
     connectionString: process.env.DATABASE_URL ?? "",
   },
 });
+
+export async function closeConnections() {
+  await db.$client.end();
+}
 
 async function main() {
   await db.transaction(async (tx) => {
@@ -16,8 +20,17 @@ async function main() {
       unit: "kg",
       description: "One of the most important measures for overall fitness",
     };
-    await tx.insert(measurements).values([weight]).onConflictDoNothing();
+    const dailyCalorieIntake: InferInsertModel<typeof measurements> = {
+      name: "daily_calorie_intake",
+      unit: "Cal",
+      description: "Amount of calories to consume",
+    };
+    await tx
+      .insert(measurements)
+      .values([weight, dailyCalorieIntake])
+      .onConflictDoNothing();
   });
+  await closeConnections();
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
