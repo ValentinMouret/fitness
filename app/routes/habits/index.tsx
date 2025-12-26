@@ -1,26 +1,26 @@
+import { Pencil1Icon, PlusIcon } from "@radix-ui/react-icons";
+import {
+  Badge,
+  Box,
+  Button,
+  Callout,
+  Card,
+  Flex,
+  Grid,
+  Heading,
+  Text,
+} from "@radix-ui/themes";
 import { data, Form, Link, useNavigation } from "react-router";
+import { handleResultError } from "~/utils/errors";
 import HabitCheckbox from "../../components/HabitCheckbox";
+import { HabitService } from "../../modules/habits/application/service";
 import { HabitCompletion } from "../../modules/habits/domain/entity";
 import {
   HabitCompletionRepository,
   HabitRepository,
 } from "../../modules/habits/infra/repository.server";
-import { HabitService } from "../../modules/habits/application/service";
 import { Day, today } from "../../time";
 import type { Route } from "./+types/index";
-import {
-  Box,
-  Heading,
-  Button,
-  Text,
-  Flex,
-  Card,
-  Grid,
-  Callout,
-  Badge,
-} from "@radix-ui/themes";
-import { PlusIcon, Pencil1Icon } from "@radix-ui/react-icons";
-import { handleResultError } from "~/utils/errors";
 
 export async function loader() {
   const habits = await HabitRepository.fetchActive();
@@ -178,18 +178,22 @@ export default function HabitsPage({
         </Heading>
         {habits.length === 0 ? (
           <Card size="4" style={{ textAlign: "center" }}>
-            <Text size="6" mb="4">
-              📝
-            </Text>
-            <Heading size="4" mb="2">
-              No habits yet
-            </Heading>
-            <Text color="gray" mb="4">
-              Start building better habits by creating your first one.
-            </Text>
-            <Button asChild>
-              <Link to="/habits/new">Create Your First Habit</Link>
-            </Button>
+            <Flex direction="column">
+              <Text size="6" mb="4">
+                📝
+              </Text>
+              <Heading size="4" mb="2">
+                No habits yet
+              </Heading>
+              <Text color="gray" mb="4">
+                Start building better habits by creating your first one.
+              </Text>
+              <div>
+                <Button asChild>
+                  <Link to="/habits/new">Create Your First Habit</Link>
+                </Button>
+              </div>
+            </Flex>
           </Card>
         ) : (
           <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="4">
