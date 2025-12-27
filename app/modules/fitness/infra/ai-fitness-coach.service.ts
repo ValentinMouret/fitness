@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { err, ok, type Result } from "neverthrow";
 import { z } from "zod";
+import { env } from "~/env.server";
 
 const AIFitnessAnalysisSchema = z.object({
   progressionAnalysis: z.object({
@@ -106,7 +107,7 @@ let anthropic: Anthropic | null = null;
 
 function getClient(): Anthropic {
   if (!anthropic) {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       throw new Error("ANTHROPIC_API_KEY environment variable is required");
     }

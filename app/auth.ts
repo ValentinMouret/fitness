@@ -46,19 +46,6 @@ export async function clearUser(): Promise<void> {
   sessionStorage.removeItem(SESSION_KEY);
 }
 
-export function authenticate(username: string, password: string): boolean {
-  const expectedUsername = process.env.AUTH_USERNAME;
-  const expectedPassword = process.env.AUTH_PASSWORD;
-
-  if (!expectedUsername || !expectedPassword) {
-    throw new Error(
-      "AUTH_USERNAME and AUTH_PASSWORD environment variables must be set",
-    );
-  }
-
-  return username === expectedUsername && password === expectedPassword;
-}
-
 export async function requireAuth(request?: Request): Promise<User> {
   const user = await getUser(request);
 

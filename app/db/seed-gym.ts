@@ -1,11 +1,12 @@
 import "dotenv/config";
-import { drizzle } from "drizzle-orm/node-postgres";
 import type { InferInsertModel } from "drizzle-orm";
-import { gymFloors, equipmentInstances } from "./schema";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { env } from "~/env.server";
+import { equipmentInstances, gymFloors } from "./schema";
 
 export const db = drizzle({
   connection: {
-    connectionString: process.env.DATABASE_URL ?? "",
+    connectionString: env.DATABASE_URL,
   },
 });
 

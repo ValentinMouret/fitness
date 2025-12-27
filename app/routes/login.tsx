@@ -1,6 +1,6 @@
 import { Form, redirect, useSearchParams } from "react-router";
 import type { Route } from "./+types/login";
-import { authenticate } from "~/auth";
+import { authenticate } from "~/auth.server";
 import {
   Container,
   Card,
