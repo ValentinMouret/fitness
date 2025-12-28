@@ -1,4 +1,5 @@
 import { ResultAsync } from "neverthrow";
+import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";
 import type { ExerciseMuscleGroups } from "~/modules/fitness/domain/workout";
 import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
@@ -31,7 +32,7 @@ export const ExerciseService = {
         }
       }),
       (err) => {
-        console.error(err);
+        logger.error({ err }, "Error updating exercise");
         return "database_error";
       },
     );

@@ -2,6 +2,7 @@ import { eq, and, isNull } from "drizzle-orm";
 import { Result, ResultAsync } from "neverthrow";
 import { db } from "~/db/index";
 import { ingredients } from "~/db/schema";
+import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";
 import {
   executeQuery,
@@ -115,8 +116,8 @@ export const IngredientRepository = {
 
     return ResultAsync.fromPromise(
       (tx ?? db).insert(ingredients).values(values).returning(),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to save ingredient");
         return "database_error" as const;
       },
     )
@@ -165,8 +166,8 @@ export const IngredientRepository = {
         .set(updateValues)
         .where(and(eq(ingredients.id, id), isNull(ingredients.deleted_at)))
         .returning(),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to update ingredient");
         return "database_error" as const;
       },
     )
@@ -191,8 +192,8 @@ export const IngredientRepository = {
         .update(ingredients)
         .set({ deleted_at: new Date() })
         .where(and(eq(ingredients.id, id), isNull(ingredients.deleted_at))),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to delete ingredient");
         return "database_error" as const;
       },
     ).map(() => {

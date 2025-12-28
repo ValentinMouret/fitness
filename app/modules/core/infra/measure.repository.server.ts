@@ -2,6 +2,7 @@ import { and, between, desc, eq, type InferSelectModel } from "drizzle-orm";
 import { Result, ResultAsync, ok } from "neverthrow";
 import { db } from "~/db/index";
 import { measures } from "~/db/schema";
+import { logger } from "~/logger.server";
 import type { ErrRepository, ErrValidation } from "~/repository";
 import { executeQuery } from "~/repository.server";
 import type { Measure } from "../domain/measure";
@@ -22,8 +23,8 @@ export const MeasureRepository = {
             value: self.value,
           },
         }),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to save measure");
         return "database_error";
       },
     );
@@ -90,8 +91,8 @@ export const MeasureRepository = {
             eq(measures.t, date),
           ),
         ),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to delete measure");
         return "database_error" as const;
       },
     ).map(() => undefined);

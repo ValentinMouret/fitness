@@ -1,5 +1,6 @@
 import { ResultAsync } from "neverthrow";
 import { db } from "~/db";
+import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";
 import { executeQuery } from "~/repository.server";
 import type {
@@ -48,8 +49,8 @@ export const AdaptiveWorkoutRepository = {
           updated_at: new Date(),
         })
         .where(eq(equipmentInstances.id, equipmentId)),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to update equipment availability");
         return "database_error" as const;
       },
     ).map(() => undefined);

@@ -1,4 +1,5 @@
 import { err, ok, type Result, ResultAsync } from "neverthrow";
+import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";
 import type {
   StrongWorkoutData,
@@ -210,10 +211,7 @@ async function createWorkoutSession(
       });
 
       if (setResult.isErr()) {
-        console.error(
-          "[Strong Import] Failed to create workout set:",
-          setResult.error,
-        );
+        logger.error({ err: setResult.error }, "Failed to create workout set");
         return err("workout_save_failed");
       }
 
@@ -308,8 +306,8 @@ async function saveWorkoutSession(
         }
       }
     }),
-    (err) => {
-      console.error("Error saving workout session:", err);
+    (error) => {
+      logger.error({ err: error }, "Error saving workout session");
       return "database_error" as const;
     },
   ).map(() => undefined);

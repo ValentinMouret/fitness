@@ -1,4 +1,16 @@
+.git
+.gitignore
+.claude
+.serena
 .react-router
+.env*
+*.md
 build
 node_modules
-README.md
+drizzle/*.sql
+tests
+*.test.ts
+*.spec.ts
+deploy
+todo.org
+WORK_LOG.md

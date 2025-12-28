@@ -202,28 +202,18 @@ export const WorkoutSet = {
       typeof input.exercise === "string" ? input.exercise : input.exercise.id;
 
     if (input.set <= 0) {
-      console.error("Set number should be positive", { set: input.set });
       return err("Invalid set");
     }
 
     if (input.targetReps !== undefined && input.targetReps <= 0) {
-      console.error("Target reps should be positive", {
-        targetReps: input.targetReps,
-      });
       return err("Invalid target reps");
     }
 
     if (input.reps !== undefined && input.reps <= 0) {
-      console.error("Reps should be positive", {
-        reps: input.reps,
-      });
       return err("Invalid reps");
     }
 
     if (input.weight !== undefined && input.weight <= 0) {
-      console.error("Weight should be positive", {
-        weight: input.weight,
-      });
       return err("Invalid weight");
     }
 

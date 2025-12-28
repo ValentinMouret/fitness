@@ -6,6 +6,7 @@ import {
   mealTemplateIngredients,
   ingredients,
 } from "~/db/schema";
+import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";
 import {
   executeQuery,
@@ -146,8 +147,8 @@ export const MealTemplateRepository = {
           ingredients: input.ingredients,
         };
       }),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to save meal template");
         return "database_error" as const;
       },
     ).andThen((result) => {
@@ -209,8 +210,8 @@ export const MealTemplateRepository = {
         .set(updateValues)
         .where(and(eq(mealTemplates.id, id), isNull(mealTemplates.deleted_at)))
         .returning(),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to update meal template");
         return "database_error" as const;
       },
     ).andThen((records) => {
@@ -235,8 +236,8 @@ export const MealTemplateRepository = {
           updated_at: new Date(),
         })
         .where(and(eq(mealTemplates.id, id), isNull(mealTemplates.deleted_at))),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to increment usage count");
         return "database_error" as const;
       },
     ).map(() => undefined);
@@ -259,8 +260,8 @@ export const MealTemplateRepository = {
             and(eq(mealTemplates.id, id), isNull(mealTemplates.deleted_at)),
           );
       }),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to delete meal template");
         return "database_error" as const;
       },
     ).map(() => undefined);

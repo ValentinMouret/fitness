@@ -7,6 +7,7 @@ import {
   workouts,
   workoutSets,
 } from "~/db/schema";
+import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";
 import { executeQuery } from "~/repository.server";
 import type {
@@ -36,8 +37,8 @@ export const WorkoutRepository = {
           .set({ ...values, updated_at: new Date() })
           .where(eq(workouts.id, workout.id))
           .returning(),
-        (err) => {
-          console.error("Error updating workout:", err);
+        (error) => {
+          logger.error({ err: error }, "Error updating workout");
           return "database_error" as const;
         },
       ).andThen((records) =>
@@ -54,8 +55,8 @@ export const WorkoutRepository = {
 
     return ResultAsync.fromPromise(
       db.insert(workouts).values(values).returning(),
-      (err) => {
-        console.error("Error creating workout:", err);
+      (error) => {
+        logger.error({ err: error }, "Error creating workout");
         return "database_error" as const;
       },
     ).andThen((records) =>
@@ -146,8 +147,8 @@ export const WorkoutRepository = {
           .set({ deleted_at: new Date() })
           .where(eq(workouts.id, id));
       }),
-      (err) => {
-        console.error("Error deleting workout:", err);
+      (error) => {
+        logger.error({ err: error }, "Error deleting workout");
         return "database_error" as const;
       },
     );
@@ -277,8 +278,8 @@ export const WorkoutSessionRepository = {
           isWarmup: false,
         });
       }),
-      (err) => {
-        console.error("Error adding exercise to workout:", err);
+      (error) => {
+        logger.error({ err: error }, "Error adding exercise to workout");
         return "database_error" as const;
       },
     ).map(() => undefined);
@@ -312,8 +313,8 @@ export const WorkoutSessionRepository = {
             ),
           );
       }),
-      (err) => {
-        console.error("Error removing exercise from workout:", err);
+      (error) => {
+        logger.error({ err: error }, "Error removing exercise from workout");
         return "database_error" as const;
       },
     ).map(() => undefined);
@@ -349,8 +350,8 @@ export const WorkoutSessionRepository = {
             deleted_at: null, // Restore if it was soft deleted
           },
         }),
-      (err) => {
-        console.error("Error adding/updating set:", err);
+      (error) => {
+        logger.error({ err: error }, "Error adding/updating set");
         return "database_error" as const;
       },
     ).map(() => undefined);
@@ -427,8 +428,8 @@ export const WorkoutSessionRepository = {
             isNull(workoutSets.deleted_at),
           ),
         ),
-      (err) => {
-        console.error("Error updating set:", err);
+      (error) => {
+        logger.error({ err: error }, "Error updating set");
         return "database_error" as const;
       },
     ).map(() => undefined);
@@ -450,8 +451,8 @@ export const WorkoutSessionRepository = {
             eq(workoutSets.set, setNumber),
           ),
         ),
-      (err) => {
-        console.error("Error removing set:", err);
+      (error) => {
+        logger.error({ err: error }, "Error removing set");
         return "database_error" as const;
       },
     ).map(() => undefined);

@@ -15,6 +15,12 @@ This is *solo-ware*: I am the sole user of this app.
 - Tailwind CSS (styling utility)
 - Recharts (data visualization)
 - neverthrow (error handling)
+- pino (logging, with pino-pretty in dev)
+
+## Environment & Configuration
+- All server-side environment variables are defined in `app/env.server.ts` with zod validation
+- Always use `env` from `env.server.ts` instead of `process.env` directly
+- Logging: use `logger` from `app/logger.server.ts` (pino-based, pretty output in dev)
 
 ## Useful commands
 ```shell

@@ -1,4 +1,5 @@
 import { ResultAsync } from "neverthrow";
+import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";
 import {
   WorkoutRepository,
@@ -126,7 +127,7 @@ async function buildAnalysisData(
 
     return analysisData;
   } catch (error) {
-    console.error("Error building analysis data:", error);
+    logger.error({ err: error }, "Error building analysis data");
     throw error;
   }
 }

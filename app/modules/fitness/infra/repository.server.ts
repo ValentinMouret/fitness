@@ -8,6 +8,7 @@ import {
   type MuscleGroupSplit,
 } from "../domain/workout";
 import { exerciseMuscleGroups, exercises } from "~/db/schema";
+import { logger } from "~/logger.server";
 import { ResultAsync } from "neverthrow";
 import type { ErrDatabase, ErrRepository } from "~/repository";
 import { executeQuery } from "~/repository.server";
@@ -40,8 +41,8 @@ export const ExerciseRepository = {
             movement_pattern: exercise.movementPattern,
           },
         }),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to save exercise");
         return "database_error";
       },
     );
@@ -94,7 +95,7 @@ export const ExerciseMuscleGroupsRepository = {
       );
 
       if (result.isErr()) {
-        console.error("Error deserializing exercise", result);
+        logger.error({ err: result.error }, "Error deserializing exercise");
         return null;
       }
 
@@ -131,7 +132,7 @@ export const ExerciseMuscleGroupsRepository = {
       );
 
       if (result.isErr()) {
-        console.error("Error deserializing exercise", result);
+        logger.error({ err: result.error }, "Error deserializing exercise");
         return null;
       }
 
@@ -147,8 +148,8 @@ export const ExerciseMuscleGroupsRepository = {
           .where(eq(exerciseMuscleGroups.exercise, exerciseId));
         await tx.delete(exercises).where(eq(exercises.id, exerciseId));
       }),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to delete exercise by id");
         return "database_error";
       },
     );
@@ -185,8 +186,8 @@ export const ExerciseMuscleGroupsRepository = {
           .where(eq(exerciseMuscleGroups.exercise, exerciseId));
         await tx.delete(exercises).where(eq(exercises.id, exerciseId));
       }),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to delete exercise");
         return "database_error";
       },
     );
@@ -252,8 +253,11 @@ export const ExerciseMuscleGroupsRepository = {
           );
         }
       }),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error(
+          { err: error },
+          "Failed to save exercise with muscle groups",
+        );
         return "database_error";
       },
     );
@@ -282,7 +286,7 @@ export const ExerciseMuscleGroupsRepository = {
             muscleGroupSplits,
           );
           if (result.isErr()) {
-            console.error("Error deserializing", result);
+            logger.error({ err: result.error }, "Error deserializing");
             return undefined;
           }
           return result.value;

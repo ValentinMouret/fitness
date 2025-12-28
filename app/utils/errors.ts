@@ -1,6 +1,4 @@
-/**
- * Standardized error handling utilities for React Router v7
- */
+import { logger } from "../logger.server";
 
 const statusTexts: Record<number, string> = {
   400: "Bad Request",
@@ -26,8 +24,8 @@ export function createServerError(
   status: ErrorCode = 500,
   cause?: unknown,
 ): Response {
-  if (import.meta.env.DEV && cause) {
-    console.error(`Server Error [${status}]:`, message, cause);
+  if (cause) {
+    logger.error({ err: cause, status }, message);
   }
 
   return new Response(message, {

@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 const schema = z.object({
+  NODE_ENV: z
+    .enum(["development", "production", "test"])
+    .default("development"),
   ANTHROPIC_API_KEY: z.string(),
   AUTH_USERNAME: z.string(),
   AUTH_PASSWORD: z.string(),

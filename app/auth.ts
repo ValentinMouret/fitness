@@ -19,8 +19,8 @@ export async function getUser(request?: Request): Promise<User | null> {
   if (sessionCookie) {
     try {
       return JSON.parse(sessionCookie);
-    } catch (err) {
-      console.error("Failed to parse session cookie", err);
+    } catch {
+      // Invalid session cookie, fall through to return null
     }
   }
 

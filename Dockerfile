@@ -1,22 +1,30 @@
-FROM node:20-alpine AS development-dependencies-env
-COPY . /app
+FROM oven/bun:1-alpine AS deps
 WORKDIR /app
-RUN npm ci
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
-FROM node:20-alpine AS production-dependencies-env
-COPY ./package.json package-lock.json /app/
+FROM oven/bun:1-alpine AS build
 WORKDIR /app
-RUN npm ci --omit=dev
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN bun run build
 
-FROM node:20-alpine AS build-env
-COPY . /app/
-COPY --from=development-dependencies-env /app/node_modules /app/node_modules
+FROM node:22-alpine AS runtime
 WORKDIR /app
-RUN npm run build
 
-FROM node:20-alpine
-COPY ./package.json package-lock.json /app/
-COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/build /app/build
-WORKDIR /app
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+COPY --from=build --chown=nodejs:nodejs /app/build ./build
+COPY --from=build --chown=nodejs:nodejs /app/package.json ./
+COPY --from=build --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=build --chown=nodejs:nodejs /app/drizzle ./drizzle
+COPY --from=build --chown=nodejs:nodejs /app/drizzle.config.ts ./
+COPY --from=build --chown=nodejs:nodejs /app/app ./app
+COPY --from=build --chown=nodejs:nodejs /app/tsconfig.json ./
+
+USER nodejs
+
+EXPOSE 5174
+
 CMD ["npm", "run", "start"]

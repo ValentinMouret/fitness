@@ -1,6 +1,7 @@
 import { eq, and, isNull, sql, gte, lte } from "drizzle-orm";
 import { Result, ResultAsync, ok } from "neverthrow";
 import { db } from "~/db/index";
+import { logger } from "~/logger.server";
 import { toDateString } from "~/time";
 import {
   mealLogs,
@@ -242,8 +243,8 @@ export const MealLogRepository = {
           ingredients: input.ingredients || [],
         };
       }),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to save meal log");
         return "database_error" as const;
       },
     ).andThen((result) => {
@@ -308,8 +309,8 @@ export const MealLogRepository = {
 
         return updatedLog;
       }),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to update meal log");
         return "database_error" as const;
       },
     ).andThen((record) => recordToMealLog(record));
@@ -326,8 +327,8 @@ export const MealLogRepository = {
         ingredient_id: ingredient.ingredient.id,
         quantity_grams: ingredient.quantityGrams,
       }),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to add ingredient");
         return "database_error" as const;
       },
     ).map(() => undefined);
@@ -353,8 +354,8 @@ export const MealLogRepository = {
             isNull(mealLogIngredients.deleted_at),
           ),
         ),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to update ingredient quantity");
         return "database_error" as const;
       },
     ).map(() => undefined);
@@ -376,8 +377,8 @@ export const MealLogRepository = {
             isNull(mealLogIngredients.deleted_at),
           ),
         ),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to remove ingredient");
         return "database_error" as const;
       },
     ).map(() => undefined);
@@ -398,8 +399,8 @@ export const MealLogRepository = {
           .set({ deleted_at: new Date() })
           .where(and(eq(mealLogs.id, id), isNull(mealLogs.deleted_at)));
       }),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to delete meal log");
         return "database_error" as const;
       },
     ).map(() => undefined);

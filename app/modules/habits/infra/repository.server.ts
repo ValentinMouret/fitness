@@ -13,6 +13,7 @@ import {
 import { Result, ResultAsync, err, ok } from "neverthrow";
 import { db } from "../../../db";
 import { habit_completions, habits } from "../../../db/schema";
+import { logger } from "../../../logger.server";
 import type { ErrRepository, ErrValidation } from "../../../repository";
 import { executeQuery, fetchSingleRecord } from "../../../repository.server";
 import { today } from "../../../time";
@@ -53,8 +54,8 @@ export const HabitRepository = {
           .update(habits)
           .set({ ...values, updated_at: new Date() })
           .where(eq(habits.id, habit.id)),
-        (err) => {
-          console.error(err);
+        (error) => {
+          logger.error({ err: error }, "Failed to update habit");
           return "database_error" as const;
         },
       );
@@ -62,8 +63,8 @@ export const HabitRepository = {
 
     return ResultAsync.fromPromise(
       db.insert(habits).values(values).returning(),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to insert habit");
         return "database_error" as const;
       },
     ).andThen((records) =>
@@ -142,8 +143,8 @@ export const HabitCompletionRepository = {
             updated_at: new Date(),
           },
         }),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to save habit completion");
         return "database_error" as const;
       },
     );

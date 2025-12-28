@@ -2,6 +2,7 @@ import "dotenv/config";
 import type { InferInsertModel } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { env } from "~/env.server";
+import { logger } from "~/logger.server";
 import { equipmentInstances, gymFloors } from "./schema";
 
 export const db = drizzle({
@@ -25,15 +26,15 @@ const gymFloorsData: Omit<InferInsertModel<typeof gymFloors>, "id">[] = [
 ];
 
 async function main() {
-  console.log("Starting gym layout seeding...");
+  logger.info("Starting gym layout seeding...");
 
   await db.transaction(async (tx) => {
-    console.log("Seeding gym floors...");
+    logger.info("Seeding gym floors...");
     const insertedFloors = await tx
       .insert(gymFloors)
       .values(gymFloorsData)
       .returning();
-    console.log(`Inserted ${insertedFloors.length} floors`);
+    logger.info({ count: insertedFloors.length }, "Inserted floors");
 
     const floor1 = insertedFloors.find((f) => f.floor_number === 1);
     const floor2 = insertedFloors.find((f) => f.floor_number === 2);
@@ -42,7 +43,7 @@ async function main() {
       throw new Error("Required floors not found after insertion");
     }
 
-    console.log("Seeding equipment instances...");
+    logger.info("Seeding equipment instances...");
 
     // FIRST FLOOR EQUIPMENT
     const floor1Equipment: Omit<
@@ -434,16 +435,18 @@ async function main() {
       .values(allEquipment)
       .onConflictDoNothing();
 
-    console.log(
-      `Seeded ${floor1Equipment.length} equipment instances on Floor 1`,
+    logger.info(
+      { floor: 1, count: floor1Equipment.length },
+      "Seeded equipment instances",
     );
-    console.log(
-      `Seeded ${floor2Equipment.length} equipment instances on Floor 2`,
+    logger.info(
+      { floor: 2, count: floor2Equipment.length },
+      "Seeded equipment instances",
     );
-    console.log(`Total equipment instances: ${allEquipment.length}`);
+    logger.info({ total: allEquipment.length }, "Total equipment instances");
   });
 
-  console.log("Gym layout seeding completed successfully!");
+  logger.info("Gym layout seeding completed successfully!");
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

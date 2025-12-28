@@ -9,6 +9,7 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
+import { logger } from "~/logger.server";
 import type { ErrValidation } from "~/repository";
 import { executeQuery, type Transaction } from "~/repository.server";
 
@@ -31,8 +32,8 @@ export const TargetRepository = {
           },
         })
         .returning(),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to save target");
         return "database_error" as const;
       },
     ).andThen((record) => recordToDomain(record[0]));
@@ -53,8 +54,8 @@ export const TargetRepository = {
           deleted_at: sql`current_timestamp`,
         })
         .where(eq(targets.measurement_name, measurement)),
-      (err) => {
-        console.error(err);
+      (error) => {
+        logger.error({ err: error }, "Failed to unset targets");
         return "database_error" as const;
       },
     );

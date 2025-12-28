@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { err, ok, type Result } from "neverthrow";
 import { z } from "zod";
 import { env } from "~/env.server";
+import { logger } from "~/logger.server";
 import {
   ingredientCategories,
   textureCategories,
@@ -200,9 +201,9 @@ export const AIIngredientService = {
       );
 
       if (!validationResult.success) {
-        console.error(
-          "AI tool response validation failed:",
-          validationResult.error,
+        logger.error(
+          { err: validationResult.error },
+          "AI tool response validation failed",
         );
         return err(
           new Error(`Invalid AI response: ${validationResult.error.message}`),
@@ -238,7 +239,7 @@ export const AIIngredientService = {
         data: ingredientData,
       });
     } catch (error) {
-      console.error("AI ingredient search error:", error);
+      logger.error({ err: error }, "AI ingredient search error");
       return err(new Error("Failed to search ingredient with AI"));
     }
   },

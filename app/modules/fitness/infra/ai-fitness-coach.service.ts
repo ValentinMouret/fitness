@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { err, ok, type Result } from "neverthrow";
 import { z } from "zod";
 import { env } from "~/env.server";
+import { logger } from "~/logger.server";
 
 const AIFitnessAnalysisSchema = z.object({
   progressionAnalysis: z.object({
@@ -278,9 +279,9 @@ export const AIFitnessCoachService = {
       const validationResult = AIFitnessAnalysisSchema.safeParse(toolUse.input);
 
       if (!validationResult.success) {
-        console.error(
-          "AI fitness analysis validation failed:",
-          validationResult.error,
+        logger.error(
+          { err: validationResult.error },
+          "AI fitness analysis validation failed",
         );
         return err(
           new Error(`Invalid AI response: ${validationResult.error.message}`),
@@ -298,7 +299,7 @@ export const AIFitnessCoachService = {
         tokensUsed: message.usage.input_tokens + message.usage.output_tokens,
       });
     } catch (error) {
-      console.error("AI fitness analysis error:", error);
+      logger.error({ err: error }, "AI fitness analysis error");
       return err(new Error("Failed to analyze workouts with AI"));
     }
   },

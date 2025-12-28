@@ -3,6 +3,7 @@ import type { InferInsertModel } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { env } from "~/env.server";
+import { logger } from "~/logger.server";
 import { ingredients } from "./schema";
 
 export const db = drizzle({
@@ -700,10 +701,10 @@ const ingredientData: Omit<InferInsertModel<typeof ingredients>, "id">[] = [
 ];
 
 async function main() {
-  console.log("Starting nutrition database seeding...");
+  logger.info("Starting nutrition database seeding...");
 
   await db.transaction(async (tx) => {
-    console.log("Seeding ingredients...");
+    logger.info("Seeding ingredients...");
     const insertedIngredients = await tx
       .insert(ingredients)
       .values(ingredientData)
@@ -727,10 +728,10 @@ async function main() {
         },
       })
       .returning();
-    console.log(`Inserted ${insertedIngredients.length} ingredients`);
+    logger.info({ count: insertedIngredients.length }, "Inserted ingredients");
   });
 
-  console.log("Nutrition database seeding completed successfully!");
+  logger.info("Nutrition database seeding completed successfully!");
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

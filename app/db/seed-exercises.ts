@@ -2,6 +2,7 @@ import "dotenv/config";
 import type { InferInsertModel } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { env } from "~/env.server";
+import { logger } from "~/logger.server";
 import type { MuscleGroup } from "~/modules/fitness/domain/workout";
 import {
   equipmentPreferences,
@@ -569,24 +570,23 @@ const equipmentPreferenceData: InferInsertModel<typeof equipmentPreferences>[] =
   ];
 
 async function main() {
-  console.log("Starting exercise database seeding...");
+  logger.info("Starting exercise database seeding...");
 
   await db.transaction(async (tx) => {
-    console.log("Seeding exercises...");
+    logger.info("Seeding exercises...");
     const insertedExercises = await tx
       .insert(exercises)
       .values(exerciseData)
       .returning();
-    console.log(`Inserted ${insertedExercises.length} exercises`);
+    logger.info({ count: insertedExercises.length }, "Inserted exercises");
 
-    console.log("Seeding equipment preferences...");
+    logger.info("Seeding equipment preferences...");
     await tx
       .insert(equipmentPreferences)
       .values(equipmentPreferenceData)
       .onConflictDoNothing();
 
-    // Create muscle group relationships based on exercise names
-    console.log("Seeding exercise muscle groups...");
+    logger.info("Seeding exercise muscle groups...");
     const muscleGroupMappings: Array<{
       exerciseName: string;
       muscleGroups: Array<{ muscle_group: MuscleGroup; split: number }>;
@@ -965,8 +965,7 @@ async function main() {
       }
     }
 
-    // Create some basic substitutions based on similar movement patterns and equipment
-    console.log("Seeding exercise substitutions...");
+    logger.info("Seeding exercise substitutions...");
     const substitutionMappings: Array<{
       primary: string;
       substitute: string;
@@ -1148,7 +1147,7 @@ async function main() {
     }
   });
 
-  console.log("Exercise database seeding completed successfully!");
+  logger.info("Exercise database seeding completed successfully!");
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
