@@ -31,6 +31,7 @@ export default function MaintenanceForm({
             <TextField.Root
               name="age"
               type="number"
+              inputMode="numeric"
               defaultValue={age ?? 30}
               min={10}
               step={1}
@@ -45,6 +46,7 @@ export default function MaintenanceForm({
             <TextField.Root
               name="height"
               type="number"
+              inputMode="numeric"
               defaultValue={height ?? 180}
               min={0}
               step={1}
@@ -59,6 +61,7 @@ export default function MaintenanceForm({
             <TextField.Root
               name="weight"
               type="number"
+              inputMode="numeric"
               defaultValue={weight ?? 70}
               min={0}
               step={1}
@@ -73,6 +76,7 @@ export default function MaintenanceForm({
             <TextField.Root
               name="activity"
               type="number"
+              inputMode="decimal"
               defaultValue={activity ?? 1.4}
               step={0.1}
               min={0.8}
@@ -92,6 +96,7 @@ export default function MaintenanceForm({
             <TextField.Root
               name="delta"
               type="number"
+              inputMode="numeric"
               defaultValue={delta ?? 0}
               min={-15}
               max={15}

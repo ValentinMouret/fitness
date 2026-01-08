@@ -213,6 +213,7 @@ export default function GenerateWorkout({
                 </Text>
                 <TextField.Root
                   type="number"
+                  inputMode="numeric"
                   name="targetDuration"
                   defaultValue="45"
                   min="20"

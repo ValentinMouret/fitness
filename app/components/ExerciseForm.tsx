@@ -148,6 +148,7 @@ export default function ExerciseForm({
                   <Table.Cell>
                     <TextField.Root
                       type="number"
+                      inputMode="numeric"
                       step="1"
                       min="0"
                       max="100"

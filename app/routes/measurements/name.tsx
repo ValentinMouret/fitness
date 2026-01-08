@@ -131,6 +131,7 @@ export default function MeasurementPage(_: Route.ComponentProps) {
               <TextField.Root
                 name="value"
                 type="number"
+                inputMode="decimal"
                 step="0.1"
                 placeholder="Enter value"
                 required

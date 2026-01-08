@@ -128,6 +128,7 @@ export function AIIngredientReviewModal({
               </Text>
               <TextField.Root
                 type="number"
+                inputMode="numeric"
                 value={formData.calories.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("calories", e.target.value)
@@ -144,6 +145,7 @@ export function AIIngredientReviewModal({
               </Text>
               <TextField.Root
                 type="number"
+                inputMode="decimal"
                 value={formData.protein.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("protein", e.target.value)
@@ -161,6 +163,7 @@ export function AIIngredientReviewModal({
               </Text>
               <TextField.Root
                 type="number"
+                inputMode="decimal"
                 value={formData.carbs.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("carbs", e.target.value)
@@ -178,6 +181,7 @@ export function AIIngredientReviewModal({
               </Text>
               <TextField.Root
                 type="number"
+                inputMode="decimal"
                 value={formData.fat.toString()}
                 onChange={(e) => handleNumberFieldChange("fat", e.target.value)}
                 placeholder="0"
@@ -193,6 +197,7 @@ export function AIIngredientReviewModal({
               </Text>
               <TextField.Root
                 type="number"
+                inputMode="decimal"
                 value={formData.fiber.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("fiber", e.target.value)
@@ -210,6 +215,7 @@ export function AIIngredientReviewModal({
               </Text>
               <TextField.Root
                 type="number"
+                inputMode="decimal"
                 value={formData.waterPercentage.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("waterPercentage", e.target.value)
@@ -228,6 +234,7 @@ export function AIIngredientReviewModal({
               </Text>
               <TextField.Root
                 type="number"
+                inputMode="decimal"
                 value={formData.energyDensity.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("energyDensity", e.target.value)
@@ -271,6 +278,7 @@ export function AIIngredientReviewModal({
               </Text>
               <TextField.Root
                 type="number"
+                inputMode="numeric"
                 value={formData.sliderMin.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("sliderMin", e.target.value)
@@ -287,6 +295,7 @@ export function AIIngredientReviewModal({
               </Text>
               <TextField.Root
                 type="number"
+                inputMode="numeric"
                 value={formData.sliderMax.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("sliderMax", e.target.value)
