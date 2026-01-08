@@ -10,7 +10,7 @@ import {
 import { ChevronDownIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 import { Link, useFetcher } from "react-router";
 import type { ExerciseMuscleGroups } from "~/modules/fitness/domain/workout";
-import ExerciseTypeBadge from "~/components/ExerciseTypeBadge";
+import { ExerciseTypeBadge } from "~/modules/fitness/presentation/components";
 import { humanFormatting } from "~/strings";
 import { designTokens } from "~/design-system";
 

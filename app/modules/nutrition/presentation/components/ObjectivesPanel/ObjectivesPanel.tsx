@@ -39,6 +39,7 @@ export function ObjectivesPanel({
           <Flex align="center" gap="2">
             <TextField.Root
               type="number"
+              inputMode="numeric"
               value={objectives.calories?.toString() || ""}
               onChange={(e) =>
                 setObjectives({
@@ -59,6 +60,7 @@ export function ObjectivesPanel({
           <Flex align="center" gap="2">
             <TextField.Root
               type="number"
+              inputMode="numeric"
               value={objectives.protein?.toString() || ""}
               onChange={(e) =>
                 setObjectives({
@@ -79,6 +81,7 @@ export function ObjectivesPanel({
           <Flex align="center" gap="2">
             <TextField.Root
               type="number"
+              inputMode="numeric"
               value={objectives.carbs?.toString() || ""}
               onChange={(e) =>
                 setObjectives({
@@ -99,6 +102,7 @@ export function ObjectivesPanel({
           <Flex align="center" gap="2">
             <TextField.Root
               type="number"
+              inputMode="numeric"
               value={objectives.fats?.toString() || ""}
               onChange={(e) =>
                 setObjectives({

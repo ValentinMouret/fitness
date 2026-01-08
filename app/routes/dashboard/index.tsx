@@ -248,6 +248,7 @@ export default function DashboardPage({
                   <TextField.Root
                     name="weight"
                     type="number"
+                    inputMode="decimal"
                     min={0}
                     step={0.1}
                     placeholder="Enter weight"

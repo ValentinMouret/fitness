@@ -23,20 +23,32 @@ import {
 } from "@radix-ui/react-icons";
 import { PageTransition } from "~/components/PageTransition";
 
+const navItems = [
+  { path: "/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
+  { path: "/habits", label: "Habits", icon: <CheckboxIcon /> },
+  { path: "/nutrition", label: "Nutrition", icon: <ReaderIcon /> },
+  { path: "/workouts", label: "Workouts", icon: <CounterClockwiseClockIcon /> },
+  { path: "/measurements", label: "Meas.", icon: <RulerSquareIcon /> },
+];
+
+const BottomTabBar: React.FC = () => (
+  <nav className="bottom-tabs">
+    {navItems.map(({ path, label, icon }) => (
+      <NavLink
+        key={path}
+        to={path}
+        className={({ isActive }) => (isActive ? "active" : "")}
+      >
+        {icon}
+        <span>{label}</span>
+      </NavLink>
+    ))}
+  </nav>
+);
+
 const AppLayout: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -61,21 +73,10 @@ const AppLayout: React.FC = () => {
     };
   }, [isMobileOpen]);
 
-  const navItems = [
-    { path: "/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
-    { path: "/habits", label: "Habits", icon: <CheckboxIcon /> },
-    { path: "/nutrition", label: "Nutrition", icon: <ReaderIcon /> },
-    {
-      path: "/workouts",
-      label: "Workouts",
-      icon: <CounterClockwiseClockIcon />,
-    },
-    { path: "/measurements", label: "Measurements", icon: <RulerSquareIcon /> },
-  ];
-
   return (
     <Flex direction="row" style={{ minHeight: "100vh" }}>
       <IconButton
+        className="hamburger-mobile"
         variant="ghost"
         size="3"
         onClick={() => setIsMobileOpen(!isMobileOpen)}
@@ -84,25 +85,23 @@ const AppLayout: React.FC = () => {
           top: "1rem",
           left: "1rem",
           zIndex: 50,
-          display: isMobile ? "block" : "none",
         }}
       >
         <HamburgerMenuIcon />
       </IconButton>
 
       <Box
+        className="sidebar-desktop"
         style={{
           width: isCollapsed ? "60px" : "240px",
           borderRight: "1px solid var(--gray-4)",
           background: "var(--brand-surface, #fff8f0)",
-          transition: "width 0.2s ease, transform 0.2s ease",
+          transition: "width 0.2s ease",
           position: "fixed",
           top: 0,
           left: 0,
           height: "100vh",
           zIndex: 40,
-          transform:
-            isMobile && !isMobileOpen ? "translateX(-100%)" : "translateX(0)",
           boxShadow: "2px 0 8px rgba(120, 80, 60, 0.04)",
         }}
       >
@@ -113,15 +112,13 @@ const AppLayout: React.FC = () => {
               {!isCollapsed && <Heading size="4">fitness</Heading>}
             </Flex>
 
-            {!isMobile && (
-              <IconButton
-                variant="ghost"
-                size="1"
-                onClick={() => setIsCollapsed(!isCollapsed)}
-              >
-                {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-              </IconButton>
-            )}
+            <IconButton
+              variant="ghost"
+              size="1"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+            >
+              {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+            </IconButton>
           </Flex>
 
           <Flex
@@ -205,26 +202,21 @@ const AppLayout: React.FC = () => {
         </Flex>
       </Box>
 
-      {isMobile && isMobileOpen && (
-        <Box
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0, 0, 0, 0.5)",
-            zIndex: 30,
-          }}
-          onClick={() => setIsMobileOpen(false)}
-        />
-      )}
+      <button
+        type="button"
+        tabIndex={isMobileOpen ? 0 : -1}
+        aria-label="Close sidebar"
+        className={`sidebar-overlay ${isMobileOpen ? "open" : ""}`}
+        onClick={() => setIsMobileOpen(false)}
+        onKeyDown={(e) => e.key === "Escape" && setIsMobileOpen(false)}
+      />
 
       <Box
+        className="main-content"
         flexGrow="1"
         style={{
           overflow: "auto",
-          marginLeft: isMobile ? "0" : isCollapsed ? "60px" : "240px",
+          marginLeft: isCollapsed ? "60px" : "240px",
           transition: "margin-left 0.2s ease",
         }}
       >
@@ -234,6 +226,8 @@ const AppLayout: React.FC = () => {
           </PageTransition>
         </Container>
       </Box>
+
+      <BottomTabBar />
     </Flex>
   );
 };
