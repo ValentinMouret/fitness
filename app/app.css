@@ -1,7 +1,136 @@
+:root {
+  --font-display: "Fraunces", serif;
+  --font-body: "Plus Jakarta Sans", sans-serif;
+
+  /* Warm brand colors */
+  --brand-background: #fffbf5;
+  --brand-surface: #fff8f0;
+  --brand-coral: #ff6b6b;
+  --brand-amber: #f59e0b;
+  --brand-success: #22c55e;
+  --brand-text: #292524;
+  --brand-text-secondary: #78716c;
+
+  /* Warm shadows */
+  --shadow-warm-sm: 0 1px 3px rgba(120, 80, 60, 0.06);
+  --shadow-warm: 0 4px 12px rgba(120, 80, 60, 0.08);
+  --shadow-warm-lg: 0 8px 24px rgba(120, 80, 60, 0.12);
+  --shadow-warm-hover: 0 8px 20px rgba(120, 80, 60, 0.15);
+}
+
 html {
-  font-family: "Lato", sans-serif;
+  font-family: var(--font-body);
 }
 
 body {
   margin: 0;
+  background: linear-gradient(180deg, #fffbf5 0%, #fef3e7 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Apply display font to all Radix headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+[class*="rt-Heading"] {
+  font-family: var(--font-display) !important;
+  font-optical-sizing: auto;
+}
+
+/* Warm card styling */
+.rt-Card {
+  box-shadow: var(--shadow-warm);
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.rt-Card:hover {
+  box-shadow: var(--shadow-warm-hover);
+}
+
+/* Clickable cards get lift on hover */
+a.rt-Card:hover,
+button.rt-Card:hover,
+.rt-Card[role="button"]:hover {
+  transform: translateY(-2px);
+}
+
+/* Animation keyframes for page transitions */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 107, 107, 0.15);
+  }
+}
+
+/* Utility classes for animations */
+.animate-fade-slide-up {
+  animation: fadeSlideUp 0.4s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Stagger delays for list items */
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+.stagger-4 {
+  animation-delay: 0.2s;
+}
+.stagger-5 {
+  animation-delay: 0.25s;
+}
+.stagger-6 {
+  animation-delay: 0.3s;
+}
+.stagger-7 {
+  animation-delay: 0.35s;
+}
+.stagger-8 {
+  animation-delay: 0.4s;
 }

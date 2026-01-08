@@ -12,6 +12,7 @@ import {
 import { Form, Link, useSearchParams, useFetcher } from "react-router";
 import { useState } from "react";
 import { Pagination } from "~/components/Pagination";
+import { EmptyState } from "~/components/EmptyState";
 import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { WorkoutAnalysisService } from "~/modules/fitness/application/workout-analysis.service.server";
 import { AIFitnessCoachService } from "~/modules/fitness/infra/ai-fitness-coach.service";
@@ -149,9 +150,11 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
 
       <Flex direction="column" gap="4">
         {workouts.length === 0 ? (
-          <Card>
-            <Text>No workouts found. Create your first workout!</Text>
-          </Card>
+          <EmptyState
+            icon="💪"
+            title="No workouts yet"
+            description="Ready to crush it? Hit 'Create Workout' to get started!"
+          />
         ) : (
           workouts.map((workout) => (
             <Card key={workout.id} asChild>

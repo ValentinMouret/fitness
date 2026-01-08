@@ -9,6 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "@radix-ui/themes/styles.css";
+import "./app.css";
 import { AuthProvider } from "./components/AuthProvider";
 import { Theme, Container, Heading, Text, Code } from "@radix-ui/themes";
 
@@ -21,7 +22,7 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap",
   },
 ];
 
@@ -35,7 +36,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <Theme accentColor="green" grayColor="sand" radius="large">
+        <Theme accentColor="tomato" grayColor="sand" radius="large">
           {children}
         </Theme>
         <ScrollRestoration />

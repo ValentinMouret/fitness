@@ -13,12 +13,12 @@ export const designTokens = {
     page: "var(--space-8)", // 64px - page-level spacing
   },
 
-  // Shadow system for elevation
+  // Warm shadow system for elevation
   shadows: {
-    subtle: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-    card: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
-    elevated:
-      "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+    subtle: "0 1px 3px rgba(120, 80, 60, 0.06)",
+    card: "0 4px 12px rgba(120, 80, 60, 0.08)",
+    elevated: "0 8px 24px rgba(120, 80, 60, 0.12)",
+    hover: "0 8px 20px rgba(120, 80, 60, 0.15)",
   },
 
   // Interactive state colors
@@ -30,12 +30,23 @@ export const designTokens = {
   },
 } as const;
 
+// Warm brand colors
+export const brandColors = {
+  background: "#fffbf5",
+  surface: "#fff8f0",
+  coral: "#ff6b6b",
+  amber: "#f59e0b",
+  success: "#22c55e",
+  text: "#292524",
+  textSecondary: "#78716c",
+} as const;
+
 // Semantic color mappings
 export const semanticColors = {
-  // Status feedback
+  // Status feedback (warm palette)
   success: "green",
   warning: "amber",
-  error: "red",
+  error: "tomato",
   info: "blue",
 
   // Exercise type categorization
@@ -47,12 +58,22 @@ export const semanticColors = {
     machine: "gold",
   },
 
-  // Interactive element semantics
+  // Interactive element semantics (coral/tomato primary)
   interactive: {
-    primary: "green",
+    primary: "tomato",
     secondary: "gray",
     destructive: "red",
   },
+} as const;
+
+// Chart colors for data visualization (warm palette)
+export const chartColors = {
+  protein: "#ff6b6b", // Coral
+  carbs: "#f59e0b", // Amber
+  fat: "#a3846f", // Warm brown
+  primary: "#ff6b6b",
+  secondary: "#f59e0b",
+  tertiary: "#22c55e",
 } as const;
 
 // Animation presets for common patterns
@@ -75,6 +96,18 @@ export const animations = {
     opacity: { from: 1, to: 0.5 },
     transition: `${designTokens.transitions.normal} ease-in-out infinite alternate`,
   },
+
+  // Page entrance animation
+  entrance: {
+    initial: { opacity: 0, transform: "translateY(12px)" },
+    animate: { opacity: 1, transform: "translateY(0)" },
+    transition: "0.4s ease-out",
+  },
+
+  // Celebration pulse
+  celebrate: {
+    keyframes: "pulse-glow 0.6s ease-out",
+  },
 } as const;
 
 // Layout constants
@@ -86,7 +119,7 @@ export const layout = {
     content: "800px",
   },
 
-  // Common breakpoints (for future responsive design)
+  // Common breakpoints
   breakpoints: {
     mobile: "640px",
     tablet: "768px",

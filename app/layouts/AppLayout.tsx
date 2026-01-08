@@ -21,6 +21,7 @@ import {
   RulerSquareIcon,
   ExitIcon,
 } from "@radix-ui/react-icons";
+import { PageTransition } from "~/components/PageTransition";
 
 const AppLayout: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -92,8 +93,8 @@ const AppLayout: React.FC = () => {
       <Box
         style={{
           width: isCollapsed ? "60px" : "240px",
-          borderRight: "1px solid var(--gray-6)",
-          background: "var(--color-surface)",
+          borderRight: "1px solid var(--gray-4)",
+          background: "var(--brand-surface, #fff8f0)",
           transition: "width 0.2s ease, transform 0.2s ease",
           position: "fixed",
           top: 0,
@@ -102,12 +103,13 @@ const AppLayout: React.FC = () => {
           zIndex: 40,
           transform:
             isMobile && !isMobileOpen ? "translateX(-100%)" : "translateX(0)",
+          boxShadow: "2px 0 8px rgba(120, 80, 60, 0.04)",
         }}
       >
         <Flex direction="column" height="100%" p="3">
           <Flex align="center" justify="between" mb="4">
             <Flex align="center" gap="2">
-              <Text size="5">{String.fromCodePoint(0x1f49a)}</Text>
+              <Text size="5">🔥</Text>
               {!isCollapsed && <Heading size="4">fitness</Heading>}
             </Flex>
 
@@ -138,7 +140,7 @@ const AppLayout: React.FC = () => {
                   {({ isActive }) => (
                     <Button
                       variant="soft"
-                      color={isActive ? "green" : undefined}
+                      color={isActive ? "tomato" : undefined}
                       size="3"
                       style={{
                         width: "100%",
@@ -227,7 +229,9 @@ const AppLayout: React.FC = () => {
         }}
       >
         <Container size="4" p="4">
-          <Outlet />
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
         </Container>
       </Box>
     </Flex>

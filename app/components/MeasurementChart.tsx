@@ -133,8 +133,8 @@ export default function MeasurementChart({
             margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
           >
             <CartesianGrid
-              strokeDasharray="2 2"
-              stroke="#f0f0f0"
+              strokeDasharray="3 3"
+              stroke="var(--gray-4, #e5e5e5)"
               vertical={false}
             />
             <XAxis
@@ -143,14 +143,14 @@ export default function MeasurementChart({
               scale="time"
               domain={["dataMin", "dataMax"]}
               tickFormatter={(value) => new Date(value).toLocaleDateString()}
-              stroke="#999"
+              stroke="var(--brand-text-secondary, #78716c)"
               fontSize={12}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
               domain={["dataMin - 1", "dataMax + 1"]}
-              stroke="#999"
+              stroke="var(--brand-text-secondary, #78716c)"
               fontSize={12}
               tickLine={false}
               axisLine={false}
@@ -158,31 +158,40 @@ export default function MeasurementChart({
                 value: `${displayName} (${unit})`,
                 angle: -90,
                 position: "insideLeft",
-                style: { textAnchor: "middle", fill: "#666" },
+                style: {
+                  textAnchor: "middle",
+                  fill: "var(--brand-text-secondary, #78716c)",
+                },
               }}
             />
             <Tooltip
               labelFormatter={(label) => new Date(label).toLocaleDateString()}
-              formatter={(value: number) => [`${value} ${unit}`, displayName]}
+              formatter={(value) => [`${value} ${unit}`, displayName]}
               contentStyle={{
-                backgroundColor: "white",
-                border: "1px solid #e0e0e0",
-                borderRadius: "4px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                backgroundColor: "#fffbf5",
+                border: "1px solid var(--gray-4)",
+                borderRadius: "12px",
+                boxShadow: "0 4px 16px rgba(120, 80, 60, 0.12)",
+                padding: "12px 16px",
               }}
             />
             <Line
-              type="linear"
+              type="monotone"
               dataKey="value"
-              stroke="#333"
-              strokeWidth={2}
-              dot={{ fill: "#333", strokeWidth: 0, r: 3 }}
+              stroke="#ff6b6b"
+              strokeWidth={2.5}
+              dot={{ fill: "#ff6b6b", strokeWidth: 0, r: 4 }}
               activeDot={{
-                r: 5,
-                fill: "#333",
-                strokeWidth: 2,
+                r: 6,
+                fill: "#ff6b6b",
+                strokeWidth: 3,
                 stroke: "white",
+                style: {
+                  filter: "drop-shadow(0 2px 4px rgba(255, 107, 107, 0.3))",
+                },
               }}
+              animationDuration={800}
+              animationEasing="ease-out"
             />
           </LineChart>
         </ResponsiveContainer>

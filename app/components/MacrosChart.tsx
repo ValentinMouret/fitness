@@ -1,16 +1,18 @@
+import { useId } from "react";
 import { Flex, Text } from "@radix-ui/themes";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { macrosEnergyPerGram } from "~/modules/nutrition/domain/macros";
 import type { MacrosSplit } from "~/modules/nutrition/domain/nutrition-calculation-service";
+import { chartColors } from "~/design-system";
 
 interface MacrosChartProps {
   readonly macrosSplit: MacrosSplit;
 }
 
 const COLORS = {
-  protein: "#e53e3e",
-  fat: "#ffd43b",
-  carbs: "#868e96",
+  protein: chartColors.protein,
+  fat: chartColors.fat,
+  carbs: chartColors.carbs,
 };
 
 interface TooltipProps {
@@ -31,22 +33,19 @@ const CustomTooltip = ({ active, payload }: TooltipProps) => {
     return (
       <div
         style={{
-          backgroundColor: "white",
-          padding: "12px",
-          border: "1px solid #e0e0e0",
-          borderRadius: "8px",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          backgroundColor: "#fffbf5",
+          padding: "12px 16px",
+          border: "1px solid var(--gray-4)",
+          borderRadius: "12px",
+          boxShadow: "0 4px 16px rgba(120, 80, 60, 0.12)",
         }}
       >
         <Text weight="medium" size="2" style={{ color: data.color }}>
           {data.name}
         </Text>
-        <div style={{ marginTop: "4px" }}>
-          <Text size="1" style={{ display: "block" }}>
-            {data.grams}g/day
-          </Text>
-          <Text size="1" style={{ display: "block" }}>
-            {Math.round(data.calories)}kcal/day
+        <div style={{ marginTop: "6px" }}>
+          <Text size="1" color="gray" style={{ display: "block" }}>
+            {data.grams}g · {Math.round(data.calories)} kcal
           </Text>
         </div>
       </div>
@@ -56,6 +55,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps) => {
 };
 
 export default function MacrosChart({ macrosSplit }: MacrosChartProps) {
+  const glowId = useId();
   const data = [
     {
       name: "Protein",
@@ -82,17 +82,34 @@ export default function MacrosChart({ macrosSplit }: MacrosChartProps) {
       <div style={{ flex: 1 }}>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
+            <defs>
+              <filter id={glowId}>
+                <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={60}
-              outerRadius={120}
-              paddingAngle={2}
+              innerRadius={65}
+              outerRadius={115}
+              paddingAngle={3}
               dataKey="calories"
+              stroke="none"
+              animationBegin={0}
+              animationDuration={800}
+              animationEasing="ease-out"
             >
               {data.map((entry) => (
-                <Cell key={entry.name} fill={entry.color} />
+                <Cell
+                  key={entry.name}
+                  fill={entry.color}
+                  style={{ filter: `url(#${glowId})`, opacity: 0.9 }}
+                />
               ))}
             </Pie>
             <Tooltip content={<CustomTooltip />} />
@@ -100,27 +117,30 @@ export default function MacrosChart({ macrosSplit }: MacrosChartProps) {
         </ResponsiveContainer>
       </div>
 
-      <Flex direction="column" gap="3" style={{ minWidth: "120px" }}>
+      <Flex
+        direction="column"
+        gap="3"
+        justify="center"
+        style={{ minWidth: "120px" }}
+      >
         {data.map((entry) => (
           <Flex key={entry.name} direction="column" gap="1">
             <Flex align="center" gap="2">
               <div
                 style={{
-                  width: "12px",
-                  height: "12px",
+                  width: "14px",
+                  height: "14px",
                   backgroundColor: entry.color,
-                  borderRadius: "2px",
+                  borderRadius: "4px",
+                  boxShadow: `0 2px 4px ${entry.color}40`,
                 }}
               />
               <Text size="2" weight="medium">
                 {entry.name}
               </Text>
             </Flex>
-            <Text size="1" color="gray" style={{ marginLeft: "20px" }}>
-              {entry.grams}g/day
-            </Text>
-            <Text size="1" color="gray" style={{ marginLeft: "20px" }}>
-              {Math.round(entry.calories)}kcal/day
+            <Text size="1" color="gray" style={{ marginLeft: "22px" }}>
+              {entry.grams}g · {Math.round(entry.calories)} kcal
             </Text>
           </Flex>
         ))}

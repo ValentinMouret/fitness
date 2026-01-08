@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Pencil1Icon, PlusIcon } from "@radix-ui/react-icons";
 import {
   Badge,
@@ -12,6 +13,8 @@ import {
 } from "@radix-ui/themes";
 import { data, Form, Link, useNavigation } from "react-router";
 import { handleResultError } from "~/utils/errors";
+import { EmptyState } from "~/components/EmptyState";
+import { Celebration } from "~/components/Celebration";
 import HabitCheckbox from "../../components/HabitCheckbox";
 import { HabitService } from "../../modules/habits/application/service";
 import { HabitCompletion } from "../../modules/habits/domain/entity";
@@ -67,6 +70,8 @@ export async function loader() {
   };
 }
 
+const STREAK_MILESTONES = [7, 30, 90, 365];
+
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
@@ -89,7 +94,30 @@ export async function action({ request }: Route.ActionArgs) {
       return data({ error: "Failed to save completion" }, { status: 500 });
     }
 
-    return data({ success: true });
+    // Check for streak milestone when completing (not uncompleting)
+    let hitMilestone: number | null = null;
+    if (!completed) {
+      const habit = await HabitRepository.fetchById(habitId);
+      if (habit.isOk() && habit.value) {
+        const completions = await HabitCompletionRepository.fetchByHabitBetween(
+          habitId,
+          new Date(habit.value.startDate),
+          today(),
+        );
+        if (completions.isOk()) {
+          const newStreak = HabitService.calculateStreak(
+            habit.value,
+            completions.value,
+            today(),
+          );
+          if (STREAK_MILESTONES.includes(newStreak)) {
+            hitMilestone = newStreak;
+          }
+        }
+      }
+    }
+
+    return data({ success: true, hitMilestone });
   }
 
   return null;
@@ -101,6 +129,14 @@ export default function HabitsPage({
 }: Route.ComponentProps) {
   const { habits, todayCompletions, habitStreaks } = loaderData;
   const navigation = useNavigation();
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Trigger celebration when a streak milestone is hit
+  useEffect(() => {
+    if (actionData && "hitMilestone" in actionData && actionData.hitMilestone) {
+      setShowCelebration(true);
+    }
+  }, [actionData]);
 
   // Create a map of today's completions
   const completionMap = new Map(
@@ -120,6 +156,10 @@ export default function HabitsPage({
 
   return (
     <Box>
+      <Celebration
+        trigger={showCelebration}
+        onComplete={() => setShowCelebration(false)}
+      />
       <Flex justify="between" align="center" mb="6">
         <Heading size="7">Habits</Heading>
         <Button asChild>
@@ -143,10 +183,11 @@ export default function HabitsPage({
         <Flex direction="column" gap="2">
           {habits.filter((habit) => HabitService.isDueOn(habit, today()))
             .length === 0 ? (
-            <Box p="6" style={{ textAlign: "center" }}>
-              <Text color="gray">No habits scheduled for today.</Text>
-              <Text color="gray">Create your first habit to get started!</Text>
-            </Box>
+            <EmptyState
+              icon="📅"
+              title="All caught up!"
+              description="No habits scheduled for today. Enjoy your rest day!"
+            />
           ) : (
             habits
               .filter((habit) => HabitService.isDueOn(habit, today()))
@@ -177,24 +218,13 @@ export default function HabitsPage({
           All Habits
         </Heading>
         {habits.length === 0 ? (
-          <Card size="4" style={{ textAlign: "center" }}>
-            <Flex direction="column">
-              <Text size="6" mb="4">
-                📝
-              </Text>
-              <Heading size="4" mb="2">
-                No habits yet
-              </Heading>
-              <Text color="gray" mb="4">
-                Start building better habits by creating your first one.
-              </Text>
-              <div>
-                <Button asChild>
-                  <Link to="/habits/new">Create Your First Habit</Link>
-                </Button>
-              </div>
-            </Flex>
-          </Card>
+          <EmptyState
+            icon="✅"
+            title="No habits yet"
+            description="Start building better habits by creating your first one."
+            actionLabel="Create Your First Habit"
+            actionTo="/habits/new"
+          />
         ) : (
           <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="4">
             {habits.map((habit) => {
