@@ -391,7 +391,6 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
 
   const fetcher = useFetcher();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -400,16 +399,6 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     startTime: loaderData?.workoutSession.workout.start || new Date(),
     endTime: loaderData?.workoutSession.workout.stop || undefined,
   });
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   useEffect(() => {
     if (isEditingName && inputRef.current) {
@@ -440,17 +429,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   return (
     <>
       {/* Fixed Header */}
-      <Box
-        style={{
-          position: "fixed",
-          top: 0,
-          left: isMobile ? 0 : "240px", // Account for sidebar on desktop
-          right: 0,
-          zIndex: 10,
-          backgroundColor: "var(--color-background)",
-          borderBottom: "1px solid var(--gray-a5)",
-        }}
-      >
+      <Box className="fixed-header-with-sidebar">
         <Flex justify="between" align="center" p="4">
           <Flex align="center" gap="3">
             <IconButton asChild variant="ghost" size="3">

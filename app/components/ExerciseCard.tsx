@@ -12,7 +12,6 @@ import { Link, useFetcher } from "react-router";
 import type { ExerciseMuscleGroups } from "~/modules/fitness/domain/workout";
 import { ExerciseTypeBadge } from "~/modules/fitness/presentation/components";
 import { humanFormatting } from "~/strings";
-import { designTokens } from "~/design-system";
 
 interface ExerciseCardProps {
   readonly exerciseMuscleGroup: ExerciseMuscleGroups;
@@ -74,23 +73,13 @@ export default function ExerciseCard({
             <IconButton
               variant="ghost"
               size="1"
-              style={{
-                transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
-                transition: `transform ${designTokens.transitions.normal}`,
-              }}
+              className={`rotating-chevron ${isExpanded ? "rotated" : ""}`}
             >
               <ChevronDownIcon />
             </IconButton>
           </Flex>
         </Flex>
-        <div
-          style={{
-            maxHeight: isExpanded ? "500px" : "0px",
-            opacity: isExpanded ? 1 : 0,
-            overflow: "hidden",
-            transition: `max-height ${designTokens.transitions.normal}, opacity ${designTokens.transitions.normal}`,
-          }}
-        >
+        <div className={`collapsible-section ${isExpanded ? "expanded" : ""}`}>
           <Flex direction="column" gap="2" pt="2">
             <Text color="gray">
               {exercise.description ?? "No description yet"}

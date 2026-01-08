@@ -60,3 +60,25 @@
   border-radius: 12px;
   background: var(--brand-surface, #fff8f0);
 }
+
+@media (max-width: 480px) {
+  .weight-chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .period-selector {
+    width: 100%;
+  }
+
+  .period-selector button {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .weight-chart-container {
+    padding: 1rem 0.5rem;
+  }
+}

@@ -167,13 +167,7 @@ export default function MeasurementChart({
             <Tooltip
               labelFormatter={(label) => new Date(label).toLocaleDateString()}
               formatter={(value) => [`${value} ${unit}`, displayName]}
-              contentStyle={{
-                backgroundColor: "#fffbf5",
-                border: "1px solid var(--gray-4)",
-                borderRadius: "12px",
-                boxShadow: "0 4px 16px rgba(120, 80, 60, 0.12)",
-                padding: "12px 16px",
-              }}
+              wrapperClassName="chart-tooltip"
             />
             <Line
               type="monotone"

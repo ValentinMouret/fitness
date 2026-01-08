@@ -16,6 +16,27 @@
   --shadow-warm: 0 4px 12px rgba(120, 80, 60, 0.08);
   --shadow-warm-lg: 0 8px 24px rgba(120, 80, 60, 0.12);
   --shadow-warm-hover: 0 8px 20px rgba(120, 80, 60, 0.15);
+
+  /* Responsive typography */
+  --heading-page: 2rem;
+  --heading-section: 1.5rem;
+  --heading-card: 1.25rem;
+
+  /* Responsive spacing */
+  --space-page: 2rem;
+  --space-section: 1.5rem;
+  --space-card: 1rem;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --heading-page: 1.75rem;
+    --heading-section: 1.25rem;
+    --heading-card: 1.125rem;
+    --space-page: 1rem;
+    --space-section: 1rem;
+    --space-card: 0.75rem;
+  }
 }
 
 html {
@@ -217,4 +238,154 @@ button.rt-Card:hover,
   background: rgba(0, 0, 0, 0.5);
   pointer-events: auto;
   cursor: pointer;
+}
+
+/* =================================
+   Utility Classes
+   ================================= */
+.d-block {
+  display: block;
+}
+
+.opacity-0 {
+  opacity: 0;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* =================================
+   Collapsible Section
+   ================================= */
+.collapsible-section {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.collapsible-section.expanded {
+  max-height: 1000px;
+  opacity: 1;
+}
+
+/* =================================
+   Rotating Chevron
+   ================================= */
+.rotating-chevron {
+  transition: transform 0.2s ease;
+}
+
+.rotating-chevron.rotated {
+  transform: rotate(90deg);
+}
+
+/* =================================
+   Chart Tooltip
+   ================================= */
+.chart-tooltip {
+  background-color: var(--brand-background, #fffbf5) !important;
+  border: 1px solid var(--gray-4) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(120, 80, 60, 0.12) !important;
+  padding: 12px 16px !important;
+}
+
+/* Override Recharts default tooltip content styles */
+.chart-tooltip .recharts-default-tooltip {
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* =================================
+   Fixed Header with Sidebar Offset
+   ================================= */
+.fixed-header-with-sidebar {
+  position: fixed;
+  top: 0;
+  left: 240px;
+  right: 0;
+  z-index: 10;
+  background-color: var(--color-background);
+  border-bottom: 1px solid var(--gray-a5);
+}
+
+@media (max-width: 768px) {
+  .fixed-header-with-sidebar {
+    left: 0;
+  }
+}
+
+/* =================================
+   MacrosChart Mobile Layout
+   ================================= */
+.macros-chart-container {
+  display: flex;
+  gap: var(--space-4, 1rem);
+}
+
+@media (max-width: 640px) {
+  .macros-chart-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .macros-chart-container .macros-legend {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-4, 1rem);
+  }
+}
+
+/* =================================
+   Mobile Table Handling
+   ================================= */
+.mobile-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  .mobile-table-wrapper {
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
+}
+
+/* =================================
+   Touch Targets
+   ================================= */
+@media (max-width: 768px) {
+  .rt-IconButton,
+  .rt-Button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .rt-TableCell input {
+    min-height: 40px;
+  }
+}
+
+/* =================================
+   Period Selector Mobile
+   ================================= */
+@media (max-width: 480px) {
+  .period-selector {
+    width: 100%;
+    display: flex;
+  }
+
+  .period-selector button,
+  .period-selector .rt-Button {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
 }

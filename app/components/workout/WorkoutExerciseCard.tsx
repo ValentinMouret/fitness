@@ -13,7 +13,6 @@ import {
 } from "@radix-ui/themes";
 import { ExerciseTypeBadge } from "~/modules/fitness/presentation/components";
 import {
-  ChevronDownIcon,
   ChevronRightIcon,
   TrashIcon,
   DotsVerticalIcon,
@@ -23,7 +22,6 @@ import type {
   WorkoutExerciseGroup,
   WorkoutSet,
 } from "~/modules/fitness/domain/workout";
-import { designTokens } from "~/design-system";
 
 interface WorkoutExerciseCardProps {
   readonly exerciseGroup: WorkoutExerciseGroup;
@@ -63,16 +61,9 @@ export function WorkoutExerciseCard({
               <IconButton
                 variant="ghost"
                 size="3"
-                style={{
-                  transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
-                  transition: `transform ${designTokens.transitions.normal}`,
-                }}
+                className={`rotating-chevron ${isExpanded ? "rotated" : ""}`}
               >
-                {isExpanded ? (
-                  <ChevronDownIcon width="20" height="20" />
-                ) : (
-                  <ChevronRightIcon width="20" height="20" />
-                )}
+                <ChevronRightIcon width="20" height="20" />
               </IconButton>
               <Flex align="center" gap="3" style={{ flex: 1 }}>
                 <Heading size="6" weight="bold">
@@ -121,12 +112,7 @@ export function WorkoutExerciseCard({
           </Flex>
 
           <Box
-            style={{
-              maxHeight: isExpanded ? "1000px" : "0px",
-              opacity: isExpanded ? 1 : 0,
-              overflow: "hidden",
-              transition: `max-height ${designTokens.transitions.normal}, opacity ${designTokens.transitions.normal}`,
-            }}
+            className={`collapsible-section ${isExpanded ? "expanded" : ""}`}
           >
             <Box>
               {totalVolume > 0 && (
@@ -141,7 +127,7 @@ export function WorkoutExerciseCard({
               )}
             </Box>
 
-            <Box mb="4">
+            <Box mb="4" className="mobile-table-wrapper">
               <Table.Root variant="surface">
                 <Table.Header>
                   <Table.Row>

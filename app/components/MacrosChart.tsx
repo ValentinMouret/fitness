@@ -31,20 +31,12 @@ const CustomTooltip = ({ active, payload }: TooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div
-        style={{
-          backgroundColor: "#fffbf5",
-          padding: "12px 16px",
-          border: "1px solid var(--gray-4)",
-          borderRadius: "12px",
-          boxShadow: "0 4px 16px rgba(120, 80, 60, 0.12)",
-        }}
-      >
+      <div className="chart-tooltip">
         <Text weight="medium" size="2" style={{ color: data.color }}>
           {data.name}
         </Text>
         <div style={{ marginTop: "6px" }}>
-          <Text size="1" color="gray" style={{ display: "block" }}>
+          <Text size="1" color="gray" className="d-block">
             {data.grams}g · {Math.round(data.calories)} kcal
           </Text>
         </div>
@@ -78,8 +70,8 @@ export default function MacrosChart({ macrosSplit }: MacrosChartProps) {
   ];
 
   return (
-    <Flex gap="4">
-      <div style={{ flex: 1 }}>
+    <div className="macros-chart-container">
+      <div style={{ flex: 1, minWidth: 0 }}>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <defs>
@@ -118,6 +110,7 @@ export default function MacrosChart({ macrosSplit }: MacrosChartProps) {
       </div>
 
       <Flex
+        className="macros-legend"
         direction="column"
         gap="3"
         justify="center"
@@ -145,6 +138,6 @@ export default function MacrosChart({ macrosSplit }: MacrosChartProps) {
           </Flex>
         ))}
       </Flex>
-    </Flex>
+    </div>
   );
 }
