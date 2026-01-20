@@ -9,9 +9,12 @@ import type {
   MuscleGroup,
 } from "~/modules/fitness/domain/workout";
 
-// Create mock functions
-const mockExerciseMuscleGroupsListAll = vi.fn();
-const mockAdaptiveWorkoutFindSubstitutes = vi.fn();
+// Create mock functions with vi.hoisted to ensure they're available during mock hoisting
+const { mockExerciseMuscleGroupsListAll, mockAdaptiveWorkoutFindSubstitutes } =
+  vi.hoisted(() => ({
+    mockExerciseMuscleGroupsListAll: vi.fn(),
+    mockAdaptiveWorkoutFindSubstitutes: vi.fn(),
+  }));
 
 // Mock dependencies
 vi.mock("~/modules/fitness/infra/repository.server", () => ({

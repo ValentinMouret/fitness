@@ -33,5 +33,6 @@ export default defineConfig({
     silent: true,
     logHeapUsage: false,
     setupFiles: ["./vitest.setup.ts"],
+    exclude: ["**/node_modules/**", ".direnv/**"],
   },
 });

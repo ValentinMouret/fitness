@@ -11,11 +11,18 @@ import type {
   WorkoutSet,
 } from "~/modules/fitness/domain/workout";
 
-// Create mock functions
-const mockGetWeeklyVolume = vi.fn();
-const mockRecordWorkoutVolume = vi.fn();
-const mockWeeklyVolumeTrackerCreate = vi.fn();
-const mockWeeklyVolumeTrackerGetVolumeNeeds = vi.fn();
+// Create mock functions with vi.hoisted to ensure they're available during mock hoisting
+const {
+  mockGetWeeklyVolume,
+  mockRecordWorkoutVolume,
+  mockWeeklyVolumeTrackerCreate,
+  mockWeeklyVolumeTrackerGetVolumeNeeds,
+} = vi.hoisted(() => ({
+  mockGetWeeklyVolume: vi.fn(),
+  mockRecordWorkoutVolume: vi.fn(),
+  mockWeeklyVolumeTrackerCreate: vi.fn(),
+  mockWeeklyVolumeTrackerGetVolumeNeeds: vi.fn(),
+}));
 
 // Mock dependencies
 vi.mock("~/modules/fitness/infra/volume-tracking-repository.server", () => ({
