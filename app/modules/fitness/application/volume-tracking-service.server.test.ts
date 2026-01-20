@@ -11,24 +11,29 @@ import type {
   WorkoutSet,
 } from "~/modules/fitness/domain/workout";
 
+// Create mock functions
+const mockGetWeeklyVolume = vi.fn();
+const mockRecordWorkoutVolume = vi.fn();
+const mockWeeklyVolumeTrackerCreate = vi.fn();
+const mockWeeklyVolumeTrackerGetVolumeNeeds = vi.fn();
+
 // Mock dependencies
 vi.mock("~/modules/fitness/infra/volume-tracking-repository.server", () => ({
   VolumeTrackingRepository: {
-    getWeeklyVolume: vi.fn(),
-    recordWorkoutVolume: vi.fn(),
+    getWeeklyVolume: mockGetWeeklyVolume,
+    recordWorkoutVolume: mockRecordWorkoutVolume,
   },
 }));
 
 vi.mock("~/modules/fitness/domain/workout", () => ({
   WeeklyVolumeTracker: {
-    create: vi.fn(),
-    getVolumeNeeds: vi.fn(),
+    create: mockWeeklyVolumeTrackerCreate,
+    getVolumeNeeds: mockWeeklyVolumeTrackerGetVolumeNeeds,
   },
 }));
 
-// Import mocked modules
+// Import mocked modules for assertion use
 import { VolumeTrackingRepository } from "~/modules/fitness/infra/volume-tracking-repository.server";
-import { WeeklyVolumeTracker as WeeklyVolumeTrackerNamespace } from "~/modules/fitness/domain/workout";
 
 // Test data helpers
 const createWorkout = (overrides?: Partial<Workout>): Workout => ({
@@ -106,13 +111,11 @@ describe("VolumeTrackingService", () => {
       ]);
       const mockTracker = createWeeklyVolumeTracker();
 
-      vi.mocked(VolumeTrackingRepository.getWeeklyVolume).mockReturnValue(
+      mockGetWeeklyVolume.mockReturnValue(
         ResultAsync.fromSafePromise(Promise.resolve(mockVolumeData)),
       );
 
-      vi.mocked(WeeklyVolumeTrackerNamespace.create).mockReturnValue(
-        mockTracker,
-      );
+      mockWeeklyVolumeTrackerCreate.mockReturnValue(mockTracker);
 
       const result = await VolumeTrackingService.getCurrentWeekVolume();
 
@@ -129,7 +132,7 @@ describe("VolumeTrackingService", () => {
     });
 
     it("should handle repository errors", async () => {
-      vi.mocked(VolumeTrackingRepository.getWeeklyVolume).mockReturnValue(
+      mockGetWeeklyVolume.mockReturnValue(
         ResultAsync.fromPromise(
           Promise.reject("database_error"),
           (error) => error as "database_error",
@@ -156,17 +159,15 @@ describe("VolumeTrackingService", () => {
 
       const mockTracker = createWeeklyVolumeTracker();
 
-      vi.mocked(VolumeTrackingRepository.recordWorkoutVolume).mockReturnValue(
+      mockRecordWorkoutVolume.mockReturnValue(
         ResultAsync.fromSafePromise(Promise.resolve(undefined)),
       );
 
-      vi.mocked(VolumeTrackingRepository.getWeeklyVolume).mockReturnValue(
+      mockGetWeeklyVolume.mockReturnValue(
         ResultAsync.fromSafePromise(Promise.resolve(new Map())),
       );
 
-      vi.mocked(WeeklyVolumeTrackerNamespace.create).mockReturnValue(
-        mockTracker,
-      );
+      mockWeeklyVolumeTrackerCreate.mockReturnValue(mockTracker);
 
       const result = await VolumeTrackingService.updateVolume(workoutSession);
 
@@ -186,7 +187,7 @@ describe("VolumeTrackingService", () => {
     it("should handle recording errors", async () => {
       const workoutSession = createWorkoutSession();
 
-      vi.mocked(VolumeTrackingRepository.recordWorkoutVolume).mockReturnValue(
+      mockRecordWorkoutVolume.mockReturnValue(
         ResultAsync.fromPromise(
           Promise.reject("database_error"),
           (error) => error as "database_error",
@@ -210,17 +211,13 @@ describe("VolumeTrackingService", () => {
         ["lats", 2],
       ]);
 
-      vi.mocked(VolumeTrackingRepository.getWeeklyVolume).mockReturnValue(
+      mockGetWeeklyVolume.mockReturnValue(
         ResultAsync.fromSafePromise(Promise.resolve(new Map())),
       );
 
-      vi.mocked(WeeklyVolumeTrackerNamespace.create).mockReturnValue(
-        mockTracker,
-      );
+      mockWeeklyVolumeTrackerCreate.mockReturnValue(mockTracker);
 
-      vi.mocked(WeeklyVolumeTrackerNamespace.getVolumeNeeds).mockReturnValue(
-        mockVolumeNeeds,
-      );
+      mockWeeklyVolumeTrackerGetVolumeNeeds.mockReturnValue(mockVolumeNeeds);
 
       const result = await VolumeTrackingService.getVolumeNeeds();
 
@@ -229,13 +226,11 @@ describe("VolumeTrackingService", () => {
         expect(result.value).toEqual(mockVolumeNeeds);
       }
 
-      expect(
-        WeeklyVolumeTrackerNamespace.getVolumeNeeds,
-      ).toHaveBeenCalledWith();
+      expect(mockWeeklyVolumeTrackerGetVolumeNeeds).toHaveBeenCalledWith();
     });
 
     it("should handle tracker retrieval errors", async () => {
-      vi.mocked(VolumeTrackingRepository.getWeeklyVolume).mockReturnValue(
+      mockGetWeeklyVolume.mockReturnValue(
         ResultAsync.fromPromise(
           Promise.reject("database_error"),
           (error) => error as "database_error",
@@ -264,13 +259,11 @@ describe("VolumeTrackingService", () => {
         ],
       });
 
-      vi.mocked(VolumeTrackingRepository.getWeeklyVolume).mockReturnValue(
+      mockGetWeeklyVolume.mockReturnValue(
         ResultAsync.fromSafePromise(Promise.resolve(new Map())),
       );
 
-      vi.mocked(WeeklyVolumeTrackerNamespace.create).mockReturnValue(
-        mockTracker,
-      );
+      mockWeeklyVolumeTrackerCreate.mockReturnValue(mockTracker);
 
       const result = await VolumeTrackingService.getWeeklyProgress();
 
@@ -295,13 +288,11 @@ describe("VolumeTrackingService", () => {
         ],
       });
 
-      vi.mocked(VolumeTrackingRepository.getWeeklyVolume).mockReturnValue(
+      mockGetWeeklyVolume.mockReturnValue(
         ResultAsync.fromSafePromise(Promise.resolve(new Map())),
       );
 
-      vi.mocked(WeeklyVolumeTrackerNamespace.create).mockReturnValue(
-        mockTracker,
-      );
+      mockWeeklyVolumeTrackerCreate.mockReturnValue(mockTracker);
 
       const result = await VolumeTrackingService.getWeeklyProgress();
 
@@ -323,13 +314,11 @@ describe("VolumeTrackingService", () => {
         ],
       });
 
-      vi.mocked(VolumeTrackingRepository.getWeeklyVolume).mockReturnValue(
+      mockGetWeeklyVolume.mockReturnValue(
         ResultAsync.fromSafePromise(Promise.resolve(new Map())),
       );
 
-      vi.mocked(WeeklyVolumeTrackerNamespace.create).mockReturnValue(
-        mockTracker,
-      );
+      mockWeeklyVolumeTrackerCreate.mockReturnValue(mockTracker);
 
       const result = await VolumeTrackingService.getWeeklyProgress();
 
@@ -348,13 +337,11 @@ describe("VolumeTrackingService", () => {
         targets: [{ muscleGroup: "pecs", minSets: 12, maxSets: 18 }],
       });
 
-      vi.mocked(VolumeTrackingRepository.getWeeklyVolume).mockReturnValue(
+      mockGetWeeklyVolume.mockReturnValue(
         ResultAsync.fromSafePromise(Promise.resolve(new Map())),
       );
 
-      vi.mocked(WeeklyVolumeTrackerNamespace.create).mockReturnValue(
-        mockTracker,
-      );
+      mockWeeklyVolumeTrackerCreate.mockReturnValue(mockTracker);
 
       const result = await VolumeTrackingService.getWeeklyProgress();
 

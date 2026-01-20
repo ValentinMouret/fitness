@@ -1,6 +1,7 @@
-import { Button, Card, Flex, Heading, Text } from "@radix-ui/themes";
-import { NumberInput } from "~/components/NumberInput";
+import { Button, Card, Flex, Heading, Slider, Text } from "@radix-ui/themes";
+import { useState } from "react";
 import { Form } from "react-router";
+import { NumberInput } from "~/components/NumberInput";
 
 interface Props {
   readonly age?: number;
@@ -17,6 +18,8 @@ export default function MaintenanceForm({
   activity,
   delta,
 }: Props) {
+  const [deltaValue, setDeltaValue] = useState(delta ?? 0);
+
   return (
     <Card size="3" mb="6">
       <Heading size="5" mb="4">
@@ -82,20 +85,37 @@ export default function MaintenanceForm({
           </Flex>
 
           <Flex direction="column" gap="2">
-            <Text as="label" size="2" weight="medium">
-              Target Deficit/Surplus (%)
-            </Text>
-            <NumberInput
-              name="delta"
-              allowDecimals={false}
-              defaultValue={delta ?? 0}
+            <Flex justify="between" align="center">
+              <Text as="label" size="2" weight="medium">
+                Target Deficit/Surplus
+              </Text>
+              <Text
+                size="2"
+                weight="bold"
+                color={
+                  deltaValue < 0 ? "red" : deltaValue > 0 ? "green" : "gray"
+                }
+              >
+                {deltaValue > 0 ? "+" : ""}
+                {deltaValue}%
+              </Text>
+            </Flex>
+            <input type="hidden" name="delta" value={deltaValue} />
+            <Slider
+              defaultValue={[delta ?? 0]}
               min={-15}
               max={15}
-              placeholder="0"
+              step={1}
+              onValueChange={(values) => setDeltaValue(values[0])}
             />
-            <Text size="1" color="gray">
-              Negative for weight loss (e.g., -10%), positive for weight gain
-            </Text>
+            <Flex justify="between">
+              <Text size="1" color="gray">
+                -15% (deficit)
+              </Text>
+              <Text size="1" color="gray">
+                +15% (surplus)
+              </Text>
+            </Flex>
           </Flex>
 
           <Button type="submit" size="3" mt="2">

@@ -319,12 +319,9 @@ describe("HabitService", () => {
         to,
       );
 
-      // Due to timezone handling, the range counts 4 days (Jan 1-4)
-      // Jan 5 is not included because endDate.setHours(23,59,59,999) in local time
-      // may still be Jan 4 in the comparison
-      expect(result.total).toBe(4);
-      expect(result.completed).toBe(3); // Jan 1, 2, 4 completed (Jan 3 was false)
-      expect(result.rate).toBe(0.75); // 75% completion rate
+      expect(result.total).toBe(5); // Jan 1-5 inclusive
+      expect(result.completed).toBe(4); // Jan 1, 2, 4, 5 completed (Jan 3 was false)
+      expect(result.rate).toBe(0.8); // 4/5 = 80% completion rate
     });
 
     it("should handle no due days", () => {

@@ -9,22 +9,22 @@ import type {
   MuscleGroup,
 } from "~/modules/fitness/domain/workout";
 
+// Create mock functions
+const mockExerciseMuscleGroupsListAll = vi.fn();
+const mockAdaptiveWorkoutFindSubstitutes = vi.fn();
+
 // Mock dependencies
 vi.mock("~/modules/fitness/infra/repository.server", () => ({
   ExerciseMuscleGroupsRepository: {
-    listAll: vi.fn(),
+    listAll: mockExerciseMuscleGroupsListAll,
   },
 }));
 
 vi.mock("~/modules/fitness/infra/adaptive-workout-repository.server", () => ({
   AdaptiveWorkoutRepository: {
-    findSubstitutes: vi.fn(),
+    findSubstitutes: mockAdaptiveWorkoutFindSubstitutes,
   },
 }));
-
-// Import mocked modules
-import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
-import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
 
 // Test data helpers
 const createExercise = (overrides?: Partial<Exercise>): Exercise => ({
@@ -97,7 +97,7 @@ describe("AdaptiveWorkoutService", () => {
         ),
       ];
 
-      vi.mocked(ExerciseMuscleGroupsRepository.listAll).mockReturnValue(
+      mockExerciseMuscleGroupsListAll.mockReturnValue(
         ResultAsync.fromSafePromise(Promise.resolve(mockExercises)),
       );
 
@@ -118,7 +118,7 @@ describe("AdaptiveWorkoutService", () => {
         createExerciseMuscleGroups({ type: "barbell" }), // Different equipment type
       ];
 
-      vi.mocked(ExerciseMuscleGroupsRepository.listAll).mockReturnValue(
+      mockExerciseMuscleGroupsListAll.mockReturnValue(
         ResultAsync.fromSafePromise(Promise.resolve(mockExercises)),
       );
 
@@ -142,7 +142,7 @@ describe("AdaptiveWorkoutService", () => {
         createExerciseMuscleGroups({ id: "exercise-2", type: "dumbbells" }),
       ];
 
-      vi.mocked(ExerciseMuscleGroupsRepository.listAll).mockReturnValue(
+      mockExerciseMuscleGroupsListAll.mockReturnValue(
         ResultAsync.fromSafePromise(Promise.resolve(mockExercises)),
       );
 
@@ -157,7 +157,7 @@ describe("AdaptiveWorkoutService", () => {
     });
 
     it("should handle repository errors", async () => {
-      vi.mocked(ExerciseMuscleGroupsRepository.listAll).mockReturnValue(
+      mockExerciseMuscleGroupsListAll.mockReturnValue(
         ResultAsync.fromPromise(
           Promise.reject("database_error"),
           (error) => error as "database_error",
@@ -181,7 +181,7 @@ describe("AdaptiveWorkoutService", () => {
         createExerciseMuscleGroups({ id: "substitute-2", type: "dumbbells" }),
       ];
 
-      vi.mocked(AdaptiveWorkoutRepository.findSubstitutes).mockReturnValue(
+      mockAdaptiveWorkoutFindSubstitutes.mockReturnValue(
         ResultAsync.fromSafePromise(Promise.resolve(mockSubstitutes)),
       );
 
@@ -202,7 +202,7 @@ describe("AdaptiveWorkoutService", () => {
     });
 
     it("should return no_suitable_substitutes error when no substitutes found", async () => {
-      vi.mocked(AdaptiveWorkoutRepository.findSubstitutes).mockReturnValue(
+      mockAdaptiveWorkoutFindSubstitutes.mockReturnValue(
         ResultAsync.fromSafePromise(Promise.resolve([])),
       );
 
@@ -224,7 +224,7 @@ describe("AdaptiveWorkoutService", () => {
         createExerciseMuscleGroups({ type: "barbell" }), // Different equipment type
       ];
 
-      vi.mocked(AdaptiveWorkoutRepository.findSubstitutes).mockReturnValue(
+      mockAdaptiveWorkoutFindSubstitutes.mockReturnValue(
         ResultAsync.fromSafePromise(Promise.resolve(mockSubstitutes)),
       );
 
