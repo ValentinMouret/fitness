@@ -5,6 +5,7 @@ const schema = z.object({
     .enum(["development", "production", "test"])
     .default("development"),
   ANTHROPIC_API_KEY: z.string(),
+  ANTHROPIC_MODEL: z.string().default("claude-haiku-4-5-20251001"),
   AUTH_USERNAME: z.string(),
   AUTH_PASSWORD: z.string(),
   DATABASE_URL: z.string(),

@@ -60,7 +60,7 @@ export const AIIngredientService = {
       const client = getClient();
 
       const message = await client.messages.create({
-        model: "claude-3-5-sonnet-20241022",
+        model: env.ANTHROPIC_MODEL,
         max_tokens: 1000,
         messages: [
           {
