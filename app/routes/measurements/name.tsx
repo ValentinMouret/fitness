@@ -12,6 +12,7 @@ import {
   AlertDialog,
   IconButton,
 } from "@radix-ui/themes";
+import { NumberInput } from "~/components/NumberInput";
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
 import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
@@ -128,11 +129,8 @@ export default function MeasurementPage(_: Route.ComponentProps) {
               <Text size="2" mb="1" style={{ display: "block" }}>
                 Value ({measurement.unit})
               </Text>
-              <TextField.Root
+              <NumberInput
                 name="value"
-                type="number"
-                inputMode="decimal"
-                step="0.1"
                 placeholder="Enter value"
                 required
                 disabled={isSubmitting}

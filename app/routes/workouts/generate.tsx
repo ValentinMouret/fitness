@@ -11,7 +11,6 @@ import {
 import {
   Card,
   Button,
-  TextField,
   Select,
   Checkbox,
   Badge,
@@ -23,11 +22,11 @@ import {
   Heading,
   Box,
 } from "@radix-ui/themes";
+import { NumberInput } from "~/components/NumberInput";
 import {
   CheckCircledIcon,
   CrossCircledIcon,
   LightningBoltIcon,
-  StopwatchIcon,
   TargetIcon,
 } from "@radix-ui/react-icons";
 import { Dumbbell, Activity } from "lucide-react";
@@ -211,21 +210,15 @@ export default function GenerateWorkout({
                 <Text as="label" size="2" weight="medium" mb="2">
                   Target Duration (minutes)
                 </Text>
-                <TextField.Root
-                  type="number"
-                  inputMode="numeric"
+                <NumberInput
+                  allowDecimals={false}
                   name="targetDuration"
                   defaultValue="45"
                   min="20"
                   max="120"
-                  step="5"
                   required
                   size="3"
-                >
-                  <TextField.Slot>
-                    <StopwatchIcon width="16" height="16" />
-                  </TextField.Slot>
-                </TextField.Root>
+                />
               </Box>
 
               {/* Preferred Floor */}

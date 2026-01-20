@@ -8,6 +8,7 @@ import {
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
+import { NumberInput } from "~/components/NumberInput";
 import { Form } from "react-router";
 import RequiredStar from "~/components/RequiredStar";
 import {
@@ -146,10 +147,8 @@ export default function ExerciseForm({
                     </Select.Root>
                   </Table.RowHeaderCell>
                   <Table.Cell>
-                    <TextField.Root
-                      type="number"
-                      inputMode="numeric"
-                      step="1"
+                    <NumberInput
+                      allowDecimals={false}
                       min="0"
                       max="100"
                       name={`${index}-split`}

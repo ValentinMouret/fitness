@@ -6,8 +6,8 @@ import {
   Flex,
   Heading,
   Text,
-  TextField,
 } from "@radix-ui/themes";
+import { NumberInput } from "~/components/NumberInput";
 import { ResultAsync } from "neverthrow";
 import { Form } from "react-router";
 import HabitCheckbox from "~/components/HabitCheckbox";
@@ -245,12 +245,9 @@ export default function DashboardPage({
                   <Text as="label" size="2" weight="medium" mb="1">
                     Weight:
                   </Text>
-                  <TextField.Root
+                  <NumberInput
                     name="weight"
-                    type="number"
-                    inputMode="decimal"
                     min={0}
-                    step={0.1}
                     placeholder="Enter weight"
                   />
                 </Box>

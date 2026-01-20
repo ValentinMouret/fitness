@@ -1,12 +1,5 @@
-import {
-  Box,
-  Card,
-  Flex,
-  Heading,
-  RadioGroup,
-  Text,
-  TextField,
-} from "@radix-ui/themes";
+import { Box, Card, Flex, Heading, RadioGroup, Text } from "@radix-ui/themes";
+import { NumberInput } from "~/components/NumberInput";
 
 export interface Objectives {
   readonly calories: number | null;
@@ -37,9 +30,8 @@ export function ObjectivesPanel({
             Calories
           </Text>
           <Flex align="center" gap="2">
-            <TextField.Root
-              type="number"
-              inputMode="numeric"
+            <NumberInput
+              allowDecimals={false}
               value={objectives.calories?.toString() || ""}
               onChange={(e) =>
                 setObjectives({
@@ -58,9 +50,8 @@ export function ObjectivesPanel({
             Protein
           </Text>
           <Flex align="center" gap="2">
-            <TextField.Root
-              type="number"
-              inputMode="numeric"
+            <NumberInput
+              allowDecimals={false}
               value={objectives.protein?.toString() || ""}
               onChange={(e) =>
                 setObjectives({
@@ -79,9 +70,8 @@ export function ObjectivesPanel({
             Carbs
           </Text>
           <Flex align="center" gap="2">
-            <TextField.Root
-              type="number"
-              inputMode="numeric"
+            <NumberInput
+              allowDecimals={false}
               value={objectives.carbs?.toString() || ""}
               onChange={(e) =>
                 setObjectives({
@@ -100,9 +90,8 @@ export function ObjectivesPanel({
             Fats
           </Text>
           <Flex align="center" gap="2">
-            <TextField.Root
-              type="number"
-              inputMode="numeric"
+            <NumberInput
+              allowDecimals={false}
               value={objectives.fats?.toString() || ""}
               onChange={(e) =>
                 setObjectives({

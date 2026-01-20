@@ -1,4 +1,5 @@
-import { Button, Card, Flex, Heading, Text, TextField } from "@radix-ui/themes";
+import { Button, Card, Flex, Heading, Text } from "@radix-ui/themes";
+import { NumberInput } from "~/components/NumberInput";
 import { Form } from "react-router";
 
 interface Props {
@@ -28,13 +29,11 @@ export default function MaintenanceForm({
             <Text as="label" size="2" weight="medium">
               Age
             </Text>
-            <TextField.Root
+            <NumberInput
               name="age"
-              type="number"
-              inputMode="numeric"
+              allowDecimals={false}
               defaultValue={age ?? 30}
               min={10}
-              step={1}
               placeholder="30"
             />
           </Flex>
@@ -43,13 +42,11 @@ export default function MaintenanceForm({
             <Text as="label" size="2" weight="medium">
               Height (cm)
             </Text>
-            <TextField.Root
+            <NumberInput
               name="height"
-              type="number"
-              inputMode="numeric"
+              allowDecimals={false}
               defaultValue={height ?? 180}
               min={0}
-              step={1}
               placeholder="180"
             />
           </Flex>
@@ -58,13 +55,11 @@ export default function MaintenanceForm({
             <Text as="label" size="2" weight="medium">
               Weight (kg)
             </Text>
-            <TextField.Root
+            <NumberInput
               name="weight"
-              type="number"
-              inputMode="numeric"
+              allowDecimals={false}
               defaultValue={weight ?? 70}
               min={0}
-              step={1}
               placeholder="70"
             />
           </Flex>
@@ -73,12 +68,9 @@ export default function MaintenanceForm({
             <Text as="label" size="2" weight="medium">
               Activity Level
             </Text>
-            <TextField.Root
+            <NumberInput
               name="activity"
-              type="number"
-              inputMode="decimal"
               defaultValue={activity ?? 1.4}
-              step={0.1}
               min={0.8}
               max={2.0}
               placeholder="1.4"
@@ -93,14 +85,12 @@ export default function MaintenanceForm({
             <Text as="label" size="2" weight="medium">
               Target Deficit/Surplus (%)
             </Text>
-            <TextField.Root
+            <NumberInput
               name="delta"
-              type="number"
-              inputMode="numeric"
+              allowDecimals={false}
               defaultValue={delta ?? 0}
               min={-15}
               max={15}
-              step={1}
               placeholder="0"
             />
             <Text size="1" color="gray">

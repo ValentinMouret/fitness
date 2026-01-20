@@ -11,6 +11,7 @@ import {
   TextField,
   DropdownMenu,
 } from "@radix-ui/themes";
+import { NumberInput } from "~/components/NumberInput";
 import { ExerciseTypeBadge } from "~/modules/fitness/presentation/components";
 import {
   ChevronRightIcon,
@@ -228,10 +229,9 @@ function EditableSetRow({
             <input type="hidden" name="intent" value="update-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />
             <input type="hidden" name="setNumber" value={set.set} />
-            <TextField.Root
+            <NumberInput
               name="reps"
-              type="number"
-              inputMode="numeric"
+              allowDecimals={false}
               value={localReps}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setLocalReps(e.target.value)
@@ -260,10 +260,8 @@ function EditableSetRow({
             <input type="hidden" name="intent" value="update-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />
             <input type="hidden" name="setNumber" value={set.set} />
-            <TextField.Root
+            <NumberInput
               name="weight"
-              type="number"
-              inputMode="decimal"
               value={localWeight}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setLocalWeight(e.target.value)

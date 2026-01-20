@@ -12,6 +12,7 @@ import {
   Text,
   TextField,
 } from "@radix-ui/themes";
+import { NumberInput } from "~/components/NumberInput";
 import { Cross2Icon, MagicWandIcon } from "@radix-ui/react-icons";
 import {
   ingredientCategories,
@@ -126,9 +127,8 @@ export function AIIngredientReviewModal({
               <Text as="label" size="2" weight="medium" mb="1">
                 Calories (per 100g) *
               </Text>
-              <TextField.Root
-                type="number"
-                inputMode="numeric"
+              <NumberInput
+                allowDecimals={false}
                 value={formData.calories.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("calories", e.target.value)
@@ -143,9 +143,7 @@ export function AIIngredientReviewModal({
               <Text as="label" size="2" weight="medium" mb="1">
                 Protein (g per 100g) *
               </Text>
-              <TextField.Root
-                type="number"
-                inputMode="decimal"
+              <NumberInput
                 value={formData.protein.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("protein", e.target.value)
@@ -153,7 +151,6 @@ export function AIIngredientReviewModal({
                 placeholder="0"
                 min="0"
                 max="100"
-                step="0.1"
               />
             </Box>
 
@@ -161,9 +158,7 @@ export function AIIngredientReviewModal({
               <Text as="label" size="2" weight="medium" mb="1">
                 Carbs (g per 100g) *
               </Text>
-              <TextField.Root
-                type="number"
-                inputMode="decimal"
+              <NumberInput
                 value={formData.carbs.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("carbs", e.target.value)
@@ -171,7 +166,6 @@ export function AIIngredientReviewModal({
                 placeholder="0"
                 min="0"
                 max="100"
-                step="0.1"
               />
             </Box>
 
@@ -179,15 +173,12 @@ export function AIIngredientReviewModal({
               <Text as="label" size="2" weight="medium" mb="1">
                 Fat (g per 100g) *
               </Text>
-              <TextField.Root
-                type="number"
-                inputMode="decimal"
+              <NumberInput
                 value={formData.fat.toString()}
                 onChange={(e) => handleNumberFieldChange("fat", e.target.value)}
                 placeholder="0"
                 min="0"
                 max="100"
-                step="0.1"
               />
             </Box>
 
@@ -195,9 +186,7 @@ export function AIIngredientReviewModal({
               <Text as="label" size="2" weight="medium" mb="1">
                 Fiber (g per 100g) *
               </Text>
-              <TextField.Root
-                type="number"
-                inputMode="decimal"
+              <NumberInput
                 value={formData.fiber.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("fiber", e.target.value)
@@ -205,7 +194,6 @@ export function AIIngredientReviewModal({
                 placeholder="0"
                 min="0"
                 max="50"
-                step="0.1"
               />
             </Box>
 
@@ -213,9 +201,7 @@ export function AIIngredientReviewModal({
               <Text as="label" size="2" weight="medium" mb="1">
                 Water Percentage (%) *
               </Text>
-              <TextField.Root
-                type="number"
-                inputMode="decimal"
+              <NumberInput
                 value={formData.waterPercentage.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("waterPercentage", e.target.value)
@@ -223,7 +209,6 @@ export function AIIngredientReviewModal({
                 placeholder="0"
                 min="0"
                 max="100"
-                step="0.1"
               />
             </Box>
 
@@ -232,9 +217,7 @@ export function AIIngredientReviewModal({
               <Text as="label" size="2" weight="medium" mb="1">
                 Energy Density (kcal/g) *
               </Text>
-              <TextField.Root
-                type="number"
-                inputMode="decimal"
+              <NumberInput
                 value={formData.energyDensity.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("energyDensity", e.target.value)
@@ -242,7 +225,6 @@ export function AIIngredientReviewModal({
                 placeholder="0"
                 min="0"
                 max="9"
-                step="0.01"
               />
             </Box>
 
@@ -276,9 +258,8 @@ export function AIIngredientReviewModal({
               <Text as="label" size="2" weight="medium" mb="1">
                 Minimum Portion (g) *
               </Text>
-              <TextField.Root
-                type="number"
-                inputMode="numeric"
+              <NumberInput
+                allowDecimals={false}
                 value={formData.sliderMin.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("sliderMin", e.target.value)
@@ -293,9 +274,8 @@ export function AIIngredientReviewModal({
               <Text as="label" size="2" weight="medium" mb="1">
                 Maximum Portion (g) *
               </Text>
-              <TextField.Root
-                type="number"
-                inputMode="numeric"
+              <NumberInput
+                allowDecimals={false}
                 value={formData.sliderMax.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("sliderMax", e.target.value)
