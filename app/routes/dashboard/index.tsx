@@ -339,13 +339,11 @@ export default function DashboardPage({
           <Heading size="4" mb="3">
             Weight Trend
           </Heading>
-          <Box style={{ height: "200px" }}>
-            <MeasurementChart
-              data={weightData}
-              unit={weight.unit}
-              measurementName="weight"
-            />
-          </Box>
+          <MeasurementChart
+            data={weightData}
+            unit={weight.unit}
+            measurementName="weight"
+          />
         </Card>
       )}
     </Box>

@@ -94,11 +94,7 @@ const AppLayout: React.FC = () => {
   );
 
   return (
-    <Flex
-      direction="row"
-      style={{ minHeight: "100vh" }}
-      onKeyDown={handleKeyDown}
-    >
+    <Flex direction="row" style={{ height: "100vh" }} onKeyDown={handleKeyDown}>
       <IconButton
         ref={hamburgerRef}
         className="hamburger-mobile"
