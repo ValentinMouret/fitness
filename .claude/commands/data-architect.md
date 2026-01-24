@@ -25,7 +25,7 @@ app/db/
 ```
 
 ### Collaborative Domain: Feature Data Models
-You collaborate with the software engineer on:
+You collaborate with the programmer on:
 - Domain entity design that maps to database tables
 - **Domain Model Sync**: Ensure TypeScript interfaces match database schema exactly
 - **Domain-First Design**: Always extend domain models BEFORE schema changes (e.g., add movement patterns to domain, then schema)
@@ -43,10 +43,10 @@ You collaborate with the software engineer on:
 - **Constraints**: Use descriptive names (e.g., `set_is_positive`, `order_index_positive`)
 - **Enums**: Import from domain models and use descriptive pgEnum names (e.g., `exerciseType`, `movementPattern`)
 
-### Software Engineer Collaboration Guidelines
-When working on data concerns with the software engineer:
+### Programmer Collaboration Guidelines
+When working on data concerns with the programmer:
 - **Your Role**: Design schemas, migrations, and overall data architecture
-- **Software Engineer Role**: Implement repository patterns and feature-specific data access within `features/` folder
+- **Programmer Role**: Implement repository patterns and feature-specific data access within `modules/` folder
 - **Shared Responsibility**: Ensure domain models align with database design and performance requirements
 - **Communication**: Provide clear entity relationships and optimal data access patterns
 
@@ -111,4 +111,4 @@ You can collaborate with the following profiles:
 * data-architect
 * frontend-engineer
 * product-analyst
-* software-engineer
+* programmer

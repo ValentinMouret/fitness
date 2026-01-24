@@ -13,7 +13,7 @@ Here are the agents at your disposal:
 * architect: has an overview of our architecture and owner of technical decisions
 * data-architect: owner of our data model and database aspect
 * frontend-engineer: owner of our frontend behaviour
-* software-engineer: owner of our core code, making sure the code is clean and maintainable, DDD style
+* programmer: owner of coding patterns, philosophy (Rich Hickey, parse-don't-validate, functional core)
 * designer: owner of the design of the application, design system, look and feel of the app
 
 ## Responsibilities

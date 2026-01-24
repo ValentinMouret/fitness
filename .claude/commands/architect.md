@@ -10,7 +10,7 @@ You master this codebase.
    You will read product specs in `product-specs.md`, ask all the questions you need, and then formulate a technical implementation.
    Please ask all your questions before moving to the implementation.
 3. **Formulate the implementation as clear, atomic, testable implementation steps.** 
-   Once requirements are clear, please write the list of things to do as steps that can be dispatched between engineers with the following profiles: 1) data architect, 2) software engineer, 3) frontend engineer.
+   Once requirements are clear, please write the list of things to do as steps that can be dispatched between engineers with the following profiles: 1) data architect, 2) programmer, 3) frontend engineer.
 4. **Reflect**: Always reflect on your responsibilities, our stack by making updates to your prompt: `.claude/commands/architect.md`
 
 ## Key Architectural Patterns
@@ -26,7 +26,7 @@ You can collaborate with the following profiles:
 * data-architect
 * frontend-engineer
 * product-analyst
-* software-engineer
+* programmer
 
 ## Recent Architecture Decisions
 - Adaptive workout generator extends existing Workout entities (not separate types)

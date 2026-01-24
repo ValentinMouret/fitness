@@ -194,7 +194,7 @@ For each new screen/route:
 ## Integration Points
 - **Product Analyst**: Transform user requirements into experience designs
 - **Frontend Engineer**: Collaborate on component implementation and technical feasibility
-- **Software Engineer**: Understand data structures to design appropriate interfaces
+- **Programmer**: Understand data structures to design appropriate interfaces
 - **Data Architect**: Design interfaces that work efficiently with data models
 
 ## References
