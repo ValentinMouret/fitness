@@ -9,27 +9,26 @@ import type {
   MuscleGroup,
 } from "~/modules/fitness/domain/workout";
 
-// Create mock functions with vi.hoisted to ensure they're available during mock hoisting
-const { mockExerciseMuscleGroupsListAll, mockAdaptiveWorkoutFindSubstitutes } =
-  vi.hoisted(() => ({
-    mockExerciseMuscleGroupsListAll: vi.fn(),
-    mockAdaptiveWorkoutFindSubstitutes: vi.fn(),
-  }));
-
-// Mock dependencies
 vi.mock("~/modules/fitness/infra/repository.server", () => ({
   ExerciseMuscleGroupsRepository: {
-    listAll: mockExerciseMuscleGroupsListAll,
+    listAll: vi.fn(),
   },
 }));
 
 vi.mock("~/modules/fitness/infra/adaptive-workout-repository.server", () => ({
   AdaptiveWorkoutRepository: {
-    findSubstitutes: mockAdaptiveWorkoutFindSubstitutes,
+    findSubstitutes: vi.fn(),
   },
 }));
 
-// Test data helpers
+import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
+import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
+
+const mockExerciseMuscleGroupsListAll =
+  ExerciseMuscleGroupsRepository.listAll as ReturnType<typeof vi.fn>;
+const mockAdaptiveWorkoutFindSubstitutes =
+  AdaptiveWorkoutRepository.findSubstitutes as ReturnType<typeof vi.fn>;
+
 const createExercise = (overrides?: Partial<Exercise>): Exercise => ({
   id: "exercise-1",
   name: "Test Exercise",

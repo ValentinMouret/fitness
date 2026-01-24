@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ResultAsync } from "neverthrow";
 import { VolumeTrackingService } from "./volume-tracking-service.server";
 import type {
-  WeeklyVolumeTracker,
+  WeeklyVolumeTracker as WeeklyVolumeTrackerType,
   WorkoutSession,
   MuscleGroup,
   Exercise,
@@ -11,38 +11,33 @@ import type {
   WorkoutSet,
 } from "~/modules/fitness/domain/workout";
 
-// Create mock functions with vi.hoisted to ensure they're available during mock hoisting
-const {
-  mockGetWeeklyVolume,
-  mockRecordWorkoutVolume,
-  mockWeeklyVolumeTrackerCreate,
-  mockWeeklyVolumeTrackerGetVolumeNeeds,
-} = vi.hoisted(() => ({
-  mockGetWeeklyVolume: vi.fn(),
-  mockRecordWorkoutVolume: vi.fn(),
-  mockWeeklyVolumeTrackerCreate: vi.fn(),
-  mockWeeklyVolumeTrackerGetVolumeNeeds: vi.fn(),
-}));
-
-// Mock dependencies
 vi.mock("~/modules/fitness/infra/volume-tracking-repository.server", () => ({
   VolumeTrackingRepository: {
-    getWeeklyVolume: mockGetWeeklyVolume,
-    recordWorkoutVolume: mockRecordWorkoutVolume,
+    getWeeklyVolume: vi.fn(),
+    recordWorkoutVolume: vi.fn(),
   },
 }));
 
 vi.mock("~/modules/fitness/domain/workout", () => ({
   WeeklyVolumeTracker: {
-    create: mockWeeklyVolumeTrackerCreate,
-    getVolumeNeeds: mockWeeklyVolumeTrackerGetVolumeNeeds,
+    create: vi.fn(),
+    getVolumeNeeds: vi.fn(),
   },
 }));
 
-// Import mocked modules for assertion use
 import { VolumeTrackingRepository } from "~/modules/fitness/infra/volume-tracking-repository.server";
+import { WeeklyVolumeTracker } from "~/modules/fitness/domain/workout";
 
-// Test data helpers
+const mockGetWeeklyVolume =
+  VolumeTrackingRepository.getWeeklyVolume as ReturnType<typeof vi.fn>;
+const mockRecordWorkoutVolume =
+  VolumeTrackingRepository.recordWorkoutVolume as ReturnType<typeof vi.fn>;
+const mockWeeklyVolumeTrackerCreate = WeeklyVolumeTracker.create as ReturnType<
+  typeof vi.fn
+>;
+const mockWeeklyVolumeTrackerGetVolumeNeeds =
+  WeeklyVolumeTracker.getVolumeNeeds as ReturnType<typeof vi.fn>;
+
 const createWorkout = (overrides?: Partial<Workout>): Workout => ({
   id: "workout-1",
   name: "Test Workout",
@@ -87,8 +82,8 @@ const createWorkoutSession = (
 });
 
 const createWeeklyVolumeTracker = (
-  overrides?: Partial<WeeklyVolumeTracker>,
-): WeeklyVolumeTracker => ({
+  overrides?: Partial<WeeklyVolumeTrackerType>,
+): WeeklyVolumeTrackerType => ({
   weekStart: new Date("2025-01-06T00:00:00.000Z"), // Monday
   currentVolume: new Map<MuscleGroup, number>([
     ["pecs", 10],
@@ -131,7 +126,6 @@ describe("VolumeTrackingService", () => {
         expect(result.value).toEqual(mockTracker);
       }
 
-      // Verify the week start calculation (should be Monday)
       const expectedWeekStart = VolumeTrackingService.getWeekStart(new Date());
       expect(VolumeTrackingRepository.getWeeklyVolume).toHaveBeenCalledWith(
         expectedWeekStart,
@@ -183,7 +177,6 @@ describe("VolumeTrackingService", () => {
         expect(result.value).toEqual(mockTracker);
       }
 
-      // Verify muscle group volumes were calculated and recorded
       expect(VolumeTrackingRepository.recordWorkoutVolume).toHaveBeenCalledWith(
         "workout-1",
         expect.any(Map),
