@@ -9,6 +9,7 @@ export const Weight = {
   kg(input: number): number {
     return input;
   },
+
   g(input: number): number {
     return input / 1000;
   },
@@ -19,6 +20,7 @@ export const Height = {
   cm(input: number): number {
     return input;
   },
+
   m(input: number): number {
     return input * 100;
   },
