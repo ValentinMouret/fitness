@@ -12,6 +12,7 @@ describe("WorkoutExerciseCardViewModel", () => {
     name: "Bench Press",
     type: "barbell",
     movementPattern: "push",
+    mmcInstructions: "Squeeze chest at the top, feel the stretch at the bottom",
   };
 
   const mockSets: WorkoutSet[] = [
@@ -68,6 +69,9 @@ describe("WorkoutExerciseCardViewModel", () => {
       expect(viewModel.exerciseName).toBe("Bench Press");
       expect(viewModel.exerciseType).toBe("barbell");
       expect(viewModel.notes).toBe("Focus on form");
+      expect(viewModel.mmcInstructions).toBe(
+        "Squeeze chest at the top, feel the stretch at the bottom",
+      );
     });
 
     it("should calculate total volume display correctly", () => {

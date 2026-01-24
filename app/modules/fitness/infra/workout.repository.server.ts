@@ -481,6 +481,7 @@ function exerciseRecordToDomain(
     type: record.type,
     movementPattern: record.movement_pattern,
     description: record.description ?? undefined,
+    mmcInstructions: record.mmc_instructions ?? undefined,
   };
 }
 

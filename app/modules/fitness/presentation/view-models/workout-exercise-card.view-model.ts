@@ -23,6 +23,7 @@ export interface WorkoutExerciseCardViewModel {
   readonly exerciseType: ExerciseType;
   readonly sets: ReadonlyArray<WorkoutSetViewModel>;
   readonly notes?: string;
+  readonly mmcInstructions?: string;
   readonly totalVolumeDisplay: string;
   readonly lastSet?: WorkoutSetViewModel;
   readonly canAddSets: boolean;
@@ -69,6 +70,7 @@ export function createWorkoutExerciseCardViewModel(
     exerciseType: exerciseGroup.exercise.type,
     sets: setViewModels,
     notes: exerciseGroup.notes,
+    mmcInstructions: exerciseGroup.exercise.mmcInstructions,
     totalVolumeDisplay: calculateTotalVolumeDisplay(exerciseGroup.sets),
     lastSet,
     canAddSets: !isWorkoutComplete,

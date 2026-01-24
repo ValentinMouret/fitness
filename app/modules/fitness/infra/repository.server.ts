@@ -32,12 +32,14 @@ export const ExerciseRepository = {
           type: exercise.type,
           movement_pattern: exercise.movementPattern,
           description: exercise.description ?? null,
+          mmc_instructions: exercise.mmcInstructions ?? null,
         })
         .onConflictDoUpdate({
           target: [exercises.name, exercises.type],
           set: {
             updated_at: new Date(),
             description: exercise.description ?? null,
+            mmc_instructions: exercise.mmcInstructions ?? null,
             movement_pattern: exercise.movementPattern,
           },
         }),
@@ -58,6 +60,7 @@ function exerciseRecordToDomain(
     type: record.type,
     movementPattern: record.movement_pattern,
     description: record.description ?? undefined,
+    mmcInstructions: record.mmc_instructions ?? undefined,
   };
 }
 
@@ -220,6 +223,7 @@ export const ExerciseMuscleGroupsRepository = {
             .update(exercises)
             .set({
               description: exercise.description,
+              mmc_instructions: exercise.mmcInstructions ?? null,
               updated_at: new Date(),
             })
             .where(eq(exercises.id, exerciseId));
@@ -232,6 +236,7 @@ export const ExerciseMuscleGroupsRepository = {
               type: exercise.type,
               movement_pattern: exercise.movementPattern,
               description: exercise.description ?? null,
+              mmc_instructions: exercise.mmcInstructions ?? null,
             })
             .returning({ id: exercises.id });
           exerciseId = insertResult[0].id;

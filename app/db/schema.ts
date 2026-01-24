@@ -104,6 +104,7 @@ export const exercises = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     name: text().notNull(),
     description: text(),
+    mmc_instructions: text(),
     type: exerciseType().notNull(),
     movement_pattern: movementPattern().notNull(),
     setup_time_seconds: integer().notNull().default(30),

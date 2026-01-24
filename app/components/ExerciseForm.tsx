@@ -5,6 +5,7 @@ import {
   Select,
   Table,
   Text,
+  TextArea,
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
@@ -93,6 +94,18 @@ export default function ExerciseForm({
             name="description"
             type="text"
             defaultValue={initialExercise?.description}
+          />
+        </Flex>
+
+        <Flex direction="column" gap="2">
+          <Text as="label" size="2" weight="medium">
+            Mind-Muscle Connection
+          </Text>
+          <TextArea
+            name="mmcInstructions"
+            placeholder="Focus cues to engage target muscles, e.g. 'Squeeze at the top', 'Feel the stretch at the bottom'"
+            defaultValue={initialExercise?.mmcInstructions}
+            rows={3}
           />
         </Flex>
 

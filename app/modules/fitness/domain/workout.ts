@@ -84,6 +84,7 @@ export interface Exercise {
   readonly type: ExerciseType;
   readonly movementPattern: MovementPattern;
   readonly description?: string;
+  readonly mmcInstructions?: string;
 }
 
 export interface MuscleGroupSplit {

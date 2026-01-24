@@ -17,6 +17,7 @@ import {
   TrashIcon,
   DotsVerticalIcon,
 } from "@radix-ui/react-icons";
+import { Brain } from "lucide-react";
 import { useFetcher } from "react-router";
 import type {
   WorkoutExerciseCardViewModel,
@@ -187,6 +188,25 @@ export function WorkoutExerciseCard({
                 <Text size="3" weight="medium" color="gray" mb="1">
                   Total Volume: {viewModel.totalVolumeDisplay}
                 </Text>
+              )}
+              {viewModel.mmcInstructions && (
+                <Flex align="start" gap="2" mb="2">
+                  <Brain
+                    size={16}
+                    style={{
+                      color: "var(--purple-9)",
+                      marginTop: 2,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Text
+                    size="2"
+                    color="purple"
+                    style={{ whiteSpace: "pre-wrap" }}
+                  >
+                    {viewModel.mmcInstructions}
+                  </Text>
+                </Flex>
               )}
               {viewModel.notes && (
                 <Text size="2" color="gray">

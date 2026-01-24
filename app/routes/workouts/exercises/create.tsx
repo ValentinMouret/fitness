@@ -20,6 +20,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
   const exerciseTypeString = form.get("type")?.toString();
   const movementPatternString = form.get("movementPattern")?.toString();
   const exerciseDescription = form.get("description")?.toString();
+  const mmcInstructions = form.get("mmcInstructions")?.toString();
 
   if (exerciseName === undefined) {
     throw new Error("Invalid exercise: no name");
@@ -73,6 +74,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
     type: exerciseType.value,
     movementPattern: movementPattern.value,
     description: coerceEmpty(exerciseDescription ?? ""),
+    mmcInstructions: coerceEmpty(mmcInstructions ?? ""),
   };
   const muscleGroup = ExerciseMuscleGroupsAggregate.create(
     exercise,
