@@ -10,4 +10,6 @@ fitness.valentinmouret.io {
     log {
         output file /var/log/caddy/fitness.log
     }
+
+    reverse_proxy /hooks/* localhost:9000
 }
