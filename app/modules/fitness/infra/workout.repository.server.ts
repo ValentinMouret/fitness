@@ -98,6 +98,22 @@ export const WorkoutRepository = {
     );
   },
 
+  findInProgress(): ResultAsync<Workout | null, ErrRepository> {
+    const query = db
+      .select()
+      .from(workouts)
+      .where(and(isNull(workouts.deleted_at), isNull(workouts.stop)))
+      .orderBy(desc(workouts.start))
+      .limit(1);
+
+    return executeQuery(query, "findInProgressWorkout").map((records) => {
+      if (records.length === 0) {
+        return null;
+      }
+      return workoutRecordToDomain(records[0]);
+    });
+  },
+
   findAllWithPagination(
     page = 1,
     limit = 10,

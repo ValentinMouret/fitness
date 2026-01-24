@@ -1,6 +1,6 @@
 import type React from "react";
-import { useState, useEffect } from "react";
-import { NavLink, Outlet, Form } from "react-router";
+import { useState, useRef, useCallback } from "react";
+import { NavLink, Outlet, Form, useLocation } from "react-router";
 import {
   Flex,
   Container,
@@ -22,6 +22,8 @@ import {
   ExitIcon,
 } from "@radix-ui/react-icons";
 import { PageTransition } from "~/components/PageTransition";
+import { QuickActionFAB } from "~/components/QuickActionFAB";
+import { QuickActionSheet } from "~/components/QuickActionSheet";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
@@ -47,39 +49,64 @@ const BottomTabBar: React.FC = () => (
 );
 
 const AppLayout: React.FC = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isMobileOpen) {
-        setIsMobileOpen(false);
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isMobileOpen]);
-
-  useEffect(() => {
-    if (isMobileOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+  const location = useLocation();
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("sidebar-collapsed") === "true";
     }
+    return false;
+  });
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [quickSheetOpen, setQuickSheetOpen] = useState(false);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
 
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isMobileOpen]);
+  const isActiveWorkout =
+    location.pathname.startsWith("/workouts/") &&
+    !location.pathname.includes("/exercises") &&
+    !location.pathname.includes("/import") &&
+    !location.pathname.includes("/generate") &&
+    location.pathname !== "/workouts/create";
+
+  const toggleCollapsed = useCallback(() => {
+    const newValue = !isCollapsed;
+    setIsCollapsed(newValue);
+    localStorage.setItem("sidebar-collapsed", String(newValue));
+  }, [isCollapsed]);
+
+  const closeMobileSidebar = useCallback(() => {
+    setIsMobileOpen(false);
+    hamburgerRef.current?.focus();
+    document.body.style.overflow = "";
+  }, []);
+
+  const openMobileSidebar = useCallback(() => {
+    setIsMobileOpen(true);
+    document.body.style.overflow = "hidden";
+  }, []);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Escape" && isMobileOpen) {
+        closeMobileSidebar();
+      }
+    },
+    [isMobileOpen, closeMobileSidebar],
+  );
 
   return (
-    <Flex direction="row" style={{ minHeight: "100vh" }}>
+    <Flex
+      direction="row"
+      style={{ minHeight: "100vh" }}
+      onKeyDown={handleKeyDown}
+    >
       <IconButton
+        ref={hamburgerRef}
         className="hamburger-mobile"
         variant="ghost"
         size="3"
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
+        onClick={openMobileSidebar}
+        aria-label="Open navigation menu"
+        aria-expanded={isMobileOpen}
         style={{
           position: "fixed",
           top: "1rem",
@@ -103,6 +130,7 @@ const AppLayout: React.FC = () => {
           height: "100vh",
           zIndex: 40,
           boxShadow: "2px 0 8px rgba(120, 80, 60, 0.04)",
+          paddingLeft: "env(safe-area-inset-left)",
         }}
       >
         <Flex direction="column" height="100%" p="3">
@@ -115,7 +143,8 @@ const AppLayout: React.FC = () => {
             <IconButton
               variant="ghost"
               size="1"
-              onClick={() => setIsCollapsed(!isCollapsed)}
+              onClick={toggleCollapsed}
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
             </IconButton>
@@ -131,7 +160,7 @@ const AppLayout: React.FC = () => {
               <Box key={path} px="1">
                 <NavLink
                   to={path}
-                  onClick={() => setIsMobileOpen(false)}
+                  onClick={closeMobileSidebar}
                   style={{ textDecoration: "none" }}
                 >
                   {({ isActive }) => (
@@ -168,7 +197,11 @@ const AppLayout: React.FC = () => {
             ))}
           </Flex>
 
-          <Box mt="4" px="1">
+          <Box
+            mt="4"
+            px="1"
+            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          >
             <Form method="post" action="/logout">
               <Button
                 type="submit"
@@ -207,8 +240,8 @@ const AppLayout: React.FC = () => {
         tabIndex={isMobileOpen ? 0 : -1}
         aria-label="Close sidebar"
         className={`sidebar-overlay ${isMobileOpen ? "open" : ""}`}
-        onClick={() => setIsMobileOpen(false)}
-        onKeyDown={(e) => e.key === "Escape" && setIsMobileOpen(false)}
+        onClick={closeMobileSidebar}
+        onKeyDown={handleKeyDown}
       />
 
       <Box
@@ -228,6 +261,16 @@ const AppLayout: React.FC = () => {
       </Box>
 
       <BottomTabBar />
+
+      {!isActiveWorkout && (
+        <>
+          <QuickActionFAB onClick={() => setQuickSheetOpen(true)} />
+          <QuickActionSheet
+            open={quickSheetOpen}
+            onOpenChange={setQuickSheetOpen}
+          />
+        </>
+      )}
     </Flex>
   );
 };

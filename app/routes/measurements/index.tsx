@@ -10,6 +10,7 @@ import {
   Button,
 } from "@radix-ui/themes";
 import { RulerSquareIcon } from "@radix-ui/react-icons";
+import { EmptyState } from "~/components/EmptyState";
 import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
 import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
 import { handleResultError } from "~/utils/errors";
@@ -57,17 +58,13 @@ export default function MeasurementsPage({ loaderData }: Route.ComponentProps) {
       </Flex>
 
       {measurements.length === 0 ? (
-        <Card size="4" style={{ textAlign: "center" }}>
-          <Text size="6" mb="4">
-            📏
-          </Text>
-          <Heading size="4" mb="2">
-            No measurements configured
-          </Heading>
-          <Text color="gray" mb="4">
-            Measurements help you track various health metrics over time.
-          </Text>
-        </Card>
+        <EmptyState
+          icon="📏"
+          title="No measurements configured"
+          description="Measurements help you track various health metrics over time."
+          actionLabel="Add Measurement"
+          actionTo="/measurements/new"
+        />
       ) : (
         <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="4">
           {measurements.map((measurement) => (

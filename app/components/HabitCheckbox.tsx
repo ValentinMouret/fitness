@@ -47,7 +47,7 @@ export default function HabitCheckbox({
       <Button
         type="submit"
         variant={isCompleted ? "solid" : "outline"}
-        color={isCompleted ? "green" : "gray"}
+        color={isCompleted ? "tomato" : "gray"}
         size="2"
         style={{
           width: "28px",

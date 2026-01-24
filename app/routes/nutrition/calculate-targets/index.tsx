@@ -3,7 +3,6 @@ import {
   Badge,
   Button,
   Card,
-  Container,
   DataList,
   Flex,
   Grid,
@@ -72,14 +71,14 @@ export default function CalculateTargetsPage({
   const [modalClosed, setModalClosed] = useState(false);
 
   return (
-    <Container size="3" p="6">
+    <>
       <Flex align="center" gap="4" mb="6">
         <IconButton asChild size="3" variant="ghost">
           <Link to="/nutrition">
             <ArrowLeftIcon />
           </Link>
         </IconButton>
-        <Heading size="8">Nutrition</Heading>
+        <Heading size="7">Calculate Targets</Heading>
       </Flex>
 
       <MaintenanceForm
@@ -208,7 +207,7 @@ export default function CalculateTargetsPage({
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>
-    </Container>
+    </>
   );
 }
 

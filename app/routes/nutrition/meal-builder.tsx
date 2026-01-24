@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Card,
-  Container,
   Dialog,
   Flex,
   Grid,
@@ -505,7 +504,7 @@ export default function MealBuilder({
   }, [fetcher.data, handleAddIngredient]);
 
   return (
-    <Container size="4">
+    <>
       <Flex align="center" gap="3" mb="6">
         <Link
           to={
@@ -542,7 +541,7 @@ export default function MealBuilder({
         <Heading size="4" mb="3">
           Selected Ingredients ({selectedIngredients.length})
         </Heading>
-        <Flex direction="column" gap="3">
+        <Flex direction="column" gap="4">
           {selectedIngredients.map((ingredient) => (
             <IngredientCard
               key={ingredient.id}
@@ -650,7 +649,7 @@ export default function MealBuilder({
           isLoading={fetcher.state === "submitting"}
         />
       )}
-    </Container>
+    </>
   );
 }
 

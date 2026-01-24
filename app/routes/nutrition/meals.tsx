@@ -8,7 +8,6 @@ import {
   Box,
   Button,
   Card,
-  Container,
   DropdownMenu,
   Flex,
   Grid,
@@ -274,7 +273,7 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <Container size="4">
+    <>
       {/* Header with date navigation */}
       <div
         style={{
@@ -443,6 +442,6 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
         viewModel={templateSelectionViewModel}
         onApply={handleApplyTemplate}
       />
-    </Container>
+    </>
   );
 }

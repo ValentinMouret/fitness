@@ -3,10 +3,8 @@ import {
   Box,
   Button,
   Card,
-  Container,
   Flex,
   Heading,
-  Link as RadixLink,
   Text,
 } from "@radix-ui/themes";
 import { Form, Link, useSearchParams, useFetcher } from "react-router";
@@ -111,41 +109,14 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
     aiFetcher.submit({ intent: "get-ai-feedback" }, { method: "POST" });
   };
   return (
-    <Container>
+    <>
       <Flex justify="between" align="center" mb="6">
-        <Heading size="8">Workouts</Heading>
-        <Flex gap="3" align="center">
-          <RadixLink asChild>
-            <Link to="/workouts/exercises">Manage Exercises</Link>
-          </RadixLink>
-          <Button
-            variant="outline"
-            size="3"
-            onClick={handleAIFeedback}
-            disabled={aiFetcher.state === "submitting" || workouts.length < 5}
-          >
-            🤖 Get AI Feedback
+        <Heading size="7">Workouts</Heading>
+        <Form action="/workouts/create" method="post">
+          <Button type="submit" size="3">
+            Start Workout
           </Button>
-          <RadixLink asChild>
-            <Link to="/workouts/import">
-              <Button variant="outline" size="3">
-                Import from Strong
-              </Button>
-            </Link>
-          </RadixLink>
-          <RadixLink asChild>
-            <Link to="/workouts/generate">
-              <Button variant="outline" size="3">
-                Generate Smart Workout
-              </Button>
-            </Link>
-          </RadixLink>
-          <Form action="/workouts/create" method="post">
-            <Button type="submit" size="3">
-              Create Workout
-            </Button>
-          </Form>
-        </Flex>
+        </Form>
       </Flex>
 
       <Flex direction="column" gap="4">
@@ -182,7 +153,7 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
                   </Box>
                   <Box>
                     {workout.stop ? (
-                      <Text size="2" color="green">
+                      <Text size="2" color="tomato">
                         Completed
                       </Text>
                     ) : (
@@ -204,6 +175,31 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
         onPageChange={handlePageChange}
       />
 
+      <Card size="3" mt="6">
+        <Heading size="4" mb="4">
+          Tools
+        </Heading>
+        <Flex gap="3" wrap="wrap">
+          <Button
+            variant="outline"
+            size="2"
+            onClick={handleAIFeedback}
+            disabled={aiFetcher.state === "submitting" || workouts.length < 5}
+          >
+            🤖 AI Feedback
+          </Button>
+          <Button variant="outline" size="2" asChild>
+            <Link to="/workouts/generate">Generate Smart Workout</Link>
+          </Button>
+          <Button variant="outline" size="2" asChild>
+            <Link to="/workouts/import">Import from Strong</Link>
+          </Button>
+          <Button variant="outline" size="2" asChild>
+            <Link to="/workouts/exercises">Manage Exercises</Link>
+          </Button>
+        </Flex>
+      </Card>
+
       <AIFeedbackModal
         open={showAIModal}
         onClose={() => setShowAIModal(false)}
@@ -211,6 +207,6 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
         loading={aiFetcher.state === "submitting"}
         error={aiFetcher.data?.error}
       />
-    </Container>
+    </>
   );
 }

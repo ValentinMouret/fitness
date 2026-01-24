@@ -41,12 +41,27 @@ export const brandColors = {
   textSecondary: "#78716c",
 } as const;
 
-// Semantic color mappings
+/**
+ * Semantic color mappings
+ *
+ * Color usage rules:
+ * - tomato: Primary actions, active nav, CTAs, completed states (habits, sets)
+ * - green: Success feedback (toasts, confirmations) - NOT for completed states
+ * - orange: In-progress states (active workout, warmup sets)
+ * - amber: Pending states, attention needed
+ * - red: Destructive actions (delete, logout)
+ * - blue: Informational content
+ */
 export const semanticColors = {
-  // Status feedback (warm palette)
-  success: "green",
+  // Primary action color (tomato)
+  primary: "tomato",
+
+  // Status feedback
+  success: "green", // For toasts/confirmations only
   warning: "amber",
+  inProgress: "orange",
   error: "tomato",
+  destructive: "red",
   info: "blue",
 
   // Exercise type categorization
@@ -58,7 +73,7 @@ export const semanticColors = {
     machine: "gold",
   },
 
-  // Interactive element semantics (coral/tomato primary)
+  // Interactive element semantics
   interactive: {
     primary: "tomato",
     secondary: "gray",

@@ -321,7 +321,7 @@ function EditableSetRow({
     <Table.Row
       style={{
         backgroundColor: set.isCompleted
-          ? "var(--green-2)"
+          ? "var(--tomato-2)"
           : set.isWarmup
             ? "var(--orange-2)"
             : "transparent",
@@ -437,7 +437,7 @@ function EditableSetRow({
                 type="submit"
                 size="2"
                 variant="soft"
-                color="green"
+                color="tomato"
                 disabled={fetcher.state !== "idle"}
                 onClick={handleCompleteSet}
               >

@@ -8,6 +8,7 @@ import {
 export default [
   route("login", "routes/login.tsx"),
   route("logout", "routes/logout.tsx"),
+  route("api/quick-actions", "routes/api/quick-actions.ts"),
   layout("layouts/ProtectedLayout.tsx", [
     layout("layouts/AppLayout.tsx", [
       index("routes/home.tsx"),

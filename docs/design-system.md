@@ -11,7 +11,7 @@ The design prioritizes clarity and simplicity, reducing cognitive load while mai
 All interactive elements follow predictable patterns for expanding content, inline editing, and state feedback.
 
 ### Semantic Color Usage
-Colors convey meaning through consistent application: green for success/completion, red for destructive actions, and contextual colors for categorization.
+Colors convey meaning through consistent application: tomato for primary actions and completion states, green for success feedback/toasts, red for destructive actions, and contextual colors for categorization.
 
 ### Smooth Transitions
 All animations use consistent timing and easing to create cohesive, polished interactions.
@@ -21,11 +21,11 @@ All animations use consistent timing and easing to create cohesive, polished int
 ### Theme Configuration
 ```typescript
 // root.tsx
-<Theme accentColor="green" grayColor="sand" radius="large">
+<Theme accentColor="tomato" grayColor="sand" radius="large">
 ```
 
-- **Accent Color**: Green - used for primary actions, completion states, and success feedback
-- **Gray Scale**: Sand - provides warm, approachable neutral tones  
+- **Accent Color**: Tomato - used for primary actions, completion states, and active navigation
+- **Gray Scale**: Sand - provides warm, approachable neutral tones
 - **Border Radius**: Large - creates friendly, approachable interfaces
 
 ### Typography
@@ -55,16 +55,20 @@ export const spacing = {
 ### Semantic Colors
 ```typescript
 export const semanticColors = {
+  // Primary interactions
+  primary: 'tomato',   // Primary buttons, active nav, CTAs, completed states
+
   // Status feedback
-  success: 'green',    // Completed actions, positive states
-  warning: 'amber',    // Cautionary states, pending actions
+  success: 'green',    // Toasts, confirmations, positive feedback
+  warning: 'amber',    // Pending states, attention needed
+  inProgress: 'orange', // Active workout, warmup sets
   error: 'red',        // Destructive actions, error states
   info: 'blue',        // Informational content, neutral actions
-  
+
   // Exercise categorization
   exerciseTypes: {
     barbell: 'yellow',
-    bodyweight: 'gray', 
+    bodyweight: 'gray',
     cable: 'blue',
     dumbbells: 'amber',
     machine: 'gold',
@@ -104,7 +108,7 @@ Real-time editing pattern for workout data entry.
 Clear visual indication of states and actions.
 
 **Key Features:**
-- Color-coded completion (green backgrounds for completed sets)
+- Color-coded completion (tomato for completed sets/habits)
 - Loading states during async operations
 - Confirmation dialogs for destructive actions
 - Badge system for categorization

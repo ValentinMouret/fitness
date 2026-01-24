@@ -145,6 +145,13 @@ export default function HabitsPage({
 
   const isSubmitting = navigation.state === "submitting";
 
+  const todayHabits = habits.filter((habit) =>
+    HabitService.isDueOn(habit, today()),
+  );
+  const completedTodayCount = todayHabits.filter((habit) =>
+    completionMap.get(habit.id),
+  ).length;
+
   const getStreakColor = (
     streak: number,
   ): "blue" | "red" | "orange" | "gray" => {
@@ -161,7 +168,20 @@ export default function HabitsPage({
         onComplete={() => setShowCelebration(false)}
       />
       <Flex justify="between" align="center" mb="6">
-        <Heading size="7">Habits</Heading>
+        <Flex align="center" gap="3">
+          <Heading size="7">Habits</Heading>
+          {todayHabits.length > 0 && (
+            <Badge
+              size="2"
+              color={
+                completedTodayCount === todayHabits.length ? "tomato" : "gray"
+              }
+              variant="soft"
+            >
+              {completedTodayCount}/{todayHabits.length}
+            </Badge>
+          )}
+        </Flex>
         <Button asChild>
           <Link to="/habits/new">
             <PlusIcon />
@@ -181,34 +201,31 @@ export default function HabitsPage({
           Today's Habits
         </Heading>
         <Flex direction="column" gap="2">
-          {habits.filter((habit) => HabitService.isDueOn(habit, today()))
-            .length === 0 ? (
+          {todayHabits.length === 0 ? (
             <EmptyState
               icon="📅"
               title="All caught up!"
               description="No habits scheduled for today. Enjoy your rest day!"
             />
           ) : (
-            habits
-              .filter((habit) => HabitService.isDueOn(habit, today()))
-              .map((habit) => {
-                const isCompleted = completionMap.get(habit.id) ?? false;
-                const habitStreak = habitStreaks.get(habit.id) ?? 0;
+            todayHabits.map((habit) => {
+              const isCompleted = completionMap.get(habit.id) ?? false;
+              const habitStreak = habitStreaks.get(habit.id) ?? 0;
 
-                return (
-                  <Form method="post" key={habit.id}>
-                    <HabitCheckbox
-                      habitId={habit.id}
-                      habitName={habit.name}
-                      habitDescription={habit.description}
-                      isCompleted={isCompleted}
-                      isSubmitting={isSubmitting}
-                      intent="toggle-completion"
-                      streak={habitStreak}
-                    />
-                  </Form>
-                );
-              })
+              return (
+                <Form method="post" key={habit.id}>
+                  <HabitCheckbox
+                    habitId={habit.id}
+                    habitName={habit.name}
+                    habitDescription={habit.description}
+                    isCompleted={isCompleted}
+                    isSubmitting={isSubmitting}
+                    intent="toggle-completion"
+                    streak={habitStreak}
+                  />
+                </Form>
+              );
+            })
           )}
         </Flex>
       </Box>

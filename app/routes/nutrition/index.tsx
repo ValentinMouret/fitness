@@ -1,61 +1,163 @@
-import { Container, Flex, Heading, Link as RadixLink } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Button,
+  Card,
+  Flex,
+  Heading,
+  Progress,
+  Text,
+} from "@radix-ui/themes";
+import { ResultAsync } from "neverthrow";
 import { TargetService } from "~/modules/core/application/measurement-service";
 import type { Route } from "./+types";
-import { Link as RouterLink } from "react-router";
+import { Link } from "react-router";
 import { baseMeasurements } from "~/modules/core/domain/measurements";
-import { handleResultError } from "~/utils/errors";
+import { NutritionService } from "~/modules/nutrition/application/service";
+import { createServerError } from "~/utils/errors";
+import { today } from "~/time";
 
 export async function loader() {
-  const activeTargets = await TargetService.currentTargets();
+  const result = await ResultAsync.combine([
+    TargetService.currentTargets(),
+    NutritionService.getDailySummary(today()),
+  ]);
 
-  if (activeTargets.isErr()) {
-    handleResultError(activeTargets, "Failed to load nutrition targets");
+  if (result.isErr()) {
+    throw createServerError("Failed to load nutrition data", 500, result.error);
   }
 
-  const dailyCalorieIntake = activeTargets.value.find(
+  const [activeTargets, dailySummary] = result.value;
+
+  const dailyCalorieIntake = activeTargets.find(
     (t) => t.measurement === baseMeasurements.dailyCalorieIntake.name,
   );
 
-  if (!dailyCalorieIntake) {
-    return undefined;
-  }
-
   return {
-    dailyCalorieIntake,
+    calorieTarget: dailyCalorieIntake?.value ?? 2100,
+    dailySummary,
   };
 }
 
+const mealLabels = {
+  breakfast: "B",
+  lunch: "L",
+  dinner: "D",
+  snack: "S",
+} as const;
+
 export default function NutritionPage({ loaderData }: Route.ComponentProps) {
+  const { calorieTarget, dailySummary } = loaderData;
+  const { dailyTotals, meals } = dailySummary;
+
+  const calorieProgress = Math.min(
+    (dailyTotals.calories / calorieTarget) * 100,
+    100,
+  );
+
   return (
-    <Container size="3" p="6">
-      <Heading size="8" mb="6">
-        Nutrition
-      </Heading>
-
-      {loaderData?.dailyCalorieIntake ? (
-        <div>
-          <p>
-            Current calorie target: {loaderData.dailyCalorieIntake.value}{" "}
-            Cal/day
-          </p>
-        </div>
-      ) : null}
-
-      <Flex direction="column" gap="3" mt="4">
-        <RadixLink asChild>
-          <RouterLink to="/nutrition/calculate-targets">
-            Calculate targets
-          </RouterLink>
-        </RadixLink>
-
-        <RadixLink asChild>
-          <RouterLink to="/nutrition/meal-builder">Meal Builder</RouterLink>
-        </RadixLink>
-
-        <RadixLink asChild>
-          <RouterLink to="/nutrition/meals">Meal Logger</RouterLink>
-        </RadixLink>
+    <Box>
+      <Flex justify="between" align="center" mb="6">
+        <Heading size="7">Nutrition</Heading>
+        <Button asChild>
+          <Link to="/nutrition/meals">Log Meal</Link>
+        </Button>
       </Flex>
-    </Container>
+
+      <Card size="3" mb="4">
+        <Flex justify="between" align="center" mb="3">
+          <Text size="3" weight="medium">
+            Today's Calories
+          </Text>
+          <Text size="2" color="gray">
+            {Math.round(dailyTotals.calories)} / {calorieTarget}
+          </Text>
+        </Flex>
+        <Progress value={calorieProgress} />
+
+        <Flex gap="4" mt="4">
+          <Box>
+            <Text size="1" color="gray">
+              Protein
+            </Text>
+            <Text size="3" weight="medium">
+              {Math.round(dailyTotals.protein)}g
+            </Text>
+          </Box>
+          <Box>
+            <Text size="1" color="gray">
+              Carbs
+            </Text>
+            <Text size="3" weight="medium">
+              {Math.round(dailyTotals.carbs)}g
+            </Text>
+          </Box>
+          <Box>
+            <Text size="1" color="gray">
+              Fat
+            </Text>
+            <Text size="3" weight="medium">
+              {Math.round(dailyTotals.fat)}g
+            </Text>
+          </Box>
+        </Flex>
+      </Card>
+
+      <Card size="3" mb="4">
+        <Heading size="4" mb="3">
+          Today's Meals
+        </Heading>
+        <Flex gap="3">
+          {(Object.keys(mealLabels) as Array<keyof typeof mealLabels>).map(
+            (mealType) => {
+              const meal = meals[mealType];
+              const hasLogged = meal !== null;
+              return (
+                <Badge
+                  key={mealType}
+                  size="2"
+                  color={hasLogged ? "tomato" : "gray"}
+                  variant={hasLogged ? "solid" : "outline"}
+                >
+                  {mealLabels[mealType]}
+                </Badge>
+              );
+            },
+          )}
+        </Flex>
+        <Flex direction="column" gap="2" mt="4">
+          {(Object.keys(mealLabels) as Array<keyof typeof mealLabels>).map(
+            (mealType) => {
+              const meal = meals[mealType];
+              if (!meal) return null;
+              return (
+                <Flex key={mealType} justify="between" align="center">
+                  <Text size="2" style={{ textTransform: "capitalize" }}>
+                    {mealType}
+                  </Text>
+                  <Text size="2" color="gray">
+                    {Math.round(meal.totals.calories)} cal
+                  </Text>
+                </Flex>
+              );
+            },
+          )}
+        </Flex>
+      </Card>
+
+      <Card size="3">
+        <Heading size="4" mb="3">
+          Tools
+        </Heading>
+        <Flex direction="column" gap="3">
+          <Button variant="outline" asChild>
+            <Link to="/nutrition/meal-builder">Meal Builder</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/nutrition/calculate-targets">Calculate Targets</Link>
+          </Button>
+        </Flex>
+      </Card>
+    </Box>
   );
 }

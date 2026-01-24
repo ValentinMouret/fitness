@@ -163,7 +163,29 @@ button.rt-Card:hover,
   display: none;
 }
 
-@media (max-width: 768px) {
+/* Desktop (> 1024px) - default, hide hamburger and bottom tabs */
+.hamburger-mobile {
+  display: none !important;
+}
+
+/* Tablet (768px-1024px) - collapsed sidebar, no bottom tabs, no hamburger */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .sidebar-desktop {
+    width: 60px !important;
+  }
+
+  .sidebar-desktop .nav-label,
+  .sidebar-desktop [data-nav-label] {
+    display: none !important;
+  }
+
+  .main-content {
+    margin-left: 60px !important;
+  }
+}
+
+/* Mobile (< 768px) - bottom tabs, no sidebar */
+@media (max-width: 767px) {
   .bottom-tabs {
     display: flex;
     position: fixed;
@@ -220,12 +242,13 @@ button.rt-Card:hover,
 
 /* =================================
    Sidebar Overlay Animation
+   z-index hierarchy: overlay 45, hamburger 50, sidebar 40
    ================================= */
 .sidebar-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0);
-  z-index: 30;
+  z-index: 45;
   pointer-events: none;
   transition: background 0.25s ease;
   border: none;
@@ -315,7 +338,13 @@ button.rt-Card:hover,
   border-bottom: 1px solid var(--gray-a5);
 }
 
-@media (max-width: 768px) {
+@media (min-width: 768px) and (max-width: 1024px) {
+  .fixed-header-with-sidebar {
+    left: 60px;
+  }
+}
+
+@media (max-width: 767px) {
   .fixed-header-with-sidebar {
     left: 0;
   }
@@ -388,4 +417,35 @@ button.rt-Card:hover,
     padding: 0.5rem 0.75rem;
     font-size: 0.8rem;
   }
+}
+
+/* =================================
+   Quick Action FAB (Mobile Only)
+   ================================= */
+.quick-action-fab {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .quick-action-fab {
+    display: flex;
+  }
+}
+
+/* =================================
+   Quick Action Sheet Animation
+   ================================= */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.quick-action-sheet {
+  animation: slideUp 0.2s ease-out;
 }
