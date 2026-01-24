@@ -1,4 +1,4 @@
-import { type Result, ok, err } from "neverthrow";
+import { err, ok, type Result } from "neverthrow";
 import type { ErrValidation } from "./repository";
 
 export function resultFromNullable<T, E>(
@@ -22,6 +22,7 @@ export function expect<T>(v: T | undefined | null): T {
   if (v === undefined || v === null) {
     throw new Error("Expected value, got nil");
   }
+
   return v;
 }
 
