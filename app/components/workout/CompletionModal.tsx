@@ -1,13 +1,5 @@
-import {
-  Dialog,
-  Button,
-  Flex,
-  Text,
-  Heading,
-  Card,
-  Box,
-} from "@radix-ui/themes";
-import { Link, useFetcher } from "react-router";
+import { Box, Button, Dialog, Flex, Heading, Text } from "@radix-ui/themes";
+import { useFetcher } from "react-router";
 import type { WorkoutSession } from "~/modules/fitness/domain/workout";
 import { useLiveDuration } from "./useLiveDuration";
 
@@ -41,83 +33,53 @@ export function CompletionModal({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content style={{ maxWidth: "500px" }}>
-        <Flex direction="column" align="center" gap="4">
-          <Box style={{ textAlign: "center" }}>
-            <Text size="8" style={{ fontSize: "4rem" }}>
-              🎉
-            </Text>
-            <Heading size="6" mt="2" mb="2">
-              Workout Complete!
-            </Heading>
-            <Text size="3" color="gray">
-              Great job on finishing your workout!
-            </Text>
-          </Box>
+      <Dialog.Content style={{ maxWidth: 400 }}>
+        <Heading size="4" mb="4">
+          Complete Workout
+        </Heading>
 
-          {/* Workout Summary */}
-          <Card style={{ width: "100%" }}>
-            <Heading size="4" mb="3">
-              {workoutSession.workout.name}
-            </Heading>
-
-            <Flex direction="column" gap="2">
-              <Flex justify="between">
-                <Text>Duration:</Text>
-                <Text weight="bold">{formattedDuration}</Text>
-              </Flex>
-
-              <Flex justify="between">
-                <Text>Exercises:</Text>
-                <Text weight="bold">
-                  {workoutSession.exerciseGroups.length}
-                </Text>
-              </Flex>
-
-              <Flex justify="between">
-                <Text>Sets Completed:</Text>
-                <Text weight="bold">
-                  {completedSets} / {totalSets}
-                </Text>
-              </Flex>
-
-              <Flex justify="between">
-                <Text>Started:</Text>
-                <Text weight="bold">
-                  {workoutSession.workout.start.toLocaleTimeString()}
-                </Text>
-              </Flex>
+        <Box py="4" style={{ borderTop: "1px solid var(--gray-4)" }}>
+          <Flex direction="column" gap="3">
+            <Flex justify="between">
+              <Text size="2" color="gray">
+                Duration
+              </Text>
+              <Text size="2">{formattedDuration}</Text>
             </Flex>
-          </Card>
 
-          {/* Action Buttons */}
-          <Flex gap="3" style={{ width: "100%" }}>
-            <Button variant="soft" style={{ flexGrow: 1 }} asChild>
-              <Link
-                to={`/workouts/${workoutSession.workout.id}`}
-                onClick={() => onOpenChange(false)}
-              >
-                View Workout
-              </Link>
-            </Button>
+            <Flex justify="between">
+              <Text size="2" color="gray">
+                Exercises
+              </Text>
+              <Text size="2">{workoutSession.exerciseGroups.length}</Text>
+            </Flex>
 
-            <fetcher.Form method="post" style={{ flexGrow: 1 }}>
-              <input type="hidden" name="intent" value="complete-workout" />
-              <Button
-                type="submit"
-                style={{ width: "100%" }}
-                disabled={fetcher.state !== "idle"}
-              >
-                {fetcher.state === "submitting"
-                  ? "Completing..."
-                  : "Finish & Go to Dashboard"}
-              </Button>
-            </fetcher.Form>
+            <Flex justify="between">
+              <Text size="2" color="gray">
+                Sets
+              </Text>
+              <Text size="2">
+                {completedSets} / {totalSets}
+              </Text>
+            </Flex>
           </Flex>
+        </Box>
 
-          <Button variant="ghost" size="2" onClick={() => onOpenChange(false)}>
-            Continue Workout
+        <Flex gap="3" mt="4" justify="end">
+          <Button
+            variant="soft"
+            size="2"
+            onClick={() => onOpenChange(false)}
+            disabled={fetcher.state !== "idle"}
+          >
+            Continue
           </Button>
+          <fetcher.Form method="post">
+            <input type="hidden" name="intent" value="complete-workout" />
+            <Button type="submit" size="2" disabled={fetcher.state !== "idle"}>
+              {fetcher.state === "submitting" ? "Completing..." : "Finish"}
+            </Button>
+          </fetcher.Form>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>

@@ -1,33 +1,32 @@
-import type { Route } from "./+types/:id";
-import { redirect } from "react-router";
+import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  IconButton,
+  Text,
+  TextField,
+} from "@radix-ui/themes";
+import { useEffect, useRef, useState } from "react";
+import { Link, redirect, useFetcher } from "react-router";
+import { CancelConfirmationDialog } from "~/components/workout/CancelConfirmationDialog";
+import { CompletionModal } from "~/components/workout/CompletionModal";
+import { DeleteConfirmationDialog } from "~/components/workout/DeleteConfirmationDialog";
+import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
+import { useLiveDuration } from "~/components/workout/useLiveDuration";
+import { Workout, WorkoutSet } from "~/modules/fitness/domain/workout";
+import { ExerciseRepository } from "~/modules/fitness/infra/repository.server";
 import {
   WorkoutRepository,
   WorkoutSessionRepository,
 } from "~/modules/fitness/infra/workout.repository.server";
-import { ExerciseRepository } from "~/modules/fitness/infra/repository.server";
-import { WorkoutSet, Workout } from "~/modules/fitness/domain/workout";
 import {
-  Box,
-  Heading,
-  Button,
-  Flex,
-  Text,
-  TextField,
-  IconButton,
-} from "@radix-ui/themes";
-import { ArrowLeftIcon } from "@radix-ui/react-icons";
-import { useState, useRef, useEffect } from "react";
-import {
-  WorkoutExerciseCard,
   createWorkoutExerciseCardViewModel,
+  WorkoutExerciseCard,
 } from "~/modules/fitness/presentation";
-import { useFetcher, Link } from "react-router";
-import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
-import { CompletionModal } from "~/components/workout/CompletionModal";
-import { CancelConfirmationDialog } from "~/components/workout/CancelConfirmationDialog";
-import { DeleteConfirmationDialog } from "~/components/workout/DeleteConfirmationDialog";
-import { useLiveDuration } from "~/components/workout/useLiveDuration";
-import { handleResultError, createNotFoundError } from "~/utils/errors";
+import { createNotFoundError, handleResultError } from "~/utils/errors";
+import type { Route } from "./+types/:id";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { id } = params;
@@ -95,7 +94,6 @@ export async function action({ request, params }: Route.ActionArgs) {
           return { error: "Exercise ID is required" };
         }
 
-        // Get the current max order index
         const workoutSessionResult =
           await WorkoutSessionRepository.findById(id);
         if (workoutSessionResult.isErr() || !workoutSessionResult.value) {
@@ -150,7 +148,6 @@ export async function action({ request, params }: Route.ActionArgs) {
           return { error: "Exercise ID is required" };
         }
 
-        // Get current sets count for this exercise
         const workoutSessionResult =
           await WorkoutSessionRepository.findById(id);
         if (workoutSessionResult.isErr() || !workoutSessionResult.value) {
@@ -176,7 +173,6 @@ export async function action({ request, params }: Route.ActionArgs) {
         const reps = repsStr ? Number.parseInt(repsStr, 10) : undefined;
         const weight = weightStr ? Number.parseFloat(weightStr) : undefined;
 
-        // Validate numbers
         if (
           repsStr &&
           reps !== undefined &&
@@ -339,13 +335,11 @@ export async function action({ request, params }: Route.ActionArgs) {
       }
 
       case "complete-workout": {
-        // Load the workout to get current data
         const workoutResult = await WorkoutRepository.findById(id);
         if (workoutResult.isErr() || !workoutResult.value) {
           return { error: "Workout not found" };
         }
 
-        // Complete the workout by setting stop time
         const completedWorkout = { ...workoutResult.value, stop: new Date() };
         const result = await WorkoutRepository.save(completedWorkout);
 
@@ -395,7 +389,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { startedAgo } = useLiveDuration({
+  const { startedAgo, formattedDuration } = useLiveDuration({
     startTime: loaderData?.workoutSession.workout.start || new Date(),
     endTime: loaderData?.workoutSession.workout.stop || undefined,
   });
@@ -412,6 +406,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   }
 
   const { workoutSession, exercises } = loaderData;
+  const isComplete = Workout.isComplete.call(workoutSession.workout);
 
   const optimisticName =
     fetcher.formData?.get("name")?.toString() || workoutSession.workout.name;
@@ -426,13 +421,21 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     setIsEditingName(false);
   };
 
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   return (
-    <>
-      {/* Fixed Header */}
-      <Box className="fixed-header-with-sidebar">
-        <Flex justify="between" align="center" p="4">
+    <Box style={{ maxWidth: 640, margin: "0 auto" }}>
+      {/* Header */}
+      <Box px="4" py="4" style={{ borderBottom: "1px solid var(--gray-4)" }}>
+        <Flex justify="between" align="center">
           <Flex align="center" gap="3">
-            <IconButton asChild variant="ghost" size="3">
+            <IconButton asChild variant="ghost" size="2">
               <Link to="/workouts">
                 <ArrowLeftIcon />
               </Link>
@@ -451,46 +454,48 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                       setIsEditingName(false);
                     }
                   }}
-                  style={{ fontSize: "var(--font-size-7)", fontWeight: "bold" }}
+                  style={{ fontWeight: "500" }}
                 />
               ) : (
                 <Heading
-                  size="7"
-                  onClick={() => setIsEditingName(true)}
-                  style={{ cursor: "pointer" }}
+                  size="5"
+                  mb="1"
+                  onClick={() => !isComplete && setIsEditingName(true)}
+                  style={{ cursor: isComplete ? undefined : "pointer" }}
                 >
                   {optimisticName}
                 </Heading>
               )}
-              <Text size="3" color="gray">
-                {Workout.isComplete.call(workoutSession.workout)
-                  ? `${workoutSession.workout.stop?.toISOString().split("T")[0]}, completed`
-                  : startedAgo}
+              <Text size="2" color="gray">
+                {isComplete
+                  ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
+                  : `${formatDate(workoutSession.workout.start)} · ${startedAgo}`}
               </Text>
             </Box>
           </Flex>
-          <Flex gap="2">
-            {Workout.isComplete.call(workoutSession.workout) ? (
+
+          <Flex align="center" gap="2">
+            {isComplete ? (
               <Button
                 variant="soft"
                 color="red"
-                size="3"
+                size="2"
                 onClick={() => setShowDeleteDialog(true)}
               >
                 Delete
               </Button>
             ) : (
               <>
-                <Button onClick={() => setShowCompletionModal(true)} size="3">
-                  Complete Workout
-                </Button>
                 <Button
                   variant="soft"
                   color="red"
-                  size="3"
+                  size="2"
                   onClick={() => setShowCancelDialog(true)}
                 >
                   Cancel
+                </Button>
+                <Button size="2" onClick={() => setShowCompletionModal(true)}>
+                  Complete
                 </Button>
               </>
             )}
@@ -498,13 +503,12 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
         </Flex>
       </Box>
 
-      {/* Scrollable Content with top padding to account for fixed header */}
-      <Box p="4" style={{ paddingTop: "120px" }}>
-        {/* Exercise Cards */}
+      {/* Content */}
+      <Box px="4">
         {workoutSession.exerciseGroups.map((group) => {
           const viewModel = createWorkoutExerciseCardViewModel(
             group,
-            Workout.isComplete.call(workoutSession.workout),
+            isComplete,
           );
           return (
             <WorkoutExerciseCard
@@ -514,15 +518,17 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
           );
         })}
 
-        {/* Add Exercise Button */}
-        {!Workout.isComplete.call(workoutSession.workout) && (
-          <Button
-            onClick={() => setShowExerciseSelector(true)}
-            size="3"
-            style={{ width: "100%" }}
-          >
-            Add Exercise
-          </Button>
+        {!isComplete && (
+          <Box py="5">
+            <Button
+              onClick={() => setShowExerciseSelector(true)}
+              size="2"
+              variant="soft"
+              style={{ width: "100%" }}
+            >
+              Add Exercise
+            </Button>
+          </Box>
         )}
       </Box>
 
@@ -545,13 +551,13 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
         onOpenChange={setShowCancelDialog}
       />
 
-      {Workout.isComplete.call(workoutSession.workout) && (
+      {isComplete && (
         <DeleteConfirmationDialog
           workoutSession={workoutSession}
           open={showDeleteDialog}
           onOpenChange={setShowDeleteDialog}
         />
       )}
-    </>
+    </Box>
   );
 }

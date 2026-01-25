@@ -1,4 +1,11 @@
-import { AlertDialog, Button, Flex, Text, Card, Box } from "@radix-ui/themes";
+import {
+  AlertDialog,
+  Box,
+  Button,
+  Flex,
+  Heading,
+  Text,
+} from "@radix-ui/themes";
 import { useFetcher } from "react-router";
 import type { WorkoutSession } from "~/modules/fitness/domain/workout";
 import { useLiveDuration } from "./useLiveDuration";
@@ -33,71 +40,60 @@ export function CancelConfirmationDialog({
 
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
-      <AlertDialog.Content style={{ maxWidth: "500px" }}>
-        <AlertDialog.Title>Cancel Workout</AlertDialog.Title>
+      <AlertDialog.Content style={{ maxWidth: 400 }}>
+        <Heading size="4" mb="2">
+          Cancel Workout
+        </Heading>
 
-        <Flex direction="column" gap="4" mt="4">
-          <AlertDialog.Description>
-            <Text size="3">
-              Are you sure you want to cancel your workout? This action cannot
-              be undone.
-            </Text>
-          </AlertDialog.Description>
+        <Text size="2" color="gray">
+          This will permanently delete all workout data.
+        </Text>
 
-          {/* Workout Summary */}
-          <Card>
-            <Text weight="bold" size="2" mb="2" as="div">
-              Workout Summary
-            </Text>
-            <Flex direction="column" gap="1">
-              <Flex justify="between">
-                <Text size="2">Duration:</Text>
-                <Text size="2" weight="bold">
-                  {formattedDuration}
-                </Text>
-              </Flex>
-              <Flex justify="between">
-                <Text size="2">Exercises added:</Text>
-                <Text size="2" weight="bold">
-                  {workoutSession.exerciseGroups.length}
-                </Text>
-              </Flex>
-              <Flex justify="between">
-                <Text size="2">Sets completed:</Text>
-                <Text size="2" weight="bold">
-                  {completedSets} / {totalSets}
-                </Text>
-              </Flex>
+        <Box py="4" mt="3" style={{ borderTop: "1px solid var(--gray-4)" }}>
+          <Flex direction="column" gap="3">
+            <Flex justify="between">
+              <Text size="2" color="gray">
+                Duration
+              </Text>
+              <Text size="2">{formattedDuration}</Text>
             </Flex>
-          </Card>
 
-          <Box>
-            <Text size="3" weight="bold" color="red" as="div">
-              ⚠️ All workout data will be permanently lost
-            </Text>
-          </Box>
+            <Flex justify="between">
+              <Text size="2" color="gray">
+                Exercises
+              </Text>
+              <Text size="2">{workoutSession.exerciseGroups.length}</Text>
+            </Flex>
 
-          {/* Action Buttons */}
-          <Flex gap="3" justify="end">
-            <AlertDialog.Cancel>
-              <Button variant="soft" disabled={fetcher.state !== "idle"}>
-                Keep Workout
-              </Button>
-            </AlertDialog.Cancel>
-
-            <fetcher.Form method="post">
-              <input type="hidden" name="intent" value="cancel-workout" />
-              <Button
-                type="submit"
-                color="red"
-                disabled={fetcher.state !== "idle"}
-              >
-                {fetcher.state === "submitting"
-                  ? "Cancelling..."
-                  : "Cancel Workout"}
-              </Button>
-            </fetcher.Form>
+            <Flex justify="between">
+              <Text size="2" color="gray">
+                Sets completed
+              </Text>
+              <Text size="2">
+                {completedSets} / {totalSets}
+              </Text>
+            </Flex>
           </Flex>
+        </Box>
+
+        <Flex gap="3" mt="4" justify="end">
+          <AlertDialog.Cancel>
+            <Button variant="soft" size="2" disabled={fetcher.state !== "idle"}>
+              Keep
+            </Button>
+          </AlertDialog.Cancel>
+
+          <fetcher.Form method="post">
+            <input type="hidden" name="intent" value="cancel-workout" />
+            <Button
+              type="submit"
+              size="2"
+              color="red"
+              disabled={fetcher.state !== "idle"}
+            >
+              {fetcher.state === "submitting" ? "Cancelling..." : "Cancel"}
+            </Button>
+          </fetcher.Form>
         </Flex>
       </AlertDialog.Content>
     </AlertDialog.Root>

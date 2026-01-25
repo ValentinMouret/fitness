@@ -10,12 +10,10 @@ export function useLiveDuration({ startTime, endTime }: UseLiveDurationProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    // If the workout is completed (has endTime), no need to update
     if (endTime) {
       return;
     }
 
-    // Update current time every second
     const interval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -23,12 +21,10 @@ export function useLiveDuration({ startTime, endTime }: UseLiveDurationProps) {
     return () => clearInterval(interval);
   }, [endTime]);
 
-  // Calculate duration in minutes
   const duration = Math.floor(
     ((endTime || currentTime).getTime() - startTime.getTime()) / 1000 / 60,
   );
 
-  // Format duration as "Xm" or "Xh Ym" for longer workouts
   const formatDuration = (minutes: number): string => {
     if (minutes < 60) {
       return `${minutes}m`;
