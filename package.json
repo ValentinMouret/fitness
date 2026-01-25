@@ -6,7 +6,7 @@
     "build": "react-router build",
     "db:dev": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "tsx app/db/migrate.ts",
     "db:seed": "tsx app/db/index.ts",
     "dev": "react-router dev",
     "fmt": "biome format --write",
