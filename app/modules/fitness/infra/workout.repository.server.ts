@@ -1,11 +1,11 @@
-import { and, desc, eq, isNull, sql, type InferSelectModel } from "drizzle-orm";
+import { and, desc, eq, type InferSelectModel, isNull, sql } from "drizzle-orm";
 import { ResultAsync } from "neverthrow";
 import { db } from "~/db";
 import {
   exercises,
   workoutExercises,
-  workouts,
   workoutSets,
+  workouts,
 } from "~/db/schema";
 import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";
@@ -28,6 +28,7 @@ export const WorkoutRepository = {
       stop: workout.stop ?? null,
       notes: workout.notes ?? null,
       imported_from_strong: workout.importedFromStrong ?? false,
+      imported_from_fitbod: workout.importedFromFitbod ?? false,
     };
 
     if ("id" in workout) {
@@ -485,6 +486,7 @@ function workoutRecordToDomain(
     stop: record.stop ?? undefined,
     notes: record.notes ?? undefined,
     importedFromStrong: record.imported_from_strong ?? false,
+    importedFromFitbod: record.imported_from_fitbod ?? false,
   };
 }
 

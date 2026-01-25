@@ -16,8 +16,8 @@ import {
 } from "drizzle-orm/pg-core";
 import {
   exerciseTypes,
-  muscleGroups,
   movementPatterns,
+  muscleGroups,
 } from "~/modules/fitness/domain/workout";
 import {
   ingredientCategories,
@@ -152,6 +152,7 @@ export const workouts = pgTable("workouts", {
   stop: timestamp(),
   notes: text(),
   imported_from_strong: boolean().notNull().default(false),
+  imported_from_fitbod: boolean().notNull().default(false),
   ...timestampColumns(),
 });
 

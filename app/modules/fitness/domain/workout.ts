@@ -130,6 +130,7 @@ export interface Workout {
   readonly stop?: Date;
   readonly notes?: string;
   readonly importedFromStrong?: boolean;
+  readonly importedFromFitbod?: boolean;
 }
 
 interface WorkoutCreateInput {
@@ -137,6 +138,7 @@ interface WorkoutCreateInput {
   readonly start?: Date;
   readonly notes?: string;
   readonly importedFromStrong?: boolean;
+  readonly importedFromFitbod?: boolean;
 }
 
 export const Workout = {
@@ -146,6 +148,7 @@ export const Workout = {
       start: input.start ?? new Date(),
       notes: input.notes,
       importedFromStrong: input.importedFromStrong ?? false,
+      importedFromFitbod: input.importedFromFitbod ?? false,
     };
   },
   stop(this: Workout): Workout {
