@@ -1,13 +1,11 @@
-import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { env } from "~/env.server";
 import { logger } from "~/logger.server";
 
 async function runMigrations() {
   const db = drizzle({
     connection: {
-      connectionString: env.DATABASE_URL,
+      connectionString: process.env.DATABASE_URL,
     },
   });
 
