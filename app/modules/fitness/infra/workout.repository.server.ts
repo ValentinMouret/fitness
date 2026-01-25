@@ -272,6 +272,7 @@ export const WorkoutSessionRepository = {
     exerciseId: string,
     orderIndex: number,
     notes?: string,
+    defaultSetValues?: { reps?: number; weight?: number },
   ): ResultAsync<void, ErrRepository> {
     return ResultAsync.fromPromise(
       db.transaction(async (tx) => {
@@ -287,8 +288,8 @@ export const WorkoutSessionRepository = {
           exercise: exerciseId,
           set: 1,
           targetReps: null,
-          reps: null,
-          weight: null,
+          reps: defaultSetValues?.reps ?? null,
+          weight: defaultSetValues?.weight ?? null,
           note: null,
           isCompleted: false,
           isFailure: false,
@@ -473,6 +474,55 @@ export const WorkoutSessionRepository = {
         return "database_error" as const;
       },
     ).map(() => undefined);
+  },
+
+  getLastCompletedSetsForExercise(
+    exerciseId: string,
+  ): ResultAsync<
+    ReadonlyArray<{ set: number; reps?: number; weight?: number }>,
+    ErrRepository
+  > {
+    const query = sql`
+      SELECT ws.set, ws.reps, ws.weight
+      FROM workout_sets ws
+      INNER JOIN workouts w ON ws.workout = w.id
+      WHERE ws.exercise = ${exerciseId}
+        AND w.stop IS NOT NULL
+        AND ws."isCompleted" = true
+        AND ws."isWarmup" = false
+        AND ws.deleted_at IS NULL
+        AND w.deleted_at IS NULL
+        AND w.id = (
+          SELECT w2.id FROM workouts w2
+          INNER JOIN workout_sets ws2 ON ws2.workout = w2.id
+          WHERE ws2.exercise = ${exerciseId}
+            AND w2.stop IS NOT NULL
+            AND ws2.deleted_at IS NULL
+            AND w2.deleted_at IS NULL
+          ORDER BY w2.start DESC LIMIT 1
+        )
+      ORDER BY ws.set ASC
+    `;
+
+    return ResultAsync.fromPromise(db.execute(query), (error) => {
+      logger.error(
+        { err: error },
+        "Error fetching last completed sets for exercise",
+      );
+      return "database_error" as const;
+    }).map((result) =>
+      (
+        result.rows as Array<{
+          set: number;
+          reps: number | null;
+          weight: string | null;
+        }>
+      ).map((row) => ({
+        set: row.set,
+        reps: row.reps ?? undefined,
+        weight: row.weight ? Number.parseFloat(row.weight) : undefined,
+      })),
+    );
   },
 };
 

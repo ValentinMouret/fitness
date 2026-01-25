@@ -105,11 +105,24 @@ export async function action({ request, params }: Route.ActionArgs) {
           -1,
         );
 
+        const historicalResult =
+          await WorkoutSessionRepository.getLastCompletedSetsForExercise(
+            exerciseId,
+          );
+        const defaultSetValues =
+          historicalResult.isOk() && historicalResult.value.length > 0
+            ? {
+                reps: historicalResult.value[0].reps,
+                weight: historicalResult.value[0].weight,
+              }
+            : undefined;
+
         const result = await WorkoutSessionRepository.addExercise(
           id,
           exerciseId,
           maxOrderIndex + 1,
           notes,
+          defaultSetValues,
         );
 
         if (result.isErr()) {
