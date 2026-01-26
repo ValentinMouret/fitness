@@ -12,6 +12,7 @@ import { Form, Link, useFetcher, useSearchParams } from "react-router";
 import { EmptyState } from "~/components/EmptyState";
 import { Pagination } from "~/components/Pagination";
 import { WorkoutAnalysisService } from "~/modules/fitness/application/workout-analysis.service.server";
+import type { Workout } from "~/modules/fitness/domain/workout";
 import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
 import { AIFitnessCoachService } from "~/modules/fitness/infra/ai-fitness-coach.service";
 import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
@@ -127,7 +128,7 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
             description="Ready to crush it? Hit 'Create Workout' to get started!"
           />
         ) : (
-          workouts.map((workout) => (
+          workouts.map((workout: Workout) => (
             <Card key={workout.id} asChild>
               <Link
                 to={`/workouts/${workout.id}`}

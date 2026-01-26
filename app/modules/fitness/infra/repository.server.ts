@@ -1,10 +1,10 @@
-import { and, eq, type InferSelectModel } from "drizzle-orm";
+import { and, eq, type InferSelectModel, isNull } from "drizzle-orm";
 import _ from "lodash";
 import { ResultAsync } from "neverthrow";
 import { db } from "~/db";
 import { exerciseMuscleGroups, exercises } from "~/db/schema";
 import { logger } from "~/logger.server";
-import type { ErrDatabase, ErrRepository } from "~/repository";
+import type { ErrRepository } from "~/repository";
 import { executeQuery } from "~/repository.server";
 import {
   type Exercise,
@@ -14,15 +14,43 @@ import {
   type MuscleGroupSplit,
 } from "../domain/workout";
 
-export const ExerciseRepository = {
-  listAll(): ResultAsync<ReadonlyArray<Exercise>, ErrDatabase> {
-    const query = db.select().from(exercises).orderBy(exercises.name);
+export interface IExerciseRepository {
+  listAll(): ResultAsync<ReadonlyArray<Exercise>, ErrRepository>;
+  create(exercise: Omit<Exercise, "id">): ResultAsync<Exercise, ErrRepository>;
+  save(exercise: Exercise): ResultAsync<void, ErrRepository>;
+}
+
+export const ExerciseRepository: IExerciseRepository = {
+  listAll(): ResultAsync<ReadonlyArray<Exercise>, ErrRepository> {
+    const query = db
+      .select()
+      .from(exercises)
+      .where(isNull(exercises.deleted_at))
+      .orderBy(exercises.name);
     return executeQuery(query, "listAllExercises").map((records) =>
       records.map((record) => exerciseRecordToDomain(record)),
     );
   },
 
-  save(exercise: Exercise) {
+  create(exercise: Omit<Exercise, "id">): ResultAsync<Exercise, ErrRepository> {
+    return executeQuery(
+      db
+        .insert(exercises)
+        .values({
+          name: exercise.name,
+          type: exercise.type,
+          movement_pattern: exercise.movementPattern,
+          description: exercise.description ?? null,
+        })
+        .returning(),
+      "createExercise",
+    ).map((records) => {
+      const record = records[0];
+      return exerciseRecordToDomain(record);
+    });
+  },
+
+  save(exercise: Exercise): ResultAsync<void, ErrRepository> {
     return ResultAsync.fromPromise(
       db
         .insert(exercises)
@@ -45,9 +73,9 @@ export const ExerciseRepository = {
         }),
       (error) => {
         logger.error({ err: error }, "Failed to save exercise");
-        return "database_error";
+        return "database_error" as const;
       },
-    );
+    ).map(() => undefined);
   },
 };
 
@@ -153,7 +181,7 @@ export const ExerciseMuscleGroupsRepository = {
       }),
       (error) => {
         logger.error({ err: error }, "Failed to delete exercise by id");
-        return "database_error";
+        return "database_error" as const;
       },
     );
   },
@@ -191,7 +219,7 @@ export const ExerciseMuscleGroupsRepository = {
       }),
       (error) => {
         logger.error({ err: error }, "Failed to delete exercise");
-        return "database_error";
+        return "database_error" as const;
       },
     );
   },
@@ -263,7 +291,7 @@ export const ExerciseMuscleGroupsRepository = {
           { err: error },
           "Failed to save exercise with muscle groups",
         );
-        return "database_error";
+        return "database_error" as const;
       },
     );
   },
