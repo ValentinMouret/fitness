@@ -1,10 +1,10 @@
-import { ok, type Result } from "neverthrow";
 import type { InferSelectModel } from "drizzle-orm";
-import type { ingredients, mealTemplates, mealLogs } from "~/db/schema";
+import { ok, type Result } from "neverthrow";
+import type { ingredients, mealLogs, mealTemplates } from "~/db/schema";
 import type { ErrValidation } from "~/repository";
 import type { Ingredient } from "../domain/ingredient";
-import type { MealTemplate } from "../domain/meal-template";
 import type { MealLog } from "../domain/meal-log";
+import type { MealTemplate } from "../domain/meal-template";
 
 export function recordToIngredient(
   record: InferSelectModel<typeof ingredients>,

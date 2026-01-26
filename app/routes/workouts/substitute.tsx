@@ -1,8 +1,8 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { redirect } from "react-router";
-import type { Route } from "./+types/substitute";
 import { AdaptiveWorkoutService } from "~/modules/fitness/application/adaptive-workout-service.server";
 import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
+import type { Route } from "./+types/substitute";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const { id: workoutId, exerciseId } = params;

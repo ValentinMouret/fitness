@@ -1,3 +1,4 @@
+import { ArrowLeftIcon } from "@radix-ui/react-icons";
 import {
   AlertDialog,
   Badge,
@@ -9,20 +10,23 @@ import {
   Heading,
   IconButton,
 } from "@radix-ui/themes";
-import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import { Result } from "neverthrow";
+import { useState } from "react";
+import { Form, Link } from "react-router";
+import MacrosChart from "~/components/MacrosChart";
+import { TargetService } from "~/modules/core/application/measurement-service";
+import {
+  Age,
+  baseMeasurements,
+  Height,
+  Weight,
+} from "~/modules/core/domain/measurements";
+import { Target } from "~/modules/core/domain/target";
+import { Activity } from "~/modules/nutrition/domain/activity";
+import { NutritionCalculationService } from "~/modules/nutrition/domain/nutrition-calculation-service";
+import { coerceFloat, coerceInt, expect } from "~/utils";
 import MaintenanceForm from "../MaintenanceForm";
 import type { Route } from "./+types";
-import { coerceFloat, coerceInt, expect } from "~/utils";
-import { Result } from "neverthrow";
-import { NutritionCalculationService } from "~/modules/nutrition/domain/nutrition-calculation-service";
-import { Age, Height, Weight } from "~/modules/core/domain/measurements";
-import { Activity } from "~/modules/nutrition/domain/activity";
-import MacrosChart from "~/components/MacrosChart";
-import { Form, Link } from "react-router";
-import { useState } from "react";
-import { Target } from "~/modules/core/domain/target";
-import { baseMeasurements } from "~/modules/core/domain/measurements";
-import { TargetService } from "~/modules/core/application/measurement-service";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);

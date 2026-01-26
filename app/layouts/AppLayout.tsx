@@ -1,26 +1,26 @@
-import type React from "react";
-import { useState, useRef, useCallback } from "react";
-import { NavLink, Outlet, Form, useLocation } from "react-router";
 import {
-  Flex,
-  Container,
-  Box,
-  Button,
-  IconButton,
-  Text,
-  Heading,
-} from "@radix-ui/themes";
-import {
-  HamburgerMenuIcon,
+  CheckboxIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  DashboardIcon,
-  CheckboxIcon,
   CounterClockwiseClockIcon,
+  DashboardIcon,
+  ExitIcon,
+  HamburgerMenuIcon,
   ReaderIcon,
   RulerSquareIcon,
-  ExitIcon,
 } from "@radix-ui/react-icons";
+import {
+  Box,
+  Button,
+  Container,
+  Flex,
+  Heading,
+  IconButton,
+  Text,
+} from "@radix-ui/themes";
+import type React from "react";
+import { useCallback, useRef, useState } from "react";
+import { Form, NavLink, Outlet, useLocation } from "react-router";
 import { PageTransition } from "~/components/PageTransition";
 import { QuickActionFAB } from "~/components/QuickActionFAB";
 import { QuickActionSheet } from "~/components/QuickActionSheet";

@@ -8,25 +8,27 @@ import {
   Progress,
   Text,
 } from "@radix-ui/themes";
-import { NumberInput } from "~/components/NumberInput";
 import { ResultAsync } from "neverthrow";
 import { Form, Link, useFetcher } from "react-router";
 import HabitCheckbox from "~/components/HabitCheckbox";
 import MeasurementChart from "~/components/MeasurementChart";
-import { MeasurementService } from "~/modules/core/application/measurement-service";
+import { NumberInput } from "~/components/NumberInput";
+import {
+  MeasurementService,
+  TargetService,
+} from "~/modules/core/application/measurement-service";
 import { Measure } from "~/modules/core/domain/measure";
+import { baseMeasurements } from "~/modules/core/domain/measurements";
 import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
 import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
+import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { HabitService } from "~/modules/habits/application/service";
 import { HabitCompletion } from "~/modules/habits/domain/entity";
 import {
   HabitCompletionRepository,
   HabitRepository,
 } from "~/modules/habits/infra/repository.server";
-import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { NutritionService } from "~/modules/nutrition/application/service";
-import { TargetService } from "~/modules/core/application/measurement-service";
-import { baseMeasurements } from "~/modules/core/domain/measurements";
 import { formatStartedAgo, isSameDay, today } from "~/time";
 import { coerceFloat, resultFromNullable } from "~/utils";
 import { createServerError, createValidationError } from "~/utils/errors";

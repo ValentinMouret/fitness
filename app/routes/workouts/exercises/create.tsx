@@ -2,17 +2,17 @@ import { Heading } from "@radix-ui/themes";
 import { redirect } from "react-router";
 import ExerciseForm from "~/components/ExerciseForm";
 import {
-  ExerciseMuscleGroupsAggregate,
-  parseExerciseType,
-  parseMuscleGroup,
-  parseMovementPattern,
   type Exercise,
+  ExerciseMuscleGroupsAggregate,
   type MuscleGroupSplit,
+  parseExerciseType,
+  parseMovementPattern,
+  parseMuscleGroup,
 } from "~/modules/fitness/domain/workout";
-import { coerceEmpty, humanFormatting } from "~/strings";
-import type { Route } from "./+types";
-import { coerceInt } from "~/utils";
 import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
+import { coerceEmpty, humanFormatting } from "~/strings";
+import { coerceInt } from "~/utils";
+import type { Route } from "./+types";
 
 export const action = async ({ request }: Route.ActionArgs) => {
   const form = await request.formData();

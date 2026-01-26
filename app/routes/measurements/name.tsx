@@ -1,25 +1,25 @@
-import { data, useFetcher, useLoaderData } from "react-router";
-import {
-  Box,
-  Heading,
-  Text,
-  Flex,
-  Card,
-  Button,
-  Table,
-  TextField,
-  Callout,
-  AlertDialog,
-  IconButton,
-} from "@radix-ui/themes";
-import { NumberInput } from "~/components/NumberInput";
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
-import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
-import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
-import { Measure } from "~/modules/core/domain/measure";
-import { handleResultError } from "~/utils/errors";
-import { today } from "~/time";
+import {
+  AlertDialog,
+  Box,
+  Button,
+  Callout,
+  Card,
+  Flex,
+  Heading,
+  IconButton,
+  Table,
+  Text,
+  TextField,
+} from "@radix-ui/themes";
+import { data, useFetcher, useLoaderData } from "react-router";
 import MeasurementChart from "~/components/MeasurementChart";
+import { NumberInput } from "~/components/NumberInput";
+import { Measure } from "~/modules/core/domain/measure";
+import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
+import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
+import { today } from "~/time";
+import { handleResultError } from "~/utils/errors";
 import type { Route } from "./+types/name";
 
 export async function loader({ params }: Route.LoaderArgs) {

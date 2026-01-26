@@ -1,17 +1,16 @@
-import { Form, redirect, useActionData, Link } from "react-router";
-import { data } from "react-router";
-import type { Route } from "./+types/new";
-import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
 import {
   Box,
-  Heading,
-  TextField,
-  TextArea,
   Button,
-  Text,
-  Flex,
   Callout,
+  Flex,
+  Heading,
+  Text,
+  TextArea,
+  TextField,
 } from "@radix-ui/themes";
+import { data, Form, Link, redirect, useActionData } from "react-router";
+import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
+import type { Route } from "./+types/new";
 
 function toSnakeCase(str: string): string {
   return str

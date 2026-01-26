@@ -1,16 +1,16 @@
+import { and, eq, gte, isNull, lte, sql } from "drizzle-orm";
 import type { ResultAsync } from "neverthrow";
 import { db } from "~/db";
-import type { ErrRepository } from "~/repository";
-import { executeQuery } from "~/repository.server";
-import type { MuscleGroup } from "~/modules/fitness/domain/workout";
 import {
-  workouts,
+  exerciseMuscleGroups,
+  exercises,
   workoutExercises,
   workoutSets,
-  exercises,
-  exerciseMuscleGroups,
+  workouts,
 } from "~/db/schema";
-import { eq, and, gte, lte, isNull, sql } from "drizzle-orm";
+import type { MuscleGroup } from "~/modules/fitness/domain/workout";
+import type { ErrRepository } from "~/repository";
+import { executeQuery } from "~/repository.server";
 
 export const VolumeTrackingRepository = {
   getWeeklyVolume(

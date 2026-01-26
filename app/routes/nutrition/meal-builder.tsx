@@ -1,5 +1,12 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
 import {
+  ChevronLeftIcon,
+  Cross2Icon,
+  DownloadIcon,
+  MagicWandIcon,
+  PlusIcon,
+} from "@radix-ui/react-icons";
+import {
+  AlertDialog,
   Box,
   Button,
   Card,
@@ -13,45 +20,40 @@ import {
   Tabs,
   Text,
   TextField,
-  AlertDialog,
 } from "@radix-ui/themes";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ChevronLeftIcon,
-  Cross2Icon,
-  PlusIcon,
-  MagicWandIcon,
-  DownloadIcon,
-} from "@radix-ui/react-icons";
-import {
-  Link,
-  useFetcher,
-  redirect,
   type ActionFunctionArgs,
+  Link,
   type LoaderFunctionArgs,
+  redirect,
+  useFetcher,
 } from "react-router";
 import { NutritionService } from "~/modules/nutrition/application/service";
-import type { Ingredient } from "~/modules/nutrition/domain/ingredient";
+import type {
+  CreateAIIngredientInput,
+  Ingredient,
+} from "~/modules/nutrition/domain/ingredient";
 import {
-  ingredientCategories,
   Ingredient as IngredientDomain,
+  ingredientCategories,
 } from "~/modules/nutrition/domain/ingredient";
 import type { CreateMealTemplateInput } from "~/modules/nutrition/domain/meal-template";
 import {
   calculateSatietyScore,
-  mealCategories,
   type MealCategory,
+  mealCategories,
 } from "~/modules/nutrition/domain/meal-template";
 import {
-  ObjectivesPanel,
+  AIIngredientReviewModal,
   CurrentTotalsPanel,
   IngredientCard,
-  AIIngredientReviewModal,
   type Objectives,
+  ObjectivesPanel,
   type SelectedIngredient,
 } from "~/modules/nutrition/presentation";
-import type { CreateAIIngredientInput } from "~/modules/nutrition/domain/ingredient";
-import type { Route } from "./+types/meal-builder";
 import { humanFormatting } from "~/strings";
+import type { Route } from "./+types/meal-builder";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);

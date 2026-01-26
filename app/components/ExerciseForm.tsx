@@ -1,3 +1,4 @@
+import { InfoCircledIcon, PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import {
   Button,
   Flex,
@@ -9,19 +10,18 @@ import {
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
-import { NumberInput } from "~/components/NumberInput";
+import { useState } from "react";
 import { Form } from "react-router";
+import { NumberInput } from "~/components/NumberInput";
 import RequiredStar from "~/components/RequiredStar";
 import {
-  exerciseTypes,
-  muscleGroups,
   type Exercise,
+  exerciseTypes,
   type MuscleGroup,
   type MuscleGroupSplit,
+  muscleGroups,
 } from "~/modules/fitness/domain/workout";
 import { humanFormatting } from "~/strings";
-import { InfoCircledIcon, PlusIcon, TrashIcon } from "@radix-ui/react-icons";
-import { useState } from "react";
 
 interface ExerciseFormProps {
   readonly initialExercise?: Exercise;

@@ -1,4 +1,4 @@
-import { eq, and, isNull } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { Result, ResultAsync } from "neverthrow";
 import { db } from "~/db/index";
 import { ingredients } from "~/db/schema";
@@ -10,8 +10,8 @@ import {
   type Transaction,
 } from "~/repository.server";
 import type {
-  Ingredient,
   CreateIngredientInput,
+  Ingredient,
   UpdateIngredientInput,
 } from "../domain/ingredient";
 import { recordToIngredient } from "./record-mappers";

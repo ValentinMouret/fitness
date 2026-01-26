@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Cross2Icon, MagicWandIcon } from "@radix-ui/react-icons";
 import {
   Box,
   Button,
@@ -12,14 +12,14 @@ import {
   Text,
   TextField,
 } from "@radix-ui/themes";
+import { useState } from "react";
 import { NumberInput } from "~/components/NumberInput";
-import { Cross2Icon, MagicWandIcon } from "@radix-ui/react-icons";
 import {
-  ingredientCategories,
-  textureCategories,
   type CreateAIIngredientInput,
   type IngredientCategory,
+  ingredientCategories,
   type TextureCategory,
+  textureCategories,
 } from "../../../domain/ingredient";
 
 interface AIIngredientReviewModalProps {

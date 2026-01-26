@@ -1,5 +1,5 @@
+import { Button, Flex, Heading, Text } from "@radix-ui/themes";
 import type { ReactNode } from "react";
-import { Flex, Text, Button, Heading } from "@radix-ui/themes";
 import { Link } from "react-router";
 
 interface EmptyStateProps {

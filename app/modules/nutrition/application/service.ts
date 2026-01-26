@@ -1,33 +1,33 @@
 import type { ResultAsync } from "neverthrow";
 import type { ErrRepository } from "~/repository";
 import type {
-  Ingredient,
   CreateIngredientInput,
-  UpdateIngredientInput,
+  Ingredient,
   IngredientWithQuantity,
+  UpdateIngredientInput,
 } from "../domain/ingredient";
 import type {
-  MealTemplate,
-  MealTemplateWithIngredients,
-  CreateMealTemplateInput,
-  UpdateMealTemplateInput,
-  MealCategory,
-} from "../domain/meal-template";
-import type {
+  CreateMealLogInput,
   MealLog,
+  MealLogSummary,
   MealLogWithIngredients,
   MealLogWithNutrition,
-  CreateMealLogInput,
   UpdateMealLogInput,
-  MealLogSummary,
 } from "../domain/meal-log";
-import { IngredientRepository } from "../infra/ingredient.repository.server";
-import { MealTemplateRepository } from "../infra/meal-template.repository.server";
-import { MealLogRepository } from "../infra/meal-log.repository.server";
+import type {
+  CreateMealTemplateInput,
+  MealCategory,
+  MealTemplate,
+  MealTemplateWithIngredients,
+  UpdateMealTemplateInput,
+} from "../domain/meal-template";
 import {
-  AIIngredientService,
   type AIIngredientSearchResult,
+  AIIngredientService,
 } from "../infra/ai-ingredient.service";
+import { IngredientRepository } from "../infra/ingredient.repository.server";
+import { MealLogRepository } from "../infra/meal-log.repository.server";
+import { MealTemplateRepository } from "../infra/meal-template.repository.server";
 
 export const NutritionService = {
   // Ingredient operations

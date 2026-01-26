@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  ci:
+    name: Lint, Typecheck, Build and Test
+    if: github.event_name == 'push' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: fitness
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:password@localhost:5432/fitness
+      ANTHROPIC_API_KEY: dummy_key
+      AUTH_USERNAME: admin
+      AUTH_PASSWORD: password
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.14
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint and Format check
+        run: bun x biome ci .
+
+      - name: Type check
+        run: bun run typecheck
+
+      - name: Build
+        run: bun run build
+
+      - name: Run migrations
+        run: bun run db:migrate
+
+      - name: Seed database
+        run: bun run db:seed
+
+      - name: Run tests
+        run: bun run test

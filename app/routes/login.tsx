@@ -1,15 +1,15 @@
-import { Form, redirect, useSearchParams } from "react-router";
-import type { Route } from "./+types/login";
-import { authenticate } from "~/auth.server";
 import {
-  Container,
+  Button,
+  Callout,
   Card,
+  Container,
   Heading,
   Text,
   TextField,
-  Button,
-  Callout,
 } from "@radix-ui/themes";
+import { Form, redirect, useSearchParams } from "react-router";
+import { authenticate } from "~/auth.server";
+import type { Route } from "./+types/login";
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();

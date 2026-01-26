@@ -1,5 +1,5 @@
-import { Flex, Button, Text, Badge } from "@radix-ui/themes";
 import { CheckIcon } from "@radix-ui/react-icons";
+import { Badge, Button, Flex, Text } from "@radix-ui/themes";
 
 interface HabitCheckboxProps {
   readonly habitId: string;

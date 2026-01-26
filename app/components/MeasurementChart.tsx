@@ -1,12 +1,12 @@
 import { useState } from "react";
 import {
-  LineChart,
+  CartesianGrid,
   Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from "recharts";
 import type { Measure } from "~/modules/core/domain/measure";
 import "./WeightChart.css";

@@ -1,9 +1,9 @@
 import { ResultAsync } from "neverthrow";
+import { db } from "~/db";
 import { logger } from "~/logger.server";
-import type { ErrRepository } from "~/repository";
 import type { ExerciseMuscleGroups } from "~/modules/fitness/domain/workout";
 import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
-import { db } from "~/db";
+import type { ErrRepository } from "~/repository";
 
 export const ExerciseService = {
   update(

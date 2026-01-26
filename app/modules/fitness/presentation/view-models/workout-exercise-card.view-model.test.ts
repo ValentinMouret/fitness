@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
-import { createWorkoutExerciseCardViewModel } from "./workout-exercise-card.view-model";
+import { describe, expect, it } from "vitest";
 import type {
-  WorkoutExerciseGroup,
   Exercise,
+  WorkoutExerciseGroup,
   WorkoutSet,
 } from "~/modules/fitness/domain/workout";
+import { createWorkoutExerciseCardViewModel } from "./workout-exercise-card.view-model";
 
 describe("WorkoutExerciseCardViewModel", () => {
   const mockExercise: Exercise = {

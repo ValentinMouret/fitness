@@ -10,8 +10,8 @@ import {
 import type { Route } from "./+types/root";
 import "@radix-ui/themes/styles.css";
 import "./app.css";
+import { Code, Container, Heading, Text, Theme } from "@radix-ui/themes";
 import { AuthProvider } from "./components/AuthProvider";
-import { Theme, Container, Heading, Text, Code } from "@radix-ui/themes";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },

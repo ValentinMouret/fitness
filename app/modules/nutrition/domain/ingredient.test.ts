@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Ingredient, type IngredientWithQuantity } from "./ingredient";
 
 const createTestIngredient = (overrides?: Partial<Ingredient>): Ingredient => ({

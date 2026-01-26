@@ -1,3 +1,4 @@
+import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import {
   Button,
   Container,
@@ -7,16 +8,15 @@ import {
   Text,
   TextField,
 } from "@radix-ui/themes";
-import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
-import type { Route } from "./+types";
+import { Form, Link, useSearchParams } from "react-router";
+import ExerciseCard from "~/components/ExerciseCard";
 import {
   exerciseTypes,
   parseExerciseType,
 } from "~/modules/fitness/domain/workout";
-import { Form, Link, useSearchParams } from "react-router";
-import ExerciseCard from "~/components/ExerciseCard";
+import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 import { humanFormatting } from "~/strings";
-import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import type { Route } from "./+types";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const url = new URL(request.url);

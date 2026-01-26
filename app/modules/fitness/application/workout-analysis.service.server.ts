@@ -1,19 +1,19 @@
 import { ResultAsync } from "neverthrow";
 import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";
+import type {
+  ExerciseType,
+  MovementPattern,
+  MuscleGroup,
+  WeeklyVolumeTracker,
+  WorkoutSession,
+} from "../domain/workout";
+import type { WorkoutAnalysisData } from "../infra/ai-fitness-coach.service";
 import {
   WorkoutRepository,
   WorkoutSessionRepository,
 } from "../infra/workout.repository.server";
 import { VolumeTrackingService } from "./volume-tracking-service.server";
-import type { WorkoutAnalysisData } from "../infra/ai-fitness-coach.service";
-import type {
-  WorkoutSession,
-  MuscleGroup,
-  MovementPattern,
-  ExerciseType,
-  WeeklyVolumeTracker,
-} from "../domain/workout";
 
 type ErrWorkoutAnalysis = "insufficient_data" | "calculation_error";
 

@@ -1,18 +1,18 @@
-import { db } from "~/db";
+import { and, eq, type InferSelectModel } from "drizzle-orm";
 import _ from "lodash";
+import { ResultAsync } from "neverthrow";
+import { db } from "~/db";
+import { exerciseMuscleGroups, exercises } from "~/db/schema";
+import { logger } from "~/logger.server";
+import type { ErrDatabase, ErrRepository } from "~/repository";
+import { executeQuery } from "~/repository.server";
 import {
-  ExerciseMuscleGroupsAggregate,
   type Exercise,
   type ExerciseMuscleGroups,
+  ExerciseMuscleGroupsAggregate,
   type ExerciseType,
   type MuscleGroupSplit,
 } from "../domain/workout";
-import { exerciseMuscleGroups, exercises } from "~/db/schema";
-import { logger } from "~/logger.server";
-import { ResultAsync } from "neverthrow";
-import type { ErrDatabase, ErrRepository } from "~/repository";
-import { executeQuery } from "~/repository.server";
-import { and, eq, type InferSelectModel } from "drizzle-orm";
 
 export const ExerciseRepository = {
   listAll(): ResultAsync<ReadonlyArray<Exercise>, ErrDatabase> {

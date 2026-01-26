@@ -1,22 +1,21 @@
-import { Form, redirect, useActionData, Link } from "react-router";
-import { data } from "react-router";
-import type { Route } from "./+types/new";
-import { Habit as HabitEntity } from "../../modules/habits/domain/entity";
-import { HabitRepository } from "../../modules/habits/infra/repository.server";
-import * as React from "react";
 import {
   Box,
-  Heading,
-  TextField,
-  TextArea,
-  Select,
   Button,
-  Text,
-  Flex,
   Callout,
   Checkbox,
+  Flex,
   Grid,
+  Heading,
+  Select,
+  Text,
+  TextArea,
+  TextField,
 } from "@radix-ui/themes";
+import * as React from "react";
+import { data, Form, Link, redirect, useActionData } from "react-router";
+import { Habit as HabitEntity } from "../../modules/habits/domain/entity";
+import { HabitRepository } from "../../modules/habits/infra/repository.server";
+import type { Route } from "./+types/new";
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();

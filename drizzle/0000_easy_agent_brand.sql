@@ -254,6 +254,7 @@ CREATE TABLE "workouts" (
 	"stop" timestamp,
 	"notes" text,
 	"imported_from_strong" boolean DEFAULT false NOT NULL,
+	"imported_from_fitbod" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp,
 	"deleted_at" timestamp

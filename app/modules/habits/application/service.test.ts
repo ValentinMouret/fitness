@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { HabitService } from "./service";
+import { describe, expect, it } from "vitest";
 import type { Habit, HabitCompletion } from "../domain/entity";
+import { HabitService } from "./service";
 
 // Helper functions for tests
 const createHabit = (overrides?: Partial<Habit>): Habit => ({

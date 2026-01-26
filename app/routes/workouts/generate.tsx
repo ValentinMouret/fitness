@@ -1,35 +1,35 @@
-import type { ActionFunctionArgs } from "react-router";
-import { Form, redirect } from "react-router";
-import type { Route } from "./+types/generate";
-import { AdaptiveWorkoutService } from "~/modules/fitness/application/adaptive-workout-service.server";
-import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
-import { VolumeTrackingService } from "~/modules/fitness/application/volume-tracking-service.server";
-import {
-  WorkoutRepository,
-  WorkoutSessionRepository,
-} from "~/modules/fitness/infra/workout.repository.server";
-import {
-  Card,
-  Button,
-  Select,
-  Checkbox,
-  Badge,
-  Callout,
-  Progress,
-  Grid,
-  Flex,
-  Text,
-  Heading,
-  Box,
-} from "@radix-ui/themes";
-import { NumberInput } from "~/components/NumberInput";
 import {
   CheckCircledIcon,
   CrossCircledIcon,
   LightningBoltIcon,
   TargetIcon,
 } from "@radix-ui/react-icons";
-import { Dumbbell, Activity } from "lucide-react";
+import {
+  Badge,
+  Box,
+  Button,
+  Callout,
+  Card,
+  Checkbox,
+  Flex,
+  Grid,
+  Heading,
+  Progress,
+  Select,
+  Text,
+} from "@radix-ui/themes";
+import { Activity, Dumbbell } from "lucide-react";
+import type { ActionFunctionArgs } from "react-router";
+import { Form, redirect } from "react-router";
+import { NumberInput } from "~/components/NumberInput";
+import { AdaptiveWorkoutService } from "~/modules/fitness/application/adaptive-workout-service.server";
+import { VolumeTrackingService } from "~/modules/fitness/application/volume-tracking-service.server";
+import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
+import {
+  WorkoutRepository,
+  WorkoutSessionRepository,
+} from "~/modules/fitness/infra/workout.repository.server";
+import type { Route } from "./+types/generate";
 
 export async function loader() {
   const availableEquipmentResult =

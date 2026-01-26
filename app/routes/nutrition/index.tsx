@@ -9,13 +9,13 @@ import {
   Text,
 } from "@radix-ui/themes";
 import { ResultAsync } from "neverthrow";
-import { TargetService } from "~/modules/core/application/measurement-service";
-import type { Route } from "./+types";
 import { Link } from "react-router";
+import { TargetService } from "~/modules/core/application/measurement-service";
 import { baseMeasurements } from "~/modules/core/domain/measurements";
 import { NutritionService } from "~/modules/nutrition/application/service";
-import { createServerError } from "~/utils/errors";
 import { today } from "~/time";
+import { createServerError } from "~/utils/errors";
+import type { Route } from "./+types";
 
 export async function loader() {
   const result = await ResultAsync.combine([

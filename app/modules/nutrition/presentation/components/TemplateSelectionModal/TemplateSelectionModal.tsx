@@ -1,5 +1,5 @@
-import { Box, Card, Dialog, Flex, IconButton, Text } from "@radix-ui/themes";
 import { Cross2Icon } from "@radix-ui/react-icons";
+import { Box, Card, Dialog, Flex, IconButton, Text } from "@radix-ui/themes";
 import type { TemplateSelectionViewModel } from "../../view-models/template-selection.view-model";
 
 interface TemplateSelectionModalProps {

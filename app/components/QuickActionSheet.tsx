@@ -1,15 +1,15 @@
-import { useState, useEffect } from "react";
+import { CheckIcon, Cross2Icon } from "@radix-ui/react-icons";
 import {
   Box,
   Button,
   Dialog,
   Flex,
   Heading,
-  Text,
   IconButton,
   Spinner,
+  Text,
 } from "@radix-ui/themes";
-import { Cross2Icon, CheckIcon } from "@radix-ui/react-icons";
+import { useEffect, useState } from "react";
 import { useFetcher, useNavigate } from "react-router";
 import { NumberInput } from "./NumberInput";
 

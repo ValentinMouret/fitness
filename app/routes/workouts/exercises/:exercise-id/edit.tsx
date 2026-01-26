@@ -1,17 +1,17 @@
-import { Heading, Flex, IconButton } from "@radix-ui/themes";
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import { Flex, Heading, IconButton } from "@radix-ui/themes";
 import { Link, redirect } from "react-router";
 import ExerciseForm from "~/components/ExerciseForm";
-import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 import { ExerciseService } from "~/modules/fitness/application/service.server";
 import {
-  ExerciseMuscleGroupsAggregate,
-  parseExerciseType,
-  parseMuscleGroup,
-  parseMovementPattern,
   type Exercise,
+  ExerciseMuscleGroupsAggregate,
   type MuscleGroupSplit,
+  parseExerciseType,
+  parseMovementPattern,
+  parseMuscleGroup,
 } from "~/modules/fitness/domain/workout";
+import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 import { coerceEmpty, humanFormatting } from "~/strings";
 import { coerceInt } from "~/utils";
 import type { Route } from "./+types/edit";

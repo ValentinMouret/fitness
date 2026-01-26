@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Pencil1Icon, PlusIcon } from "@radix-ui/react-icons";
 import {
   Badge,
@@ -11,10 +10,11 @@ import {
   Heading,
   Text,
 } from "@radix-ui/themes";
+import { useEffect, useState } from "react";
 import { data, Form, Link, useNavigation } from "react-router";
-import { handleResultError } from "~/utils/errors";
-import { EmptyState } from "~/components/EmptyState";
 import { Celebration } from "~/components/Celebration";
+import { EmptyState } from "~/components/EmptyState";
+import { handleResultError } from "~/utils/errors";
 import HabitCheckbox from "../../components/HabitCheckbox";
 import { HabitService } from "../../modules/habits/application/service";
 import { HabitCompletion } from "../../modules/habits/domain/entity";

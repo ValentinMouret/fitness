@@ -1,12 +1,12 @@
 import type { ResultAsync } from "neverthrow";
-import type { ErrRepository } from "~/repository";
 import type {
+  MuscleGroup,
   WeeklyVolumeTracker,
   WorkoutSession,
-  MuscleGroup,
 } from "~/modules/fitness/domain/workout";
 import { WeeklyVolumeTracker as WeeklyVolumeTrackerNamespace } from "~/modules/fitness/domain/workout";
 import { VolumeTrackingRepository } from "~/modules/fitness/infra/volume-tracking-repository.server";
+import type { ErrRepository } from "~/repository";
 
 type ErrVolumeTracking = "invalid_workout_data" | "week_calculation_error";
 

@@ -1,21 +1,21 @@
+import { and, eq, gte, type InferSelectModel, isNull } from "drizzle-orm";
 import { ResultAsync } from "neverthrow";
 import { db } from "~/db";
+import {
+  equipmentInstances,
+  equipmentPreferences,
+  exerciseMuscleGroups,
+  exerciseSubstitutions,
+  exercises,
+} from "~/db/schema";
 import { logger } from "~/logger.server";
-import type { ErrRepository } from "~/repository";
-import { executeQuery } from "~/repository.server";
 import type {
   EquipmentInstance,
   ExerciseMuscleGroups,
 } from "~/modules/fitness/domain/workout";
-import {
-  equipmentInstances,
-  exerciseSubstitutions,
-  exercises,
-  exerciseMuscleGroups,
-  equipmentPreferences,
-} from "~/db/schema";
-import { eq, and, gte, isNull, type InferSelectModel } from "drizzle-orm";
 import { ExerciseMuscleGroupsAggregate } from "~/modules/fitness/domain/workout";
+import type { ErrRepository } from "~/repository";
+import { executeQuery } from "~/repository.server";
 
 export const AdaptiveWorkoutRepository = {
   getAvailableEquipment(): ResultAsync<

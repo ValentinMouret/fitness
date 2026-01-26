@@ -1,26 +1,25 @@
-import { Form, redirect, useActionData, Link } from "react-router";
-import { data } from "react-router";
-import type { Route } from "./+types/edit";
-import type {
-  Habit as HabitEntity,
-  Habit,
-} from "../../modules/habits/domain/entity";
-import { HabitRepository } from "../../modules/habits/infra/repository.server";
-import * as React from "react";
-import { allDays } from "~/time";
 import {
   Box,
-  Heading,
-  TextField,
-  TextArea,
-  Select,
   Button,
-  Text,
-  Flex,
   Callout,
   Checkbox,
+  Flex,
   Grid,
+  Heading,
+  Select,
+  Text,
+  TextArea,
+  TextField,
 } from "@radix-ui/themes";
+import * as React from "react";
+import { data, Form, Link, redirect, useActionData } from "react-router";
+import { allDays } from "~/time";
+import type {
+  Habit,
+  Habit as HabitEntity,
+} from "../../modules/habits/domain/entity";
+import { HabitRepository } from "../../modules/habits/infra/repository.server";
+import type { Route } from "./+types/edit";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const result = await HabitRepository.fetchById(params.id);

@@ -1,6 +1,6 @@
 import type {
-  MealTemplate,
   MealCategory,
+  MealTemplate,
 } from "~/modules/nutrition/domain/meal-template";
 
 export interface TemplateSelectionViewModel {

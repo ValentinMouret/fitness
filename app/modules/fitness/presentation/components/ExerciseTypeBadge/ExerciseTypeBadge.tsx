@@ -1,7 +1,7 @@
 import { Badge } from "@radix-ui/themes";
+import { semanticColors } from "~/design-system";
 import type { ExerciseType } from "~/modules/fitness/domain/workout";
 import { capitalize } from "~/strings";
-import { semanticColors } from "~/design-system";
 
 interface ExerciseTypeBadgeProps {
   readonly type: ExerciseType;

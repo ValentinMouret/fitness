@@ -7,17 +7,17 @@ import {
   Heading,
   Text,
 } from "@radix-ui/themes";
-import { Form, Link, useSearchParams, useFetcher } from "react-router";
 import { useState } from "react";
-import { Pagination } from "~/components/Pagination";
+import { Form, Link, useFetcher, useSearchParams } from "react-router";
 import { EmptyState } from "~/components/EmptyState";
-import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
+import { Pagination } from "~/components/Pagination";
 import { WorkoutAnalysisService } from "~/modules/fitness/application/workout-analysis.service.server";
+import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
 import { AIFitnessCoachService } from "~/modules/fitness/infra/ai-fitness-coach.service";
+import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { AIFeedbackModal } from "~/modules/fitness/presentation/components";
 import { handleResultError } from "~/utils/errors";
 import type { Route } from "./+types/index";
-import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const url = new URL(request.url);

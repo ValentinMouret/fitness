@@ -1,18 +1,18 @@
-import { Link } from "react-router";
+import { RulerSquareIcon } from "@radix-ui/react-icons";
 import {
+  Badge,
   Box,
+  Button,
+  Card,
+  Flex,
+  Grid,
   Heading,
   Text,
-  Flex,
-  Card,
-  Grid,
-  Badge,
-  Button,
 } from "@radix-ui/themes";
-import { RulerSquareIcon } from "@radix-ui/react-icons";
+import { Link } from "react-router";
 import { EmptyState } from "~/components/EmptyState";
-import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
 import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
+import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
 import { handleResultError } from "~/utils/errors";
 import type { Route } from "./+types/index";
 
