@@ -10,19 +10,47 @@ import {
 import { exerciseMuscleGroups, exercises } from "~/db/schema";
 import { logger } from "~/logger.server";
 import { ResultAsync } from "neverthrow";
-import type { ErrDatabase, ErrRepository } from "~/repository";
+import type { ErrRepository } from "~/repository";
 import { executeQuery } from "~/repository.server";
-import { and, eq, type InferSelectModel } from "drizzle-orm";
+import { and, eq, isNull, type InferSelectModel } from "drizzle-orm";
 
-export const ExerciseRepository = {
-  listAll(): ResultAsync<ReadonlyArray<Exercise>, ErrDatabase> {
-    const query = db.select().from(exercises).orderBy(exercises.name);
+export interface IExerciseRepository {
+  listAll(): ResultAsync<ReadonlyArray<Exercise>, ErrRepository>;
+  create(exercise: Omit<Exercise, "id">): ResultAsync<Exercise, ErrRepository>;
+  save(exercise: Exercise): ResultAsync<void, ErrRepository>;
+}
+
+export const ExerciseRepository: IExerciseRepository = {
+  listAll(): ResultAsync<ReadonlyArray<Exercise>, ErrRepository> {
+    const query = db
+      .select()
+      .from(exercises)
+      .where(isNull(exercises.deleted_at))
+      .orderBy(exercises.name);
     return executeQuery(query, "listAllExercises").map((records) =>
       records.map((record) => exerciseRecordToDomain(record)),
     );
   },
 
-  save(exercise: Exercise) {
+  create(exercise: Omit<Exercise, "id">): ResultAsync<Exercise, ErrRepository> {
+    return executeQuery(
+      db
+        .insert(exercises)
+        .values({
+          name: exercise.name,
+          type: exercise.type,
+          movement_pattern: exercise.movementPattern,
+          description: exercise.description ?? null,
+        })
+        .returning(),
+      "createExercise",
+    ).map((records) => {
+      const record = records[0];
+      return exerciseRecordToDomain(record);
+    });
+  },
+
+  save(exercise: Exercise): ResultAsync<void, ErrRepository> {
     return ResultAsync.fromPromise(
       db
         .insert(exercises)

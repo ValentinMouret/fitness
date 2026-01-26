@@ -1,10 +1,6 @@
-import { isNull } from "drizzle-orm";
-import { err, ok, type Result, ResultAsync } from "neverthrow";
-import { db } from "~/db";
-import { exercises, workoutExercises, workoutSets } from "~/db/schema";
+import { err, ok, type Result } from "neverthrow";
 import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";
-import { executeQuery } from "~/repository.server";
 import type {
   FitbodExercise,
   FitbodWorkoutData,
@@ -23,7 +19,24 @@ import {
   Workout as WorkoutFactory,
   WorkoutSet as WorkoutSetFactory,
 } from "../domain/workout";
-import { WorkoutRepository } from "../infra/workout.repository.server";
+import {
+  ExerciseRepository as DefaultExerciseRepository,
+  type IExerciseRepository,
+} from "../infra/repository.server";
+import {
+  WorkoutRepository as DefaultWorkoutRepository,
+  type IWorkoutRepository,
+} from "../infra/workout.repository.server";
+
+export interface FitbodImportDependencies {
+  readonly exerciseRepository: IExerciseRepository;
+  readonly workoutRepository: IWorkoutRepository;
+}
+
+const defaultDependencies: FitbodImportDependencies = {
+  exerciseRepository: DefaultExerciseRepository,
+  workoutRepository: DefaultWorkoutRepository,
+};
 
 export type ErrFitbodImport =
   | "invalid_fitbod_format"
@@ -211,6 +224,7 @@ export async function importFitbodCSV(
     createMissingExercises: true,
     skipUnmappedExercises: false,
   },
+  deps: FitbodImportDependencies = defaultDependencies,
 ): Promise<Result<ImportResult, ErrFitbodImport>> {
   const parseResult = parseCSV(csvContent);
   if (parseResult.isErr()) {
@@ -225,7 +239,11 @@ export async function importFitbodCSV(
   const allResults: ImportResult[] = [];
 
   for (const fitbodWorkout of fitbodWorkouts) {
-    const mappingResult = await processExerciseMappings(fitbodWorkout, config);
+    const mappingResult = await processExerciseMappings(
+      fitbodWorkout,
+      config,
+      deps,
+    );
     if (mappingResult.isErr()) {
       return err(mappingResult.error);
     }
@@ -236,13 +254,14 @@ export async function importFitbodCSV(
       fitbodWorkout,
       exerciseMap,
       config,
+      deps,
     );
     if (workoutSessionResult.isErr()) {
       return err(workoutSessionResult.error);
     }
     const workoutSession = workoutSessionResult.value;
 
-    const saveResult = await saveWorkoutSession(workoutSession);
+    const saveResult = await deps.workoutRepository.saveSession(workoutSession);
     if (saveResult.isErr()) {
       return err("workout_save_failed");
     }
@@ -274,6 +293,7 @@ export async function importFitbodCSV(
 async function processExerciseMappings(
   fitbodWorkout: FitbodWorkoutData,
   config: ImportConfig,
+  deps: FitbodImportDependencies,
 ): Promise<
   Result<
     {
@@ -293,6 +313,7 @@ async function processExerciseMappings(
   for (const fitbodExercise of fitbodWorkout.exercises) {
     const existingExerciseResult = await findExerciseByName(
       fitbodExercise.name,
+      deps,
     );
 
     if (existingExerciseResult.isOk() && existingExerciseResult.value) {
@@ -303,6 +324,7 @@ async function processExerciseMappings(
     if (config.createMissingExercises) {
       const newExerciseResult = await createExerciseFromFitbod(
         fitbodExercise.name,
+        deps,
       );
       if (newExerciseResult.isErr()) {
         if (config.skipUnmappedExercises) {
@@ -340,17 +362,24 @@ async function createWorkoutSession(
   fitbodWorkout: FitbodWorkoutData,
   exerciseMap: Map<string, Exercise>,
   config: ImportConfig,
+  deps: FitbodImportDependencies,
 ): Promise<Result<WorkoutSession, ErrFitbodImport>> {
   const dateStr = fitbodWorkout.date.toISOString().split("T")[0];
   const workoutName = `Fitbod Import ${dateStr}`;
 
-  const workout = WorkoutFactory.create({
-    name: workoutName,
-    start: config.overrideImportTime ?? fitbodWorkout.date,
-    importedFromFitbod: true,
-  });
+  const start = config.overrideImportTime ?? fitbodWorkout.date;
+  const stop = new Date(start.getTime() + 45 * 60 * 1000);
 
-  const savedWorkoutResult = await WorkoutRepository.save(workout);
+  const workout = {
+    ...WorkoutFactory.create({
+      name: workoutName,
+      start,
+      importedFromFitbod: true,
+    }),
+    stop,
+  };
+
+  const savedWorkoutResult = await deps.workoutRepository.save(workout);
   if (savedWorkoutResult.isErr()) {
     return err(savedWorkoutResult.error);
   }
@@ -406,105 +435,17 @@ async function createWorkoutSession(
   });
 }
 
-async function saveWorkoutSession(
-  workoutSession: WorkoutSession,
-): Promise<Result<void, ErrRepository>> {
-  return ResultAsync.fromPromise(
-    db.transaction(async (tx) => {
-      for (const group of workoutSession.exerciseGroups) {
-        await tx
-          .insert(workoutExercises)
-          .values({
-            workout_id: workoutSession.workout.id,
-            exercise_id: group.exercise.id,
-            order_index: group.orderIndex,
-            notes: group.notes ?? null,
-          })
-          .onConflictDoUpdate({
-            target: [workoutExercises.workout_id, workoutExercises.exercise_id],
-            set: {
-              order_index: group.orderIndex,
-              notes: group.notes ?? null,
-              updated_at: new Date(),
-              deleted_at: null,
-            },
-          });
-
-        for (const set of group.sets) {
-          await tx
-            .insert(workoutSets)
-            .values({
-              workout: set.workoutId,
-              exercise: set.exerciseId,
-              set: set.set,
-              targetReps: set.targetReps ?? null,
-              reps: set.reps ?? null,
-              weight: set.weight ?? null,
-              note: set.note ?? null,
-              isCompleted: set.isCompleted,
-              isFailure: set.isFailure,
-              isWarmup: set.isWarmup,
-            })
-            .onConflictDoUpdate({
-              target: [
-                workoutSets.workout,
-                workoutSets.exercise,
-                workoutSets.set,
-              ],
-              set: {
-                targetReps: set.targetReps ?? null,
-                reps: set.reps ?? null,
-                weight: set.weight ?? null,
-                note: set.note ?? null,
-                isCompleted: set.isCompleted,
-                isFailure: set.isFailure,
-                isWarmup: set.isWarmup,
-                updated_at: new Date(),
-                deleted_at: null,
-              },
-            });
-        }
-      }
-    }),
-    (error) => {
-      logger.error({ err: error }, "Error saving workout session");
-      return "database_error" as const;
-    },
-  ).map(() => undefined);
-}
-
 async function createExerciseFromFitbod(
   fitbodName: string,
+  deps: FitbodImportDependencies,
 ): Promise<Result<Exercise, ErrRepository>> {
   const { type, movementPattern } = inferExerciseTypeAndPattern(fitbodName);
 
-  const exerciseData = {
+  return deps.exerciseRepository.create({
     name: fitbodName,
     type,
-    movement_pattern: movementPattern,
+    movementPattern,
     description: `Created from Fitbod import: ${fitbodName}`,
-    setup_time_seconds: 30,
-    complexity_score: 1,
-    equipment_sharing_friendly: false,
-    requires_spotter: false,
-  };
-
-  return executeQuery(
-    db.insert(exercises).values(exerciseData).returning(),
-    "createExerciseFromFitbod",
-  ).map((records) => {
-    if (records.length === 0) {
-      throw new Error("No records returned when creating exercise");
-    }
-
-    const record = records[0];
-    return {
-      id: record.id,
-      name: record.name,
-      type: record.type,
-      movementPattern: record.movement_pattern,
-      description: record.description ?? undefined,
-    };
   });
 }
 
@@ -552,10 +493,9 @@ function inferExerciseTypeAndPattern(name: string): {
 
 async function findExerciseByName(
   fitbodName: string,
+  deps: FitbodImportDependencies,
 ): Promise<Result<Exercise | null, ErrRepository>> {
-  const query = db.select().from(exercises).where(isNull(exercises.deleted_at));
-
-  return executeQuery(query, "findExerciseByName").map((records) => {
+  return deps.exerciseRepository.listAll().map((records) => {
     const normalizedFitbodName = normalizeExerciseName(fitbodName);
 
     for (const record of records) {
