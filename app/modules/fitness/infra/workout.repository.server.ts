@@ -18,7 +18,7 @@ import type {
   WorkoutSet,
 } from "../domain/workout";
 
-export const WorkoutRepository = {
+export const WorkoutRepository: IWorkoutRepository = {
   save(
     workout: Omit<Workout, "id"> | Workout,
   ): ResultAsync<Workout, ErrRepository> {
@@ -170,7 +170,88 @@ export const WorkoutRepository = {
       },
     );
   },
+
+  saveSession(
+    workoutSession: WorkoutSession,
+  ): ResultAsync<void, ErrRepository> {
+    return ResultAsync.fromPromise(
+      db.transaction(async (tx) => {
+        for (const group of workoutSession.exerciseGroups) {
+          await tx
+            .insert(workoutExercises)
+            .values({
+              workout_id: workoutSession.workout.id,
+              exercise_id: group.exercise.id,
+              order_index: group.orderIndex,
+              notes: group.notes ?? null,
+            })
+            .onConflictDoUpdate({
+              target: [
+                workoutExercises.workout_id,
+                workoutExercises.exercise_id,
+              ],
+              set: {
+                order_index: group.orderIndex,
+                notes: group.notes ?? null,
+                updated_at: new Date(),
+                deleted_at: null,
+              },
+            });
+
+          for (const set of group.sets) {
+            await tx
+              .insert(workoutSets)
+              .values({
+                workout: set.workoutId,
+                exercise: set.exerciseId,
+                set: set.set,
+                targetReps: set.targetReps ?? null,
+                reps: set.reps ?? null,
+                weight: set.weight ?? null,
+                note: set.note ?? null,
+                isCompleted: set.isCompleted,
+                isFailure: set.isFailure,
+                isWarmup: set.isWarmup,
+              })
+              .onConflictDoUpdate({
+                target: [
+                  workoutSets.workout,
+                  workoutSets.exercise,
+                  workoutSets.set,
+                ],
+                set: {
+                  targetReps: set.targetReps ?? null,
+                  reps: set.reps ?? null,
+                  weight: set.weight ?? null,
+                  note: set.note ?? null,
+                  isCompleted: set.isCompleted,
+                  isFailure: set.isFailure,
+                  isWarmup: set.isWarmup,
+                  updated_at: new Date(),
+                  deleted_at: null,
+                },
+              });
+          }
+        }
+      }),
+      (error) => {
+        logger.error({ err: error }, "Error saving workout session");
+        return "database_error" as const;
+      },
+    ).map(() => undefined);
+  },
 };
+
+export interface IWorkoutRepository {
+  save(
+    workout: Omit<Workout, "id"> | Workout,
+  ): ResultAsync<Workout, ErrRepository>;
+  saveSession(workoutSession: WorkoutSession): ResultAsync<void, ErrRepository>;
+  findById(id: string): ResultAsync<Workout | null, ErrRepository>;
+  findAll(): ResultAsync<Workout[], ErrRepository>;
+  findInProgress(): ResultAsync<Workout | null, ErrRepository>;
+  delete(id: string): ResultAsync<void, ErrRepository>;
+}
 
 export const WorkoutSessionRepository = {
   findById(

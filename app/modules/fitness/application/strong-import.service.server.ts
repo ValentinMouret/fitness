@@ -1,4 +1,4 @@
-import { err, ok, type Result, ResultAsync } from "neverthrow";
+import { err, ok, type Result } from "neverthrow";
 import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";
 import type {
@@ -14,11 +14,14 @@ import {
   StrongExercise as StrongExerciseFactory,
   StrongWorkoutData as StrongWorkoutDataFactory,
 } from "../domain/strong-import";
-import { WorkoutRepository } from "../infra/workout.repository.server";
-import { executeQuery } from "~/repository.server";
-import { db } from "~/db";
-import { exercises, workoutExercises, workoutSets } from "~/db/schema";
-import { eq, isNull } from "drizzle-orm";
+import {
+  WorkoutRepository as DefaultWorkoutRepository,
+  type IWorkoutRepository,
+} from "../infra/workout.repository.server";
+import {
+  ExerciseRepository as DefaultExerciseRepository,
+  type IExerciseRepository,
+} from "../infra/repository.server";
 import type {
   WorkoutSession,
   WorkoutExerciseGroup,
@@ -32,6 +35,16 @@ import {
   WorkoutSet as WorkoutSetFactory,
 } from "../domain/workout";
 
+export interface StrongImportDependencies {
+  readonly exerciseRepository: IExerciseRepository;
+  readonly workoutRepository: IWorkoutRepository;
+}
+
+const defaultDependencies: StrongImportDependencies = {
+  exerciseRepository: DefaultExerciseRepository,
+  workoutRepository: DefaultWorkoutRepository,
+};
+
 export type ErrStrongImport =
   | "invalid_strong_format"
   | "invalid_date_format"
@@ -41,15 +54,13 @@ export type ErrStrongImport =
   | "exercise_creation_failed"
   | ErrRepository;
 
-/**
- * Import a Strong workout from text export
- */
 export async function importWorkout(
   strongText: string,
   config: ImportConfig = {
     createMissingExercises: true,
     skipUnmappedExercises: false,
   },
+  deps: StrongImportDependencies = defaultDependencies,
 ): Promise<Result<ImportResult, ErrStrongImport>> {
   const parseResult = parseWorkout(strongText);
   if (parseResult.isErr()) {
@@ -57,9 +68,11 @@ export async function importWorkout(
   }
   const strongWorkout = parseResult.value;
 
-  // console.log("[Strong Import] Parsed workout:", ...);
-
-  const mappingResult = await processExerciseMappings(strongWorkout, config);
+  const mappingResult = await processExerciseMappings(
+    strongWorkout,
+    config,
+    deps,
+  );
   if (mappingResult.isErr()) {
     return err(mappingResult.error);
   }
@@ -70,13 +83,14 @@ export async function importWorkout(
     strongWorkout,
     exerciseMap,
     config,
+    deps,
   );
   if (workoutSessionResult.isErr()) {
     return err(workoutSessionResult.error);
   }
   const workoutSession = workoutSessionResult.value;
 
-  const saveResult = await saveWorkoutSession(workoutSession);
+  const saveResult = await deps.workoutRepository.saveSession(workoutSession);
   if (saveResult.isErr()) {
     return err("workout_save_failed");
   }
@@ -89,12 +103,10 @@ export async function importWorkout(
   });
 }
 
-/**
- * Process exercise mappings for all exercises in the Strong workout
- */
 async function processExerciseMappings(
   strongWorkout: StrongWorkoutData,
   config: ImportConfig,
+  deps: StrongImportDependencies,
 ): Promise<
   Result<
     {
@@ -115,6 +127,7 @@ async function processExerciseMappings(
     // Try to find existing exercise by name similarity
     const existingExerciseResult = await findExerciseByName(
       strongExercise.name,
+      deps,
     );
 
     if (existingExerciseResult.isOk() && existingExerciseResult.value) {
@@ -125,6 +138,7 @@ async function processExerciseMappings(
     if (config.createMissingExercises) {
       const newExerciseResult = await createExerciseFromStrong(
         strongExercise.name,
+        deps,
       );
       if (newExerciseResult.isErr()) {
         if (config.skipUnmappedExercises) {
@@ -158,23 +172,27 @@ async function processExerciseMappings(
   });
 }
 
-/**
- * Create a WorkoutSession from Strong data and exercise mappings
- */
 async function createWorkoutSession(
   strongWorkout: StrongWorkoutData,
   exerciseMap: Map<string, Exercise>,
   config: ImportConfig,
+  deps: StrongImportDependencies,
 ): Promise<Result<WorkoutSession, ErrStrongImport>> {
   // Create the workout
-  const workout = WorkoutFactory.create({
-    name: strongWorkout.name,
-    start: config.overrideImportTime ?? strongWorkout.date,
-    importedFromStrong: true,
-  });
+  const start = config.overrideImportTime ?? strongWorkout.date;
+  const stop = new Date(start.getTime() + 45 * 60 * 1000);
+
+  const workout = {
+    ...WorkoutFactory.create({
+      name: strongWorkout.name,
+      start,
+      importedFromStrong: true,
+    }),
+    stop,
+  };
 
   // Save the workout to get an ID
-  const savedWorkoutResult = await WorkoutRepository.save(workout);
+  const savedWorkoutResult = await deps.workoutRepository.save(workout);
   if (savedWorkoutResult.isErr()) {
     return err(savedWorkoutResult.error);
   }
@@ -196,8 +214,6 @@ async function createWorkoutSession(
     let setCounter = 1; // Sequential counter for all sets (warm-up + working)
 
     for (const strongSet of strongExercise.sets) {
-      // console.log(`[Strong Import] Creating workout set...`);
-
       const setResult = WorkoutSetFactory.create({
         workout: savedWorkout,
         exercise,
@@ -216,7 +232,6 @@ async function createWorkoutSession(
       }
 
       const createdSet = setResult.value;
-      // console.log(`[Strong Import] Created workout set...`);
 
       workoutSets.push(createdSet);
       setCounter++; // Increment for next set
@@ -238,146 +253,33 @@ async function createWorkoutSession(
   });
 }
 
-/**
- * Save a complete workout session
- */
-async function saveWorkoutSession(
-  workoutSession: WorkoutSession,
-): Promise<Result<void, ErrRepository>> {
-  return ResultAsync.fromPromise(
-    db.transaction(async (tx) => {
-      // Add exercises to workout and save sets
-      for (const group of workoutSession.exerciseGroups) {
-        // Add exercise to workout without creating initial set
-        await tx
-          .insert(workoutExercises)
-          .values({
-            workout_id: workoutSession.workout.id,
-            exercise_id: group.exercise.id,
-            order_index: group.orderIndex,
-            notes: group.notes ?? null,
-          })
-          .onConflictDoUpdate({
-            target: [workoutExercises.workout_id, workoutExercises.exercise_id],
-            set: {
-              order_index: group.orderIndex,
-              notes: group.notes ?? null,
-              updated_at: new Date(),
-              deleted_at: null,
-            },
-          });
-
-        // Add all sets for this exercise
-        for (const set of group.sets) {
-          // console.log(`[Strong Import] Saving set to database...`);
-
-          await tx
-            .insert(workoutSets)
-            .values({
-              workout: set.workoutId,
-              exercise: set.exerciseId,
-              set: set.set,
-              targetReps: set.targetReps ?? null,
-              reps: set.reps ?? null,
-              weight: set.weight ?? null,
-              note: set.note ?? null,
-              isCompleted: set.isCompleted,
-              isFailure: set.isFailure,
-              isWarmup: set.isWarmup,
-            })
-            .onConflictDoUpdate({
-              target: [
-                workoutSets.workout,
-                workoutSets.exercise,
-                workoutSets.set,
-              ],
-              set: {
-                targetReps: set.targetReps ?? null,
-                reps: set.reps ?? null,
-                weight: set.weight ?? null,
-                note: set.note ?? null,
-                isCompleted: set.isCompleted,
-                isFailure: set.isFailure,
-                isWarmup: set.isWarmup,
-                updated_at: new Date(),
-                deleted_at: null,
-              },
-            });
-        }
-      }
-    }),
-    (error) => {
-      logger.error({ err: error }, "Error saving workout session");
-      return "database_error" as const;
-    },
-  ).map(() => undefined);
-}
-
-/**
- * Get exercise by ID
- */
 async function _getExerciseById(
+  deps: StrongImportDependencies,
   id: string,
 ): Promise<Result<Exercise, ErrRepository>> {
-  const query = db.select().from(exercises).where(eq(exercises.id, id));
-
-  return executeQuery(query, "getExerciseById").map((records) => {
-    if (records.length === 0) {
+  return deps.exerciseRepository.listAll().map((records) => {
+    const record = records.find((r) => r.id === id);
+    if (!record) {
       throw new Error("Exercise not found");
     }
-
-    const record = records[0];
-    return {
-      id: record.id,
-      name: record.name,
-      type: record.type,
-      movementPattern: record.movement_pattern,
-      description: record.description ?? undefined,
-    };
+    return record;
   });
 }
 
-/**
- * Create a new exercise from Strong exercise name
- */
 async function createExerciseFromStrong(
   strongName: string,
+  deps: StrongImportDependencies,
 ): Promise<Result<Exercise, ErrRepository>> {
   const { type, movementPattern } = inferExerciseTypeAndPattern(strongName);
 
-  const exerciseData = {
+  return deps.exerciseRepository.create({
     name: strongName,
     type,
-    movement_pattern: movementPattern,
+    movementPattern,
     description: `Created from Strong import: ${strongName}`,
-    setup_time_seconds: 30,
-    complexity_score: 1,
-    equipment_sharing_friendly: false,
-    requires_spotter: false,
-  };
-
-  return executeQuery(
-    db.insert(exercises).values(exerciseData).returning(),
-    "createExerciseFromStrong",
-  ).map((records) => {
-    if (records.length === 0) {
-      throw new Error("No records returned when creating exercise");
-    }
-
-    const record = records[0];
-    return {
-      id: record.id,
-      name: record.name,
-      type: record.type,
-      movementPattern: record.movement_pattern,
-      description: record.description ?? undefined,
-    };
   });
 }
 
-/**
- * Infer exercise type and movement pattern from Strong exercise name
- */
 function inferExerciseTypeAndPattern(name: string): {
   type: ExerciseType;
   movementPattern: MovementPattern;
@@ -418,9 +320,6 @@ function inferExerciseTypeAndPattern(name: string): {
   return { type, movementPattern };
 }
 
-/**
- * Validate Strong export text before attempting import
- */
 export function validateStrongText(text: string): Result<boolean, string> {
   if (!text || text.trim().length === 0) {
     return err("Text is empty");
@@ -433,9 +332,6 @@ export function validateStrongText(text: string): Result<boolean, string> {
   return ok(true);
 }
 
-/**
- * Parse a Strong app export text into structured workout data
- */
 function parseWorkout(
   text: string,
 ): Result<StrongWorkoutData, ErrStrongImport> {
@@ -470,9 +366,6 @@ function parseWorkout(
   ).mapErr(() => "invalid_strong_format" as const);
 }
 
-/**
- * Parse Strong date/time format: "Wednesday 13 August 2025 at 07:32"
- */
 function parseDateTime(dateTimeStr: string): Result<Date, ErrStrongImport> {
   const cleanStr = dateTimeStr.replace(/\s+at\s+/, " ");
 
@@ -537,9 +430,6 @@ function parseDateTime(dateTimeStr: string): Result<Date, ErrStrongImport> {
   return err("invalid_date_format");
 }
 
-/**
- * Parse exercises from the remaining lines
- */
 function parseExercises(
   lines: string[],
 ): Result<ReadonlyArray<StrongExercise>, ErrStrongImport> {
@@ -593,9 +483,6 @@ function parseExercises(
   return ok(exercises);
 }
 
-/**
- * Check if a line represents a set
- */
 function isSetLine(line: string): boolean {
   // Match both formats:
   // 1. "Set 1: 20 kg × 10" or "W1: 20 kg × 10" (weight + reps format)
@@ -607,9 +494,6 @@ function isSetLine(line: string): boolean {
   return weightFormat || repsOnlyFormat;
 }
 
-/**
- * Parse a single set line
- */
 function parseSet(
   line: string,
   defaultSetNumber: number,
@@ -702,15 +586,11 @@ function parseSet(
   return err("invalid_set_format");
 }
 
-/**
- * Find existing exercise by name similarity
- */
 async function findExerciseByName(
   strongName: string,
+  deps: StrongImportDependencies,
 ): Promise<Result<Exercise | null, ErrRepository>> {
-  const query = db.select().from(exercises).where(isNull(exercises.deleted_at));
-
-  return executeQuery(query, "findExerciseByName").map((records) => {
+  return deps.exerciseRepository.listAll().map((records) => {
     const normalizedStrongName = normalizeExerciseName(strongName);
 
     // Look for exact match first
@@ -745,9 +625,6 @@ async function findExerciseByName(
   });
 }
 
-/**
- * Normalize exercise name for comparison
- */
 function normalizeExerciseName(name: string): string {
   return name
     .toLowerCase()
@@ -757,9 +634,6 @@ function normalizeExerciseName(name: string): string {
     .trim();
 }
 
-/**
- * Calculate similarity between two exercise names
- */
 function calculateNameSimilarity(name1: string, name2: string): number {
   const norm1 = normalizeExerciseName(name1);
   const norm2 = normalizeExerciseName(name2);
@@ -776,9 +650,6 @@ function calculateNameSimilarity(name1: string, name2: string): number {
   return intersection.length / union.length;
 }
 
-/**
- * Validate that a string looks like a Strong export
- */
 function isValidStrongExport(text: string): boolean {
   const lines = text
     .split("\n")
