@@ -18,12 +18,14 @@ interface ExerciseSelectorProps {
   readonly exercises: ReadonlyArray<Exercise>;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
+  readonly replaceExerciseId?: string;
 }
 
 export function ExerciseSelector({
   exercises,
   open,
   onOpenChange,
+  replaceExerciseId,
 }: ExerciseSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<ExerciseType | "all">("all");
@@ -52,12 +54,21 @@ export function ExerciseSelector({
     return fuse.search(searchQuery).map((result) => result.item);
   }, [typeFiltered, fuse, searchQuery]);
 
+  const isReplaceMode = !!replaceExerciseId;
+
   const handleSubmit = () => {
     if (!selectedExercise) return;
 
     const formData = new FormData();
-    formData.append("intent", "add-exercise");
-    formData.append("exerciseId", selectedExercise.id);
+
+    if (isReplaceMode) {
+      formData.append("intent", "replace-exercise");
+      formData.append("oldExerciseId", replaceExerciseId);
+      formData.append("newExerciseId", selectedExercise.id);
+    } else {
+      formData.append("intent", "add-exercise");
+      formData.append("exerciseId", selectedExercise.id);
+    }
 
     fetcher.submit(formData, { method: "post" });
 
@@ -77,7 +88,9 @@ export function ExerciseSelector({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content style={{ maxWidth: 480, maxHeight: "80vh" }}>
-        <Dialog.Title size="4">Add Exercise</Dialog.Title>
+        <Dialog.Title size="4">
+          {isReplaceMode ? "Replace Exercise" : "Add Exercise"}
+        </Dialog.Title>
 
         <Flex direction="column" gap="4" mt="4">
           <Flex gap="2">
@@ -172,7 +185,13 @@ export function ExerciseSelector({
               onClick={handleSubmit}
               disabled={!selectedExercise || fetcher.state !== "idle"}
             >
-              {fetcher.state === "submitting" ? "Adding..." : "Add"}
+              {fetcher.state === "submitting"
+                ? isReplaceMode
+                  ? "Replacing..."
+                  : "Adding..."
+                : isReplaceMode
+                  ? "Replace"
+                  : "Add"}
             </Button>
           </Flex>
         </Flex>

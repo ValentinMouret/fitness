@@ -1,9 +1,22 @@
-import { ArrowLeftIcon } from "@radix-ui/react-icons";
 import {
-  Box,
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { ArrowLeftIcon, DotsVerticalIcon } from "@radix-ui/react-icons";
+import {
   Button,
-  Flex,
-  Heading,
+  DropdownMenu,
   IconButton,
   Text,
   TextField,
@@ -16,6 +29,7 @@ import { DeleteConfirmationDialog } from "~/components/workout/DeleteConfirmatio
 import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
 import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
+import type { WorkoutExerciseGroup } from "~/modules/fitness/domain/workout";
 import { Workout, WorkoutSet } from "~/modules/fitness/domain/workout";
 import { ExerciseRepository } from "~/modules/fitness/infra/repository.server";
 import {
@@ -28,6 +42,7 @@ import {
 } from "~/modules/fitness/presentation";
 import { createNotFoundError, handleResultError } from "~/utils/errors";
 import type { Route } from "./+types/:id";
+import "./active-workout.css";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { id } = params;
@@ -147,6 +162,47 @@ export async function action({ request, params }: Route.ActionArgs) {
 
         if (result.isErr()) {
           return { error: "Failed to remove exercise" };
+        }
+
+        return { success: true };
+      }
+
+      case "replace-exercise": {
+        const oldExerciseId = formData.get("oldExerciseId")?.toString();
+        const newExerciseId = formData.get("newExerciseId")?.toString();
+
+        if (!oldExerciseId || !newExerciseId) {
+          return { error: "Both old and new exercise IDs are required" };
+        }
+
+        const replaceResult = await WorkoutSessionRepository.replaceExercise(
+          id,
+          oldExerciseId,
+          newExerciseId,
+        );
+
+        if (replaceResult.isErr()) {
+          return { error: "Failed to replace exercise" };
+        }
+
+        return { success: true };
+      }
+
+      case "reorder-exercises": {
+        const exerciseIdsJson = formData.get("exerciseIds")?.toString();
+
+        if (!exerciseIdsJson) {
+          return { error: "Exercise IDs are required" };
+        }
+
+        const exerciseIds: string[] = JSON.parse(exerciseIdsJson);
+        const reorderResult = await WorkoutSessionRepository.reorderExercises(
+          id,
+          exerciseIds,
+        );
+
+        if (reorderResult.isErr()) {
+          return { error: "Failed to reorder exercises" };
         }
 
         return { success: true };
@@ -395,13 +451,22 @@ export async function action({ request, params }: Route.ActionArgs) {
 
 export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
+  const [replaceExerciseId, setReplaceExerciseId] = useState<string>();
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
 
   const fetcher = useFetcher();
+  const reorderFetcher = useFetcher();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    }),
+  );
 
   const { startedAgo, formattedDuration } = useLiveDuration({
     startTime: loaderData?.workoutSession.workout.start || new Date(),
@@ -437,6 +502,28 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     setIsEditingName(false);
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const groups = workoutSession.exerciseGroups;
+    const oldIndex = groups.findIndex((g) => g.exercise.id === active.id);
+    const newIndex = groups.findIndex((g) => g.exercise.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = [...groups];
+    const [moved] = reordered.splice(oldIndex, 1);
+    reordered.splice(newIndex, 0, moved);
+
+    reorderFetcher.submit(
+      {
+        intent: "reorder-exercises",
+        exerciseIds: JSON.stringify(reordered.map((g) => g.exercise.id)),
+      },
+      { method: "post" },
+    );
+  };
+
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-US", {
       month: "short",
@@ -446,114 +533,142 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <Box style={{ maxWidth: 640, margin: "0 auto" }}>
+    <div className="active-workout-page">
       {/* Header */}
-      <Box px="4" py="4" style={{ borderBottom: "1px solid var(--gray-4)" }}>
-        <Flex justify="between" align="center">
-          <Flex align="center" gap="3">
-            <IconButton asChild variant="ghost" size="2">
-              <Link to="/workouts">
-                <ArrowLeftIcon />
-              </Link>
-            </IconButton>
-            <Box>
-              {isEditingName ? (
-                <TextField.Root
-                  ref={inputRef}
-                  defaultValue={optimisticName}
-                  size="3"
-                  onBlur={(e) => handleNameSubmit(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleNameSubmit(e.currentTarget.value);
-                    } else if (e.key === "Escape") {
-                      setIsEditingName(false);
-                    }
-                  }}
-                  style={{ fontWeight: "500" }}
-                />
-              ) : (
-                <Heading
-                  size="5"
-                  mb="1"
-                  onClick={() => !isComplete && setIsEditingName(true)}
-                  style={{ cursor: isComplete ? undefined : "pointer" }}
-                >
-                  {optimisticName}
-                </Heading>
-              )}
-              <Text size="2" color="gray">
-                {isComplete
-                  ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
-                  : `${formatDate(workoutSession.workout.start)} · ${startedAgo}`}
-              </Text>
-            </Box>
-          </Flex>
+      <header className="active-workout-header">
+        <IconButton asChild variant="ghost" size="1">
+          <Link to="/workouts">
+            <ArrowLeftIcon />
+          </Link>
+        </IconButton>
 
-          <Flex align="center" gap="2">
-            {isComplete ? (
-              <Button
-                variant="soft"
-                color="red"
-                size="2"
-                onClick={() => setShowDeleteDialog(true)}
-              >
-                Delete
-              </Button>
-            ) : (
-              <>
-                <Button
-                  variant="soft"
-                  color="red"
-                  size="2"
-                  onClick={() => setShowCancelDialog(true)}
-                >
-                  Cancel
-                </Button>
-                <Button size="2" onClick={() => setShowCompletionModal(true)}>
-                  Complete
-                </Button>
-              </>
-            )}
-          </Flex>
-        </Flex>
-      </Box>
-
-      {/* Content */}
-      <Box px="4">
-        {workoutSession.exerciseGroups.map((group) => {
-          const viewModel = createWorkoutExerciseCardViewModel(
-            group,
-            isComplete,
-          );
-          return (
-            <WorkoutExerciseCard
-              key={group.exercise.id}
-              viewModel={viewModel}
-              onCompleteSet={() => restTimer.start()}
+        <div className="active-workout-header__info">
+          {isEditingName ? (
+            <TextField.Root
+              ref={inputRef}
+              defaultValue={optimisticName}
+              size="2"
+              onBlur={(e) => handleNameSubmit(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleNameSubmit(e.currentTarget.value);
+                } else if (e.key === "Escape") {
+                  setIsEditingName(false);
+                }
+              }}
             />
-          );
-        })}
+          ) : (
+            <Text
+              size="3"
+              weight="bold"
+              className="active-workout-header__name"
+              onClick={() => !isComplete && setIsEditingName(true)}
+            >
+              {optimisticName}
+            </Text>
+          )}
+          <Text size="1" color="gray" className="active-workout-header__meta">
+            {isComplete
+              ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
+              : startedAgo}
+          </Text>
+        </div>
 
         {!isComplete && (
-          <Box py="5">
+          <Button size="1" onClick={() => setShowCompletionModal(true)}>
+            Complete
+          </Button>
+        )}
+
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <IconButton variant="ghost" size="1">
+              <DotsVerticalIcon />
+            </IconButton>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content>
+            {isComplete ? (
+              <DropdownMenu.Item
+                color="red"
+                onSelect={() => setShowDeleteDialog(true)}
+              >
+                Delete Workout
+              </DropdownMenu.Item>
+            ) : (
+              <DropdownMenu.Item
+                color="red"
+                onSelect={() => setShowCancelDialog(true)}
+              >
+                Cancel Workout
+              </DropdownMenu.Item>
+            )}
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+      </header>
+
+      {/* Content */}
+      <div className="active-workout-content">
+        {!isComplete ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={workoutSession.exerciseGroups.map((g) => g.exercise.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {workoutSession.exerciseGroups.map((group) => (
+                <SortableExerciseCard
+                  key={group.exercise.id}
+                  group={group}
+                  isComplete={false}
+                  onCompleteSet={() => restTimer.start()}
+                  onReplaceExercise={(exerciseId) => {
+                    setReplaceExerciseId(exerciseId);
+                    setShowExerciseSelector(true);
+                  }}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        ) : (
+          workoutSession.exerciseGroups.map((group) => {
+            const viewModel = createWorkoutExerciseCardViewModel(group, true);
+            return (
+              <WorkoutExerciseCard
+                key={group.exercise.id}
+                viewModel={viewModel}
+              />
+            );
+          })
+        )}
+
+        {!isComplete && (
+          <div className="active-workout-add-exercise">
             <Button
-              onClick={() => setShowExerciseSelector(true)}
+              onClick={() => {
+                setReplaceExerciseId(undefined);
+                setShowExerciseSelector(true);
+              }}
               size="2"
               variant="soft"
-              style={{ width: "100%" }}
             >
               Add Exercise
             </Button>
-          </Box>
+          </div>
         )}
-      </Box>
+      </div>
 
       {/* Modals */}
       <ExerciseSelector
         exercises={exercises}
         open={showExerciseSelector}
-        onOpenChange={setShowExerciseSelector}
+        onOpenChange={(open) => {
+          setShowExerciseSelector(open);
+          if (!open) setReplaceExerciseId(undefined);
+        }}
+        replaceExerciseId={replaceExerciseId}
       />
 
       <CompletionModal
@@ -585,6 +700,40 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
           onSetDuration={restTimer.setDuration}
         />
       )}
-    </Box>
+    </div>
+  );
+}
+
+function SortableExerciseCard({
+  group,
+  isComplete,
+  onCompleteSet,
+  onReplaceExercise,
+}: {
+  readonly group: WorkoutExerciseGroup;
+  readonly isComplete: boolean;
+  readonly onCompleteSet?: () => void;
+  readonly onReplaceExercise?: (exerciseId: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: group.exercise.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const viewModel = createWorkoutExerciseCardViewModel(group, isComplete);
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <WorkoutExerciseCard
+        viewModel={viewModel}
+        onCompleteSet={onCompleteSet}
+        onReplaceExercise={onReplaceExercise}
+        dragHandleListeners={listeners}
+        dragHandleAttributes={attributes}
+      />
+    </div>
   );
 }

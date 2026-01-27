@@ -1,21 +1,27 @@
-import { DotsVerticalIcon, PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import {
-  Box,
+  DotsVerticalIcon,
+  DragHandleDots2Icon,
+  LoopIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@radix-ui/react-icons";
+import {
   Button,
   Callout,
   DropdownMenu,
-  Flex,
   IconButton,
   Text,
 } from "@radix-ui/themes";
 import { Brain } from "lucide-react";
 import { NumberInput } from "~/components/NumberInput";
+import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
 import type {
   WorkoutExerciseCardViewModel,
   WorkoutSetViewModel,
 } from "../../view-models/workout-exercise-card.view-model";
+import "./WorkoutExerciseCard.css";
 
 interface WorkoutExerciseCardProps {
   readonly viewModel: WorkoutExerciseCardViewModel;
@@ -24,6 +30,7 @@ interface WorkoutExerciseCardProps {
     lastSet?: WorkoutSetViewModel,
   ) => void;
   readonly onRemoveExercise?: (exerciseId: string) => void;
+  readonly onReplaceExercise?: (exerciseId: string) => void;
   readonly onUpdateSet?: (
     exerciseId: string,
     setNumber: number,
@@ -32,15 +39,20 @@ interface WorkoutExerciseCardProps {
   ) => void;
   readonly onCompleteSet?: (exerciseId: string, setNumber: number) => void;
   readonly onRemoveSet?: (exerciseId: string, setNumber: number) => void;
+  readonly dragHandleListeners?: SyntheticListenerMap;
+  readonly dragHandleAttributes?: Record<string, unknown>;
 }
 
 export function WorkoutExerciseCard({
   viewModel,
   onAddSet,
   onRemoveExercise,
+  onReplaceExercise,
   onUpdateSet,
   onCompleteSet,
   onRemoveSet,
+  dragHandleListeners,
+  dragHandleAttributes,
 }: WorkoutExerciseCardProps) {
   const fetcher = useFetcher();
 
@@ -78,9 +90,19 @@ export function WorkoutExerciseCard({
   };
 
   return (
-    <Box py="5" style={{ borderBottom: "1px solid var(--gray-4)" }}>
-      <Flex justify="between" align="start" mb="1">
-        <Text size="3" weight="medium">
+    <div className="exercise-card">
+      <div className="exercise-card__header">
+        {dragHandleListeners && (
+          <button
+            type="button"
+            className="exercise-card__drag-handle"
+            {...dragHandleListeners}
+            {...dragHandleAttributes}
+          >
+            <DragHandleDots2Icon />
+          </button>
+        )}
+        <Text size="3" weight="medium" className="exercise-card__name">
           {viewModel.exerciseName}
         </Text>
 
@@ -92,15 +114,22 @@ export function WorkoutExerciseCard({
               </IconButton>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
+              {onReplaceExercise && (
+                <DropdownMenu.Item
+                  onSelect={() => onReplaceExercise(viewModel.exerciseId)}
+                >
+                  <LoopIcon /> Replace Exercise
+                </DropdownMenu.Item>
+              )}
               <DropdownMenu.Item color="red" onSelect={handleRemoveExercise}>
                 <TrashIcon /> Delete Exercise
               </DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
         )}
-      </Flex>
+      </div>
 
-      <Text size="1" color="gray" style={{ display: "block" }}>
+      <Text size="1" color="gray" className="exercise-card__type">
         {viewModel.exerciseType}
       </Text>
 
@@ -113,20 +142,32 @@ export function WorkoutExerciseCard({
         </Callout.Root>
       )}
 
-      <Box mt="4" style={{ fontVariantNumeric: "tabular-nums" }}>
-        {viewModel.sets.map((set, index) => (
+      <div className="set-table">
+        <div className="set-table-header">
+          <span className="set-table-header__label set-table-header__label--center">
+            #
+          </span>
+          <span className="set-table-header__label set-table-header__label--right">
+            Weight
+          </span>
+          <span className="set-table-header__label set-table-header__label--right">
+            Reps
+          </span>
+          <span className="set-table-header__label set-table-header__label--center" />
+        </div>
+
+        {viewModel.sets.map((set) => (
           <SetRow
             key={`${viewModel.exerciseId}-${set.set}`}
             set={set}
             exerciseId={viewModel.exerciseId}
             canEdit={viewModel.canAddSets}
-            isFirst={index === 0}
             onUpdateSet={onUpdateSet}
             onCompleteSet={onCompleteSet}
             onRemoveSet={onRemoveSet}
           />
         ))}
-      </Box>
+      </div>
 
       {viewModel.canAddSets && (
         <Button
@@ -139,7 +180,7 @@ export function WorkoutExerciseCard({
           <PlusIcon /> Add Set
         </Button>
       )}
-    </Box>
+    </div>
   );
 }
 
@@ -147,7 +188,6 @@ interface SetRowProps {
   readonly set: WorkoutSetViewModel;
   readonly exerciseId: string;
   readonly canEdit: boolean;
-  readonly isFirst: boolean;
   readonly onUpdateSet?: (
     exerciseId: string,
     setNumber: number,
@@ -162,7 +202,6 @@ function SetRow({
   set,
   exerciseId,
   canEdit,
-  isFirst,
   onUpdateSet,
   onCompleteSet,
   onRemoveSet,
@@ -194,26 +233,18 @@ function SetRow({
     }
   };
 
-  const rowStyle = {
-    borderTop: isFirst ? undefined : "1px solid var(--gray-3)",
-    backgroundColor: set.isCompleted ? "var(--green-2)" : undefined,
-  };
+  const rowClassName = `set-row ${set.isCompleted ? "set-row--completed" : ""}`;
 
   return (
-    <Flex align="center" py="2" gap="3" style={rowStyle}>
-      <Text size="2" color="gray" style={{ width: 24, flexShrink: 0 }}>
-        {set.set}
-      </Text>
+    <div className={rowClassName}>
+      <span className="set-row__number">{set.set}</span>
 
       {set.isCompleted || !canEdit ? (
         <>
-          <Text size="2" style={{ width: 64, flexShrink: 0 }}>
-            {set.weight ? `${set.weight} kg` : "—"}
+          <Text size="2" className="set-row__value">
+            {set.weight ? `${set.weight}` : "—"}
           </Text>
-          <Text size="2" color="gray" style={{ flexShrink: 0 }}>
-            ×
-          </Text>
-          <Text size="2" style={{ width: 64, flexShrink: 0 }}>
+          <Text size="2" className="set-row__value">
             {set.reps ?? "—"}
           </Text>
         </>
@@ -222,7 +253,6 @@ function SetRow({
           <fetcher.Form
             method="post"
             onChange={(e) => e.currentTarget.requestSubmit()}
-            style={{ width: 64, flexShrink: 0 }}
           >
             <input type="hidden" name="intent" value="update-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />
@@ -238,16 +268,12 @@ function SetRow({
               placeholder="kg"
               size="2"
               variant="surface"
-              style={{ textAlign: "right" }}
+              className="set-row__input"
             />
           </fetcher.Form>
-          <Text size="2" color="gray" style={{ flexShrink: 0 }}>
-            ×
-          </Text>
           <fetcher.Form
             method="post"
             onChange={(e) => e.currentTarget.requestSubmit()}
-            style={{ width: 64, flexShrink: 0 }}
           >
             <input type="hidden" name="intent" value="update-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />
@@ -264,46 +290,40 @@ function SetRow({
               placeholder="reps"
               size="2"
               variant="surface"
-              style={{ textAlign: "right" }}
+              className="set-row__input"
             />
           </fetcher.Form>
         </>
       )}
 
-      {set.isWarmup && (
-        <Text size="1" color="gray">
-          warmup
-        </Text>
-      )}
-
-      {canEdit && (
-        <Flex gap="2" align="center">
-          {!set.isCompleted && (
-            <fetcher.Form method="post">
-              <input type="hidden" name="intent" value="complete-set" />
-              <input type="hidden" name="exerciseId" value={exerciseId} />
-              <input type="hidden" name="setNumber" value={set.set} />
-              <IconButton
-                type="submit"
-                size="2"
-                variant="soft"
-                color="green"
-                disabled={fetcher.state !== "idle"}
-                onClick={handleCompleteSet}
-              >
-                ✓
-              </IconButton>
-            </fetcher.Form>
-          )}
-
+      <div className="set-row__actions">
+        {canEdit && !set.isCompleted && (
           <fetcher.Form method="post">
-            <input type="hidden" name="intent" value="remove-set" />
+            <input type="hidden" name="intent" value="complete-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />
             <input type="hidden" name="setNumber" value={set.set} />
             <IconButton
               type="submit"
               size="2"
               variant="soft"
+              color="green"
+              disabled={fetcher.state !== "idle"}
+              onClick={handleCompleteSet}
+            >
+              ✓
+            </IconButton>
+          </fetcher.Form>
+        )}
+
+        {canEdit && (
+          <fetcher.Form method="post">
+            <input type="hidden" name="intent" value="remove-set" />
+            <input type="hidden" name="exerciseId" value={exerciseId} />
+            <input type="hidden" name="setNumber" value={set.set} />
+            <IconButton
+              type="submit"
+              size="1"
+              variant="ghost"
               color="red"
               disabled={fetcher.state !== "idle"}
               onClick={handleRemoveSet}
@@ -311,8 +331,8 @@ function SetRow({
               <TrashIcon />
             </IconButton>
           </fetcher.Form>
-        </Flex>
-      )}
-    </Flex>
+        )}
+      </div>
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Text } from "@radix-ui/themes";
+import { Button, Text } from "@radix-ui/themes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./RestTimer.css";
 
@@ -112,31 +112,37 @@ export function RestTimer({
   const progress = 1 - secondsRemaining / totalSeconds;
 
   return (
-    <Box className={`rest-timer ${isFinished ? "rest-timer--finished" : ""}`}>
-      <Box
+    <div className={`rest-timer ${isFinished ? "rest-timer--finished" : ""}`}>
+      <div
         className="rest-timer__progress"
         style={{ transform: `scaleX(${progress})` }}
       />
 
-      <Flex
-        className="rest-timer__content"
-        align="center"
-        justify="between"
-        px="4"
-        py="3"
-      >
-        <Flex align="center" gap="3">
-          <Text size="2" weight="medium" className="rest-timer__label">
-            {isFinished ? "Rest complete" : "Rest"}
-          </Text>
-          <Text size="5" weight="bold" className="rest-timer__countdown">
-            {formatCountdown(secondsRemaining)}
-          </Text>
-        </Flex>
+      <div className="rest-timer__content">
+        <div className="rest-timer__top-row">
+          <div className="rest-timer__timer">
+            <Text size="2" weight="medium" className="rest-timer__label">
+              {isFinished ? "Rest complete" : "Rest"}
+            </Text>
+            <Text size="5" weight="bold" className="rest-timer__countdown">
+              {formatCountdown(secondsRemaining)}
+            </Text>
+          </div>
 
-        <Flex align="center" gap="2">
-          {!isFinished &&
-            REST_PRESETS.map((preset) => (
+          <Button
+            size="1"
+            variant="soft"
+            color="gray"
+            onClick={onDismiss}
+            className="rest-timer__dismiss"
+          >
+            {isFinished ? "OK" : "Skip"}
+          </Button>
+        </div>
+
+        {!isFinished && (
+          <div className="rest-timer__presets">
+            {REST_PRESETS.map((preset) => (
               <Button
                 key={preset}
                 size="1"
@@ -147,17 +153,9 @@ export function RestTimer({
                 {formatPreset(preset)}
               </Button>
             ))}
-          <Button
-            size="1"
-            variant="soft"
-            color="gray"
-            onClick={onDismiss}
-            className="rest-timer__dismiss"
-          >
-            {isFinished ? "OK" : "Skip"}
-          </Button>
-        </Flex>
-      </Flex>
-    </Box>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
