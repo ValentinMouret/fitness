@@ -1,13 +1,19 @@
-import { Box, Button, Flex, Heading, Text, TextField } from "@radix-ui/themes";
+import { ArrowLeftIcon, DotsVerticalIcon } from "@radix-ui/react-icons";
+import {
+  Button,
+  DropdownMenu,
+  IconButton,
+  Text,
+  TextField,
+} from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
-import { useFetcher } from "react-router";
+import { Link, useFetcher } from "react-router";
 import { CancelConfirmationDialog } from "~/components/workout/CancelConfirmationDialog";
 import { CompletionModal } from "~/components/workout/CompletionModal";
 import { DeleteConfirmationDialog } from "~/components/workout/DeleteConfirmationDialog";
 import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
 import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
-import "~/components/workout/WorkoutTimerBar.css";
 import { Workout } from "~/modules/fitness/domain/workout";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -16,7 +22,6 @@ import {
   createWorkoutExerciseCardViewModel,
   WorkoutExerciseCard,
 } from "~/modules/fitness/presentation";
-import { PageHeader } from "~/components/PageHeader";
 import type { Route } from "./+types/:id";
 import {
   addExerciseToWorkout,
@@ -32,6 +37,7 @@ import {
   updateWorkoutName,
 } from "~/modules/fitness/application/workout-session.service.server";
 import { duplicateWorkout } from "~/modules/fitness/application/duplicate-workout.service.server";
+import "./active-workout.css";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { id } = params;
@@ -184,7 +190,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { formattedDuration } = useLiveDuration({
+  const { startedAgo, formattedDuration } = useLiveDuration({
     startTime: loaderData?.workoutSession.workout.start || new Date(),
     endTime: loaderData?.workoutSession.workout.stop || undefined,
   });
@@ -226,105 +232,98 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     });
   };
 
-  const title = isEditingName ? (
-    <TextField.Root
-      ref={inputRef}
-      defaultValue={optimisticName}
-      size="3"
-      onBlur={(e) => handleNameSubmit(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          handleNameSubmit(e.currentTarget.value);
-        } else if (e.key === "Escape") {
-          setIsEditingName(false);
-        }
-      }}
-      style={{ fontWeight: "500" }}
-    />
-  ) : (
-    <Heading
-      size="7"
-      onClick={() => !isComplete && setIsEditingName(true)}
-      style={{ cursor: isComplete ? undefined : "pointer" }}
-    >
-      {optimisticName}
-    </Heading>
-  );
-
-  const subtitle = (
-    <Text size="2" color="gray">
-      {isComplete
-        ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
-        : formatDate(workoutSession.workout.start)}
-    </Text>
-  );
-
-  const customRight = isComplete ? (
-    <Flex gap="2">
-      <fetcher.Form method="post">
-        <input type="hidden" name="intent" value="duplicate-workout" />
-        <Button variant="soft" size="2" type="submit">
-          Repeat
-        </Button>
-      </fetcher.Form>
-      <Button
-        variant="soft"
-        color="red"
-        size="2"
-        onClick={() => setShowDeleteDialog(true)}
-      >
-        Delete
-      </Button>
-    </Flex>
-  ) : undefined;
-
   return (
-    <Box>
-      <PageHeader
-        title={title}
-        subtitle={subtitle}
-        backTo="/workouts"
-        customRight={customRight}
-      />
+    <div className="active-workout-page">
+      {/* Header */}
+      <header className="active-workout-header">
+        <div className="active-workout-header__top-row">
+          <IconButton asChild variant="ghost" size="2">
+            <Link to="/workouts">
+              <ArrowLeftIcon />
+            </Link>
+          </IconButton>
 
-      {/* Sticky workout timer */}
-      {!isComplete && (
-        <Flex
-          className="workout-timer-bar"
-          align="center"
-          justify="between"
-          py="2"
-        >
-          <Flex align="center" gap="2">
+          {isEditingName ? (
+            <TextField.Root
+              ref={inputRef}
+              defaultValue={optimisticName}
+              size="3"
+              className="active-workout-header__name"
+              onBlur={(e) => handleNameSubmit(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleNameSubmit(e.currentTarget.value);
+                } else if (e.key === "Escape") {
+                  setIsEditingName(false);
+                }
+              }}
+            />
+          ) : (
             <Text
-              className="workout-timer-bar__duration"
               size="4"
               weight="bold"
+              className="active-workout-header__name"
+              onClick={() => !isComplete && setIsEditingName(true)}
             >
-              {formattedDuration}
+              {optimisticName}
             </Text>
-            <Text size="2" color="gray">
-              elapsed
-            </Text>
-          </Flex>
-          <Flex gap="2">
-            <Button
-              variant="soft"
-              color="red"
-              size="2"
-              onClick={() => setShowCancelDialog(true)}
-            >
-              Cancel
-            </Button>
+          )}
+
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <IconButton variant="ghost" size="2">
+                <DotsVerticalIcon />
+              </IconButton>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              {isComplete ? (
+                <>
+                  <DropdownMenu.Item
+                    onSelect={() =>
+                      fetcher.submit(
+                        { intent: "duplicate-workout" },
+                        { method: "post" },
+                      )
+                    }
+                  >
+                    Repeat Workout
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    color="red"
+                    onSelect={() => setShowDeleteDialog(true)}
+                  >
+                    Delete Workout
+                  </DropdownMenu.Item>
+                </>
+              ) : (
+                <DropdownMenu.Item
+                  color="red"
+                  onSelect={() => setShowCancelDialog(true)}
+                >
+                  Cancel Workout
+                </DropdownMenu.Item>
+              )}
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        </div>
+
+        <div className="active-workout-header__bottom-row">
+          <Text size="2" color="gray">
+            {isComplete
+              ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
+              : `${formatDate(workoutSession.workout.start)} · ${startedAgo}`}
+          </Text>
+
+          {!isComplete && (
             <Button size="2" onClick={() => setShowCompletionModal(true)}>
               Complete
             </Button>
-          </Flex>
-        </Flex>
-      )}
+          )}
+        </div>
+      </header>
 
       {/* Content */}
-      <Box>
+      <div className="active-workout-content">
         {workoutSession.exerciseGroups.map((group) => {
           const viewModel = createWorkoutExerciseCardViewModel(
             group,
@@ -340,18 +339,17 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
         })}
 
         {!isComplete && (
-          <Box py="5">
+          <div className="active-workout-add-exercise">
             <Button
               onClick={() => setShowExerciseSelector(true)}
               size="2"
               variant="soft"
-              style={{ width: "100%" }}
             >
               Add Exercise
             </Button>
-          </Box>
+          </div>
         )}
-      </Box>
+      </div>
 
       {/* Modals */}
       <ExerciseSelector
@@ -389,6 +387,6 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
           onSetDuration={restTimer.setDuration}
         />
       )}
-    </Box>
+    </div>
   );
 }
