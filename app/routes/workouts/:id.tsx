@@ -402,7 +402,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { startedAgo, formattedDuration } = useLiveDuration({
+  const { formattedDuration, formattedTimer } = useLiveDuration({
     startTime: loaderData?.workoutSession.workout.start || new Date(),
     endTime: loaderData?.workoutSession.workout.stop || undefined,
   });
@@ -479,11 +479,25 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                   {optimisticName}
                 </Heading>
               )}
-              <Text size="2" color="gray">
-                {isComplete
-                  ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
-                  : `${formatDate(workoutSession.workout.start)} · ${startedAgo}`}
-              </Text>
+              <Flex align="center" gap="2">
+                <Text size="2" color="gray">
+                  {isComplete
+                    ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
+                    : formatDate(workoutSession.workout.start)}
+                </Text>
+                {!isComplete && (
+                  <Text
+                    size="2"
+                    weight="medium"
+                    style={{
+                      fontVariantNumeric: "tabular-nums",
+                      color: "var(--accent-11)",
+                    }}
+                  >
+                    {formattedTimer}
+                  </Text>
+                )}
+              </Flex>
             </Box>
           </Flex>
 
