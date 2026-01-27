@@ -390,7 +390,11 @@ export const WorkoutSessionRepository = {
             isWarmup: false,
           })
           .onConflictDoUpdate({
-            target: [workoutSets.workout, workoutSets.exercise, workoutSets.set],
+            target: [
+              workoutSets.workout,
+              workoutSets.exercise,
+              workoutSets.set,
+            ],
             set: {
               targetReps: null,
               reps: defaultSetValues?.reps ?? null,
