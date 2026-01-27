@@ -600,6 +600,142 @@ export const WorkoutSessionRepository = {
     ).map(() => undefined);
   },
 
+  replaceExercise(
+    workoutId: string,
+    oldExerciseId: string,
+    newExerciseId: string,
+  ): ResultAsync<void, ErrRepository> {
+    return ResultAsync.fromPromise(
+      db.transaction(async (tx) => {
+        // Get the current order_index and notes
+        const existing = await tx
+          .select({
+            order_index: workoutExercises.order_index,
+            notes: workoutExercises.notes,
+          })
+          .from(workoutExercises)
+          .where(
+            and(
+              eq(workoutExercises.workout_id, workoutId),
+              eq(workoutExercises.exercise_id, oldExerciseId),
+              isNull(workoutExercises.deleted_at),
+            ),
+          );
+
+        if (existing.length === 0) {
+          throw new Error("Exercise not found in workout");
+        }
+
+        const { order_index, notes } = existing[0];
+
+        // Soft delete old exercise's sets
+        await tx
+          .update(workoutSets)
+          .set({ deleted_at: new Date() })
+          .where(
+            and(
+              eq(workoutSets.workout, workoutId),
+              eq(workoutSets.exercise, oldExerciseId),
+            ),
+          );
+
+        // Soft delete old workout_exercise
+        await tx
+          .update(workoutExercises)
+          .set({ deleted_at: new Date() })
+          .where(
+            and(
+              eq(workoutExercises.workout_id, workoutId),
+              eq(workoutExercises.exercise_id, oldExerciseId),
+            ),
+          );
+
+        // Insert new workout_exercise at the same position
+        await tx
+          .insert(workoutExercises)
+          .values({
+            workout_id: workoutId,
+            exercise_id: newExerciseId,
+            order_index,
+            notes,
+          })
+          .onConflictDoUpdate({
+            target: [workoutExercises.workout_id, workoutExercises.exercise_id],
+            set: {
+              order_index,
+              notes,
+              updated_at: new Date(),
+              deleted_at: null,
+            },
+          });
+
+        // Add a default first set for the new exercise
+        await tx
+          .insert(workoutSets)
+          .values({
+            workout: workoutId,
+            exercise: newExerciseId,
+            set: 1,
+            targetReps: null,
+            reps: null,
+            weight: null,
+            note: null,
+            isCompleted: false,
+            isFailure: false,
+            isWarmup: false,
+          })
+          .onConflictDoUpdate({
+            target: [
+              workoutSets.workout,
+              workoutSets.exercise,
+              workoutSets.set,
+            ],
+            set: {
+              targetReps: null,
+              reps: null,
+              weight: null,
+              note: null,
+              isCompleted: false,
+              isFailure: false,
+              isWarmup: false,
+              updated_at: new Date(),
+              deleted_at: null,
+            },
+          });
+      }),
+      (error) => {
+        logger.error({ err: error }, "Error replacing exercise in workout");
+        return "database_error" as const;
+      },
+    ).map(() => undefined);
+  },
+
+  reorderExercises(
+    workoutId: string,
+    exerciseIds: ReadonlyArray<string>,
+  ): ResultAsync<void, ErrRepository> {
+    return ResultAsync.fromPromise(
+      db.transaction(async (tx) => {
+        for (let i = 0; i < exerciseIds.length; i++) {
+          await tx
+            .update(workoutExercises)
+            .set({ order_index: i, updated_at: new Date() })
+            .where(
+              and(
+                eq(workoutExercises.workout_id, workoutId),
+                eq(workoutExercises.exercise_id, exerciseIds[i]),
+                isNull(workoutExercises.deleted_at),
+              ),
+            );
+        }
+      }),
+      (error) => {
+        logger.error({ err: error }, "Error reordering exercises");
+        return "database_error" as const;
+      },
+    ).map(() => undefined);
+  },
+
   getLastCompletedSetsForExercise(
     exerciseId: string,
   ): ResultAsync<
