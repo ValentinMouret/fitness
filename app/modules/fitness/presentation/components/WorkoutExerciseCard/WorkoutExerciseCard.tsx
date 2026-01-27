@@ -7,9 +7,9 @@ import {
   Flex,
   IconButton,
   Text,
-  TextField,
 } from "@radix-ui/themes";
 import { Brain } from "lucide-react";
+import { NumberInput } from "~/components/NumberInput";
 import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
 import type {
@@ -227,7 +227,7 @@ function SetRow({
             <input type="hidden" name="intent" value="update-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />
             <input type="hidden" name="setNumber" value={set.set} />
-            <TextField.Root
+            <NumberInput
               name="weight"
               value={localWeight}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -252,8 +252,9 @@ function SetRow({
             <input type="hidden" name="intent" value="update-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />
             <input type="hidden" name="setNumber" value={set.set} />
-            <TextField.Root
+            <NumberInput
               name="reps"
+              allowDecimals={false}
               value={localReps}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 const value = e.target.value;
