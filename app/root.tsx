@@ -13,6 +13,10 @@ import "./app.css";
 import { Code, Container, Heading, Text, Theme } from "@radix-ui/themes";
 import { AuthProvider } from "./components/AuthProvider";
 
+export const headers: Route.HeadersFunction = () => ({
+  "Cache-Control": "no-cache",
+});
+
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {

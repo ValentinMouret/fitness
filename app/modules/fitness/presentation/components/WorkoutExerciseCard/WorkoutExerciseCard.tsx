@@ -2,14 +2,16 @@ import { DotsVerticalIcon, PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import {
   Box,
   Button,
+  Callout,
   DropdownMenu,
   Flex,
   IconButton,
   Text,
-  TextField,
 } from "@radix-ui/themes";
+import { Brain } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
+import { NumberInput } from "~/components/NumberInput";
 import type {
   WorkoutExerciseCardViewModel,
   WorkoutSetViewModel,
@@ -103,14 +105,12 @@ export function WorkoutExerciseCard({
       </Text>
 
       {viewModel.mmcInstructions && (
-        <Text
-          size="2"
-          color="gray"
-          mt="2"
-          style={{ display: "block", fontStyle: "italic" }}
-        >
-          {viewModel.mmcInstructions}
-        </Text>
+        <Callout.Root size="1" color="blue" mt="2">
+          <Callout.Icon>
+            <Brain size={16} />
+          </Callout.Icon>
+          <Callout.Text>{viewModel.mmcInstructions}</Callout.Text>
+        </Callout.Root>
       )}
 
       <Box mt="4" style={{ fontVariantNumeric: "tabular-nums" }}>
@@ -227,7 +227,7 @@ function SetRow({
             <input type="hidden" name="intent" value="update-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />
             <input type="hidden" name="setNumber" value={set.set} />
-            <TextField.Root
+            <NumberInput
               name="weight"
               value={localWeight}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -252,8 +252,9 @@ function SetRow({
             <input type="hidden" name="intent" value="update-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />
             <input type="hidden" name="setNumber" value={set.set} />
-            <TextField.Root
+            <NumberInput
               name="reps"
+              allowDecimals={false}
               value={localReps}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 const value = e.target.value;

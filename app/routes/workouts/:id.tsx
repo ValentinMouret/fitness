@@ -14,6 +14,7 @@ import { CancelConfirmationDialog } from "~/components/workout/CancelConfirmatio
 import { CompletionModal } from "~/components/workout/CompletionModal";
 import { DeleteConfirmationDialog } from "~/components/workout/DeleteConfirmationDialog";
 import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
+import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
 import { Workout, WorkoutSet } from "~/modules/fitness/domain/workout";
 import { ExerciseRepository } from "~/modules/fitness/infra/repository.server";
@@ -407,6 +408,8 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     endTime: loaderData?.workoutSession.workout.stop || undefined,
   });
 
+  const restTimer = useRestTimer();
+
   useEffect(() => {
     if (isEditingName && inputRef.current) {
       inputRef.current.focus();
@@ -527,6 +530,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
             <WorkoutExerciseCard
               key={group.exercise.id}
               viewModel={viewModel}
+              onCompleteSet={() => restTimer.start()}
             />
           );
         })}
@@ -569,6 +573,16 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
           workoutSession={workoutSession}
           open={showDeleteDialog}
           onOpenChange={setShowDeleteDialog}
+        />
+      )}
+
+      {!isComplete && (
+        <RestTimer
+          isActive={restTimer.isActive}
+          secondsRemaining={restTimer.secondsRemaining}
+          totalSeconds={restTimer.totalSeconds}
+          onDismiss={restTimer.dismiss}
+          onSetDuration={restTimer.setDuration}
         />
       )}
     </Box>
