@@ -1,4 +1,10 @@
-import { DotsVerticalIcon, PlusIcon, TrashIcon } from "@radix-ui/react-icons";
+import {
+  DotsVerticalIcon,
+  DragHandleDots2Icon,
+  LoopIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@radix-ui/react-icons";
 import {
   Button,
   Callout,
@@ -8,6 +14,7 @@ import {
 } from "@radix-ui/themes";
 import { Brain } from "lucide-react";
 import { NumberInput } from "~/components/NumberInput";
+import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
 import type {
@@ -23,6 +30,7 @@ interface WorkoutExerciseCardProps {
     lastSet?: WorkoutSetViewModel,
   ) => void;
   readonly onRemoveExercise?: (exerciseId: string) => void;
+  readonly onReplaceExercise?: (exerciseId: string) => void;
   readonly onUpdateSet?: (
     exerciseId: string,
     setNumber: number,
@@ -31,15 +39,20 @@ interface WorkoutExerciseCardProps {
   ) => void;
   readonly onCompleteSet?: (exerciseId: string, setNumber: number) => void;
   readonly onRemoveSet?: (exerciseId: string, setNumber: number) => void;
+  readonly dragHandleListeners?: SyntheticListenerMap;
+  readonly dragHandleAttributes?: Record<string, unknown>;
 }
 
 export function WorkoutExerciseCard({
   viewModel,
   onAddSet,
   onRemoveExercise,
+  onReplaceExercise,
   onUpdateSet,
   onCompleteSet,
   onRemoveSet,
+  dragHandleListeners,
+  dragHandleAttributes,
 }: WorkoutExerciseCardProps) {
   const fetcher = useFetcher();
 
@@ -79,6 +92,16 @@ export function WorkoutExerciseCard({
   return (
     <div className="exercise-card">
       <div className="exercise-card__header">
+        {dragHandleListeners && (
+          <button
+            type="button"
+            className="exercise-card__drag-handle"
+            {...dragHandleListeners}
+            {...dragHandleAttributes}
+          >
+            <DragHandleDots2Icon />
+          </button>
+        )}
         <Text size="3" weight="medium" className="exercise-card__name">
           {viewModel.exerciseName}
         </Text>
@@ -91,6 +114,13 @@ export function WorkoutExerciseCard({
               </IconButton>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
+              {onReplaceExercise && (
+                <DropdownMenu.Item
+                  onSelect={() => onReplaceExercise(viewModel.exerciseId)}
+                >
+                  <LoopIcon /> Replace Exercise
+                </DropdownMenu.Item>
+              )}
               <DropdownMenu.Item color="red" onSelect={handleRemoveExercise}>
                 <TrashIcon /> Delete Exercise
               </DropdownMenu.Item>
@@ -266,7 +296,7 @@ function SetRow({
         </>
       )}
 
-      <div className="set-row__action">
+      <div className="set-row__actions">
         {canEdit && !set.isCompleted && (
           <fetcher.Form method="post">
             <input type="hidden" name="intent" value="complete-set" />
@@ -285,7 +315,7 @@ function SetRow({
           </fetcher.Form>
         )}
 
-        {canEdit && set.isCompleted && (
+        {canEdit && (
           <fetcher.Form method="post">
             <input type="hidden" name="intent" value="remove-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />

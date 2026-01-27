@@ -5,9 +5,26 @@
 
 .exercise-card__header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
+}
+
+.exercise-card__drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  touch-action: none;
+  color: var(--gray-8);
+  background: none;
+  border: none;
+  padding: var(--space-1);
+  flex-shrink: 0;
+}
+
+.exercise-card__drag-handle:active {
+  cursor: grabbing;
 }
 
 .exercise-card__name {
@@ -31,7 +48,7 @@
 
 .set-table-header {
   display: grid;
-  grid-template-columns: 28px 1fr 1fr 44px;
+  grid-template-columns: 28px 1fr 1fr auto;
   align-items: center;
   gap: var(--space-2);
   padding-bottom: var(--space-1);
@@ -53,7 +70,7 @@
 
 .set-row {
   display: grid;
-  grid-template-columns: 28px 1fr 1fr 44px;
+  grid-template-columns: 28px 1fr 1fr auto;
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) 0;
@@ -85,7 +102,8 @@
   text-align: right;
 }
 
-.set-row__action {
+.set-row__actions {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: var(--space-1);
 }
