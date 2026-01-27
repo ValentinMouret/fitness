@@ -2,12 +2,14 @@ import { DotsVerticalIcon, PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import {
   Box,
   Button,
+  Callout,
   DropdownMenu,
   Flex,
   IconButton,
   Text,
   TextField,
 } from "@radix-ui/themes";
+import { Brain } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
 import type {
@@ -103,14 +105,12 @@ export function WorkoutExerciseCard({
       </Text>
 
       {viewModel.mmcInstructions && (
-        <Text
-          size="2"
-          color="gray"
-          mt="2"
-          style={{ display: "block", fontStyle: "italic" }}
-        >
-          {viewModel.mmcInstructions}
-        </Text>
+        <Callout.Root size="1" color="blue" mt="2">
+          <Callout.Icon>
+            <Brain size={16} />
+          </Callout.Icon>
+          <Callout.Text>{viewModel.mmcInstructions}</Callout.Text>
+        </Callout.Root>
       )}
 
       <Box mt="4" style={{ fontVariantNumeric: "tabular-nums" }}>
