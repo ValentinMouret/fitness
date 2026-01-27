@@ -9,6 +9,7 @@ import {
   Text,
   TextField,
 } from "@radix-ui/themes";
+import Fuse from "fuse.js";
 import { useMemo, useState } from "react";
 import { useFetcher } from "react-router";
 import type { Exercise, ExerciseType } from "~/modules/fitness/domain/workout";
@@ -31,22 +32,25 @@ export function ExerciseSelector({
   );
   const fetcher = useFetcher();
 
+  const typeFiltered = useMemo(() => {
+    if (selectedType === "all") return exercises;
+    return exercises.filter((exercise) => exercise.type === selectedType);
+  }, [exercises, selectedType]);
+
+  const fuse = useMemo(
+    () =>
+      new Fuse(typeFiltered, {
+        keys: ["name"],
+        threshold: 0.4,
+        ignoreLocation: true,
+      }),
+    [typeFiltered],
+  );
+
   const filteredExercises = useMemo(() => {
-    let filtered = exercises;
-
-    if (selectedType !== "all") {
-      filtered = filtered.filter((exercise) => exercise.type === selectedType);
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter((exercise) =>
-        exercise.name.toLowerCase().includes(query),
-      );
-    }
-
-    return filtered;
-  }, [exercises, selectedType, searchQuery]);
+    if (!searchQuery.trim()) return typeFiltered;
+    return fuse.search(searchQuery).map((result) => result.item);
+  }, [typeFiltered, fuse, searchQuery]);
 
   const handleSubmit = () => {
     if (!selectedExercise) return;
