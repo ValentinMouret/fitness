@@ -1,10 +1,18 @@
 .rest-timer {
-  position: sticky;
+  position: fixed;
   bottom: 0;
-  z-index: 10;
+  left: 0;
+  right: 0;
+  z-index: 40;
   background-color: var(--color-background);
   border-top: 1px solid var(--gray-5);
   overflow: hidden;
+}
+
+@media (max-width: 767px) {
+  .rest-timer {
+    bottom: calc(60px + env(safe-area-inset-bottom));
+  }
 }
 
 .rest-timer--finished {
@@ -21,6 +29,19 @@
 
 .rest-timer__content {
   position: relative;
+  padding: var(--space-3) var(--space-4);
+}
+
+.rest-timer__top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rest-timer__timer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .rest-timer__countdown {
@@ -29,6 +50,16 @@
 
 .rest-timer__label {
   color: var(--gray-11);
+}
+
+.rest-timer__presets {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.rest-timer__preset {
+  flex: 1;
 }
 
 @keyframes rest-timer-pulse {

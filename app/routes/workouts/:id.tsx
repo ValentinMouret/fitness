@@ -1,9 +1,7 @@
-import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import { ArrowLeftIcon, DotsVerticalIcon } from "@radix-ui/react-icons";
 import {
-  Box,
   Button,
-  Flex,
-  Heading,
+  DropdownMenu,
   IconButton,
   Text,
   TextField,
@@ -28,6 +26,7 @@ import {
 } from "~/modules/fitness/presentation";
 import { createNotFoundError, handleResultError } from "~/utils/errors";
 import type { Route } from "./+types/:id";
+import "./active-workout.css";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { id } = params;
@@ -446,81 +445,85 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <Box style={{ maxWidth: 640, margin: "0 auto" }}>
+    <div className="active-workout-page">
       {/* Header */}
-      <Box px="4" py="4" style={{ borderBottom: "1px solid var(--gray-4)" }}>
-        <Flex justify="between" align="center">
-          <Flex align="center" gap="3">
-            <IconButton asChild variant="ghost" size="2">
-              <Link to="/workouts">
-                <ArrowLeftIcon />
-              </Link>
-            </IconButton>
-            <Box>
-              {isEditingName ? (
-                <TextField.Root
-                  ref={inputRef}
-                  defaultValue={optimisticName}
-                  size="3"
-                  onBlur={(e) => handleNameSubmit(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleNameSubmit(e.currentTarget.value);
-                    } else if (e.key === "Escape") {
-                      setIsEditingName(false);
-                    }
-                  }}
-                  style={{ fontWeight: "500" }}
-                />
-              ) : (
-                <Heading
-                  size="5"
-                  mb="1"
-                  onClick={() => !isComplete && setIsEditingName(true)}
-                  style={{ cursor: isComplete ? undefined : "pointer" }}
-                >
-                  {optimisticName}
-                </Heading>
-              )}
-              <Text size="2" color="gray">
-                {isComplete
-                  ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
-                  : `${formatDate(workoutSession.workout.start)} · ${startedAgo}`}
-              </Text>
-            </Box>
-          </Flex>
+      <header className="active-workout-header">
+        <div className="active-workout-header__top-row">
+          <IconButton asChild variant="ghost" size="2">
+            <Link to="/workouts">
+              <ArrowLeftIcon />
+            </Link>
+          </IconButton>
 
-          <Flex align="center" gap="2">
-            {isComplete ? (
-              <Button
-                variant="soft"
-                color="red"
-                size="2"
-                onClick={() => setShowDeleteDialog(true)}
-              >
-                Delete
-              </Button>
-            ) : (
-              <>
-                <Button
-                  variant="soft"
+          {isEditingName ? (
+            <TextField.Root
+              ref={inputRef}
+              defaultValue={optimisticName}
+              size="3"
+              className="active-workout-header__name"
+              onBlur={(e) => handleNameSubmit(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleNameSubmit(e.currentTarget.value);
+                } else if (e.key === "Escape") {
+                  setIsEditingName(false);
+                }
+              }}
+            />
+          ) : (
+            <Text
+              size="4"
+              weight="bold"
+              className="active-workout-header__name"
+              onClick={() => !isComplete && setIsEditingName(true)}
+            >
+              {optimisticName}
+            </Text>
+          )}
+
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <IconButton variant="ghost" size="2">
+                <DotsVerticalIcon />
+              </IconButton>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              {isComplete ? (
+                <DropdownMenu.Item
                   color="red"
-                  size="2"
-                  onClick={() => setShowCancelDialog(true)}
+                  onSelect={() => setShowDeleteDialog(true)}
                 >
-                  Cancel
-                </Button>
-                <Button size="2" onClick={() => setShowCompletionModal(true)}>
-                  Complete
-                </Button>
-              </>
-            )}
-          </Flex>
-        </Flex>
-      </Box>
+                  Delete Workout
+                </DropdownMenu.Item>
+              ) : (
+                <DropdownMenu.Item
+                  color="red"
+                  onSelect={() => setShowCancelDialog(true)}
+                >
+                  Cancel Workout
+                </DropdownMenu.Item>
+              )}
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        </div>
+
+        <div className="active-workout-header__bottom-row">
+          <Text size="2" color="gray">
+            {isComplete
+              ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
+              : `${formatDate(workoutSession.workout.start)} · ${startedAgo}`}
+          </Text>
+
+          {!isComplete && (
+            <Button size="2" onClick={() => setShowCompletionModal(true)}>
+              Complete
+            </Button>
+          )}
+        </div>
+      </header>
 
       {/* Content */}
-      <Box px="4">
+      <div className="active-workout-content">
         {workoutSession.exerciseGroups.map((group) => {
           const viewModel = createWorkoutExerciseCardViewModel(
             group,
@@ -536,18 +539,17 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
         })}
 
         {!isComplete && (
-          <Box py="5">
+          <div className="active-workout-add-exercise">
             <Button
               onClick={() => setShowExerciseSelector(true)}
               size="2"
               variant="soft"
-              style={{ width: "100%" }}
             >
               Add Exercise
             </Button>
-          </Box>
+          </div>
         )}
-      </Box>
+      </div>
 
       {/* Modals */}
       <ExerciseSelector
@@ -585,6 +587,6 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
           onSetDuration={restTimer.setDuration}
         />
       )}
-    </Box>
+    </div>
   );
 }

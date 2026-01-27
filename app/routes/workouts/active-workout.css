@@ -1,0 +1,59 @@
+.active-workout-page {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* Header */
+.active-workout-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--color-background);
+  border-bottom: 1px solid var(--gray-4);
+  padding: var(--space-3) var(--space-4);
+}
+
+.active-workout-header__top-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.active-workout-header__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.active-workout-header__bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-2);
+  padding-left: calc(
+    44px +
+    var(--space-2)
+  ); /* align with name, past back button */
+}
+
+/* Content */
+.active-workout-content {
+  padding: 0 var(--space-4);
+}
+
+.active-workout-add-exercise {
+  padding: var(--space-5) 0;
+}
+
+.active-workout-add-exercise button {
+  width: 100%;
+}
+
+/* Bottom padding to account for rest timer + tab bar */
+@media (max-width: 767px) {
+  .active-workout-page {
+    padding-bottom: calc(120px + 60px + env(safe-area-inset-bottom));
+  }
+}
