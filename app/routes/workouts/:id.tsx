@@ -14,6 +14,7 @@ import { CancelConfirmationDialog } from "~/components/workout/CancelConfirmatio
 import { CompletionModal } from "~/components/workout/CompletionModal";
 import { DeleteConfirmationDialog } from "~/components/workout/DeleteConfirmationDialog";
 import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
+import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
 import { Workout, WorkoutSet } from "~/modules/fitness/domain/workout";
 import { ExerciseRepository } from "~/modules/fitness/infra/repository.server";
@@ -402,10 +403,12 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { formattedDuration, formattedTimer } = useLiveDuration({
+  const { startedAgo, formattedDuration } = useLiveDuration({
     startTime: loaderData?.workoutSession.workout.start || new Date(),
     endTime: loaderData?.workoutSession.workout.stop || undefined,
   });
+
+  const restTimer = useRestTimer();
 
   useEffect(() => {
     if (isEditingName && inputRef.current) {
@@ -479,25 +482,11 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                   {optimisticName}
                 </Heading>
               )}
-              <Flex align="center" gap="2">
-                <Text size="2" color="gray">
-                  {isComplete
-                    ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
-                    : formatDate(workoutSession.workout.start)}
-                </Text>
-                {!isComplete && (
-                  <Text
-                    size="2"
-                    weight="medium"
-                    style={{
-                      fontVariantNumeric: "tabular-nums",
-                      color: "var(--accent-11)",
-                    }}
-                  >
-                    {formattedTimer}
-                  </Text>
-                )}
-              </Flex>
+              <Text size="2" color="gray">
+                {isComplete
+                  ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
+                  : `${formatDate(workoutSession.workout.start)} · ${startedAgo}`}
+              </Text>
             </Box>
           </Flex>
 
@@ -541,6 +530,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
             <WorkoutExerciseCard
               key={group.exercise.id}
               viewModel={viewModel}
+              onCompleteSet={() => restTimer.start()}
             />
           );
         })}
@@ -583,6 +573,16 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
           workoutSession={workoutSession}
           open={showDeleteDialog}
           onOpenChange={setShowDeleteDialog}
+        />
+      )}
+
+      {!isComplete && (
+        <RestTimer
+          isActive={restTimer.isActive}
+          secondsRemaining={restTimer.secondsRemaining}
+          totalSeconds={restTimer.totalSeconds}
+          onDismiss={restTimer.dismiss}
+          onSetDuration={restTimer.setDuration}
         />
       )}
     </Box>
