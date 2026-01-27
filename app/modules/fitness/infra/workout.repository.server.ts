@@ -357,25 +357,52 @@ export const WorkoutSessionRepository = {
   ): ResultAsync<void, ErrRepository> {
     return ResultAsync.fromPromise(
       db.transaction(async (tx) => {
-        await tx.insert(workoutExercises).values({
-          workout_id: workoutId,
-          exercise_id: exerciseId,
-          order_index: orderIndex,
-          notes: notes ?? null,
-        });
+        await tx
+          .insert(workoutExercises)
+          .values({
+            workout_id: workoutId,
+            exercise_id: exerciseId,
+            order_index: orderIndex,
+            notes: notes ?? null,
+          })
+          .onConflictDoUpdate({
+            target: [workoutExercises.workout_id, workoutExercises.exercise_id],
+            set: {
+              order_index: orderIndex,
+              notes: notes ?? null,
+              updated_at: new Date(),
+              deleted_at: null,
+            },
+          });
 
-        await tx.insert(workoutSets).values({
-          workout: workoutId,
-          exercise: exerciseId,
-          set: 1,
-          targetReps: null,
-          reps: defaultSetValues?.reps ?? null,
-          weight: defaultSetValues?.weight ?? null,
-          note: null,
-          isCompleted: false,
-          isFailure: false,
-          isWarmup: false,
-        });
+        await tx
+          .insert(workoutSets)
+          .values({
+            workout: workoutId,
+            exercise: exerciseId,
+            set: 1,
+            targetReps: null,
+            reps: defaultSetValues?.reps ?? null,
+            weight: defaultSetValues?.weight ?? null,
+            note: null,
+            isCompleted: false,
+            isFailure: false,
+            isWarmup: false,
+          })
+          .onConflictDoUpdate({
+            target: [workoutSets.workout, workoutSets.exercise, workoutSets.set],
+            set: {
+              targetReps: null,
+              reps: defaultSetValues?.reps ?? null,
+              weight: defaultSetValues?.weight ?? null,
+              note: null,
+              isCompleted: false,
+              isFailure: false,
+              isWarmup: false,
+              updated_at: new Date(),
+              deleted_at: null,
+            },
+          });
       }),
       (error) => {
         logger.error({ err: error }, "Error adding exercise to workout");
@@ -467,6 +494,7 @@ export const WorkoutSessionRepository = {
         and(
           eq(workoutSets.workout, workoutId),
           eq(workoutSets.exercise, exerciseId),
+          isNull(workoutSets.deleted_at),
         ),
       )
       .orderBy(workoutSets.set);
