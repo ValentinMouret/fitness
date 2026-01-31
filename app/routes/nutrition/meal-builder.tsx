@@ -120,7 +120,9 @@ export async function action({ request }: ActionFunctionArgs) {
       throw new Error("Missing required fields");
     }
 
-    const category = z.enum(["breakfast", "lunch", "dinner", "snack"]).parse(categoryValue);
+    const category = z
+      .enum(["breakfast", "lunch", "dinner", "snack"])
+      .parse(categoryValue);
 
     try {
       const ingredientsData = JSON.parse(ingredientsJson);
@@ -162,7 +164,10 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (intent === "save-meal") {
     const mealCategoryParam = formData.get("mealCategory")?.toString();
-    const mealCategory = z.enum(["breakfast", "lunch", "dinner", "snack"]).nullable().parse(mealCategoryParam);
+    const mealCategory = z
+      .enum(["breakfast", "lunch", "dinner", "snack"])
+      .nullable()
+      .parse(mealCategoryParam);
     const loggedDate = formData.get("loggedDate")?.toString();
     const ingredientsJson = formData.get("ingredients")?.toString();
     const returnTo = formData.get("returnTo")?.toString();

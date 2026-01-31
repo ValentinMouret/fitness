@@ -1,10 +1,4 @@
-import {
-  Box,
-  Button,
-  Flex,
-  Text,
-  TextField,
-} from "@radix-ui/themes";
+import { Box, Button, Flex, Text, TextField } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { Link, redirect, useFetcher } from "react-router";
 import { CancelConfirmationDialog } from "~/components/workout/CancelConfirmationDialog";

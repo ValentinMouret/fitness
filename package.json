@@ -12,6 +12,7 @@
     "fmt": "biome format --write",
     "lint": "biome lint --write ./app",
     "start": "react-router-serve ./build/server/index.js",
+    "test:e2e": "playwright test",
     "tc": "bun typecheck",
     "tc:watch": "nodemon --exec 'bun tc' --watch src --ext ts,tsx,js,jsx",
     "test": "vitest",
@@ -49,6 +50,10 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
+    "@playwright/browser-chromium": "^1.58.1",
+    "@playwright/browser-firefox": "^1.58.1",
+    "@playwright/browser-webkit": "^1.58.1",
+    "@playwright/test": "^1.58.1",
     "@react-router/dev": "^7.11.0",
     "@types/node": "^24.10.4",
     "@types/pg": "^8.16.0",
