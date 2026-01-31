@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
+    "ci": "bun run typecheck && bun run lint && bun run test && bun run test:e2e",
     "db:dev": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx app/db/migrate.ts",
@@ -11,14 +12,14 @@
     "dev": "react-router dev",
     "fmt": "biome format --write",
     "lint": "biome lint --write ./app",
+    "prepare": "husky",
     "start": "react-router-serve ./build/server/index.js",
-    "test:e2e": "playwright test",
     "tc": "bun typecheck",
     "tc:watch": "nodemon --exec 'bun tc' --watch src --ext ts,tsx,js,jsx",
-    "test": "vitest",
+    "test": "vitest run",
     "test:debug": "vitest --reporter=verbose --silent=false",
-    "typecheck": "react-router typegen && tsc",
-    "prepare": "husky"
+    "test:e2e": "playwright test",
+    "typecheck": "react-router typegen && tsc"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
