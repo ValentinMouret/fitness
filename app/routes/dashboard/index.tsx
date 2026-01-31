@@ -225,7 +225,9 @@ export default function DashboardPage({
             todayHabits.length > 0 && (
               <Badge
                 color={
-                  completedHabitsCount === todayHabits.length ? "tomato" : "gray"
+                  completedHabitsCount === todayHabits.length
+                    ? "tomato"
+                    : "gray"
                 }
                 variant="soft"
               >

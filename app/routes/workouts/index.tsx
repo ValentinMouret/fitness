@@ -1,11 +1,4 @@
-import {
-  Badge,
-  Box,
-  Button,
-  Card,
-  Flex,
-  Text,
-} from "@radix-ui/themes";
+import { Badge, Box, Button, Card, Flex, Text } from "@radix-ui/themes";
 import { Form, Link, useSearchParams, useFetcher } from "react-router";
 import { useState } from "react";
 import { Pagination } from "~/components/Pagination";

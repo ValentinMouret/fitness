@@ -98,7 +98,9 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (intent === "apply-template") {
     const templateId = formData.get("templateId")?.toString() ?? "";
-    const mealCategory = z.enum(["breakfast", "lunch", "dinner", "snack"]).parse(formData.get("mealCategory"));
+    const mealCategory = z
+      .enum(["breakfast", "lunch", "dinner", "snack"])
+      .parse(formData.get("mealCategory"));
     const loggedDate = new Date(formData.get("loggedDate")?.toString() ?? "");
 
     const result = await NutritionService.createMealLogFromTemplate(
