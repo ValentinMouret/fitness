@@ -49,12 +49,10 @@ export async function loader() {
   }
 
   // Group completions by habit for streak calculation
-  const completionsByHabit = new Map<string, HabitCompletion[]>();
-  for (const c of completionsResult.value) {
-    const list = completionsByHabit.get(c.habitId) || [];
-    list.push(c);
-    completionsByHabit.set(c.habitId, list);
-  }
+  const completionsByHabit = Map.groupBy(
+    completionsResult.value,
+    (c) => c.habitId,
+  );
 
   const habitStreaks: Record<string, number> = {};
   const completionMap: Record<string, boolean> = {};
