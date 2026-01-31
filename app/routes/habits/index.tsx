@@ -8,12 +8,12 @@ import {
   Card,
   Flex,
   Grid,
-  Heading,
   Text,
 } from "@radix-ui/themes";
 import { data, Form, Link, useNavigation } from "react-router";
 import { handleResultError } from "~/utils/errors";
 import { EmptyState } from "~/components/EmptyState";
+import { SectionHeader } from "~/components/SectionHeader";
 import { Celebration } from "~/components/Celebration";
 import HabitCheckbox from "../../components/HabitCheckbox";
 import { HabitService } from "../../modules/habits/application/service";
@@ -63,12 +63,48 @@ export async function loader() {
     }
   }
 
+  const todayHabits = habits.value.filter((habit) =>
+    HabitService.isDueOn(habit, todayDate),
+  );
+  const todayHabitsCount = todayHabits.length;
+  const completedTodayCount = todayHabits.filter((habit) =>
+    completionMap.get(habit.id),
+  ).length;
+
   return {
     habits: habits.value,
     todayCompletions: todayCompletions.value,
     habitStreaks,
+    todayHabitsCount,
+    completedTodayCount,
   };
 }
+
+export const handle = {
+  header: (data: Route.ComponentProps["loaderData"]) => {
+    return {
+      title: "Habits",
+      customRight: data.todayHabitsCount > 0 && (
+        <Badge
+          size="2"
+          color={
+            data.completedTodayCount === data.todayHabitsCount
+              ? "tomato"
+              : "gray"
+          }
+          variant="soft"
+        >
+          {data.completedTodayCount}/{data.todayHabitsCount}
+        </Badge>
+      ),
+      primaryAction: {
+        label: "New Habit",
+        to: "/habits/new",
+        icon: <PlusIcon />,
+      },
+    };
+  },
+};
 
 const STREAK_MILESTONES = [7, 30, 90, 365];
 
@@ -77,9 +113,9 @@ export async function action({ request }: Route.ActionArgs) {
   const intent = formData.get("intent");
 
   if (intent === "toggle-completion") {
-    const habitId = formData.get("habitId") as string;
+    const habitId = formData.get("habitId")?.toString() ?? "";
     const completed = formData.get("completed") === "true";
-    const notes = formData.get("notes") as string | undefined;
+    const notes = formData.get("notes")?.toString();
 
     const completion = HabitCompletion.create(
       habitId,
@@ -167,39 +203,15 @@ export default function HabitsPage({
         trigger={showCelebration}
         onComplete={() => setShowCelebration(false)}
       />
-      <Flex justify="between" align="center" mb="6">
-        <Flex align="center" gap="3">
-          <Heading size="7">Habits</Heading>
-          {todayHabits.length > 0 && (
-            <Badge
-              size="2"
-              color={
-                completedTodayCount === todayHabits.length ? "tomato" : "gray"
-              }
-              variant="soft"
-            >
-              {completedTodayCount}/{todayHabits.length}
-            </Badge>
-          )}
-        </Flex>
-        <Button asChild>
-          <Link to="/habits/new">
-            <PlusIcon />
-            New Habit
-          </Link>
-        </Button>
-      </Flex>
 
-      {"error" in (actionData ?? {}) && (
+      {actionData && "error" in actionData && (
         <Callout.Root color="red" mb="4">
-          <Callout.Text>{(actionData as { error: string }).error}</Callout.Text>
+          <Callout.Text>{actionData.error}</Callout.Text>
         </Callout.Root>
       )}
 
       <Box mb="8">
-        <Heading size="5" mb="4">
-          Today's Habits
-        </Heading>
+        <SectionHeader title="Today's Habits" />
         <Flex direction="column" gap="2">
           {todayHabits.length === 0 ? (
             <EmptyState
@@ -231,9 +243,7 @@ export default function HabitsPage({
       </Box>
 
       <Box>
-        <Heading size="5" mb="4">
-          All Habits
-        </Heading>
+        <SectionHeader title="All Habits" />
         {habits.length === 0 ? (
           <EmptyState
             icon="✅"
@@ -250,7 +260,9 @@ export default function HabitsPage({
               return (
                 <Card key={habit.id} size="3">
                   <Flex justify="between" align="start" mb="2">
-                    <Heading size="4">{habit.name}</Heading>
+                    <Text weight="bold" size="4">
+                      {habit.name}
+                    </Text>
                     <Flex gap="2" align="center">
                       {habitStreak > 0 && (
                         <Badge

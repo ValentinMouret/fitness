@@ -1,10 +1,7 @@
-import { ArrowLeftIcon } from "@radix-ui/react-icons";
 import {
   Box,
   Button,
   Flex,
-  Heading,
-  IconButton,
   Text,
   TextField,
 } from "@radix-ui/themes";
@@ -26,6 +23,7 @@ import {
   createWorkoutExerciseCardViewModel,
   WorkoutExerciseCard,
 } from "~/modules/fitness/presentation";
+import { PageHeader } from "~/components/PageHeader";
 import { createNotFoundError, handleResultError } from "~/utils/errors";
 import type { Route } from "./+types/:id";
 
@@ -445,82 +443,75 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     });
   };
 
-  return (
-    <Box style={{ maxWidth: 640, margin: "0 auto" }}>
-      {/* Header */}
-      <Box px="4" py="4" style={{ borderBottom: "1px solid var(--gray-4)" }}>
-        <Flex justify="between" align="center">
-          <Flex align="center" gap="3">
-            <IconButton asChild variant="ghost" size="2">
-              <Link to="/workouts">
-                <ArrowLeftIcon />
-              </Link>
-            </IconButton>
-            <Box>
-              {isEditingName ? (
-                <TextField.Root
-                  ref={inputRef}
-                  defaultValue={optimisticName}
-                  size="3"
-                  onBlur={(e) => handleNameSubmit(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleNameSubmit(e.currentTarget.value);
-                    } else if (e.key === "Escape") {
-                      setIsEditingName(false);
-                    }
-                  }}
-                  style={{ fontWeight: "500" }}
-                />
-              ) : (
-                <Heading
-                  size="5"
-                  mb="1"
-                  onClick={() => !isComplete && setIsEditingName(true)}
-                  style={{ cursor: isComplete ? undefined : "pointer" }}
-                >
-                  {optimisticName}
-                </Heading>
-              )}
-              <Text size="2" color="gray">
-                {isComplete
-                  ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
-                  : `${formatDate(workoutSession.workout.start)} · ${startedAgo}`}
-              </Text>
-            </Box>
-          </Flex>
+  const title = isEditingName ? (
+    <TextField.Root
+      ref={inputRef}
+      defaultValue={optimisticName}
+      size="3"
+      onBlur={(e) => handleNameSubmit(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          handleNameSubmit(e.currentTarget.value);
+        } else if (e.key === "Escape") {
+          setIsEditingName(false);
+        }
+      }}
+      style={{ fontWeight: "500" }}
+    />
+  ) : (
+    <Heading
+      size="7"
+      onClick={() => !isComplete && setIsEditingName(true)}
+      style={{ cursor: isComplete ? undefined : "pointer" }}
+    >
+      {optimisticName}
+    </Heading>
+  );
 
-          <Flex align="center" gap="2">
-            {isComplete ? (
-              <Button
-                variant="soft"
-                color="red"
-                size="2"
-                onClick={() => setShowDeleteDialog(true)}
-              >
-                Delete
-              </Button>
-            ) : (
-              <>
-                <Button
-                  variant="soft"
-                  color="red"
-                  size="2"
-                  onClick={() => setShowCancelDialog(true)}
-                >
-                  Cancel
-                </Button>
-                <Button size="2" onClick={() => setShowCompletionModal(true)}>
-                  Complete
-                </Button>
-              </>
-            )}
-          </Flex>
-        </Flex>
-      </Box>
+  const subtitle = (
+    <Text size="2" color="gray">
+      {isComplete
+        ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
+        : `${formatDate(workoutSession.workout.start)} · ${startedAgo}`}
+    </Text>
+  );
+
+  const customRight = isComplete ? (
+    <Button
+      variant="soft"
+      color="red"
+      size="2"
+      onClick={() => setShowDeleteDialog(true)}
+    >
+      Delete
+    </Button>
+  ) : (
+    <Flex gap="2">
+      <Button
+        variant="soft"
+        color="red"
+        size="2"
+        onClick={() => setShowCancelDialog(true)}
+      >
+        Cancel
+      </Button>
+      <Button size="2" onClick={() => setShowCompletionModal(true)}>
+        Complete
+      </Button>
+    </Flex>
+  );
+
+  return (
+    <Box>
+      <PageHeader
+        title={title}
+        subtitle={subtitle}
+        backTo="/workouts"
+        customRight={customRight}
+      />
 
       {/* Content */}
-      <Box px="4">
+      <Box>
         {workoutSession.exerciseGroups.map((group) => {
           const viewModel = createWorkoutExerciseCardViewModel(
             group,

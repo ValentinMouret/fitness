@@ -2,7 +2,6 @@ import {
   Button,
   Container,
   Flex,
-  Heading,
   Select,
   Text,
   TextField,
@@ -37,6 +36,17 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   };
 };
 
+export const handle = {
+  header: () => ({
+    title: "Exercises",
+    backTo: "/workouts",
+    primaryAction: {
+      label: "Add Exercise",
+      to: "/workouts/exercises/create",
+    },
+  }),
+};
+
 export const action = async ({ request }: Route.ActionArgs) => {
   const formData = await request.formData();
   const exerciseId = formData.get("exerciseId")?.toString();
@@ -62,12 +72,6 @@ export default function ExercisesIndexPage({
 
   return (
     <>
-      <Flex gap="3">
-        <Heading>Exercises</Heading>
-        <Button asChild>
-          <Link to="/workouts/exercises/create">Add exercise</Link>
-        </Button>
-      </Flex>
       <Container pt="2">
         <Form>
           <Flex gap="2">

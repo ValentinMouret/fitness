@@ -15,6 +15,7 @@ import {
   TextField,
   AlertDialog,
 } from "@radix-ui/themes";
+import { SectionHeader } from "~/components/SectionHeader";
 import {
   ChevronLeftIcon,
   Cross2Icon,
@@ -119,11 +120,7 @@ export async function action({ request }: ActionFunctionArgs) {
       throw new Error("Missing required fields");
     }
 
-    if (!mealCategories.includes(categoryValue as MealCategory)) {
-      throw new Error("Invalid meal category");
-    }
-
-    const category = categoryValue as MealCategory;
+    const category = z.enum(["breakfast", "lunch", "dinner", "snack"]).parse(categoryValue);
 
     try {
       const ingredientsData = JSON.parse(ingredientsJson);
@@ -165,11 +162,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (intent === "save-meal") {
     const mealCategoryParam = formData.get("mealCategory")?.toString();
-    const mealCategory =
-      mealCategoryParam &&
-      mealCategories.includes(mealCategoryParam as MealCategory)
-        ? (mealCategoryParam as MealCategory)
-        : null;
+    const mealCategory = z.enum(["breakfast", "lunch", "dinner", "snack"]).nullable().parse(mealCategoryParam);
     const loggedDate = formData.get("loggedDate")?.toString();
     const ingredientsJson = formData.get("ingredients")?.toString();
     const returnTo = formData.get("returnTo")?.toString();
@@ -503,26 +496,20 @@ export default function MealBuilder({
     }
   }, [fetcher.data, handleAddIngredient]);
 
+  const title = mealLoggingMode.isEnabled
+    ? `${mealLoggingMode.existingMeal ? "Edit" : "Add"} ${mealLoggingMode.mealCategory?.charAt(0).toUpperCase()}${mealLoggingMode.mealCategory?.slice(1)}${mealLoggingMode.date ? ` for ${new Date(mealLoggingMode.date).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}` : ""}`
+    : "Meal Builder";
+
   return (
     <>
-      <Flex align="center" gap="3" mb="6">
-        <Link
-          to={
-            mealLoggingMode.isEnabled
-              ? mealLoggingMode.returnTo || "/nutrition/meals"
-              : "/nutrition"
-          }
-        >
-          <IconButton variant="ghost" size="2">
-            <ChevronLeftIcon width="16" height="16" />
-          </IconButton>
-        </Link>
-        <Heading size="6">
-          {mealLoggingMode.isEnabled
-            ? `${mealLoggingMode.existingMeal ? "Edit" : "Add"} ${mealLoggingMode.mealCategory?.charAt(0).toUpperCase()}${mealLoggingMode.mealCategory?.slice(1)}${mealLoggingMode.date ? ` for ${new Date(mealLoggingMode.date).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}` : ""}`
-            : "Meal Builder"}
-        </Heading>
-      </Flex>
+      <PageHeader
+        title={title}
+        backTo={
+          mealLoggingMode.isEnabled
+            ? mealLoggingMode.returnTo || "/nutrition/meals"
+            : "/nutrition"
+        }
+      />
 
       <Grid columns="2" gap="4" mb="6">
         <ObjectivesPanel
@@ -538,9 +525,9 @@ export default function MealBuilder({
       </Grid>
 
       <Box mb="6">
-        <Heading size="4" mb="3">
-          Selected Ingredients ({selectedIngredients.length})
-        </Heading>
+        <SectionHeader
+          title={`Selected Ingredients (${selectedIngredients.length})`}
+        />
         <Flex direction="column" gap="4">
           {selectedIngredients.map((ingredient) => (
             <IngredientCard

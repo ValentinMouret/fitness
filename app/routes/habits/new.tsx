@@ -1,5 +1,6 @@
 import { Form, redirect, useActionData, Link } from "react-router";
 import { data } from "react-router";
+import { z } from "zod";
 import type { Route } from "./+types/new";
 import { Habit as HabitEntity } from "../../modules/habits/domain/entity";
 import { HabitRepository } from "../../modules/habits/infra/repository.server";
@@ -18,14 +19,21 @@ import {
   Grid,
 } from "@radix-ui/themes";
 
+export const handle = {
+  header: () => ({
+    title: "Create New Habit",
+    backTo: "/habits",
+  }),
+};
+
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
 
-  const name = formData.get("name") as string;
-  const description = formData.get("description") as string | undefined;
-  const frequencyType = formData.get(
-    "frequencyType",
-  ) as HabitEntity["frequencyType"];
+  const name = formData.get("name")?.toString() ?? "";
+  const description = formData.get("description")?.toString();
+  const habitFrequencyType = z
+    .enum(["daily", "weekly", "monthly", "custom"])
+    .parse(formData.get("frequencyType"));
 
   const frequencyConfig: {
     days_of_week?: string[];
@@ -39,7 +47,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
   }
 
-  const habit = HabitEntity.create(name, frequencyType, frequencyConfig, {
+  const habit = HabitEntity.create(name, habitFrequencyType, frequencyConfig, {
     description: description || undefined,
   });
 
@@ -68,13 +76,9 @@ export default function NewHabit() {
 
   return (
     <Box>
-      <Flex justify="between" align="center" mb="6">
-        <Heading size="7">Create New Habit</Heading>
-      </Flex>
-
-      {"error" in (actionData ?? {}) && (
+      {actionData && "error" in actionData && (
         <Callout.Root color="red" mb="4">
-          <Callout.Text>{(actionData as { error: string }).error}</Callout.Text>
+          <Callout.Text>{actionData.error}</Callout.Text>
         </Callout.Root>
       )}
 

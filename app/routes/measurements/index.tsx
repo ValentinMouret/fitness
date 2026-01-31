@@ -45,18 +45,21 @@ export async function loader() {
   };
 }
 
+export const handle = {
+  header: () => ({
+    title: "Measurements",
+    primaryAction: {
+      label: "New Measurement",
+      to: "/measurements/new",
+    },
+  }),
+};
+
 export default function MeasurementsPage({ loaderData }: Route.ComponentProps) {
   const { measurements } = loaderData;
 
   return (
     <Box>
-      <Flex justify="between" align="center" mb="6">
-        <Heading size="7">Measurements</Heading>
-        <Button asChild>
-          <Link to="/measurements/new">New Measurement</Link>
-        </Button>
-      </Flex>
-
       {measurements.length === 0 ? (
         <EmptyState
           icon="📏"

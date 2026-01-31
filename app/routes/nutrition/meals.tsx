@@ -36,6 +36,8 @@ import {
   MealCard,
   TemplateSelectionModal,
 } from "~/modules/nutrition/presentation";
+import { PageHeader } from "~/components/PageHeader";
+import { SectionHeader } from "~/components/SectionHeader";
 import { addOneDay, removeOneDay, toDateString, today } from "~/time";
 import { handleResultError } from "~/utils/errors";
 import type { Route } from "./+types/meals";
@@ -92,12 +94,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
-  const intent = formData.get("intent") as string;
+  const intent = formData.get("intent")?.toString();
 
   if (intent === "apply-template") {
-    const templateId = formData.get("templateId") as string;
-    const mealCategory = formData.get("mealCategory") as MealCategory;
-    const loggedDate = new Date(formData.get("loggedDate") as string);
+    const templateId = formData.get("templateId")?.toString() ?? "";
+    const mealCategory = z.enum(["breakfast", "lunch", "dinner", "snack"]).parse(formData.get("mealCategory"));
+    const loggedDate = new Date(formData.get("loggedDate")?.toString() ?? "");
 
     const result = await NutritionService.createMealLogFromTemplate(
       templateId,
@@ -113,7 +115,7 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   if (intent === "delete-meal") {
-    const mealId = formData.get("mealId") as string;
+    const mealId = formData.get("mealId")?.toString() ?? "";
 
     const result = await NutritionService.deleteMealLog(mealId);
 
@@ -272,49 +274,38 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
     }
   };
 
+  const title = (
+    <Flex align="center" justify="center" gap="2">
+      <IconButton
+        variant="ghost"
+        onClick={previousDay}
+        aria-label="Previous day"
+      >
+        <ChevronLeftIcon width="16" height="16" />
+      </IconButton>
+
+      <Heading size="7">{formatDate(parsedCurrentDate)}</Heading>
+
+      <IconButton variant="ghost" onClick={nextDay} aria-label="Next day">
+        <ChevronRightIcon width="16" height="16" />
+      </IconButton>
+    </Flex>
+  );
+
   return (
     <>
-      {/* Header with date navigation */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "auto 1fr auto",
-          alignItems: "center",
-          gap: "16px",
-          marginBottom: "24px",
+      <PageHeader
+        title={title}
+        backTo="/nutrition"
+        primaryAction={{
+          label: "Today",
+          onClick: goToToday,
+          type: "button",
         }}
-      >
-        <Link to="/nutrition">
-          <IconButton variant="ghost" size="2">
-            <ChevronLeftIcon width="16" height="16" />
-          </IconButton>
-        </Link>
-
-        <Flex align="center" justify="center" gap="2">
-          <IconButton
-            variant="ghost"
-            onClick={previousDay}
-            aria-label="Previous day"
-          >
-            <ChevronLeftIcon width="16" height="16" />
-          </IconButton>
-
-          <Heading size="5">{formatDate(parsedCurrentDate)}</Heading>
-
-          <IconButton variant="ghost" onClick={nextDay} aria-label="Next day">
-            <ChevronRightIcon width="16" height="16" />
-          </IconButton>
-        </Flex>
-
-        <Button variant="outline" size="2" onClick={goToToday}>
-          Today
-        </Button>
-      </div>
+      />
 
       <Card size="3" mb="6">
-        <Heading size="4" mb="4">
-          Daily Progress
-        </Heading>
+        <SectionHeader title="Daily Progress" />
 
         <Grid columns="2" gap="4" mb="4">
           <Box>
@@ -374,7 +365,7 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
 
       {/* Meal Cards */}
       <Flex direction="column" gap="4" mb="6">
-        {(["breakfast", "lunch", "dinner", "snack"] as MealCategory[]).map(
+        {(["breakfast", "lunch", "dinner", "snack"] as const).map(
           (mealType) => {
             const meal = getMealForType(mealType);
 

@@ -1,5 +1,6 @@
 import { Form, redirect, useActionData, Link } from "react-router";
 import { data } from "react-router";
+import { z } from "zod";
 import type { Route } from "./+types/edit";
 import type {
   Habit as HabitEntity,
@@ -22,6 +23,13 @@ import {
   Grid,
 } from "@radix-ui/themes";
 
+export const handle = {
+  header: () => ({
+    title: "Edit Habit",
+    backTo: "/habits",
+  }),
+};
+
 export async function loader({ params }: Route.LoaderArgs) {
   const result = await HabitRepository.fetchById(params.id);
 
@@ -35,11 +43,11 @@ export async function loader({ params }: Route.LoaderArgs) {
 export async function action({ request, params }: Route.ActionArgs) {
   const formData = await request.formData();
 
-  const name = formData.get("name") as string;
-  const description = formData.get("description") as string | undefined;
-  const frequencyType = formData.get(
-    "frequencyType",
-  ) as HabitEntity["frequencyType"];
+  const name = formData.get("name")?.toString() ?? "";
+  const description = formData.get("description")?.toString();
+  const frequencyType = z
+    .enum(["daily", "weekly", "monthly", "custom"])
+    .parse(formData.get("frequencyType"));
 
   const frequencyConfig: {
     days_of_week?: string[];
@@ -85,13 +93,9 @@ export default function EditHabit({
 
   return (
     <Box>
-      <Flex justify="between" align="center" mb="6">
-        <Heading size="7">Edit Habit</Heading>
-      </Flex>
-
-      {"error" in (actionData ?? {}) && (
+      {actionData && "error" in actionData && (
         <Callout.Root color="red" mb="4">
-          <Callout.Text>{(actionData as { error: string }).error}</Callout.Text>
+          <Callout.Text>{actionData.error}</Callout.Text>
         </Callout.Root>
       )}
 
