@@ -2,38 +2,11 @@ import { Link } from "react-router";
 import { Box, Heading, Text, Flex, Card, Grid, Badge } from "@radix-ui/themes";
 import { RulerSquareIcon } from "@radix-ui/react-icons";
 import { EmptyState } from "~/components/EmptyState";
-import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
-import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
-import { handleResultError } from "~/utils/errors";
+import { getMeasurementsPageData } from "~/modules/core/application/measurements-page.service.server";
 import type { Route } from "./+types/index";
 
 export async function loader() {
-  const measurements = await MeasurementRepository.fetchAll();
-
-  if (measurements.isErr()) {
-    handleResultError(measurements, "Failed to load measurements");
-  }
-
-  const measurementsWithLatest = await Promise.all(
-    measurements.value.map(async (measurement) => {
-      const latestMeasures = await MeasureRepository.fetchByMeasurementName(
-        measurement.name,
-        1,
-      );
-
-      return {
-        ...measurement,
-        latestValue:
-          latestMeasures.isOk() && latestMeasures.value.length > 0
-            ? latestMeasures.value[0]
-            : null,
-      };
-    }),
-  );
-
-  return {
-    measurements: measurementsWithLatest,
-  };
+  return getMeasurementsPageData();
 }
 
 export const handle = {

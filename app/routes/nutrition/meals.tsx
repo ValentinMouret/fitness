@@ -25,9 +25,6 @@ import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from "react-router";
-import { TargetService } from "~/modules/core/application/measurement-service";
-import { baseMeasurements } from "~/modules/core/domain/measurements";
-import { NutritionService } from "~/modules/nutrition/application/service";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import {
@@ -40,57 +37,19 @@ import {
 import { PageHeader } from "~/components/PageHeader";
 import { SectionHeader } from "~/components/SectionHeader";
 import { addOneDay, removeOneDay, toDateString, today } from "~/time";
-import { handleResultError } from "~/utils/errors";
 import type { Route } from "./+types/meals";
+import {
+  applyMealTemplate,
+  deleteMealLog,
+  getMealsPageData,
+} from "~/modules/nutrition/application/meals-page.service.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const dateParam = url.searchParams.get("date");
 
   const currentDate = dateParam ? new Date(dateParam) : today();
-
-  // Note: Ingredients loading removed since we're using direct navigation to meal builder
-
-  // Fetch daily summary
-  const dailySummaryResult =
-    await NutritionService.getDailySummary(currentDate);
-
-  // Fetch meal templates
-  const mealTemplatesResult = await NutritionService.getAllMealTemplates();
-
-  // Fetch targets
-  const activeTargets = await TargetService.currentTargets();
-
-  if (dailySummaryResult.isErr()) {
-    handleResultError(dailySummaryResult, "Failed to load daily summary");
-  }
-
-  if (mealTemplatesResult.isErr()) {
-    handleResultError(mealTemplatesResult, "Failed to load meal templates");
-  }
-
-  // Extract daily calorie target (for now, we'll just use this one target)
-  let targets = null;
-  if (activeTargets.isOk()) {
-    const dailyCalorieTarget = activeTargets.value.find(
-      (t) => t.measurement === baseMeasurements.dailyCalorieIntake.name,
-    );
-    if (dailyCalorieTarget) {
-      targets = {
-        calories: dailyCalorieTarget.value,
-        protein: Math.round((dailyCalorieTarget.value * 0.3) / 4), // 30% protein
-        carbs: Math.round((dailyCalorieTarget.value * 0.4) / 4), // 40% carbs
-        fat: Math.round((dailyCalorieTarget.value * 0.3) / 9), // 30% fat
-      };
-    }
-  }
-
-  return {
-    dailySummary: dailySummaryResult.value,
-    mealTemplates: mealTemplatesResult.value,
-    targets,
-    currentDate: currentDate.toISOString(),
-  };
+  return getMealsPageData(currentDate);
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -104,14 +63,14 @@ export async function action({ request }: ActionFunctionArgs) {
       .parse(formData.get("mealCategory"));
     const loggedDate = new Date(formData.get("loggedDate")?.toString() ?? "");
 
-    const result = await NutritionService.createMealLogFromTemplate(
+    const result = await applyMealTemplate({
       templateId,
       mealCategory,
       loggedDate,
-    );
+    });
 
-    if (result.isErr()) {
-      return { success: false, error: "Failed to apply template" };
+    if (!result.ok) {
+      return { success: false, error: result.error };
     }
 
     return { success: true };
@@ -120,10 +79,10 @@ export async function action({ request }: ActionFunctionArgs) {
   if (intent === "delete-meal") {
     const mealId = formData.get("mealId")?.toString() ?? "";
 
-    const result = await NutritionService.deleteMealLog(mealId);
+    const result = await deleteMealLog({ mealId });
 
-    if (result.isErr()) {
-      return { success: false, error: "Failed to delete meal" };
+    if (!result.ok) {
+      return { success: false, error: result.error };
     }
 
     return { success: true };

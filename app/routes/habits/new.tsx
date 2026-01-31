@@ -2,8 +2,7 @@ import { Form, redirect, useActionData, Link } from "react-router";
 import { data } from "react-router";
 import { z } from "zod";
 import type { Route } from "./+types/new";
-import { Habit as HabitEntity } from "../../modules/habits/domain/entity";
-import { HabitRepository } from "../../modules/habits/infra/repository.server";
+import { createHabit } from "../../modules/habits/application/create-habit.service.server";
 import * as React from "react";
 import {
   Box,
@@ -46,14 +45,15 @@ export async function action({ request }: Route.ActionArgs) {
     }
   }
 
-  const habit = HabitEntity.create(name, habitFrequencyType, frequencyConfig, {
+  const result = await createHabit({
+    name,
     description: description || undefined,
+    frequencyType: habitFrequencyType,
+    frequencyConfig,
   });
 
-  const result = await HabitRepository.save(habit);
-
-  if (result.isErr()) {
-    return data({ error: "Failed to create habit" }, { status: 500 });
+  if (!result.ok) {
+    return data({ error: result.error }, { status: result.status });
   }
 
   return redirect("/habits");

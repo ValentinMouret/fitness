@@ -1,32 +1,24 @@
 import { Container, Flex, Select, Text, TextField } from "@radix-ui/themes";
-import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 import type { Route } from "./+types";
-import {
-  exerciseTypes,
-  parseExerciseType,
-} from "~/modules/fitness/domain/workout";
+import { exerciseTypes } from "~/modules/fitness/domain/workout";
 import { Form, useSearchParams } from "react-router";
 import ExerciseCard from "~/components/ExerciseCard";
 import { humanFormatting } from "~/strings";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import {
+  deleteExercise,
+  getExercisesPageData,
+} from "~/modules/fitness/application/exercises-page.service.server";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const url = new URL(request.url);
 
   const searchParams = url.searchParams;
 
-  const allExercises = await ExerciseMuscleGroupsRepository.listAll({
-    type: parseExerciseType(searchParams.get("type") ?? "").unwrapOr(undefined),
-    q: searchParams.get("q")?.toString(),
+  return getExercisesPageData({
+    typeParam: searchParams.get("type"),
+    query: searchParams.get("q"),
   });
-
-  if (allExercises.isErr()) {
-    throw new Error("Error fetching exercises");
-  }
-
-  return {
-    allExercises: allExercises.value,
-  };
 };
 
 export const handle = {
@@ -44,17 +36,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
   const formData = await request.formData();
   const exerciseId = formData.get("exerciseId")?.toString();
 
-  if (!exerciseId) {
-    throw new Error("Exercise ID is required");
-  }
-
-  const result = await ExerciseMuscleGroupsRepository.deleteById(exerciseId);
-
-  if (result.isErr()) {
-    throw new Error("Failed to delete exercise");
-  }
-
-  return { success: true };
+  return deleteExercise(exerciseId ?? "");
 };
 
 export default function ExercisesIndexPage({

@@ -11,84 +11,19 @@ import {
   Text,
 } from "@radix-ui/themes";
 import { data, Form, Link, useNavigation } from "react-router";
-import { handleResultError } from "~/utils/errors";
 import { EmptyState } from "~/components/EmptyState";
 import { SectionHeader } from "~/components/SectionHeader";
 import { Celebration } from "~/components/Celebration";
 import HabitCheckbox from "../../components/HabitCheckbox";
-import { HabitService } from "../../modules/habits/application/service";
-import { HabitCompletion } from "../../modules/habits/domain/entity";
-import {
-  HabitCompletionRepository,
-  HabitRepository,
-} from "../../modules/habits/infra/repository.server";
-import { Day, isSameDay, today } from "../../time";
+import { Day } from "../../time";
 import type { Route } from "./+types/index";
+import {
+  getHabitsPageData,
+  toggleHabitCompletion,
+} from "~/modules/habits/application/habits-page.service.server";
 
 export async function loader() {
-  const habitsResult = await HabitRepository.fetchActive();
-  if (habitsResult.isErr()) {
-    handleResultError(habitsResult, "Failed to load habits");
-  }
-
-  const habits = habitsResult.value;
-  const todayDate = today();
-
-  // Find earliest start date to fetch all relevant completions at once
-  const earliestDate = habits.reduce(
-    (min, h) => (h.startDate < min ? h.startDate : min),
-    todayDate,
-  );
-
-  const completionsResult = await HabitCompletionRepository.fetchByDateRange(
-    earliestDate,
-    todayDate,
-  );
-  if (completionsResult.isErr()) {
-    handleResultError(completionsResult, "Failed to load completions");
-  }
-
-  // Group completions by habit for streak calculation
-  const completionsByHabit = Map.groupBy(
-    completionsResult.value,
-    (c) => c.habitId,
-  );
-
-  const habitStreaks: Record<string, number> = {};
-  const completionMap: Record<string, boolean> = {};
-
-  for (const habit of habits) {
-    const habitCompletions = completionsByHabit.get(habit.id) || [];
-    habitStreaks[habit.id] = HabitService.calculateStreak(
-      habit,
-      habitCompletions,
-      todayDate,
-    );
-
-    const todayCompletion = habitCompletions.find((c) =>
-      isSameDay(c.completionDate, todayDate),
-    );
-    if (todayCompletion) {
-      completionMap[habit.id] = todayCompletion.completed;
-    }
-  }
-
-  const todayHabits = habits.filter((habit) =>
-    HabitService.isDueOn(habit, todayDate),
-  );
-
-  const completedTodayCount = todayHabits.filter(
-    (habit) => completionMap[habit.id],
-  ).length;
-
-  return {
-    habits,
-    todayHabits,
-    completionMap,
-    habitStreaks,
-    todayHabitsCount: todayHabits.length,
-    completedTodayCount,
-  };
+  return getHabitsPageData();
 }
 
 export const handle = {
@@ -117,54 +52,28 @@ export const handle = {
   },
 };
 
-const STREAK_MILESTONES = [7, 30, 90, 365];
-
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
 
   if (intent === "toggle-completion") {
-    const habitId = formData.get("habitId")?.toString() ?? "";
+    const habitIdValue = formData.get("habitId");
+    const habitId = typeof habitIdValue === "string" ? habitIdValue : "";
     const completed = formData.get("completed") === "true";
-    const notes = formData.get("notes")?.toString();
+    const notesValue = formData.get("notes");
+    const notes = typeof notesValue === "string" ? notesValue : undefined;
 
-    const completion = HabitCompletion.create(
+    const result = await toggleHabitCompletion({
       habitId,
-      today(),
-      !completed,
+      completed,
       notes,
-    );
+    });
 
-    const result = await HabitCompletionRepository.save(completion);
-
-    if (result.isErr()) {
-      return data({ error: "Failed to save completion" }, { status: 500 });
+    if (!result.ok) {
+      return data({ error: result.error }, { status: result.status });
     }
 
-    // Check for streak milestone when completing (not uncompleting)
-    let hitMilestone: number | null = null;
-    if (!completed) {
-      const habit = await HabitRepository.fetchById(habitId);
-      if (habit.isOk() && habit.value) {
-        const completions = await HabitCompletionRepository.fetchByHabitBetween(
-          habitId,
-          new Date(habit.value.startDate),
-          today(),
-        );
-        if (completions.isOk()) {
-          const newStreak = HabitService.calculateStreak(
-            habit.value,
-            completions.value,
-            today(),
-          );
-          if (STREAK_MILESTONES.includes(newStreak)) {
-            hitMilestone = newStreak;
-          }
-        }
-      }
-    }
-
-    return data({ success: true, hitMilestone });
+    return data({ success: true, hitMilestone: result.hitMilestone });
   }
 
   return null;

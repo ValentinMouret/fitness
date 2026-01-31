@@ -26,22 +26,18 @@ import {
 } from "@radix-ui/react-icons";
 import {
   useFetcher,
-  redirect,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from "react-router";
-import { NutritionService } from "~/modules/nutrition/application/service";
-import type { Ingredient } from "~/modules/nutrition/domain/ingredient";
+import type {
+  CreateAIIngredientInput,
+  Ingredient,
+} from "~/modules/nutrition/domain/ingredient";
 import {
   ingredientCategories,
   Ingredient as IngredientDomain,
 } from "~/modules/nutrition/domain/ingredient";
-import type { CreateMealTemplateInput } from "~/modules/nutrition/domain/meal-template";
-import {
-  calculateSatietyScore,
-  mealCategories,
-  type MealCategory,
-} from "~/modules/nutrition/domain/meal-template";
+import { calculateSatietyScore } from "~/modules/nutrition/domain/meal-template";
 import {
   ObjectivesPanel,
   CurrentTotalsPanel,
@@ -50,9 +46,15 @@ import {
   type Objectives,
   type SelectedIngredient,
 } from "~/modules/nutrition/presentation";
-import type { CreateAIIngredientInput } from "~/modules/nutrition/domain/ingredient";
 import type { Route } from "./+types/meal-builder";
 import { humanFormatting } from "~/strings";
+import {
+  getMealBuilderData,
+  saveAiIngredient,
+  saveMealLog,
+  saveMealTemplate,
+  searchAiIngredient,
+} from "~/modules/nutrition/application/meal-builder.service.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -61,49 +63,24 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // Meal logging mode parameters
   const mealCategoryParam = url.searchParams.get("meal");
-  const mealCategory =
-    mealCategoryParam &&
-    mealCategories.includes(mealCategoryParam as MealCategory)
-      ? (mealCategoryParam as MealCategory)
-      : null;
+  const mealCategoryParse = z
+    .enum(["breakfast", "lunch", "dinner", "snack"])
+    .safeParse(mealCategoryParam);
+  const mealCategory = mealCategoryParse.success
+    ? mealCategoryParse.data
+    : null;
   const dateParam = url.searchParams.get("date");
   const mealId = url.searchParams.get("mealId");
   const returnTo = url.searchParams.get("returnTo");
 
-  const [ingredientsResult, templatesResult] = await Promise.all([
-    NutritionService.searchIngredients(searchTerm, category),
-    NutritionService.getAllMealTemplates(),
-  ]);
-
-  if (ingredientsResult.isErr()) {
-    throw new Error("Failed to load ingredients");
-  }
-
-  if (templatesResult.isErr()) {
-    throw new Error("Failed to load meal templates");
-  }
-
-  // If in meal logging mode and editing an existing meal, fetch the meal data
-  let existingMeal = null;
-  if (mealId) {
-    const mealResult = await NutritionService.getMealLogWithIngredients(mealId);
-    if (mealResult.isOk()) {
-      existingMeal = mealResult.value;
-    }
-  }
-
-  return {
-    ingredients: ingredientsResult.value,
-    mealTemplates: templatesResult.value,
-    // Meal logging context
-    mealLoggingMode: {
-      isEnabled: Boolean(mealCategory && dateParam && returnTo),
-      mealCategory,
-      date: dateParam,
-      returnTo,
-      existingMeal,
-    },
-  };
+  return getMealBuilderData({
+    searchTerm,
+    category,
+    mealCategory,
+    date: dateParam,
+    returnTo,
+    mealId,
+  });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -124,42 +101,12 @@ export async function action({ request }: ActionFunctionArgs) {
       .enum(["breakfast", "lunch", "dinner", "snack"])
       .parse(categoryValue);
 
-    try {
-      const ingredientsData = JSON.parse(ingredientsJson);
-
-      // Convert ingredient data back to domain objects
-      const ingredients = await Promise.all(
-        ingredientsData.map(async (item: { id: string; quantity: number }) => {
-          const ingredientResult = await NutritionService.getIngredientById(
-            item.id,
-          );
-          if (ingredientResult.isErr()) {
-            throw new Error(`Failed to find ingredient: ${item.id}`);
-          }
-          return {
-            ingredient: ingredientResult.value,
-            quantityGrams: item.quantity,
-          };
-        }),
-      );
-
-      const input: CreateMealTemplateInput = {
-        name,
-        category,
-        notes,
-        ingredients,
-      };
-
-      const result = await NutritionService.createMealTemplate(input);
-
-      if (result.isErr()) {
-        throw new Error("Failed to save meal template");
-      }
-
-      return { success: true, template: result.value };
-    } catch (_error) {
-      throw new Error("Invalid ingredient data");
-    }
+    return saveMealTemplate({
+      name,
+      category,
+      notes,
+      ingredientsJson,
+    });
   }
 
   if (intent === "save-meal") {
@@ -178,57 +125,14 @@ export async function action({ request }: ActionFunctionArgs) {
       throw new Error("Missing required fields for meal logging");
     }
 
-    try {
-      const ingredientsData = JSON.parse(ingredientsJson);
-      const parsedDate = new Date(loggedDate);
-
-      // Convert ingredient data back to domain objects
-      const ingredients = await Promise.all(
-        ingredientsData.map(async (item: { id: string; quantity: number }) => {
-          const ingredientResult = await NutritionService.getIngredientById(
-            item.id,
-          );
-          if (ingredientResult.isErr()) {
-            throw new Error(`Failed to find ingredient: ${item.id}`);
-          }
-          return {
-            ingredient: ingredientResult.value,
-            quantityGrams: item.quantity,
-          };
-        }),
-      );
-
-      let result: Awaited<
-        ReturnType<
-          | typeof NutritionService.createMealLog
-          | typeof NutritionService.updateMealLog
-        >
-      >;
-      if (mealId) {
-        // Update existing meal
-        result = await NutritionService.updateMealLog(mealId, {
-          ingredients,
-          notes,
-        });
-      } else {
-        // Create new meal
-        result = await NutritionService.createMealLog({
-          mealCategory,
-          loggedDate: parsedDate,
-          ingredients,
-          notes,
-        });
-      }
-
-      if (result.isErr()) {
-        throw new Error("Failed to save meal");
-      }
-
-      // Redirect back to the meal logger
-      return redirect(returnTo || "/nutrition/meals");
-    } catch (_error) {
-      throw new Error("Invalid meal data");
-    }
+    return saveMealLog({
+      mealCategory,
+      loggedDate,
+      ingredientsJson,
+      returnTo,
+      mealId: mealId || undefined,
+      notes,
+    });
   }
 
   if (intent === "search-ai-ingredient") {
@@ -237,15 +141,7 @@ export async function action({ request }: ActionFunctionArgs) {
       throw new Error("Search query is required");
     }
 
-    try {
-      const result = await NutritionService.searchIngredientWithAI(query);
-      return { aiIngredient: result };
-    } catch (error) {
-      console.error("AI ingredient search error:", error);
-      return {
-        error: "Failed to search ingredient with AI. Please try again.",
-      };
-    }
+    return searchAiIngredient({ query });
   }
 
   if (intent === "save-ai-ingredient") {
@@ -254,20 +150,7 @@ export async function action({ request }: ActionFunctionArgs) {
       throw new Error("Ingredient data is required");
     }
 
-    try {
-      const ingredientData: CreateAIIngredientInput =
-        JSON.parse(ingredientDataJson);
-      const result = await NutritionService.createIngredient(ingredientData);
-
-      if (result.isErr()) {
-        throw new Error("Failed to save AI ingredient");
-      }
-
-      return { success: true, ingredient: result.value };
-    } catch (error) {
-      console.error("Save AI ingredient error:", error);
-      return { error: "Failed to save ingredient. Please try again." };
-    }
+    return saveAiIngredient({ ingredientDataJson });
   }
 
   throw new Error("Invalid intent");

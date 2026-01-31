@@ -1,8 +1,9 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { redirect } from "react-router";
 import type { Route } from "./+types/substitute";
-import { AdaptiveWorkoutService } from "~/modules/fitness/application/adaptive-workout-service.server";
-import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
+import {
+  getSubstituteExerciseData,
+  substituteExercise,
+} from "~/modules/fitness/application/substitute-exercise.service.server";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const { id: workoutId, exerciseId } = params;
@@ -13,32 +14,13 @@ export async function loader({ params }: LoaderFunctionArgs) {
     });
   }
 
-  // Get available equipment for substitution
-  const availableEquipmentResult =
-    await AdaptiveWorkoutRepository.getAvailableEquipment();
-  if (availableEquipmentResult.isErr()) {
-    throw new Error("Failed to load available equipment");
-  }
-
-  // Get potential substitutes
-  const substitutesResult =
-    await AdaptiveWorkoutRepository.findSubstitutes(exerciseId);
-  if (substitutesResult.isErr()) {
-    throw new Error("Failed to load exercise substitutes");
-  }
-
-  return {
-    workoutId,
-    exerciseId,
-    availableEquipment: availableEquipmentResult.value,
-    potentialSubstitutes: substitutesResult.value,
-  };
+  return getSubstituteExerciseData({ workoutId, exerciseId });
 }
 
 export async function action({ params, request }: ActionFunctionArgs) {
   const { id: workoutId, exerciseId } = params;
   const formData = await request.formData();
-  const selectedEquipment = formData.getAll("equipment") as string[];
+  const selectedEquipment = formData.getAll("equipment").map(String);
 
   if (!workoutId || !exerciseId) {
     throw new Response("Workout ID and Exercise ID are required", {
@@ -46,40 +28,11 @@ export async function action({ params, request }: ActionFunctionArgs) {
     });
   }
 
-  // Get available equipment
-  const availableEquipmentResult =
-    await AdaptiveWorkoutRepository.getAvailableEquipment();
-  if (availableEquipmentResult.isErr()) {
-    throw new Error("Failed to load equipment data");
-  }
-
-  // Filter to only selected equipment
-  const selectedEquipmentInstances = availableEquipmentResult.value.filter(
-    (equipment) => selectedEquipment.includes(equipment.id),
-  );
-
-  // Find substitute exercise
-  const substituteResult = await AdaptiveWorkoutService.replaceExercise(
+  return substituteExercise({
     workoutId,
     exerciseId,
-    selectedEquipmentInstances,
-  );
-
-  if (substituteResult.isErr()) {
-    throw new Error(
-      substituteResult.error === "no_suitable_substitutes"
-        ? "No suitable substitute exercises found"
-        : substituteResult.error === "equipment_unavailable"
-          ? "No substitutes available with selected equipment"
-          : "Failed to find substitute exercise",
-    );
-  }
-
-  // Redirect back to workout with success message
-  // In a real implementation, you would update the workout in the database
-  return redirect(
-    `/workouts/${workoutId}?substituted=${exerciseId}&new=${substituteResult.value.id}`,
-  );
+    selectedEquipmentIds: selectedEquipment,
+  });
 }
 
 export default function SubstituteExercise({

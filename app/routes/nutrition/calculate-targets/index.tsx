@@ -14,15 +14,13 @@ import MaintenanceForm from "../MaintenanceForm";
 import type { Route } from "./+types";
 import { coerceFloat, coerceInt, expect } from "~/utils";
 import { Result } from "neverthrow";
-import { NutritionCalculationService } from "~/modules/nutrition/domain/nutrition-calculation-service";
-import { Age, Height, Weight } from "~/modules/core/domain/measurements";
-import { Activity } from "~/modules/nutrition/domain/activity";
 import MacrosChart from "~/components/MacrosChart";
 import { Form, Link } from "react-router";
 import { useState } from "react";
-import { Target } from "~/modules/core/domain/target";
-import { baseMeasurements } from "~/modules/core/domain/measurements";
-import { TargetService } from "~/modules/core/application/measurement-service";
+import {
+  calculateTargets,
+  saveNutritionTarget,
+} from "~/modules/nutrition/application/calculate-targets.service.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -39,28 +37,15 @@ export async function loader({ request }: Route.LoaderArgs) {
   const delta = coerceInt(expect(searchParams.get("delta")));
 
   return Result.combine([age, height, weight, activity, delta])
-    .map(([a, h, w, act, d]) => {
-      const maintenance = NutritionCalculationService.mifflinStJeor({
-        age: Age.years(a),
-        height: Height.cm(h),
-        weight: Weight.kg(w),
-        activity: Activity.ratio(act),
-      });
-      const target = Math.round((1 + d / 100) * maintenance);
-      return {
+    .map(([a, h, w, act, d]) =>
+      calculateTargets({
         age: a,
         height: h,
         weight: w,
         activity: act,
         delta: d,
-        maintenance,
-        target,
-        macrosSplit: NutritionCalculationService.macrosSplit({
-          calories: target,
-          weight: w,
-        }),
-      };
-    })
+      }),
+    )
     .unwrapOr(undefined);
 }
 
@@ -228,24 +213,11 @@ export async function action({ request }: Route.ActionArgs) {
 
   const [a, h, w, act, d] = result.value;
 
-  const maintenance = NutritionCalculationService.mifflinStJeor({
-    age: Age.years(a),
-    height: Height.cm(h),
-    weight: Weight.kg(w),
-    activity: Activity.ratio(act),
+  return saveNutritionTarget({
+    age: a,
+    height: h,
+    weight: w,
+    activity: act,
+    delta: d,
   });
-  const targetIntake = Math.round((1 + d / 100) * maintenance);
-
-  const target = Target.create({
-    measurement: baseMeasurements.dailyCalorieIntake.name,
-    value: targetIntake,
-  });
-
-  const saveResult = await TargetService.setTarget(target);
-
-  if (saveResult.isErr()) {
-    throw new Error(saveResult.error);
-  }
-
-  return { success: true };
 }

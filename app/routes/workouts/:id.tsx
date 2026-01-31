@@ -1,49 +1,36 @@
 import { Box, Button, Flex, Heading, Text, TextField } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
-import { redirect, useFetcher } from "react-router";
+import { useFetcher } from "react-router";
 import { CancelConfirmationDialog } from "~/components/workout/CancelConfirmationDialog";
 import { CompletionModal } from "~/components/workout/CompletionModal";
 import { DeleteConfirmationDialog } from "~/components/workout/DeleteConfirmationDialog";
 import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
 import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
-import { Workout, WorkoutSet } from "~/modules/fitness/domain/workout";
-import { ExerciseRepository } from "~/modules/fitness/infra/repository.server";
-import {
-  WorkoutRepository,
-  WorkoutSessionRepository,
-} from "~/modules/fitness/infra/workout.repository.server";
+import { Workout } from "~/modules/fitness/domain/workout";
 import {
   createWorkoutExerciseCardViewModel,
   WorkoutExerciseCard,
 } from "~/modules/fitness/presentation";
 import { PageHeader } from "~/components/PageHeader";
-import { createNotFoundError, handleResultError } from "~/utils/errors";
 import type { Route } from "./+types/:id";
+import {
+  addExerciseToWorkout,
+  addSetToWorkout,
+  cancelWorkout,
+  completeSetInWorkout,
+  completeWorkout,
+  deleteWorkout,
+  getWorkoutSessionData,
+  removeExerciseFromWorkout,
+  removeSetFromWorkout,
+  updateSetInWorkout,
+  updateWorkoutName,
+} from "~/modules/fitness/application/workout-session.service.server";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { id } = params;
-
-  const workoutSessionResult = await WorkoutSessionRepository.findById(id);
-
-  if (workoutSessionResult.isErr()) {
-    handleResultError(workoutSessionResult, "Failed to load workout");
-  }
-
-  if (!workoutSessionResult.value) {
-    throw createNotFoundError("Workout");
-  }
-
-  const exercisesResult = await ExerciseRepository.listAll();
-
-  if (exercisesResult.isErr()) {
-    handleResultError(exercisesResult, "Failed to load exercises");
-  }
-
-  return {
-    workoutSession: workoutSessionResult.value,
-    exercises: exercisesResult.value,
-  };
+  return getWorkoutSessionData(id);
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -58,322 +45,72 @@ export async function action({ request, params }: Route.ActionArgs) {
   try {
     switch (intent) {
       case "update-name": {
-        const name = formData.get("name")?.toString();
-
-        if (!name || !name.trim()) {
-          return { error: "Name is required" };
-        }
-
-        const workoutResult = await WorkoutRepository.findById(id);
-        if (workoutResult.isErr() || !workoutResult.value) {
-          return { error: "Workout not found" };
-        }
-
-        const updatedWorkout = { ...workoutResult.value, name: name.trim() };
-        const result = await WorkoutRepository.save(updatedWorkout);
-
-        if (result.isErr()) {
-          return { error: "Failed to update workout name" };
-        }
-
-        return { success: true };
+        return updateWorkoutName(id, formData.get("name")?.toString());
       }
 
       case "add-exercise": {
-        const exerciseId = formData.get("exerciseId")?.toString();
-        const notes = formData.get("notes")?.toString();
-
-        if (!exerciseId) {
-          return { error: "Exercise ID is required" };
-        }
-
-        const workoutSessionResult =
-          await WorkoutSessionRepository.findById(id);
-        if (workoutSessionResult.isErr() || !workoutSessionResult.value) {
-          return { error: "Workout not found" };
-        }
-
-        const maxOrderIndex = Math.max(
-          ...workoutSessionResult.value.exerciseGroups.map((g) => g.orderIndex),
-          -1,
-        );
-
-        const historicalResult =
-          await WorkoutSessionRepository.getLastCompletedSetsForExercise(
-            exerciseId,
-          );
-        const defaultSetValues =
-          historicalResult.isOk() && historicalResult.value.length > 0
-            ? {
-                reps: historicalResult.value[0].reps,
-                weight: historicalResult.value[0].weight,
-              }
-            : undefined;
-
-        const result = await WorkoutSessionRepository.addExercise(
-          id,
-          exerciseId,
-          maxOrderIndex + 1,
-          notes,
-          defaultSetValues,
-        );
-
-        if (result.isErr()) {
-          return { error: "Failed to add exercise" };
-        }
-
-        return { success: true };
+        return addExerciseToWorkout({
+          workoutId: id,
+          exerciseId: formData.get("exerciseId")?.toString(),
+          notes: formData.get("notes")?.toString(),
+        });
       }
 
       case "remove-exercise": {
-        const exerciseId = formData.get("exerciseId")?.toString();
-
-        if (!exerciseId) {
-          return { error: "Exercise ID is required" };
-        }
-
-        const result = await WorkoutSessionRepository.removeExercise(
-          id,
-          exerciseId,
-        );
-
-        if (result.isErr()) {
-          return { error: "Failed to remove exercise" };
-        }
-
-        return { success: true };
+        return removeExerciseFromWorkout({
+          workoutId: id,
+          exerciseId: formData.get("exerciseId")?.toString(),
+        });
       }
 
       case "add-set": {
-        const exerciseId = formData.get("exerciseId")?.toString();
-        const repsStr = formData.get("reps")?.toString();
-        const weightStr = formData.get("weight")?.toString();
-        const note = formData.get("note")?.toString();
-
-        if (!exerciseId) {
-          return { error: "Exercise ID is required" };
-        }
-
-        const workoutSessionResult =
-          await WorkoutSessionRepository.findById(id);
-        if (workoutSessionResult.isErr() || !workoutSessionResult.value) {
-          return { error: "Workout not found" };
-        }
-
-        const exerciseGroup = workoutSessionResult.value.exerciseGroups.find(
-          (g) => g.exercise.id === exerciseId,
-        );
-        if (!exerciseGroup) {
-          return { error: "Exercise not found in workout" };
-        }
-
-        const setNumberResult =
-          await WorkoutSessionRepository.getNextAvailableSetNumber(
-            id,
-            exerciseId,
-          );
-        if (setNumberResult.isErr()) {
-          return { error: "Failed to determine set number" };
-        }
-        const setNumber = setNumberResult.value;
-        const reps = repsStr ? Number.parseInt(repsStr, 10) : undefined;
-        const weight = weightStr ? Number.parseFloat(weightStr) : undefined;
-
-        if (
-          repsStr &&
-          reps !== undefined &&
-          (Number.isNaN(reps) || reps <= 0)
-        ) {
-          return { error: "Reps must be a positive number" };
-        }
-
-        if (
-          weightStr &&
-          weight !== undefined &&
-          (Number.isNaN(weight) || weight <= 0)
-        ) {
-          return { error: "Weight must be a positive number" };
-        }
-
-        const workoutSetResult = WorkoutSet.create({
-          workout: id,
-          exercise: {
-            id: exerciseId,
-            name: "",
-            type: "barbell",
-            movementPattern: "push",
-          },
-          set: setNumber,
-          reps,
-          weight,
-          note,
+        return addSetToWorkout({
+          workoutId: id,
+          exerciseId: formData.get("exerciseId")?.toString(),
+          repsStr: formData.get("reps")?.toString(),
+          weightStr: formData.get("weight")?.toString(),
+          note: formData.get("note")?.toString(),
         });
-
-        if (workoutSetResult.isErr()) {
-          return { error: "Invalid set data" };
-        }
-
-        const result = await WorkoutSessionRepository.addSet(
-          workoutSetResult.value,
-        );
-
-        if (result.isErr()) {
-          return { error: "Failed to add set" };
-        }
-
-        return { success: true };
       }
 
       case "update-set": {
-        const exerciseId = formData.get("exerciseId")?.toString();
-        const setNumberStr = formData.get("setNumber")?.toString();
-        const repsStr = formData.get("reps")?.toString();
-        const weightStr = formData.get("weight")?.toString();
-        const note = formData.get("note")?.toString();
-        const isCompletedStr = formData.get("isCompleted")?.toString();
-
-        if (!exerciseId || !setNumberStr) {
-          return { error: "Exercise ID and set number are required" };
-        }
-
-        const setNumber = Number.parseInt(setNumberStr, 10);
-        if (Number.isNaN(setNumber) || setNumber <= 0) {
-          return { error: "Set number must be a positive integer" };
-        }
-
-        const updateData: Record<string, unknown> = {};
-
-        if (repsStr !== undefined) {
-          const reps = Number.parseInt(repsStr, 10);
-          if (repsStr === "" || reps === 0) {
-            updateData.reps = null;
-          } else if (Number.isNaN(reps) || reps < 0) {
-            return { error: "Reps must be a positive number" };
-          } else {
-            updateData.reps = reps;
-          }
-        }
-
-        if (weightStr !== undefined) {
-          const weight = Number.parseFloat(weightStr);
-          if (weightStr === "" || weight === 0) {
-            updateData.weight = null;
-          } else if (Number.isNaN(weight) || weight < 0) {
-            return { error: "Weight must be a positive number" };
-          } else {
-            updateData.weight = weight;
-          }
-        }
-
-        if (note !== undefined) {
-          updateData.note = note === "" ? null : note;
-        }
-
-        if (isCompletedStr !== undefined) {
-          updateData.isCompleted = isCompletedStr === "true";
-        }
-
-        const result = await WorkoutSessionRepository.updateSet(
-          id,
-          exerciseId,
-          setNumber,
-          updateData,
-        );
-
-        if (result.isErr()) {
-          return { error: "Failed to update set" };
-        }
-
-        return { success: true };
+        return updateSetInWorkout({
+          workoutId: id,
+          exerciseId: formData.get("exerciseId")?.toString(),
+          setNumberStr: formData.get("setNumber")?.toString(),
+          repsStr: formData.get("reps")?.toString(),
+          weightStr: formData.get("weight")?.toString(),
+          note: formData.get("note")?.toString(),
+          isCompletedStr: formData.get("isCompleted")?.toString(),
+        });
       }
 
       case "complete-set": {
-        const exerciseId = formData.get("exerciseId")?.toString();
-        const setNumberStr = formData.get("setNumber")?.toString();
-
-        if (!exerciseId || !setNumberStr) {
-          return { error: "Exercise ID and set number are required" };
-        }
-
-        const setNumber = Number.parseInt(setNumberStr, 10);
-        if (Number.isNaN(setNumber) || setNumber <= 0) {
-          return { error: "Set number must be a positive integer" };
-        }
-
-        const result = await WorkoutSessionRepository.updateSet(
-          id,
-          exerciseId,
-          setNumber,
-          { isCompleted: true },
-        );
-
-        if (result.isErr()) {
-          return { error: "Failed to complete set" };
-        }
-
-        return { success: true };
+        return completeSetInWorkout({
+          workoutId: id,
+          exerciseId: formData.get("exerciseId")?.toString(),
+          setNumberStr: formData.get("setNumber")?.toString(),
+        });
       }
 
       case "remove-set": {
-        const exerciseId = formData.get("exerciseId")?.toString();
-        const setNumberStr = formData.get("setNumber")?.toString();
-
-        if (!exerciseId || !setNumberStr) {
-          return { error: "Exercise ID and set number are required" };
-        }
-
-        const setNumber = Number.parseInt(setNumberStr, 10);
-        if (Number.isNaN(setNumber) || setNumber <= 0) {
-          return { error: "Set number must be a positive integer" };
-        }
-
-        const result = await WorkoutSessionRepository.removeSet(
-          id,
-          exerciseId,
-          setNumber,
-        );
-
-        if (result.isErr()) {
-          return { error: "Failed to remove set" };
-        }
-
-        return { success: true };
+        return removeSetFromWorkout({
+          workoutId: id,
+          exerciseId: formData.get("exerciseId")?.toString(),
+          setNumberStr: formData.get("setNumber")?.toString(),
+        });
       }
 
       case "complete-workout": {
-        const workoutResult = await WorkoutRepository.findById(id);
-        if (workoutResult.isErr() || !workoutResult.value) {
-          return { error: "Workout not found" };
-        }
-
-        const completedWorkout = { ...workoutResult.value, stop: new Date() };
-        const result = await WorkoutRepository.save(completedWorkout);
-
-        if (result.isErr()) {
-          return { error: "Failed to complete workout" };
-        }
-
-        return redirect("/dashboard");
+        return completeWorkout({ workoutId: id });
       }
 
       case "cancel-workout": {
-        const result = await WorkoutRepository.delete(id);
-
-        if (result.isErr()) {
-          return { error: "Failed to cancel workout" };
-        }
-
-        return redirect("/workouts");
+        return cancelWorkout({ workoutId: id });
       }
 
       case "delete-workout": {
-        const result = await WorkoutRepository.delete(id);
-
-        if (result.isErr()) {
-          return { error: "Failed to delete workout" };
-        }
-
-        return redirect("/workouts");
+        return deleteWorkout({ workoutId: id });
       }
 
       default:

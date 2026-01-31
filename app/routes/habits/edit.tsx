@@ -2,8 +2,10 @@ import { Form, redirect, useActionData, Link } from "react-router";
 import { data } from "react-router";
 import { z } from "zod";
 import type { Route } from "./+types/edit";
-import type { Habit } from "../../modules/habits/domain/entity";
-import { HabitRepository } from "../../modules/habits/infra/repository.server";
+import {
+  getHabitForEdit,
+  updateHabit,
+} from "../../modules/habits/application/edit-habit.service.server";
 import * as React from "react";
 import { allDays } from "~/time";
 import {
@@ -27,13 +29,8 @@ export const handle = {
 };
 
 export async function loader({ params }: Route.LoaderArgs) {
-  const result = await HabitRepository.fetchById(params.id);
-
-  if (result.isErr()) {
-    throw data({ error: "Habit not found" }, { status: 404 });
-  }
-
-  return data({ habit: result.value });
+  const habit = await getHabitForEdit(params.id);
+  return data({ habit });
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -57,23 +54,16 @@ export async function action({ request, params }: Route.ActionArgs) {
     }
   }
 
-  const existingHabit = await HabitRepository.fetchById(params.id);
-  if (existingHabit.isErr()) {
-    return data({ error: "Habit not found" }, { status: 404 });
-  }
-
-  const updatedHabit: Habit = {
-    ...existingHabit.value,
+  const result = await updateHabit({
+    id: params.id,
     name,
     description: description || undefined,
     frequencyType,
     frequencyConfig,
-  };
+  });
 
-  const result = await HabitRepository.save(updatedHabit);
-
-  if (result.isErr()) {
-    return data({ error: "Failed to update habit" }, { status: 500 });
+  if (!result.ok) {
+    return data({ error: result.error }, { status: result.status });
   }
 
   return redirect("/habits");

@@ -10,123 +10,21 @@ import {
 } from "@radix-ui/themes";
 import { SectionHeader } from "~/components/SectionHeader";
 import { NumberInput } from "~/components/NumberInput";
-import { ResultAsync } from "neverthrow";
 import { Form, Link, useFetcher } from "react-router";
 import HabitCheckbox from "~/components/HabitCheckbox";
 import MeasurementChart from "~/components/MeasurementChart";
-import { MeasurementService } from "~/modules/core/application/measurement-service";
-import { Measure } from "~/modules/core/domain/measure";
-import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
-import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
-import { HabitService } from "~/modules/habits/application/service";
-import { HabitCompletion } from "~/modules/habits/domain/entity";
-import {
-  HabitCompletionRepository,
-  HabitRepository,
-} from "~/modules/habits/infra/repository.server";
-import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
-import { NutritionService } from "~/modules/nutrition/application/service";
-import { TargetService } from "~/modules/core/application/measurement-service";
-import { baseMeasurements } from "~/modules/core/domain/measurements";
-import { formatStartedAgo, isSameDay, today } from "~/time";
+import { formatStartedAgo } from "~/time";
 import { coerceFloat, resultFromNullable } from "~/utils";
-import { createServerError, createValidationError } from "~/utils/errors";
+import { createValidationError } from "~/utils/errors";
 import type { Route } from "./+types/index";
+import {
+  getDashboardData,
+  logWeight,
+  toggleHabitCompletion,
+} from "~/modules/dashboard/application/dashboard.service.server";
 
 export async function loader() {
-  const now = new Date();
-  const todayDate = today();
-
-  const result = await ResultAsync.combine([
-    MeasureRepository.fetchByMeasurementName("weight", 1),
-    MeasureRepository.fetchByMeasurementName("weight", 200),
-    MeasurementRepository.fetchByName("weight"),
-    MeasurementService.fetchStreak("weight"),
-    HabitRepository.fetchActive(),
-    HabitCompletionRepository.fetchByDateRange(todayDate, todayDate),
-    WorkoutRepository.findInProgress(),
-    NutritionService.getDailySummary(todayDate),
-    TargetService.currentTargets(),
-  ]);
-
-  if (result.isErr()) {
-    throw createServerError(
-      "Failed to fetch dashboard data",
-      500,
-      result.error,
-    );
-  }
-
-  const [
-    weights,
-    weightData,
-    weight,
-    streak,
-    habits,
-    completions,
-    inProgressWorkout,
-    dailySummaryResult,
-    targetsResult,
-  ] = result.value;
-
-  const todayHabits = habits.filter((h) => HabitService.isDueOn(h, todayDate));
-
-  const completionMap = new Map(
-    completions.map((c) => [c.habitId, c.completed]),
-  );
-
-  const habitStreakPromises = todayHabits.map(async (habit) => {
-    const habitCompletions =
-      await HabitCompletionRepository.fetchByHabitBetween(
-        habit.id,
-        new Date(habit.startDate),
-        todayDate,
-      );
-
-    if (habitCompletions.isOk()) {
-      const habitStreak = HabitService.calculateStreak(
-        habit,
-        habitCompletions.value,
-        todayDate,
-      );
-      return [habit.id, habitStreak] as const;
-    }
-    return [habit.id, 0] as const;
-  });
-
-  const streakPairs = await Promise.all(habitStreakPromises);
-  const habitStreaks = new Map(streakPairs);
-
-  const completedHabitsCount = todayHabits.filter((h) =>
-    completionMap.get(h.id),
-  ).length;
-
-  let calorieTarget = 2100;
-  const dailyCalorieTarget = targetsResult.find(
-    (t) => t.measurement === baseMeasurements.dailyCalorieIntake.name,
-  );
-  if (dailyCalorieTarget) {
-    calorieTarget = dailyCalorieTarget.value;
-  }
-
-  const dailySummary = dailySummaryResult.dailyTotals;
-
-  return {
-    weight,
-    streak,
-    lastWeight: weights?.[0],
-    weightData,
-    loggedToday: Boolean(weights?.[0] && isSameDay(weights[0].t, now)),
-    todayHabits,
-    completionMap,
-    habitStreaks,
-    completedHabitsCount,
-    inProgressWorkout,
-    nutrition: {
-      calories: dailySummary.calories,
-      calorieTarget,
-    },
-  };
+  return getDashboardData();
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -134,37 +32,28 @@ export async function action({ request }: Route.ActionArgs) {
   const intent = form.get("intent");
 
   if (intent === "toggle-habit") {
-    const habitId = form.get("habitId")?.toString() ?? "";
+    const habitIdValue = form.get("habitId");
+    const habitId = typeof habitIdValue === "string" ? habitIdValue : "";
     const completed = form.get("completed") === "true";
-
-    const completion = HabitCompletion.create(habitId, today(), !completed);
-
-    const result = await HabitCompletionRepository.save(completion);
-
-    if (result.isErr()) {
-      throw createServerError("Failed to toggle habit", 500, result.error);
-    }
+    await toggleHabitCompletion({ habitId, completed });
 
     return null;
   }
 
-  const result = await resultFromNullable(
-    form.get("weight")?.toString(),
+  const weightValue = form.get("weight");
+  const parsedWeight = resultFromNullable(
+    typeof weightValue === "string" ? weightValue : null,
     "validation_error",
-  )
-    .andThen(coerceFloat)
-    .asyncMap(async (w) => MeasureRepository.save(Measure.create("weight", w)));
+  ).andThen(coerceFloat);
 
-  if (result.isErr()) {
-    const isValidationError = result.error === "validation_error";
-    if (isValidationError) {
-      throw createValidationError(
-        "Invalid weight value provided",
-        result.error,
-      );
-    }
-    throw createServerError("Failed to save weight", 500, result.error);
+  if (parsedWeight.isErr()) {
+    throw createValidationError(
+      "Invalid weight value provided",
+      parsedWeight.error,
+    );
   }
+
+  await logWeight({ weight: parsedWeight.value });
 }
 
 export const handle = {
@@ -269,7 +158,7 @@ export default function DashboardPage({
               <Text size="3" weight="medium">
                 Weight
               </Text>
-              {loggedToday ? (
+              {loggedToday && lastWeight ? (
                 <Text size="2" color="gray">
                   {lastWeight.value} {weight.unit} logged
                 </Text>

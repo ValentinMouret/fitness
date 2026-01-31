@@ -1,6 +1,7 @@
-import { Form, redirect, useSearchParams } from "react-router";
+import { Form, useSearchParams } from "react-router";
 import type { Route } from "./+types/login";
-import { authenticate } from "~/auth.server";
+import { loginWithCredentials } from "~/modules/auth/application/auth.service.server";
+import { syncSessionFromCookie } from "~/modules/auth/application/session-sync";
 import {
   Container,
   Card,
@@ -13,47 +14,19 @@ import {
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const username = formData.get("username") as string;
-  const password = formData.get("password") as string;
-  const redirectTo = formData.get("redirectTo") as string;
+  const username = formData.get("username");
+  const password = formData.get("password");
+  const redirectTo = formData.get("redirectTo");
 
-  if (!username || !password) {
-    return { error: "Username and password are required" };
-  }
-
-  if (authenticate(username, password)) {
-    // Set cookie in server response
-    const user = { username };
-    const sessionCookie = `fitness-rr-session=${encodeURIComponent(JSON.stringify(user))}; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Strict`;
-
-    return redirect(redirectTo || "/dashboard", {
-      headers: {
-        "Set-Cookie": sessionCookie,
-      },
-    });
-  }
-
-  return { error: "Invalid username or password" };
+  return loginWithCredentials({
+    username: typeof username === "string" ? username : "",
+    password: typeof password === "string" ? password : "",
+    redirectTo: typeof redirectTo === "string" ? redirectTo : null,
+  });
 }
 
 export async function clientLoader() {
-  // Sync cookie to sessionStorage on client-side
-  if (typeof window !== "undefined") {
-    const cookies = document.cookie.split(";");
-    for (const cookie of cookies) {
-      const [key, value] = cookie.trim().split("=");
-      if (key === "fitness-rr-session" && value) {
-        try {
-          const user = JSON.parse(decodeURIComponent(value));
-          sessionStorage.setItem("fitness-rr-auth", JSON.stringify(user));
-        } catch {
-          // Invalid cookie data, ignore
-        }
-        break;
-      }
-    }
-  }
-  return null;
+  return syncSessionFromCookie();
 }
 
 export default function Login({ actionData }: Route.ComponentProps) {

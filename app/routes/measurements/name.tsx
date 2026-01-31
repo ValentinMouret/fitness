@@ -15,31 +15,18 @@ import {
 } from "@radix-ui/themes";
 import { NumberInput } from "~/components/NumberInput";
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
-import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
-import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
-import { Measure } from "~/modules/core/domain/measure";
-import { handleResultError } from "~/utils/errors";
+import {
+  addMeasure,
+  deleteMeasure,
+  getMeasurementDetail,
+} from "~/modules/core/application/measurement-detail.service.server";
 import { today } from "~/time";
 import MeasurementChart from "~/components/MeasurementChart";
 import type { Route } from "./+types/name";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { name } = params;
-
-  const measurement = await MeasurementRepository.fetchByName(name);
-  if (measurement.isErr()) {
-    handleResultError(measurement, "Failed to load measurement");
-  }
-
-  const measures = await MeasureRepository.fetchAll(name);
-  if (measures.isErr()) {
-    handleResultError(measures, "Failed to load measures");
-  }
-
-  return {
-    measurement: measurement.value,
-    measures: measures.value,
-  };
+  return getMeasurementDetail(name);
 }
 
 export const handle = {
@@ -68,11 +55,14 @@ export async function action({ request, params }: Route.ActionArgs) {
     }
 
     const measureDate = dateStr ? new Date(dateStr) : today();
-    const measure = Measure.create(name, value, measureDate);
+    const result = await addMeasure({
+      name,
+      value,
+      date: measureDate,
+    });
 
-    const result = await MeasureRepository.save(measure);
-    if (result.isErr()) {
-      return data({ error: "Failed to save measure" }, { status: 500 });
+    if (!result.ok) {
+      return data({ error: result.error }, { status: result.status });
     }
 
     return data({ success: true });
@@ -82,9 +72,9 @@ export async function action({ request, params }: Route.ActionArgs) {
     const dateStr = formData.get("date")?.toString();
     const measureDate = dateStr ? new Date(dateStr) : new Date();
 
-    const result = await MeasureRepository.delete(name, measureDate);
-    if (result.isErr()) {
-      return data({ error: "Failed to delete measure" }, { status: 500 });
+    const result = await deleteMeasure({ name, date: measureDate });
+    if (!result.ok) {
+      return data({ error: result.error }, { status: result.status });
     }
 
     return data({ success: true });

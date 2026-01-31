@@ -7,36 +7,13 @@ import {
   Progress,
   Text,
 } from "@radix-ui/themes";
-import { ResultAsync } from "neverthrow";
-import { TargetService } from "~/modules/core/application/measurement-service";
 import type { Route } from "./+types";
 import { Link } from "react-router";
-import { baseMeasurements } from "~/modules/core/domain/measurements";
-import { NutritionService } from "~/modules/nutrition/application/service";
-import { createServerError } from "~/utils/errors";
-import { today } from "~/time";
+import { getNutritionPageData } from "~/modules/nutrition/application/nutrition-page.service.server";
 import { SectionHeader } from "~/components/SectionHeader";
 
 export async function loader() {
-  const result = await ResultAsync.combine([
-    TargetService.currentTargets(),
-    NutritionService.getDailySummary(today()),
-  ]);
-
-  if (result.isErr()) {
-    throw createServerError("Failed to load nutrition data", 500, result.error);
-  }
-
-  const [activeTargets, dailySummary] = result.value;
-
-  const dailyCalorieIntake = activeTargets.find(
-    (t) => t.measurement === baseMeasurements.dailyCalorieIntake.name,
-  );
-
-  return {
-    calorieTarget: dailyCalorieIntake?.value ?? 2100,
-    dailySummary,
-  };
+  return getNutritionPageData();
 }
 
 const mealLabels = {

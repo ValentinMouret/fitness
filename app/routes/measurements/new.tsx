@@ -1,7 +1,7 @@
 import { Form, redirect, useActionData, Link } from "react-router";
 import { data } from "react-router";
 import type { Route } from "./+types/new";
-import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
+import { createMeasurement } from "~/modules/core/application/create-measurement.service.server";
 import {
   Box,
   TextField,
@@ -11,14 +11,6 @@ import {
   Flex,
   Callout,
 } from "@radix-ui/themes";
-
-function toSnakeCase(str: string): string {
-  return str
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-z0-9_]/g, "");
-}
 
 export const handle = {
   header: () => ({
@@ -34,27 +26,10 @@ export async function action({ request }: Route.ActionArgs) {
   const unit = formData.get("unit")?.toString();
   const description = formData.get("description")?.toString();
 
-  if (!rawName || !unit) {
-    return data({ error: "Name and unit are required" }, { status: 400 });
-  }
+  const result = await createMeasurement({ rawName, unit, description });
 
-  const name = toSnakeCase(rawName);
-
-  if (!name) {
-    return data(
-      { error: "Name must contain at least one alphanumeric character" },
-      { status: 400 },
-    );
-  }
-
-  const result = await MeasurementRepository.save({
-    name,
-    unit: unit.trim(),
-    description: description?.trim() || undefined,
-  });
-
-  if (result.isErr()) {
-    return data({ error: "Failed to create measurement" }, { status: 500 });
+  if (!result.ok) {
+    return data({ error: result.error }, { status: result.status });
   }
 
   return redirect("/measurements");
