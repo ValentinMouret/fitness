@@ -4,12 +4,12 @@ import {
   Button,
   Card,
   Flex,
-  Heading,
   Text,
 } from "@radix-ui/themes";
 import { Form, Link, useSearchParams, useFetcher } from "react-router";
 import { useState } from "react";
 import { Pagination } from "~/components/Pagination";
+import { SectionHeader } from "~/components/SectionHeader";
 import { EmptyState } from "~/components/EmptyState";
 import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { WorkoutAnalysisService } from "~/modules/fitness/application/workout-analysis.service.server";
@@ -47,6 +47,24 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
       limit: validLimit,
     },
   };
+};
+
+export const handle = {
+  header: () => ({
+    title: "Workouts",
+    primaryAction: {
+      label: "Start Workout",
+      type: "submit",
+      onClick: () => {
+        const form = document.createElement("form");
+        form.method = "post";
+        form.action = "/workouts/create";
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+      },
+    },
+  }),
 };
 
 export const action = async ({ request }: Route.ActionArgs) => {
@@ -110,15 +128,6 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
   };
   return (
     <>
-      <Flex justify="between" align="center" mb="6">
-        <Heading size="7">Workouts</Heading>
-        <Form action="/workouts/create" method="post">
-          <Button type="submit" size="3">
-            Start Workout
-          </Button>
-        </Form>
-      </Flex>
-
       <Flex direction="column" gap="4">
         {workouts.length === 0 ? (
           <EmptyState
@@ -136,7 +145,9 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
                 <Flex justify="between" align="center" p="4">
                   <Box>
                     <Flex align="center" gap="2" mb="1">
-                      <Heading size="4">{workout.name}</Heading>
+                      <Text weight="bold" size="4">
+                        {workout.name}
+                      </Text>
                       {workout.importedFromStrong && (
                         <Badge size="1" color="blue" variant="soft">
                           Strong
@@ -176,9 +187,7 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
       />
 
       <Card size="3" mt="6">
-        <Heading size="4" mb="4">
-          Tools
-        </Heading>
+        <SectionHeader title="Tools" />
         <Flex gap="3" wrap="wrap">
           <Button
             variant="outline"

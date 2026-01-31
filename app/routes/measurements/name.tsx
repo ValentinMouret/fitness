@@ -1,4 +1,6 @@
 import { data, useFetcher, useLoaderData } from "react-router";
+import { z } from "zod";
+import { SectionHeader } from "~/components/SectionHeader";
 import {
   Box,
   Heading,
@@ -41,6 +43,18 @@ export async function loader({ params }: Route.LoaderArgs) {
   };
 }
 
+export const handle = {
+  header: (data: Route.ComponentProps["loaderData"]) => {
+    const displayName = data.measurement.name
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
+    return {
+      title: displayName,
+      backTo: "/measurements",
+    };
+  },
+};
+
 export async function action({ request, params }: Route.ActionArgs) {
   const { name } = params;
   const formData = await request.formData();
@@ -48,7 +62,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 
   if (intent === "add-measure") {
     const value = Number(formData.get("value"));
-    const dateStr = formData.get("date") as string;
+    const dateStr = formData.get("date")?.toString();
 
     if (Number.isNaN(value)) {
       return data({ error: "Invalid value" }, { status: 400 });
@@ -66,8 +80,8 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 
   if (intent === "delete-measure") {
-    const dateStr = formData.get("date") as string;
-    const measureDate = new Date(dateStr);
+    const dateStr = formData.get("date")?.toString();
+    const measureDate = dateStr ? new Date(dateStr) : new Date();
 
     const result = await MeasureRepository.delete(name, measureDate);
     if (result.isErr()) {
@@ -85,21 +99,14 @@ export default function MeasurementPage(_: Route.ComponentProps) {
   const fetcher = useFetcher();
   const addFetcher = useFetcher();
 
-  const displayName = measurement.name
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (l) => l.toUpperCase());
-
   const isSubmitting = addFetcher.state === "submitting";
-  const actionData = addFetcher.data as
-    | { error?: string; success?: boolean }
-    | undefined;
+  const actionData = z
+    .object({ error: z.string().optional(), success: z.boolean().optional() })
+    .nullable()
+    .parse(addFetcher.data);
 
   return (
     <Box>
-      <Flex justify="between" align="center" mb="6">
-        <Heading size="7">{displayName}</Heading>
-      </Flex>
-
       {measurement.description && (
         <Text color="gray" mb="4" style={{ display: "block" }}>
           {measurement.description}
@@ -119,9 +126,7 @@ export default function MeasurementPage(_: Route.ComponentProps) {
       )}
 
       <Card size="3" mb="6">
-        <Heading size="4" mb="4">
-          Add New Measurement
-        </Heading>
+        <SectionHeader title="Add New Measurement" />
         <addFetcher.Form method="post">
           <input type="hidden" name="intent" value="add-measure" />
           <Flex gap="3" align="end" wrap="wrap">
@@ -166,9 +171,7 @@ export default function MeasurementPage(_: Route.ComponentProps) {
       )}
 
       <Card size="3">
-        <Heading size="4" mb="4">
-          Measurement History
-        </Heading>
+        <SectionHeader title="Measurement History" />
         {measures.length === 0 ? (
           <Text
             color="gray"

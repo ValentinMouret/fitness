@@ -1,6 +1,7 @@
 import type React from "react";
 import { useState, useRef, useCallback } from "react";
-import { NavLink, Outlet, Form, useLocation } from "react-router";
+import { NavLink, Outlet, Form, useLocation, useMatches } from "react-router";
+import { z } from "zod";
 import {
   Flex,
   Container,
@@ -24,6 +25,7 @@ import {
 import { PageTransition } from "~/components/PageTransition";
 import { QuickActionFAB } from "~/components/QuickActionFAB";
 import { QuickActionSheet } from "~/components/QuickActionSheet";
+import { PageHeader, type PageHeaderProps } from "~/components/PageHeader";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
@@ -48,8 +50,25 @@ const BottomTabBar: React.FC = () => (
   </nav>
 );
 
+const HeaderHandleSchema = z.object({
+  header: z.function(z.tuple([z.unknown()]), z.custom<PageHeaderProps>()),
+});
+
 const AppLayout: React.FC = () => {
   const location = useLocation();
+  const matches = useMatches();
+
+  const headerConfig = matches
+    .map((match) => {
+      const result = HeaderHandleSchema.safeParse(match.handle);
+      if (result.success) {
+        return result.data.header(match.data);
+      }
+      return undefined;
+    })
+    .filter((config): config is PageHeaderProps => config !== undefined)
+    .at(-1);
+
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("sidebar-collapsed") === "true";
@@ -251,6 +270,7 @@ const AppLayout: React.FC = () => {
       >
         <Container size="4" p="4">
           <PageTransition>
+            {headerConfig && <PageHeader {...headerConfig} />}
             <Outlet />
           </PageTransition>
         </Container>

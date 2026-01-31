@@ -1,4 +1,3 @@
-import { Heading } from "@radix-ui/themes";
 import { redirect } from "react-router";
 import ExerciseForm from "~/components/ExerciseForm";
 import {
@@ -94,10 +93,16 @@ export const action = async ({ request }: Route.ActionArgs) => {
   throw redirect("/workouts/exercises");
 };
 
+export const handle = {
+  header: () => ({
+    title: "New Exercise",
+    backTo: "/workouts/exercises",
+  }),
+};
+
 export default function CreateExercisePage() {
   return (
     <>
-      <Heading size="7">New exercise</Heading>
       <ExerciseForm mode="create" />
     </>
   );

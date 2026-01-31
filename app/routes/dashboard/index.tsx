@@ -8,6 +8,7 @@ import {
   Progress,
   Text,
 } from "@radix-ui/themes";
+import { SectionHeader } from "~/components/SectionHeader";
 import { NumberInput } from "~/components/NumberInput";
 import { ResultAsync } from "neverthrow";
 import { Form, Link, useFetcher } from "react-router";
@@ -133,7 +134,7 @@ export async function action({ request }: Route.ActionArgs) {
   const intent = form.get("intent");
 
   if (intent === "toggle-habit") {
-    const habitId = form.get("habitId") as string;
+    const habitId = form.get("habitId")?.toString() ?? "";
     const completed = form.get("completed") === "true";
 
     const completion = HabitCompletion.create(habitId, today(), !completed);
@@ -166,6 +167,12 @@ export async function action({ request }: Route.ActionArgs) {
   }
 }
 
+export const handle = {
+  header: () => ({
+    title: "Today",
+  }),
+};
+
 export default function DashboardPage({
   loaderData: {
     weight,
@@ -185,10 +192,6 @@ export default function DashboardPage({
 
   return (
     <Box>
-      <Heading size="7" mb="6">
-        Today
-      </Heading>
-
       {inProgressWorkout && (
         <Card size="3" mb="4" asChild>
           <Link
@@ -216,19 +219,21 @@ export default function DashboardPage({
       )}
 
       <Card size="3" mb="4">
-        <Flex justify="between" align="center" mb="4">
-          <Heading size="4">Today's Focus</Heading>
-          {todayHabits.length > 0 && (
-            <Badge
-              color={
-                completedHabitsCount === todayHabits.length ? "tomato" : "gray"
-              }
-              variant="soft"
-            >
-              {completedHabitsCount}/{todayHabits.length} complete
-            </Badge>
-          )}
-        </Flex>
+        <SectionHeader
+          title="Today's Focus"
+          right={
+            todayHabits.length > 0 && (
+              <Badge
+                color={
+                  completedHabitsCount === todayHabits.length ? "tomato" : "gray"
+                }
+                variant="soft"
+              >
+                {completedHabitsCount}/{todayHabits.length} complete
+              </Badge>
+            )
+          }
+        />
 
         <Flex direction="column" gap="3">
           {todayHabits.map((habit) => {
@@ -336,9 +341,7 @@ export default function DashboardPage({
 
       {weightData.length > 0 && (
         <Card size="3">
-          <Heading size="4" mb="3">
-            Weight Trend
-          </Heading>
+          <SectionHeader title="Weight Trend" />
           <MeasurementChart
             data={weightData}
             unit={weight.unit}

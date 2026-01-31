@@ -21,12 +21,19 @@ function toSnakeCase(str: string): string {
     .replace(/[^a-z0-9_]/g, "");
 }
 
+export const handle = {
+  header: () => ({
+    title: "New Measurement",
+    backTo: "/measurements",
+  }),
+};
+
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
 
-  const rawName = formData.get("name") as string;
-  const unit = formData.get("unit") as string;
-  const description = formData.get("description") as string | undefined;
+  const rawName = formData.get("name")?.toString();
+  const unit = formData.get("unit")?.toString();
+  const description = formData.get("description")?.toString();
 
   if (!rawName || !unit) {
     return data({ error: "Name and unit are required" }, { status: 400 });
@@ -59,13 +66,9 @@ export default function NewMeasurement() {
 
   return (
     <Box>
-      <Flex justify="between" align="center" mb="6">
-        <Heading size="7">New Measurement</Heading>
-      </Flex>
-
-      {"error" in (actionData ?? {}) && (
+      {actionData && "error" in actionData && (
         <Callout.Root color="red" mb="4">
-          <Callout.Text>{(actionData as { error: string }).error}</Callout.Text>
+          <Callout.Text>{actionData.error}</Callout.Text>
         </Callout.Root>
       )}
 

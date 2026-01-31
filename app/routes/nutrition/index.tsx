@@ -46,6 +46,16 @@ const mealLabels = {
   snack: "S",
 } as const;
 
+export const handle = {
+  header: () => ({
+    title: "Nutrition",
+    primaryAction: {
+      label: "Log Meal",
+      to: "/nutrition/meals",
+    },
+  }),
+};
+
 export default function NutritionPage({ loaderData }: Route.ComponentProps) {
   const { calorieTarget, dailySummary } = loaderData;
   const { dailyTotals, meals } = dailySummary;
@@ -57,13 +67,6 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <Box>
-      <Flex justify="between" align="center" mb="6">
-        <Heading size="7">Nutrition</Heading>
-        <Button asChild>
-          <Link to="/nutrition/meals">Log Meal</Link>
-        </Button>
-      </Flex>
-
       <Card size="3" mb="4">
         <Flex justify="between" align="center" mb="3">
           <Text size="3" weight="medium">
@@ -104,11 +107,9 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
       </Card>
 
       <Card size="3" mb="4">
-        <Heading size="4" mb="3">
-          Today's Meals
-        </Heading>
+        <SectionHeader title="Today's Meals" />
         <Flex gap="3">
-          {(Object.keys(mealLabels) as Array<keyof typeof mealLabels>).map(
+          {(["breakfast", "lunch", "dinner", "snack"] as const).map(
             (mealType) => {
               const meal = meals[mealType];
               const hasLogged = meal !== null;
@@ -126,7 +127,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
           )}
         </Flex>
         <Flex direction="column" gap="2" mt="4">
-          {(Object.keys(mealLabels) as Array<keyof typeof mealLabels>).map(
+          {(["breakfast", "lunch", "dinner", "snack"] as const).map(
             (mealType) => {
               const meal = meals[mealType];
               if (!meal) return null;
@@ -146,9 +147,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
       </Card>
 
       <Card size="3">
-        <Heading size="4" mb="3">
-          Tools
-        </Heading>
+        <SectionHeader title="Tools" />
         <Flex direction="column" gap="3">
           <Button variant="outline" asChild>
             <Link to="/nutrition/meal-builder">Meal Builder</Link>
