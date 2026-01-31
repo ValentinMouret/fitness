@@ -51,31 +51,27 @@ export const ExerciseRepository: IExerciseRepository = {
   },
 
   save(exercise: Exercise): ResultAsync<void, ErrRepository> {
-    return ResultAsync.fromPromise(
-      db
-        .insert(exercises)
-        .values({
-          id: exercise.id,
-          name: exercise.name,
-          type: exercise.type,
-          movement_pattern: exercise.movementPattern,
+    const query = db
+      .insert(exercises)
+      .values({
+        id: exercise.id,
+        name: exercise.name,
+        type: exercise.type,
+        movement_pattern: exercise.movementPattern,
+        description: exercise.description ?? null,
+        mmc_instructions: exercise.mmcInstructions ?? null,
+      })
+      .onConflictDoUpdate({
+        target: [exercises.name, exercises.type],
+        set: {
+          updated_at: new Date(),
           description: exercise.description ?? null,
           mmc_instructions: exercise.mmcInstructions ?? null,
-        })
-        .onConflictDoUpdate({
-          target: [exercises.name, exercises.type],
-          set: {
-            updated_at: new Date(),
-            description: exercise.description ?? null,
-            mmc_instructions: exercise.mmcInstructions ?? null,
-            movement_pattern: exercise.movementPattern,
-          },
-        }),
-      (error) => {
-        logger.error({ err: error }, "Failed to save exercise");
-        return "database_error";
-      },
-    );
+          movement_pattern: exercise.movementPattern,
+        },
+      });
+
+    return executeQuery(query, "saveExercise").map(() => undefined);
   },
 };
 

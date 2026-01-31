@@ -101,9 +101,5 @@ export const handle = {
 };
 
 export default function CreateExercisePage() {
-  return (
-    <>
-      <ExerciseForm mode="create" />
-    </>
-  );
+  return <ExerciseForm mode="create" />;
 }

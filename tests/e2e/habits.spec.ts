@@ -8,7 +8,9 @@ test.describe("Habits Page", () => {
   });
 
   test("should display habits sections", async ({ page }) => {
-    await expect(page.getByRole("heading", { name: "Habits" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Habits", exact: true }),
+    ).toBeVisible();
     await expect(page.getByText("Today's Habits")).toBeVisible();
     await expect(page.getByText("All Habits")).toBeVisible();
   });

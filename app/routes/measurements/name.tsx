@@ -3,7 +3,6 @@ import { z } from "zod";
 import { SectionHeader } from "~/components/SectionHeader";
 import {
   Box,
-  Heading,
   Text,
   Flex,
   Card,

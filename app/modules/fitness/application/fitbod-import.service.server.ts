@@ -505,7 +505,7 @@ async function findExerciseByName(
           id: record.id,
           name: record.name,
           type: record.type,
-          movementPattern: record.movement_pattern,
+          movementPattern: record.movementPattern,
           description: record.description ?? undefined,
         };
       }
@@ -518,7 +518,7 @@ async function findExerciseByName(
           id: record.id,
           name: record.name,
           type: record.type,
-          movementPattern: record.movement_pattern,
+          movementPattern: record.movementPattern,
           description: record.description ?? undefined,
         };
       }

@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   Flex,
-  Heading,
   Progress,
   Text,
 } from "@radix-ui/themes";
@@ -16,6 +15,7 @@ import { baseMeasurements } from "~/modules/core/domain/measurements";
 import { NutritionService } from "~/modules/nutrition/application/service";
 import { createServerError } from "~/utils/errors";
 import { today } from "~/time";
+import { SectionHeader } from "~/components/SectionHeader";
 
 export async function loader() {
   const result = await ResultAsync.combine([

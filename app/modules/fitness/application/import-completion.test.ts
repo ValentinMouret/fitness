@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { ResultAsync, ok } from "neverthrow";
+import { ResultAsync } from "neverthrow";
 import { importFitbodCSV } from "./fitbod-import.service.server";
 import { importWorkout as importStrongWorkout } from "./strong-import.service.server";
 import type { IWorkoutRepository } from "../infra/workout.repository.server";
@@ -18,35 +18,60 @@ class InMemoryWorkoutRepository implements IWorkoutRepository {
       "id" in workout ? workout.id : `workout-${this.workouts.length + 1}`;
     const newWorkout: Workout = { ...workout, id };
     this.workouts.push(newWorkout);
-    return ResultAsync.fromSafePromise(Promise.resolve(ok(newWorkout)));
+    return ResultAsync.fromPromise(
+      Promise.resolve(newWorkout),
+      () => "database_error",
+    );
   }
 
   saveSession(
     workoutSession: WorkoutSession,
   ): ResultAsync<void, ErrRepository> {
     this.savedSessions.push(workoutSession);
-    return ResultAsync.fromSafePromise(Promise.resolve(ok(undefined)));
+    return ResultAsync.fromPromise(Promise.resolve(), () => "database_error");
   }
 
   findById(id: string): ResultAsync<Workout | null, ErrRepository> {
-    return ResultAsync.fromSafePromise(
-      Promise.resolve(ok(this.workouts.find((w) => w.id === id) ?? null)),
+    return ResultAsync.fromPromise(
+      Promise.resolve(this.workouts.find((w) => w.id === id) ?? null),
+      () => "database_error",
     );
   }
 
   findAll(): ResultAsync<Workout[], ErrRepository> {
-    return ResultAsync.fromSafePromise(Promise.resolve(ok(this.workouts)));
+    return ResultAsync.fromPromise(
+      Promise.resolve(this.workouts),
+      () => "database_error",
+    );
+  }
+
+  findAllWithPagination(
+    page = 1,
+    limit = 10,
+  ): ResultAsync<{ workouts: Workout[]; totalCount: number }, ErrRepository> {
+    const offset = (page - 1) * limit;
+    const ordered = [...this.workouts].sort(
+      (a, b) => b.start.getTime() - a.start.getTime(),
+    );
+    return ResultAsync.fromPromise(
+      Promise.resolve({
+        workouts: ordered.slice(offset, offset + limit),
+        totalCount: ordered.length,
+      }),
+      () => "database_error",
+    );
   }
 
   findInProgress(): ResultAsync<Workout | null, ErrRepository> {
-    return ResultAsync.fromSafePromise(
-      Promise.resolve(ok(this.workouts.find((w) => !w.stop) ?? null)),
+    return ResultAsync.fromPromise(
+      Promise.resolve(this.workouts.find((w) => !w.stop) ?? null),
+      () => "database_error",
     );
   }
 
   delete(id: string): ResultAsync<void, ErrRepository> {
     this.workouts = this.workouts.filter((w) => w.id !== id);
-    return ResultAsync.fromSafePromise(Promise.resolve(ok(undefined)));
+    return ResultAsync.fromPromise(Promise.resolve(), () => "database_error");
   }
 }
 
@@ -54,7 +79,10 @@ class InMemoryExerciseRepository implements IExerciseRepository {
   exercises: Exercise[] = [];
 
   listAll(): ResultAsync<ReadonlyArray<Exercise>, ErrRepository> {
-    return ResultAsync.fromSafePromise(Promise.resolve(ok(this.exercises)));
+    return ResultAsync.fromPromise(
+      Promise.resolve(this.exercises),
+      () => "database_error",
+    );
   }
 
   create(exercise: Omit<Exercise, "id">): ResultAsync<Exercise, ErrRepository> {
@@ -63,7 +91,10 @@ class InMemoryExerciseRepository implements IExerciseRepository {
       id: `exercise-${this.exercises.length + 1}`,
     };
     this.exercises.push(newExercise);
-    return ResultAsync.fromSafePromise(Promise.resolve(ok(newExercise)));
+    return ResultAsync.fromPromise(
+      Promise.resolve(newExercise),
+      () => "database_error",
+    );
   }
 
   save(exercise: Exercise): ResultAsync<void, ErrRepository> {
@@ -73,7 +104,7 @@ class InMemoryExerciseRepository implements IExerciseRepository {
     } else {
       this.exercises.push(exercise);
     }
-    return ResultAsync.fromSafePromise(Promise.resolve(ok(undefined)));
+    return ResultAsync.fromPromise(Promise.resolve(), () => "database_error");
   }
 }
 
