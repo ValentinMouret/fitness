@@ -22,60 +22,73 @@ import {
   HabitCompletionRepository,
   HabitRepository,
 } from "../../modules/habits/infra/repository.server";
-import { Day, today } from "../../time";
+import { Day, isSameDay, today } from "../../time";
 import type { Route } from "./+types/index";
 
 export async function loader() {
-  const habits = await HabitRepository.fetchActive();
-
-  if (habits.isErr()) {
-    handleResultError(habits, "Failed to load habits");
+  const habitsResult = await HabitRepository.fetchActive();
+  if (habitsResult.isErr()) {
+    handleResultError(habitsResult, "Failed to load habits");
   }
 
-  const todayCompletions = await HabitCompletionRepository.fetchByDateRange(
-    today(),
-    today(),
-  );
-
-  if (todayCompletions.isErr()) {
-    handleResultError(todayCompletions, "Failed to load completions");
-  }
-
-  // Calculate streaks for each habit
-  const habitStreaks = new Map<string, number>();
+  const habits = habitsResult.value;
   const todayDate = today();
 
-  for (const habit of habits.value) {
-    const habitCompletions =
-      await HabitCompletionRepository.fetchByHabitBetween(
-        habit.id,
-        new Date(habit.startDate),
-        todayDate,
-      );
+  // Find earliest start date to fetch all relevant completions at once
+  const earliestDate = habits.reduce(
+    (min, h) => (h.startDate < min ? h.startDate : min),
+    todayDate,
+  );
 
-    if (habitCompletions.isOk()) {
-      const streak = HabitService.calculateStreak(
-        habit,
-        habitCompletions.value,
-        todayDate,
-      );
-      habitStreaks.set(habit.id, streak);
+  const completionsResult = await HabitCompletionRepository.fetchByDateRange(
+    earliestDate,
+    todayDate,
+  );
+  if (completionsResult.isErr()) {
+    handleResultError(completionsResult, "Failed to load completions");
+  }
+
+  // Group completions by habit for streak calculation
+  const completionsByHabit = new Map<string, HabitCompletion[]>();
+  for (const c of completionsResult.value) {
+    const list = completionsByHabit.get(c.habitId) || [];
+    list.push(c);
+    completionsByHabit.set(c.habitId, list);
+  }
+
+  const habitStreaks: Record<string, number> = {};
+  const completionMap: Record<string, boolean> = {};
+
+  for (const habit of habits) {
+    const habitCompletions = completionsByHabit.get(habit.id) || [];
+    habitStreaks[habit.id] = HabitService.calculateStreak(
+      habit,
+      habitCompletions,
+      todayDate,
+    );
+
+    const todayCompletion = habitCompletions.find((c) =>
+      isSameDay(c.completionDate, todayDate),
+    );
+    if (todayCompletion) {
+      completionMap[habit.id] = todayCompletion.completed;
     }
   }
 
-  const todayHabits = habits.value.filter((habit) =>
+  const todayHabits = habits.filter((habit) =>
     HabitService.isDueOn(habit, todayDate),
   );
-  const todayHabitsCount = todayHabits.length;
-  const completedTodayCount = todayHabits.filter((habit) =>
-    completionMap.get(habit.id),
+
+  const completedTodayCount = todayHabits.filter(
+    (habit) => completionMap[habit.id],
   ).length;
 
   return {
-    habits: habits.value,
-    todayCompletions: todayCompletions.value,
+    habits,
+    todayHabits,
+    completionMap,
     habitStreaks,
-    todayHabitsCount,
+    todayHabitsCount: todayHabits.length,
     completedTodayCount,
   };
 }
@@ -163,7 +176,7 @@ export default function HabitsPage({
   loaderData,
   actionData,
 }: Route.ComponentProps) {
-  const { habits, todayCompletions, habitStreaks } = loaderData;
+  const { habits, todayHabits, completionMap, habitStreaks } = loaderData;
   const navigation = useNavigation();
   const [showCelebration, setShowCelebration] = useState(false);
 
@@ -174,19 +187,7 @@ export default function HabitsPage({
     }
   }, [actionData]);
 
-  // Create a map of today's completions
-  const completionMap = new Map(
-    todayCompletions.map((c) => [c.habitId, c.completed]),
-  );
-
   const isSubmitting = navigation.state === "submitting";
-
-  const todayHabits = habits.filter((habit) =>
-    HabitService.isDueOn(habit, today()),
-  );
-  const completedTodayCount = todayHabits.filter((habit) =>
-    completionMap.get(habit.id),
-  ).length;
 
   const getStreakColor = (
     streak: number,
@@ -221,8 +222,8 @@ export default function HabitsPage({
             />
           ) : (
             todayHabits.map((habit) => {
-              const isCompleted = completionMap.get(habit.id) ?? false;
-              const habitStreak = habitStreaks.get(habit.id) ?? 0;
+              const isCompleted = completionMap[habit.id] ?? false;
+              const habitStreak = habitStreaks[habit.id] ?? 0;
 
               return (
                 <Form method="post" key={habit.id}>
@@ -255,7 +256,7 @@ export default function HabitsPage({
         ) : (
           <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="4">
             {habits.map((habit) => {
-              const habitStreak = habitStreaks.get(habit.id) ?? 0;
+              const habitStreak = habitStreaks[habit.id] ?? 0;
 
               return (
                 <Card key={habit.id} size="3">
