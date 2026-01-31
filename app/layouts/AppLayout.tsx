@@ -51,7 +51,10 @@ const BottomTabBar: React.FC = () => (
 );
 
 const HeaderHandleSchema = z.object({
-  header: z.function(z.tuple([z.unknown()]), z.custom<PageHeaderProps>()),
+  header: z.function({
+    input: [z.unknown()],
+    output: z.custom<PageHeaderProps>(),
+  }),
 });
 
 const AppLayout: React.FC = () => {

@@ -1,5 +1,5 @@
 import { Badge, Box, Button, Card, Flex, Text } from "@radix-ui/themes";
-import { Form, Link, useSearchParams, useFetcher } from "react-router";
+import { Link, useSearchParams, useFetcher } from "react-router";
 import { useState } from "react";
 import { Pagination } from "~/components/Pagination";
 import { SectionHeader } from "~/components/SectionHeader";
@@ -10,6 +10,7 @@ import { AIFitnessCoachService } from "~/modules/fitness/infra/ai-fitness-coach.
 import { AIFeedbackModal } from "~/modules/fitness/presentation/components";
 import { handleResultError } from "~/utils/errors";
 import type { Route } from "./+types/index";
+import type { Workout } from "~/modules/fitness/domain/workout";
 import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
@@ -129,7 +130,7 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
             description="Ready to crush it? Hit 'Create Workout' to get started!"
           />
         ) : (
-          workouts.map((workout) => (
+          workouts.map((workout: Workout) => (
             <Card key={workout.id} asChild>
               <Link
                 to={`/workouts/${workout.id}`}

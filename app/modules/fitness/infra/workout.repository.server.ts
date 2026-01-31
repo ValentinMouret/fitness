@@ -249,6 +249,10 @@ export interface IWorkoutRepository {
   saveSession(workoutSession: WorkoutSession): ResultAsync<void, ErrRepository>;
   findById(id: string): ResultAsync<Workout | null, ErrRepository>;
   findAll(): ResultAsync<Workout[], ErrRepository>;
+  findAllWithPagination(
+    page?: number,
+    limit?: number,
+  ): ResultAsync<{ workouts: Workout[]; totalCount: number }, ErrRepository>;
   findInProgress(): ResultAsync<Workout | null, ErrRepository>;
   delete(id: string): ResultAsync<void, ErrRepository>;
 }

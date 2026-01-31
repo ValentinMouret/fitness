@@ -1,18 +1,11 @@
-import {
-  Button,
-  Container,
-  Flex,
-  Select,
-  Text,
-  TextField,
-} from "@radix-ui/themes";
+import { Container, Flex, Select, Text, TextField } from "@radix-ui/themes";
 import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 import type { Route } from "./+types";
 import {
   exerciseTypes,
   parseExerciseType,
 } from "~/modules/fitness/domain/workout";
-import { Form, Link, useSearchParams } from "react-router";
+import { Form, useSearchParams } from "react-router";
 import ExerciseCard from "~/components/ExerciseCard";
 import { humanFormatting } from "~/strings";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";

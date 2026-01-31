@@ -4,7 +4,6 @@ import type { Route } from "./+types/new";
 import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
 import {
   Box,
-  Heading,
   TextField,
   TextArea,
   Button,

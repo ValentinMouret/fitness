@@ -7,7 +7,6 @@ import { HabitRepository } from "../../modules/habits/infra/repository.server";
 import * as React from "react";
 import {
   Box,
-  Heading,
   TextField,
   TextArea,
   Select,
@@ -40,7 +39,7 @@ export async function action({ request }: Route.ActionArgs) {
     interval_days?: number;
     day_of_month?: number;
   } = {};
-  if (frequencyType === "custom" || frequencyType === "weekly") {
+  if (habitFrequencyType === "custom" || habitFrequencyType === "weekly") {
     const daysOfWeek = formData.getAll("daysOfWeek").map(String);
     if (daysOfWeek.length > 0) {
       frequencyConfig.days_of_week = daysOfWeek;

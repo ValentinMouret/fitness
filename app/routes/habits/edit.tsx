@@ -2,16 +2,12 @@ import { Form, redirect, useActionData, Link } from "react-router";
 import { data } from "react-router";
 import { z } from "zod";
 import type { Route } from "./+types/edit";
-import type {
-  Habit as HabitEntity,
-  Habit,
-} from "../../modules/habits/domain/entity";
+import type { Habit } from "../../modules/habits/domain/entity";
 import { HabitRepository } from "../../modules/habits/infra/repository.server";
 import * as React from "react";
 import { allDays } from "~/time";
 import {
   Box,
-  Heading,
   TextField,
   TextArea,
   Select,
