@@ -18,7 +18,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: "http://localhost:5173",
+    baseURL: "http://localhost:5175",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -35,13 +35,13 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     command: "bun run build && bun run start",
-    url: "http://localhost:5173",
+    url: "http://localhost:5175",
     reuseExistingServer: !process.env.CI,
     env: {
       AUTH_USERNAME: "testuser",
       AUTH_PASSWORD: "testpassword",
       HOST: "127.0.0.1",
-      PORT: "5173",
+      PORT: "5175",
       // These should be updated to point to a test database in a real CI environment
       DATABASE_URL:
         process.env.DATABASE_URL || "postgresql://localhost/fitness",

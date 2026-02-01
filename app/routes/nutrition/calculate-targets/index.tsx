@@ -17,10 +17,13 @@ import { Result } from "neverthrow";
 import MacrosChart from "~/components/MacrosChart";
 import { Form, Link } from "react-router";
 import { useState } from "react";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
 import {
   calculateTargets,
   saveNutritionTarget,
 } from "~/modules/nutrition/application/calculate-targets.service.server";
+import { formNumber } from "~/utils/form-data";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -198,26 +201,15 @@ export default function CalculateTargetsPage({
 
 export async function action({ request }: Route.ActionArgs) {
   const form = await request.formData();
-
-  const age = coerceInt(expect(form.get("age")?.toString()));
-  const height = coerceInt(expect(form.get("height")?.toString()));
-  const weight = coerceInt(expect(form.get("weight")?.toString()));
-  const activity = coerceFloat(expect(form.get("activity")?.toString()));
-  const delta = coerceInt(expect(form.get("delta")?.toString()));
-
-  const result = Result.combine([age, height, weight, activity, delta]);
-
-  if (result.isErr()) {
-    throw new Error(result.error);
-  }
-
-  const [a, h, w, act, d] = result.value;
-
-  return saveNutritionTarget({
-    age: a,
-    height: h,
-    weight: w,
-    activity: act,
-    delta: d,
+  const schema = zfd.formData({
+    age: formNumber(z.number().int().min(1)),
+    height: formNumber(z.number().int().min(1)),
+    weight: formNumber(z.number().int().min(1)),
+    activity: formNumber(z.number().min(0)),
+    delta: formNumber(z.number().int()),
   });
+
+  const parsed = schema.parse(form);
+
+  return saveNutritionTarget(parsed);
 }

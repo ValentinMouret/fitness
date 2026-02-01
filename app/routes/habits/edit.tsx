@@ -8,6 +8,12 @@ import {
 } from "../../modules/habits/application/edit-habit.service.server";
 import * as React from "react";
 import { allDays } from "~/time";
+import { zfd } from "zod-form-data";
+import {
+  formOptionalText,
+  formRepeatableText,
+  formText,
+} from "~/utils/form-data";
 import {
   Box,
   TextField,
@@ -36,29 +42,30 @@ export async function loader({ params }: Route.LoaderArgs) {
 export async function action({ request, params }: Route.ActionArgs) {
   const formData = await request.formData();
 
-  const name = formData.get("name")?.toString() ?? "";
-  const description = formData.get("description")?.toString();
-  const frequencyType = z
-    .enum(["daily", "weekly", "monthly", "custom"])
-    .parse(formData.get("frequencyType"));
+  const schema = zfd.formData({
+    name: formText(z.string().min(1)),
+    description: formOptionalText(),
+    frequencyType: formText(z.enum(["daily", "weekly", "monthly", "custom"])),
+    daysOfWeek: formRepeatableText(),
+  });
+  const parsed = schema.parse(formData);
 
   const frequencyConfig: {
     days_of_week?: string[];
     interval_days?: number;
     day_of_month?: number;
   } = {};
-  if (frequencyType === "custom" || frequencyType === "weekly") {
-    const daysOfWeek = formData.getAll("daysOfWeek").map((s) => s.toString());
-    if (daysOfWeek.length > 0) {
-      frequencyConfig.days_of_week = daysOfWeek;
+  if (parsed.frequencyType === "custom" || parsed.frequencyType === "weekly") {
+    if (parsed.daysOfWeek.length > 0) {
+      frequencyConfig.days_of_week = parsed.daysOfWeek;
     }
   }
 
   const result = await updateHabit({
     id: params.id,
-    name,
-    description: description || undefined,
-    frequencyType,
+    name: parsed.name,
+    description: parsed.description || undefined,
+    frequencyType: parsed.frequencyType,
     frequencyConfig,
   });
 

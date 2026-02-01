@@ -5,10 +5,13 @@ import { Form, useSearchParams } from "react-router";
 import ExerciseCard from "~/components/ExerciseCard";
 import { humanFormatting } from "~/strings";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
 import {
   deleteExercise,
   getExercisesPageData,
 } from "~/modules/fitness/application/exercises-page.service.server";
+import { formText } from "~/utils/form-data";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const url = new URL(request.url);
@@ -34,9 +37,12 @@ export const handle = {
 
 export const action = async ({ request }: Route.ActionArgs) => {
   const formData = await request.formData();
-  const exerciseId = formData.get("exerciseId")?.toString();
+  const schema = zfd.formData({
+    exerciseId: formText(z.string().min(1)),
+  });
+  const parsed = schema.parse(formData);
 
-  return deleteExercise(exerciseId ?? "");
+  return deleteExercise(parsed.exerciseId);
 };
 
 export default function ExercisesIndexPage({

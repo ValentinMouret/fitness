@@ -18,46 +18,42 @@ import {
   importFromFitbod,
   importFromStrong,
 } from "~/modules/fitness/application/import-workout.service.server";
+import { zfd } from "zod-form-data";
+import { formBoolean, formOptionalText } from "~/utils/form-data";
 
 export const action = async ({ request }: Route.ActionArgs) => {
   const formData = await request.formData();
-  const importSourceValue = formData.get("importSource");
-  const importSource =
-    typeof importSourceValue === "string" ? importSourceValue : "";
-
-  const createMissingExercises =
-    formData.get("createMissingExercises") === "true";
-  const skipUnmappedExercises =
-    formData.get("skipUnmappedExercises") === "true";
-  const customImportTimeValue = formData.get("customImportTime");
-  const customImportTime =
-    typeof customImportTimeValue === "string" ? customImportTimeValue : "";
+  const schema = zfd.formData({
+    importSource: formOptionalText(),
+    createMissingExercises: formBoolean(),
+    skipUnmappedExercises: formBoolean(),
+    customImportTime: formOptionalText(),
+    strongText: formOptionalText(),
+    csvContent: formOptionalText(),
+  });
+  const parsed = schema.parse(formData);
+  const importSource = parsed.importSource ?? "strong";
 
   const config: ImportConfig = {
-    createMissingExercises,
-    skipUnmappedExercises,
-    overrideImportTime: customImportTime
-      ? new Date(customImportTime)
+    createMissingExercises: parsed.createMissingExercises,
+    skipUnmappedExercises: parsed.skipUnmappedExercises,
+    overrideImportTime: parsed.customImportTime
+      ? new Date(parsed.customImportTime)
       : undefined,
   };
 
   if (importSource === "fitbod") {
-    const csvContentValue = formData.get("csvContent");
-    const csvContent =
-      typeof csvContentValue === "string" ? csvContentValue : "";
     return importFromFitbod({
-      csvContent,
+      csvContent: parsed.csvContent ?? "",
       config,
-      skipUnmappedExercises,
+      skipUnmappedExercises: parsed.skipUnmappedExercises,
     });
   }
 
-  const strongTextValue = formData.get("strongText");
-  const strongText = typeof strongTextValue === "string" ? strongTextValue : "";
   return importFromStrong({
-    strongText,
+    strongText: parsed.strongText ?? "",
     config,
-    skipUnmappedExercises,
+    skipUnmappedExercises: parsed.skipUnmappedExercises,
   });
 };
 

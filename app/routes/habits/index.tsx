@@ -21,6 +21,9 @@ import {
   getHabitsPageData,
   toggleHabitCompletion,
 } from "~/modules/habits/application/habits-page.service.server";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
+import { formBoolean, formOptionalText, formText } from "~/utils/form-data";
 
 export async function loader() {
   return getHabitsPageData();
@@ -54,19 +57,24 @@ export const handle = {
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const intent = formData.get("intent");
+  const intentSchema = zfd.formData({
+    intent: formOptionalText(),
+  });
+  const intentParsed = intentSchema.parse(formData);
+  const intent = intentParsed.intent;
 
   if (intent === "toggle-completion") {
-    const habitIdValue = formData.get("habitId");
-    const habitId = typeof habitIdValue === "string" ? habitIdValue : "";
-    const completed = formData.get("completed") === "true";
-    const notesValue = formData.get("notes");
-    const notes = typeof notesValue === "string" ? notesValue : undefined;
+    const schema = zfd.formData({
+      habitId: formText(z.string().min(1)),
+      completed: formBoolean(),
+      notes: formOptionalText(),
+    });
+    const parsed = schema.parse(formData);
 
     const result = await toggleHabitCompletion({
-      habitId,
-      completed,
-      notes,
+      habitId: parsed.habitId,
+      completed: parsed.completed,
+      notes: parsed.notes,
     });
 
     if (!result.ok) {

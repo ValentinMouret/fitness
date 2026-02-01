@@ -1,5 +1,6 @@
 import { data, useFetcher, useLoaderData } from "react-router";
 import { z } from "zod";
+import { zfd } from "zod-form-data";
 import { SectionHeader } from "~/components/SectionHeader";
 import {
   Box,
@@ -20,6 +21,7 @@ import {
   deleteMeasure,
   getMeasurementDetail,
 } from "~/modules/core/application/measurement-detail.service.server";
+import { formNumber, formOptionalText } from "~/utils/form-data";
 import { today } from "~/time";
 import MeasurementChart from "~/components/MeasurementChart";
 import type { Route } from "./+types/name";
@@ -44,20 +46,26 @@ export const handle = {
 export async function action({ request, params }: Route.ActionArgs) {
   const { name } = params;
   const formData = await request.formData();
-  const intent = formData.get("intent");
+  const intentSchema = zfd.formData({
+    intent: formOptionalText(),
+  });
+  const intentParsed = intentSchema.parse(formData);
+  const intent = intentParsed.intent;
 
   if (intent === "add-measure") {
-    const value = Number(formData.get("value"));
-    const dateStr = formData.get("date")?.toString();
-
-    if (Number.isNaN(value)) {
+    const schema = zfd.formData({
+      value: formNumber(z.number()),
+      date: formOptionalText(),
+    });
+    const parsed = schema.safeParse(formData);
+    if (!parsed.success) {
       return data({ error: "Invalid value" }, { status: 400 });
     }
 
-    const measureDate = dateStr ? new Date(dateStr) : today();
+    const measureDate = parsed.data.date ? new Date(parsed.data.date) : today();
     const result = await addMeasure({
       name,
-      value,
+      value: parsed.data.value,
       date: measureDate,
     });
 
@@ -69,8 +77,11 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 
   if (intent === "delete-measure") {
-    const dateStr = formData.get("date")?.toString();
-    const measureDate = dateStr ? new Date(dateStr) : new Date();
+    const schema = zfd.formData({
+      date: formOptionalText(),
+    });
+    const parsed = schema.parse(formData);
+    const measureDate = parsed.date ? new Date(parsed.date) : new Date();
 
     const result = await deleteMeasure({ name, date: measureDate });
     if (!result.ok) {

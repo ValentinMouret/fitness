@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 
-export const formText = (schema: z.ZodType<string> = z.string()) =>
-  zfd.text(schema);
+export const formText = <T extends z.ZodTypeAny>(schema: T) => zfd.text(schema);
 
 export const formOptionalText = () => zfd.text(z.string().optional());
 

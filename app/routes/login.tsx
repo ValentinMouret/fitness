@@ -2,6 +2,9 @@ import { Form, useSearchParams } from "react-router";
 import type { Route } from "./+types/login";
 import { loginWithCredentials } from "~/modules/auth/application/auth.service.server";
 import { syncSessionFromCookie } from "~/modules/auth/application/session-sync";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
+import { formOptionalText, formText } from "~/utils/form-data";
 import {
   Container,
   Card,
@@ -14,14 +17,18 @@ import {
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const username = formData.get("username");
-  const password = formData.get("password");
-  const redirectTo = formData.get("redirectTo");
+  const schema = zfd.formData({
+    username: formText(z.string().min(1)),
+    password: formText(z.string().min(1)),
+    redirectTo: formOptionalText(),
+  });
+
+  const parsed = schema.parse(formData);
 
   return loginWithCredentials({
-    username: typeof username === "string" ? username : "",
-    password: typeof password === "string" ? password : "",
-    redirectTo: typeof redirectTo === "string" ? redirectTo : null,
+    username: parsed.username,
+    password: parsed.password,
+    redirectTo: parsed.redirectTo ?? null,
   });
 }
 

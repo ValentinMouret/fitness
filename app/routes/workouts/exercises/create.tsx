@@ -4,14 +4,20 @@ import {
   createExercise,
   type MuscleGroupSplitInput,
 } from "~/modules/fitness/application/exercise-form.service.server";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
+import { formOptionalText, formText } from "~/utils/form-data";
 
 export const action = async ({ request }: Route.ActionArgs) => {
   const form = await request.formData();
-  const exerciseName = form.get("name")?.toString();
-  const exerciseTypeString = form.get("type")?.toString();
-  const movementPatternString = form.get("movementPattern")?.toString();
-  const exerciseDescription = form.get("description")?.toString();
-  const mmcInstructions = form.get("mmcInstructions")?.toString();
+  const schema = zfd.formData({
+    name: formText(z.string().min(1)),
+    type: formText(z.string().min(1)),
+    movementPattern: formText(z.string().min(1)),
+    description: formOptionalText(),
+    mmcInstructions: formOptionalText(),
+  });
+  const parsed = schema.parse(form);
 
   const muscleGroupSplits: MuscleGroupSplitInput[] = [];
   let i = 0;
@@ -29,11 +35,11 @@ export const action = async ({ request }: Route.ActionArgs) => {
   }
 
   return createExercise({
-    name: exerciseName,
-    type: exerciseTypeString,
-    movementPattern: movementPatternString,
-    description: exerciseDescription,
-    mmcInstructions,
+    name: parsed.name,
+    type: parsed.type,
+    movementPattern: parsed.movementPattern,
+    description: parsed.description ?? undefined,
+    mmcInstructions: parsed.mmcInstructions ?? undefined,
     splits: muscleGroupSplits,
   });
 };

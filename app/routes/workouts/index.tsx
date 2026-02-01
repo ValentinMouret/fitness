@@ -12,6 +12,8 @@ import {
   getAiFeedback,
   getWorkoutsPageData,
 } from "~/modules/fitness/application/workouts-page.service.server";
+import { zfd } from "zod-form-data";
+import { formOptionalText } from "~/utils/form-data";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const url = new URL(request.url);
@@ -41,7 +43,11 @@ export const handle = {
 
 export const action = async ({ request }: Route.ActionArgs) => {
   const formData = await request.formData();
-  const intent = formData.get("intent");
+  const intentSchema = zfd.formData({
+    intent: formOptionalText(),
+  });
+  const intentParsed = intentSchema.parse(formData);
+  const intent = intentParsed.intent;
 
   if (intent === "get-ai-feedback") {
     return getAiFeedback();

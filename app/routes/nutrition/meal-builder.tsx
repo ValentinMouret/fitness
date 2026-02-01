@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { z } from "zod";
+import { zfd } from "zod-form-data";
 import {
   Box,
   Button,
@@ -55,6 +56,7 @@ import {
   saveMealTemplate,
   searchAiIngredient,
 } from "~/modules/nutrition/application/meal-builder.service.server";
+import { formOptionalText, formText } from "~/utils/form-data";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -85,72 +87,66 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
-  const intent = formData.get("intent")?.toString();
+  const intentSchema = zfd.formData({
+    intent: formOptionalText(),
+  });
+  const intentParsed = intentSchema.parse(formData);
+  const intent = intentParsed.intent;
 
   if (intent === "save-template") {
-    const name = formData.get("name")?.toString();
-    const categoryValue = formData.get("category")?.toString();
-    const notes = formData.get("notes")?.toString();
-    const ingredientsJson = formData.get("ingredients")?.toString();
-
-    if (!name || !categoryValue || !ingredientsJson) {
-      throw new Error("Missing required fields");
-    }
-
-    const category = z
-      .enum(["breakfast", "lunch", "dinner", "snack"])
-      .parse(categoryValue);
+    const schema = zfd.formData({
+      name: formText(z.string().min(1)),
+      category: formText(z.enum(["breakfast", "lunch", "dinner", "snack"])),
+      notes: formOptionalText(),
+      ingredients: formText(z.string().min(1)),
+    });
+    const parsed = schema.parse(formData);
 
     return saveMealTemplate({
-      name,
-      category,
-      notes,
-      ingredientsJson,
+      name: parsed.name,
+      category: parsed.category,
+      notes: parsed.notes ?? undefined,
+      ingredientsJson: parsed.ingredients,
     });
   }
 
   if (intent === "save-meal") {
-    const mealCategoryParam = formData.get("mealCategory")?.toString();
-    const mealCategory = z
-      .enum(["breakfast", "lunch", "dinner", "snack"])
-      .nullable()
-      .parse(mealCategoryParam);
-    const loggedDate = formData.get("loggedDate")?.toString();
-    const ingredientsJson = formData.get("ingredients")?.toString();
-    const returnTo = formData.get("returnTo")?.toString();
-    const mealId = formData.get("mealId")?.toString(); // For editing existing meals
-    const notes = formData.get("notes")?.toString();
-
-    if (!mealCategory || !loggedDate || !ingredientsJson) {
-      throw new Error("Missing required fields for meal logging");
-    }
+    const schema = zfd.formData({
+      mealCategory: formText(z.enum(["breakfast", "lunch", "dinner", "snack"])),
+      loggedDate: formText(z.string().min(1)),
+      ingredients: formText(z.string().min(1)),
+      returnTo: formOptionalText(),
+      mealId: formOptionalText(),
+      notes: formOptionalText(),
+    });
+    const parsed = schema.parse(formData);
 
     return saveMealLog({
-      mealCategory,
-      loggedDate,
-      ingredientsJson,
-      returnTo,
-      mealId: mealId || undefined,
-      notes,
+      mealCategory: parsed.mealCategory,
+      loggedDate: parsed.loggedDate,
+      ingredientsJson: parsed.ingredients,
+      returnTo: parsed.returnTo ?? undefined,
+      mealId: parsed.mealId ?? undefined,
+      notes: parsed.notes ?? undefined,
     });
   }
 
   if (intent === "search-ai-ingredient") {
-    const query = formData.get("query")?.toString();
-    if (!query) {
-      throw new Error("Search query is required");
-    }
+    const schema = zfd.formData({
+      query: formText(z.string().min(1)),
+    });
+    const parsed = schema.parse(formData);
 
-    return searchAiIngredient({ query });
+    return searchAiIngredient({ query: parsed.query });
   }
 
   if (intent === "save-ai-ingredient") {
-    const ingredientDataJson = formData.get("ingredientData")?.toString();
-    if (!ingredientDataJson) {
-      throw new Error("Ingredient data is required");
-    }
+    const schema = zfd.formData({
+      ingredientData: formText(z.string().min(1)),
+    });
+    const parsed = schema.parse(formData);
 
-    return saveAiIngredient({ ingredientDataJson });
+    return saveAiIngredient({ ingredientDataJson: parsed.ingredientData });
   }
 
   throw new Error("Invalid intent");

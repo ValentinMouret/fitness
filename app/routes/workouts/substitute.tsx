@@ -4,6 +4,8 @@ import {
   getSubstituteExerciseData,
   substituteExercise,
 } from "~/modules/fitness/application/substitute-exercise.service.server";
+import { zfd } from "zod-form-data";
+import { formRepeatableText } from "~/utils/form-data";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const { id: workoutId, exerciseId } = params;
@@ -20,7 +22,11 @@ export async function loader({ params }: LoaderFunctionArgs) {
 export async function action({ params, request }: ActionFunctionArgs) {
   const { id: workoutId, exerciseId } = params;
   const formData = await request.formData();
-  const selectedEquipment = formData.getAll("equipment").map(String);
+  const schema = zfd.formData({
+    equipment: formRepeatableText(),
+  });
+  const parsed = schema.parse(formData);
+  const selectedEquipment = parsed.equipment;
 
   if (!workoutId || !exerciseId) {
     throw new Response("Workout ID and Exercise ID are required", {

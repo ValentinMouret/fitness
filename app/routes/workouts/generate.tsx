@@ -27,6 +27,13 @@ import {
   generateWorkout,
   getGenerateWorkoutData,
 } from "~/modules/fitness/application/generate-workout.service.server";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
+import {
+  formNumber,
+  formOptionalText,
+  formRepeatableText,
+} from "~/utils/form-data";
 
 export async function loader() {
   return getGenerateWorkoutData();
@@ -34,14 +41,17 @@ export async function loader() {
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
-  const targetDuration = Number(formData.get("targetDuration"));
-  const preferredFloor = formData.get("preferredFloor")?.toString();
-  const selectedEquipment = formData.getAll("equipment").map(String);
+  const schema = zfd.formData({
+    targetDuration: formNumber(z.number().int().min(1)),
+    preferredFloor: formOptionalText(),
+    equipment: formRepeatableText(),
+  });
+  const parsed = schema.parse(formData);
 
   return generateWorkout({
-    targetDuration,
-    preferredFloor,
-    selectedEquipmentIds: selectedEquipment,
+    targetDuration: parsed.targetDuration,
+    preferredFloor: parsed.preferredFloor ?? undefined,
+    selectedEquipmentIds: parsed.equipment,
   });
 }
 

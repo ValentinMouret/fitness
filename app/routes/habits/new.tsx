@@ -4,6 +4,12 @@ import { z } from "zod";
 import type { Route } from "./+types/new";
 import { createHabit } from "../../modules/habits/application/create-habit.service.server";
 import * as React from "react";
+import { zfd } from "zod-form-data";
+import {
+  formOptionalText,
+  formRepeatableText,
+  formText,
+} from "~/utils/form-data";
 import {
   Box,
   TextField,
@@ -27,28 +33,30 @@ export const handle = {
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
 
-  const name = formData.get("name")?.toString() ?? "";
-  const description = formData.get("description")?.toString();
-  const habitFrequencyType = z
-    .enum(["daily", "weekly", "monthly", "custom"])
-    .parse(formData.get("frequencyType"));
+  const schema = zfd.formData({
+    name: formText(z.string().min(1)),
+    description: formOptionalText(),
+    frequencyType: formText(z.enum(["daily", "weekly", "monthly", "custom"])),
+    daysOfWeek: formRepeatableText(),
+  });
+
+  const parsed = schema.parse(formData);
 
   const frequencyConfig: {
     days_of_week?: string[];
     interval_days?: number;
     day_of_month?: number;
   } = {};
-  if (habitFrequencyType === "custom" || habitFrequencyType === "weekly") {
-    const daysOfWeek = formData.getAll("daysOfWeek").map(String);
-    if (daysOfWeek.length > 0) {
-      frequencyConfig.days_of_week = daysOfWeek;
+  if (parsed.frequencyType === "custom" || parsed.frequencyType === "weekly") {
+    if (parsed.daysOfWeek.length > 0) {
+      frequencyConfig.days_of_week = parsed.daysOfWeek;
     }
   }
 
   const result = await createHabit({
-    name,
-    description: description || undefined,
-    frequencyType: habitFrequencyType,
+    name: parsed.name,
+    description: parsed.description || undefined,
+    frequencyType: parsed.frequencyType,
     frequencyConfig,
   });
 

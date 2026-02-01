@@ -2,6 +2,9 @@ import { Form, redirect, useActionData, Link } from "react-router";
 import { data } from "react-router";
 import type { Route } from "./+types/new";
 import { createMeasurement } from "~/modules/core/application/create-measurement.service.server";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
+import { formOptionalText, formText } from "~/utils/form-data";
 import {
   Box,
   TextField,
@@ -22,11 +25,19 @@ export const handle = {
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
 
-  const rawName = formData.get("name")?.toString();
-  const unit = formData.get("unit")?.toString();
-  const description = formData.get("description")?.toString();
+  const schema = zfd.formData({
+    name: formText(z.string().min(1)),
+    unit: formText(z.string().min(1)),
+    description: formOptionalText(),
+  });
 
-  const result = await createMeasurement({ rawName, unit, description });
+  const parsed = schema.parse(formData);
+
+  const result = await createMeasurement({
+    rawName: parsed.name,
+    unit: parsed.unit,
+    description: parsed.description ?? undefined,
+  });
 
   if (!result.ok) {
     return data({ error: result.error }, { status: result.status });

@@ -8,6 +8,9 @@ import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
 import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
 import { Workout } from "~/modules/fitness/domain/workout";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
+import { formOptionalText, formText } from "~/utils/form-data";
 import {
   createWorkoutExerciseCardViewModel,
   WorkoutExerciseCard,
@@ -36,68 +39,111 @@ export async function loader({ params }: Route.LoaderArgs) {
 export async function action({ request, params }: Route.ActionArgs) {
   const { id } = params;
   const formData = await request.formData();
-  const intent = formData.get("intent")?.toString();
+  const intentSchema = zfd.formData({
+    intent: formText(z.string().min(1)),
+  });
+  const intentParsed = intentSchema.safeParse(formData);
 
-  if (!intent) {
+  if (!intentParsed.success) {
     return { error: "Intent is required" };
   }
+  const intent = intentParsed.data.intent;
 
   try {
     switch (intent) {
       case "update-name": {
-        return updateWorkoutName(id, formData.get("name")?.toString());
+        const schema = zfd.formData({
+          name: formText(z.string().min(1)),
+        });
+        const parsed = schema.parse(formData);
+        return updateWorkoutName(id, parsed.name);
       }
 
       case "add-exercise": {
+        const schema = zfd.formData({
+          exerciseId: formText(z.string().min(1)),
+          notes: formOptionalText(),
+        });
+        const parsed = schema.parse(formData);
         return addExerciseToWorkout({
           workoutId: id,
-          exerciseId: formData.get("exerciseId")?.toString(),
-          notes: formData.get("notes")?.toString(),
+          exerciseId: parsed.exerciseId,
+          notes: parsed.notes ?? undefined,
         });
       }
 
       case "remove-exercise": {
+        const schema = zfd.formData({
+          exerciseId: formText(z.string().min(1)),
+        });
+        const parsed = schema.parse(formData);
         return removeExerciseFromWorkout({
           workoutId: id,
-          exerciseId: formData.get("exerciseId")?.toString(),
+          exerciseId: parsed.exerciseId,
         });
       }
 
       case "add-set": {
+        const schema = zfd.formData({
+          exerciseId: formText(z.string().min(1)),
+          reps: formOptionalText(),
+          weight: formOptionalText(),
+          note: formOptionalText(),
+        });
+        const parsed = schema.parse(formData);
         return addSetToWorkout({
           workoutId: id,
-          exerciseId: formData.get("exerciseId")?.toString(),
-          repsStr: formData.get("reps")?.toString(),
-          weightStr: formData.get("weight")?.toString(),
-          note: formData.get("note")?.toString(),
+          exerciseId: parsed.exerciseId,
+          repsStr: parsed.reps ?? undefined,
+          weightStr: parsed.weight ?? undefined,
+          note: parsed.note ?? undefined,
         });
       }
 
       case "update-set": {
+        const schema = zfd.formData({
+          exerciseId: formText(z.string().min(1)),
+          setNumber: formText(z.string().min(1)),
+          reps: formOptionalText(),
+          weight: formOptionalText(),
+          note: formOptionalText(),
+          isCompleted: formOptionalText(),
+        });
+        const parsed = schema.parse(formData);
         return updateSetInWorkout({
           workoutId: id,
-          exerciseId: formData.get("exerciseId")?.toString(),
-          setNumberStr: formData.get("setNumber")?.toString(),
-          repsStr: formData.get("reps")?.toString(),
-          weightStr: formData.get("weight")?.toString(),
-          note: formData.get("note")?.toString(),
-          isCompletedStr: formData.get("isCompleted")?.toString(),
+          exerciseId: parsed.exerciseId,
+          setNumberStr: parsed.setNumber,
+          repsStr: parsed.reps ?? undefined,
+          weightStr: parsed.weight ?? undefined,
+          note: parsed.note ?? undefined,
+          isCompletedStr: parsed.isCompleted ?? undefined,
         });
       }
 
       case "complete-set": {
+        const schema = zfd.formData({
+          exerciseId: formText(z.string().min(1)),
+          setNumber: formText(z.string().min(1)),
+        });
+        const parsed = schema.parse(formData);
         return completeSetInWorkout({
           workoutId: id,
-          exerciseId: formData.get("exerciseId")?.toString(),
-          setNumberStr: formData.get("setNumber")?.toString(),
+          exerciseId: parsed.exerciseId,
+          setNumberStr: parsed.setNumber,
         });
       }
 
       case "remove-set": {
+        const schema = zfd.formData({
+          exerciseId: formText(z.string().min(1)),
+          setNumber: formText(z.string().min(1)),
+        });
+        const parsed = schema.parse(formData);
         return removeSetFromWorkout({
           workoutId: id,
-          exerciseId: formData.get("exerciseId")?.toString(),
-          setNumberStr: formData.get("setNumber")?.toString(),
+          exerciseId: parsed.exerciseId,
+          setNumberStr: parsed.setNumber,
         });
       }
 

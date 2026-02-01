@@ -14,7 +14,6 @@ import { Form, Link, useFetcher } from "react-router";
 import HabitCheckbox from "~/components/HabitCheckbox";
 import MeasurementChart from "~/components/MeasurementChart";
 import { formatStartedAgo } from "~/time";
-import { coerceFloat, resultFromNullable } from "~/utils";
 import { createValidationError } from "~/utils/errors";
 import type { Route } from "./+types/index";
 import {
@@ -22,6 +21,9 @@ import {
   logWeight,
   toggleHabitCompletion,
 } from "~/modules/dashboard/application/dashboard.service.server";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
+import { formBoolean, formNumber, formText } from "~/utils/form-data";
 
 export async function loader() {
   return getDashboardData();
@@ -32,28 +34,30 @@ export async function action({ request }: Route.ActionArgs) {
   const intent = form.get("intent");
 
   if (intent === "toggle-habit") {
-    const habitIdValue = form.get("habitId");
-    const habitId = typeof habitIdValue === "string" ? habitIdValue : "";
-    const completed = form.get("completed") === "true";
-    await toggleHabitCompletion({ habitId, completed });
+    const schema = zfd.formData({
+      habitId: formText(z.string().min(1)),
+      completed: formBoolean(),
+    });
+    const parsed = schema.parse(form);
+
+    await toggleHabitCompletion({
+      habitId: parsed.habitId,
+      completed: parsed.completed,
+    });
 
     return null;
   }
 
-  const weightValue = form.get("weight");
-  const parsedWeight = resultFromNullable(
-    typeof weightValue === "string" ? weightValue : null,
-    "validation_error",
-  ).andThen(coerceFloat);
+  const schema = zfd.formData({
+    weight: formNumber(z.number().positive()),
+  });
 
-  if (parsedWeight.isErr()) {
-    throw createValidationError(
-      "Invalid weight value provided",
-      parsedWeight.error,
-    );
+  const parsed = schema.safeParse(form);
+  if (!parsed.success) {
+    throw createValidationError("Invalid weight value provided", parsed.error);
   }
 
-  await logWeight({ weight: parsedWeight.value });
+  await logWeight({ weight: parsed.data.weight });
 }
 
 export const handle = {

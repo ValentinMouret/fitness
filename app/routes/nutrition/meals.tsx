@@ -25,6 +25,7 @@ import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from "react-router";
+import { zfd } from "zod-form-data";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import {
@@ -43,6 +44,7 @@ import {
   deleteMealLog,
   getMealsPageData,
 } from "~/modules/nutrition/application/meals-page.service.server";
+import { formOptionalText, formText } from "~/utils/form-data";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -54,18 +56,24 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
-  const intent = formData.get("intent")?.toString();
+  const intentSchema = zfd.formData({
+    intent: formOptionalText(),
+  });
+  const intentParsed = intentSchema.parse(formData);
+  const intent = intentParsed.intent;
 
   if (intent === "apply-template") {
-    const templateId = formData.get("templateId")?.toString() ?? "";
-    const mealCategory = z
-      .enum(["breakfast", "lunch", "dinner", "snack"])
-      .parse(formData.get("mealCategory"));
-    const loggedDate = new Date(formData.get("loggedDate")?.toString() ?? "");
+    const schema = zfd.formData({
+      templateId: formText(z.string().min(1)),
+      mealCategory: formText(z.enum(["breakfast", "lunch", "dinner", "snack"])),
+      loggedDate: formText(z.string().min(1)),
+    });
+    const parsed = schema.parse(formData);
+    const loggedDate = new Date(parsed.loggedDate);
 
     const result = await applyMealTemplate({
-      templateId,
-      mealCategory,
+      templateId: parsed.templateId,
+      mealCategory: parsed.mealCategory,
       loggedDate,
     });
 
@@ -77,9 +85,12 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   if (intent === "delete-meal") {
-    const mealId = formData.get("mealId")?.toString() ?? "";
+    const schema = zfd.formData({
+      mealId: formText(z.string().min(1)),
+    });
+    const parsed = schema.parse(formData);
 
-    const result = await deleteMealLog({ mealId });
+    const result = await deleteMealLog({ mealId: parsed.mealId });
 
     if (!result.ok) {
       return { success: false, error: result.error };
