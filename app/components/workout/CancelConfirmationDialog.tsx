@@ -6,7 +6,7 @@ import {
   Heading,
   Text,
 } from "@radix-ui/themes";
-import { useFetcher } from "react-router";
+import { Form, useNavigation } from "react-router";
 import type { WorkoutSession } from "~/modules/fitness/domain/workout";
 import { useLiveDuration } from "./useLiveDuration";
 
@@ -21,7 +21,11 @@ export function CancelConfirmationDialog({
   open,
   onOpenChange,
 }: CancelConfirmationDialogProps) {
-  const fetcher = useFetcher();
+  const navigation = useNavigation();
+  const isCancelling =
+    navigation.state === "submitting" &&
+    navigation.formData?.get("intent") === "cancel-workout";
+  const isBusy = navigation.state !== "idle";
 
   const { formattedDuration } = useLiveDuration({
     startTime: workoutSession.workout.start,
@@ -78,22 +82,17 @@ export function CancelConfirmationDialog({
 
         <Flex gap="3" mt="4" justify="end">
           <AlertDialog.Cancel>
-            <Button variant="soft" size="2" disabled={fetcher.state !== "idle"}>
+            <Button variant="soft" size="2" disabled={isBusy}>
               Keep
             </Button>
           </AlertDialog.Cancel>
 
-          <fetcher.Form method="post">
+          <Form method="post">
             <input type="hidden" name="intent" value="cancel-workout" />
-            <Button
-              type="submit"
-              size="2"
-              color="red"
-              disabled={fetcher.state !== "idle"}
-            >
-              {fetcher.state === "submitting" ? "Cancelling..." : "Cancel"}
+            <Button type="submit" size="2" color="red" disabled={isBusy}>
+              {isCancelling ? "Cancelling..." : "Cancel"}
             </Button>
-          </fetcher.Form>
+          </Form>
         </Flex>
       </AlertDialog.Content>
     </AlertDialog.Root>

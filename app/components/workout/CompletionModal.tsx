@@ -1,5 +1,5 @@
 import { Box, Button, Dialog, Flex, Heading, Text } from "@radix-ui/themes";
-import { useFetcher } from "react-router";
+import { Form, useNavigation } from "react-router";
 import type { WorkoutSession } from "~/modules/fitness/domain/workout";
 import { useLiveDuration } from "./useLiveDuration";
 
@@ -14,7 +14,11 @@ export function CompletionModal({
   open,
   onOpenChange,
 }: CompletionModalProps) {
-  const fetcher = useFetcher();
+  const navigation = useNavigation();
+  const isCompleting =
+    navigation.state === "submitting" &&
+    navigation.formData?.get("intent") === "complete-workout";
+  const isBusy = navigation.state !== "idle";
 
   const { formattedDuration } = useLiveDuration({
     startTime: workoutSession.workout.start,
@@ -70,16 +74,16 @@ export function CompletionModal({
             variant="soft"
             size="2"
             onClick={() => onOpenChange(false)}
-            disabled={fetcher.state !== "idle"}
+            disabled={isBusy}
           >
             Continue
           </Button>
-          <fetcher.Form method="post">
+          <Form method="post">
             <input type="hidden" name="intent" value="complete-workout" />
-            <Button type="submit" size="2" disabled={fetcher.state !== "idle"}>
-              {fetcher.state === "submitting" ? "Completing..." : "Finish"}
+            <Button type="submit" size="2" disabled={isBusy}>
+              {isCompleting ? "Completing..." : "Finish"}
             </Button>
-          </fetcher.Form>
+          </Form>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>

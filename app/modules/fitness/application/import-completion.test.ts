@@ -64,7 +64,11 @@ class InMemoryWorkoutRepository implements IWorkoutRepository {
 
   findInProgress(): ResultAsync<Workout | null, ErrRepository> {
     return ResultAsync.fromPromise(
-      Promise.resolve(this.workouts.find((w) => !w.stop) ?? null),
+      Promise.resolve(
+        this.workouts.find(
+          (w) => !w.stop && !w.importedFromFitbod && !w.importedFromStrong,
+        ) ?? null,
+      ),
       () => "database_error",
     );
   }

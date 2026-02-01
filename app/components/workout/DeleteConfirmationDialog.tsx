@@ -1,5 +1,5 @@
 import { AlertDialog, Button, Flex, Text, Card, Box } from "@radix-ui/themes";
-import { useFetcher } from "react-router";
+import { Form, useNavigation } from "react-router";
 import type { WorkoutSession } from "~/modules/fitness/domain/workout";
 
 interface DeleteConfirmationDialogProps {
@@ -13,7 +13,11 @@ export function DeleteConfirmationDialog({
   open,
   onOpenChange,
 }: DeleteConfirmationDialogProps) {
-  const fetcher = useFetcher();
+  const navigation = useNavigation();
+  const isDeleting =
+    navigation.state === "submitting" &&
+    navigation.formData?.get("intent") === "delete-workout";
+  const isBusy = navigation.state !== "idle";
 
   const totalSets = workoutSession.exerciseGroups.reduce(
     (sum, group) => sum + group.sets.length,
@@ -78,23 +82,17 @@ export function DeleteConfirmationDialog({
           {/* Action Buttons */}
           <Flex gap="3" justify="end">
             <AlertDialog.Cancel>
-              <Button variant="soft" disabled={fetcher.state !== "idle"}>
+              <Button variant="soft" disabled={isBusy}>
                 Keep Workout
               </Button>
             </AlertDialog.Cancel>
 
-            <fetcher.Form method="post">
+            <Form method="post">
               <input type="hidden" name="intent" value="delete-workout" />
-              <Button
-                type="submit"
-                color="red"
-                disabled={fetcher.state !== "idle"}
-              >
-                {fetcher.state === "submitting"
-                  ? "Deleting..."
-                  : "Delete Workout"}
+              <Button type="submit" color="red" disabled={isBusy}>
+                {isDeleting ? "Deleting..." : "Delete Workout"}
               </Button>
-            </fetcher.Form>
+            </Form>
           </Flex>
         </Flex>
       </AlertDialog.Content>

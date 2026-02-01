@@ -103,7 +103,14 @@ export const WorkoutRepository: IWorkoutRepository = {
     const query = db
       .select()
       .from(workouts)
-      .where(and(isNull(workouts.deleted_at), isNull(workouts.stop)))
+      .where(
+        and(
+          isNull(workouts.deleted_at),
+          isNull(workouts.stop),
+          eq(workouts.imported_from_fitbod, false),
+          eq(workouts.imported_from_strong, false),
+        ),
+      )
       .orderBy(desc(workouts.start))
       .limit(1);
 
