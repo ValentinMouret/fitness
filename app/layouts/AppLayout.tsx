@@ -265,11 +265,14 @@ const AppLayout: React.FC = () => {
       <Box
         className="main-content"
         flexGrow="1"
-        style={{
-          overflow: "auto",
-          marginLeft: isCollapsed ? "60px" : "240px",
-          transition: "margin-left 0.2s ease",
-        }}
+        style={
+          {
+            overflow: "auto",
+            marginLeft: isCollapsed ? "60px" : "240px",
+            transition: "margin-left 0.2s ease",
+            "--sidebar-width": isCollapsed ? "60px" : "240px",
+          } as React.CSSProperties
+        }
       >
         <Container size="4" p="4">
           <PageTransition>
