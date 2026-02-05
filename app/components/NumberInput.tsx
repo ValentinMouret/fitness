@@ -1,5 +1,5 @@
 import { TextField } from "@radix-ui/themes";
-import type { ComponentProps, ChangeEvent } from "react";
+import type { ComponentProps, ChangeEvent, FocusEvent } from "react";
 
 type TextFieldRootProps = ComponentProps<typeof TextField.Root>;
 
@@ -14,6 +14,7 @@ function normalizeDecimalSeparator(value: string): string {
 export function NumberInput({
   allowDecimals = true,
   onChange,
+  onFocus,
   ...props
 }: NumberInputProps) {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -21,11 +22,17 @@ export function NumberInput({
     onChange?.(e);
   };
 
+  const handleFocus = (e: FocusEvent<HTMLInputElement>) => {
+    e.target.select();
+    onFocus?.(e);
+  };
+
   return (
     <TextField.Root
       type="text"
       inputMode={allowDecimals ? "decimal" : "numeric"}
       onChange={handleChange}
+      onFocus={handleFocus}
       {...props}
     />
   );
