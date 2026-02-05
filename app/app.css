@@ -400,6 +400,13 @@ button.rt-Card:hover,
   .rt-TableCell input {
     min-height: 40px;
   }
+
+  /* Prevent mobile browser auto-zoom on input focus (triggers at <16px) */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* =================================
