@@ -31,6 +31,7 @@ import {
   updateSetInWorkout,
   updateWorkoutName,
 } from "~/modules/fitness/application/workout-session.service.server";
+import { duplicateWorkout } from "~/modules/fitness/application/duplicate-workout.service.server";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { id } = params;
@@ -160,6 +161,10 @@ export async function action({ request, params }: Route.ActionArgs) {
         return deleteWorkout({ workoutId: id });
       }
 
+      case "duplicate-workout": {
+        return duplicateWorkout(id);
+      }
+
       default:
         return { error: "Unknown intent" };
     }
@@ -255,14 +260,22 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   );
 
   const customRight = isComplete ? (
-    <Button
-      variant="soft"
-      color="red"
-      size="2"
-      onClick={() => setShowDeleteDialog(true)}
-    >
-      Delete
-    </Button>
+    <Flex gap="2">
+      <fetcher.Form method="post">
+        <input type="hidden" name="intent" value="duplicate-workout" />
+        <Button variant="soft" size="2" type="submit">
+          Repeat
+        </Button>
+      </fetcher.Form>
+      <Button
+        variant="soft"
+        color="red"
+        size="2"
+        onClick={() => setShowDeleteDialog(true)}
+      >
+        Delete
+      </Button>
+    </Flex>
   ) : undefined;
 
   return (
