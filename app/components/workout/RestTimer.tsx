@@ -1,5 +1,7 @@
-import { Box, Button, Flex, Text } from "@radix-ui/themes";
+import { Box, Button, Flex, IconButton, Text, Tooltip } from "@radix-ui/themes";
+import { Bell, BellOff, BellRing } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { sendNotification, useNotificationPermission } from "~/notifications";
 import "./RestTimer.css";
 
 const DEFAULT_REST_SECONDS = 90;
@@ -72,6 +74,18 @@ export function useRestTimer(defaultSeconds = DEFAULT_REST_SECONDS) {
     [clear],
   );
 
+  // Notify on timer completion
+  useEffect(() => {
+    if (state.isActive && state.secondsRemaining === 0) {
+      sendNotification("Rest Complete", {
+        body: "Time for your next set!",
+        icon: "/icons/icon-192.png",
+        tag: "rest-timer",
+      });
+      navigator.vibrate?.([200, 100, 200]);
+    }
+  }, [state.isActive, state.secondsRemaining]);
+
   useEffect(() => {
     return clear;
   }, [clear]);
@@ -89,6 +103,43 @@ function formatPreset(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
   const m = seconds / 60;
   return Number.isInteger(m) ? `${m}m` : `${m.toFixed(0.5)}m`;
+}
+
+const BELL_SIZE = 14;
+
+function NotificationBell() {
+  const { permission, request } = useNotificationPermission();
+
+  if (permission === "unsupported") return null;
+
+  if (permission === "denied") {
+    return (
+      <Tooltip content="Notifications blocked in browser settings">
+        <IconButton size="1" variant="ghost" color="gray" disabled>
+          <BellOff size={BELL_SIZE} />
+        </IconButton>
+      </Tooltip>
+    );
+  }
+
+  if (permission === "granted") {
+    return (
+      <Tooltip content="Notifications enabled">
+        <IconButton size="1" variant="ghost" color="gray" tabIndex={-1}>
+          <BellRing size={BELL_SIZE} />
+        </IconButton>
+      </Tooltip>
+    );
+  }
+
+  // permission === "default" — not yet asked
+  return (
+    <Tooltip content="Enable notifications">
+      <IconButton size="1" variant="soft" onClick={request}>
+        <Bell size={BELL_SIZE} />
+      </IconButton>
+    </Tooltip>
+  );
 }
 
 interface RestTimerProps {
@@ -126,6 +177,7 @@ export function RestTimer({
         py="3"
       >
         <Flex align="center" gap="3">
+          <NotificationBell />
           <Text size="2" weight="medium" className="rest-timer__label">
             {isFinished ? "Rest complete" : "Rest"}
           </Text>
