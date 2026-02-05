@@ -3,13 +3,14 @@
   margin: 0 auto;
 }
 
-/* Header — compact single-row with metadata inline */
+/* Header */
 .active-workout-header {
   position: sticky;
   top: 0;
   z-index: 10;
-  background-color: var(--color-background);
+  background: var(--brand-surface);
   border-bottom: 1px solid var(--gray-4);
+  box-shadow: var(--shadow-warm-sm);
   padding: var(--space-2) var(--space-3);
   display: flex;
   align-items: center;
@@ -33,20 +34,127 @@
   display: block;
 }
 
-/* Content */
-.active-workout-content {
-  padding: 0 var(--space-4);
+/* Progress bar — thin, below header */
+.active-workout-progress {
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
+.active-workout-progress__bar {
+  flex: 1;
+  height: 5px;
+  background: var(--gray-4);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.active-workout-progress__fill {
+  height: 100%;
+  background: var(--tomato-9);
+  border-radius: 3px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.active-workout-progress__text {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Completed summary */
+.active-workout-summary {
+  margin: var(--space-3) var(--space-4);
+  padding: var(--space-4);
+  background: var(--brand-surface);
+  border: 1px solid var(--gray-4);
+  border-radius: var(--radius-3);
+  box-shadow: var(--shadow-warm-sm);
+  animation: fadeSlideUp 0.3s ease-out both;
+}
+
+.active-workout-summary__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.active-workout-summary__stat {
+  text-align: center;
+}
+
+.active-workout-summary__stat-value {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--brand-text);
+}
+
+.active-workout-summary__stat-label {
+  display: block;
+  font-size: var(--font-size-1);
+  color: var(--brand-text-secondary);
+  margin-top: 2px;
+}
+
+/* Content */
+.active-workout-content {
+  padding: 0 var(--space-3);
+}
+
+/* Stagger animation for exercise cards */
+.active-workout-exercise {
+  animation: fadeSlideUp 0.3s ease-out both;
+}
+
+.active-workout-exercise:nth-child(1) {
+  animation-delay: 0s;
+}
+.active-workout-exercise:nth-child(2) {
+  animation-delay: 0.05s;
+}
+.active-workout-exercise:nth-child(3) {
+  animation-delay: 0.1s;
+}
+.active-workout-exercise:nth-child(4) {
+  animation-delay: 0.15s;
+}
+.active-workout-exercise:nth-child(5) {
+  animation-delay: 0.2s;
+}
+.active-workout-exercise:nth-child(6) {
+  animation-delay: 0.25s;
+}
+.active-workout-exercise:nth-child(7) {
+  animation-delay: 0.3s;
+}
+.active-workout-exercise:nth-child(8) {
+  animation-delay: 0.35s;
+}
+
+/* Add exercise button */
 .active-workout-add-exercise {
-  padding: var(--space-5) 0;
+  padding: var(--space-4) 0;
 }
 
 .active-workout-add-exercise button {
   width: 100%;
 }
 
-/* Bottom padding to account for rest timer + tab bar */
+/* Empty state */
+.active-workout-empty {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--brand-text-secondary);
+}
+
+.active-workout-empty__icon {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-3);
+}
+
+/* Bottom padding for rest timer + tab bar */
 @media (max-width: 767px) {
   .active-workout-page {
     padding-bottom: calc(120px + 60px + env(safe-area-inset-bottom));

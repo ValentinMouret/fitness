@@ -24,90 +24,158 @@ All animations use consistent timing and easing to create cohesive, polished int
 <Theme accentColor="tomato" grayColor="sand" radius="large">
 ```
 
-- **Accent Color**: Tomato - used for primary actions, completion states, and active navigation
-- **Gray Scale**: Sand - provides warm, approachable neutral tones
-- **Border Radius**: Large - creates friendly, approachable interfaces
+- **Accent Color**: Tomato — primary actions, completion states, active navigation
+- **Gray Scale**: Sand — warm, approachable neutral tones
+- **Border Radius**: Large — friendly, approachable interfaces
 
 ### Typography
-- **Font Family**: Lato - clean, readable sans-serif optimized for digital interfaces
-- **Scale**: Uses Radix UI's type scale (1-9) for consistent sizing and hierarchy
+- **Display**: `Fraunces` (serif) — headings, stat values, display numbers
+- **Body**: `Plus Jakarta Sans` (sans-serif) — all body text, labels, inputs
+- **Scale**: Radix UI type scale (1-9)
+
+```css
+--font-display: "Fraunces", serif;
+--font-body: "Plus Jakarta Sans", sans-serif;
+```
+
+### Brand Tokens
+Defined in `app/app.css`:
+```css
+/* Warm palette */
+--brand-background: #fffbf5;       /* Page background */
+--brand-surface: #fff8f0;          /* Card/header backgrounds */
+--brand-coral: #ff6b6b;
+--brand-amber: #f59e0b;
+--brand-success: #22c55e;
+--brand-text: #292524;
+--brand-text-secondary: #78716c;
+
+/* Warm shadows — use instead of generic box-shadow */
+--shadow-warm-sm: 0 1px 3px rgba(120, 80, 60, 0.06);
+--shadow-warm: 0 4px 12px rgba(120, 80, 60, 0.08);
+--shadow-warm-lg: 0 8px 24px rgba(120, 80, 60, 0.12);
+--shadow-warm-hover: 0 8px 20px rgba(120, 80, 60, 0.15);
+```
 
 ## Design Tokens
 
 ### Motion System
-```typescript
-export const transitions = {
-  fast: '0.15s cubic-bezier(0.4, 0, 0.2, 1)',    // Quick interactions
-  normal: '0.25s cubic-bezier(0.4, 0, 0.2, 1)',  // Standard animations  
-  slow: '0.35s cubic-bezier(0.4, 0, 0.2, 1)',    // Complex state changes
-};
+```css
+/* Standard easing for all transitions */
+cubic-bezier(0.4, 0, 0.2, 1)
+
+/* Durations */
+fast:   0.15s  /* Hover states, micro-interactions */
+normal: 0.25s  /* Standard animations */
+slow:   0.35s  /* Complex state changes, page transitions */
 ```
 
+**Stagger animations**: For lists of cards/items, use `fadeSlideUp` with 50ms delay increments per child (defined in `app/app.css`).
+
 ### Spacing Extensions
-```typescript
-export const spacing = {
-  card: 'var(--space-4)',     // 16px - internal card padding
-  section: 'var(--space-6)',  // 32px - between major sections
-  page: 'var(--space-8)',     // 64px - page-level spacing
-};
+```css
+--space-card: var(--space-4);     /* 16px — internal card padding */
+--space-section: var(--space-6);  /* 32px — between major sections */
+--space-page: var(--space-8);     /* 64px — page-level spacing */
 ```
 
 ### Semantic Colors
-```typescript
-export const semanticColors = {
-  // Primary interactions
-  primary: 'tomato',   // Primary buttons, active nav, CTAs, completed states
-
-  // Status feedback
-  success: 'green',    // Toasts, confirmations, positive feedback
-  warning: 'amber',    // Pending states, attention needed
-  inProgress: 'orange', // Active workout, warmup sets
-  error: 'red',        // Destructive actions, error states
-  info: 'blue',        // Informational content, neutral actions
-
-  // Exercise categorization
-  exerciseTypes: {
-    barbell: 'yellow',
-    bodyweight: 'gray',
-    cable: 'blue',
-    dumbbells: 'amber',
-    machine: 'gold',
-  }
-};
+| Role | Color | Usage |
+|------|-------|-------|
+| Primary | `tomato` | Buttons, active nav, CTAs, completed states |
+| Success | `green` | Toasts, confirmations |
+| Warning | `amber` | Pending/editable states |
+| In-progress | `orange` | Active workout, warmup |
+| Error | `red` | Destructive actions |
+| Info | `blue` | Informational content |
 ```
 
 ## Component Patterns
 
-### Expandable Cards
-Used throughout the app for progressive disclosure of information.
+### Card Containment
+All content blocks (exercise cards, summary cards, etc.) use warm card treatment:
 
-**Key Features:**
-- Smooth expand/collapse animations
-- Chevron icon rotation
-- Clickable header area
-- Optional action menus
+```css
+.my-card {
+  padding: var(--space-4);
+  background: var(--brand-surface);
+  border: 1px solid var(--gray-4);
+  border-radius: var(--radius-3);
+  box-shadow: var(--shadow-warm-sm);
+}
+```
 
-**Current Usage:**
-- `ExerciseCard` - exercise details and muscle group breakdown
-- `WorkoutExerciseCard` - workout sets and tracking interface
+### Row State Indicators
+Table rows use a **left border accent** to indicate state — no background fills:
 
-### Inline Editing
-Real-time editing pattern for workout data entry.
+| State | CSS |
+|-------|-----|
+| Completed | `border-left: 3px solid var(--tomato-8)` |
+| Pending/editable | `border-left: 3px solid var(--amber-8)` |
+| Default | No border |
 
-**Key Features:**
-- Auto-submit on field change
-- Visual focus states
-- Loading feedback during submission
-- Transparent backgrounds with hover/focus highlights
+### Inline Inputs (Underline Style)
+Inputs inside data tables use underline style, not boxed:
 
-**Current Usage:**
-- Set reps, weight, and notes in workout tracking
-- Form fields with immediate persistence
+```css
+.my-input.rt-TextFieldRoot {
+  --text-field-border-width: 0px;
+  background: transparent;
+  box-shadow: inset 0 -1px 0 var(--gray-7) !important;
+  border-radius: 0;
+}
+
+.my-input.rt-TextFieldRoot:focus-within {
+  box-shadow: inset 0 -2px 0 var(--tomato-8) !important;
+}
+```
+
+### Progress Indicators
+Thin progress bars for tracking completion:
+
+```css
+/* Track */
+height: 5px;
+background: var(--gray-4);
+border-radius: 3px;
+
+/* Fill */
+background: var(--tomato-9);
+transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+```
+
+### Summary Cards
+Stats grids use display font for values:
+
+```css
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--brand-text);
+}
+
+.stat-label {
+  font-size: var(--font-size-1);
+  color: var(--brand-text-secondary);
+}
+```
+
+### Sticky Headers
+Page-level headers use warm surface with shadow:
+
+```css
+.my-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--brand-surface);
+  border-bottom: 1px solid var(--gray-4);
+  box-shadow: var(--shadow-warm-sm);
+}
+```
 
 ### Status Feedback
-Clear visual indication of states and actions.
-
-**Key Features:**
 - Color-coded completion (tomato for completed sets/habits)
 - Loading states during async operations
 - Confirmation dialogs for destructive actions
@@ -138,42 +206,24 @@ Domain-specific components built on composite patterns.
 - `WorkoutExerciseCard` - interactive workout tracking interface
 - `WeightChart` - data visualization with custom styling
 
-## Implementation Status
-
-### ✅ Established Patterns
-- Radix UI theme configuration
-- Consistent color semantics
-- Animation patterns for expandable content
-- Inline editing with auto-submit behavior
-
-### 🔄 In Progress  
-- Design token standardization
-- Component pattern extraction
-- Animation timing consistency
-
-### 📋 Planned
-- Composite component library
-- Comprehensive component documentation  
-- Accessibility guidelines
-- Usage examples and best practices
-
 ## Usage Guidelines
 
-### Color Application
-- Use semantic color names rather than direct Radix color references
-- Apply success/error colors consistently across similar interactions
-- Maintain exercise type color mapping for categorization
+### Colors
+- Use semantic color names (tomato, amber) rather than hex values
+- `--brand-*` tokens for backgrounds, text, shadows
+- Radix color scales (e.g. `var(--tomato-8)`) for component accents
 
-### Animation Standards
-- Use `normal` transition timing for most interactions
-- Apply `fast` timing for hover states and micro-interactions  
-- Reserve `slow` timing for complex state changes or page transitions
+### Shadows
+- Always use `--shadow-warm-*` instead of generic `box-shadow`
+- Cards get `--shadow-warm-sm`, elevated elements get `--shadow-warm`
 
-### Component Composition
-- Build new components using established patterns
-- Prefer composition over customization
-- Maintain consistent spacing and layout approaches
+### Animations
+- `normal` (0.25s) for most interactions
+- `fast` (0.15s) for hover states
+- `slow` (0.35s) for page transitions
+- Stagger children at 50ms increments using `animation-delay`
 
----
-
-*This design system is a living document that evolves with the application. Updates should reflect both current usage patterns and future design intentions.*
+### Mobile
+- Touch targets: minimum 44px on mobile (`min-height: 44px; min-width: 44px`)
+- Inputs: `font-size: 16px` to prevent iOS auto-zoom
+- Bottom padding: account for tab bar + safe area inset
