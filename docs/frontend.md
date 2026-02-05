@@ -87,25 +87,18 @@ The style for the component should live next to it: `{FeatureName}Card.css`.
 
 ## Styling Rules (STRICT)
 **NEVER** put styles inside components:
-- ❌ NO `style={}` props
+- ❌ NO `style={}` props for static styling
 - ❌ NO `<style>` elements/tags
 - ❌ NO CSS-in-JS
 - ❌ NO inline styles
+
+**Exception**: `style={}` is acceptable for **data-driven dynamic values** that cannot be expressed in CSS (e.g. progress bar widths, drag transforms). This matches existing patterns like `RestTimer` and dnd-kit wrappers.
 
 **ALWAYS** use external CSS files:
 - ✅ Create `.css` file next to component
 - ✅ Import CSS file: `import "./Chart.css"`
 - ✅ Use `className` with semantic names
-- ✅ Leverage global styles in `app/app.css`
-
-## Available Global Classes
-Use these classes from `app/app.css`:
-- **Buttons**: `.button`, `.button-primary`, `.button-secondary`, `.button-link`
-- **Forms**: `.form-group`, `.form-label`, `.form-input`, `.form-textarea`
-- **Layout**: `.page`, `.page-header`, `.card`, `.card-header`, `.grid`
-- **Checkboxes**: `.checkbox-wrapper`, `.checkbox-button`, `.checkbox-label`
-- **Utilities**: `.text-muted`, `.text-small`, `.mb-1`, `.mb-2`, `.gap-1`
-- **States**: `.checked`, `.error-message`, `.empty-state`
+- ✅ Reference design tokens from `docs/design-system.md` for consistent look
 
 
 ## Component Structure Example
@@ -150,9 +143,22 @@ export default function Chart<T>({ title, onUpdate }: ChartProps<T>) {
 ## Dynamic Styling
 For conditional styles, use dynamic class names:
 ```tsx
-// ✅ Good
-<button className={`checkbox-button ${isCompleted ? 'checked' : ''}`}>
+// ✅ State-driven classes
+<div className={`set-row ${set.isCompleted ? "set-row--completed" : canEdit ? "set-row--pending" : ""}`}>
 
-// ❌ Bad
-<button style={{ background: isCompleted ? '#green' : 'white' }}>
+// ✅ Data-driven dynamic value (acceptable inline style)
+<div className="progress__fill" style={{ width: `${percent}%` }} />
+
+// ❌ Static styling via inline style
+<button style={{ background: 'green', borderRadius: 8 }}>
 ```
+
+## Design Reference
+See `docs/design-system.md` for:
+- Brand tokens (`--brand-surface`, `--shadow-warm-*`)
+- Card containment pattern
+- Row state indicators (left border accents)
+- Inline input styling (underline, not boxed)
+- Progress bars
+- Summary card grids
+- Sticky header pattern

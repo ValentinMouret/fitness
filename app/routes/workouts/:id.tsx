@@ -1,11 +1,11 @@
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  type DragEndEvent,
   PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
-  type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -23,23 +23,15 @@ import {
 } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { Link, useFetcher } from "react-router";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
 import { CancelConfirmationDialog } from "~/components/workout/CancelConfirmationDialog";
 import { CompletionModal } from "~/components/workout/CompletionModal";
 import { DeleteConfirmationDialog } from "~/components/workout/DeleteConfirmationDialog";
 import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
 import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
-import type { WorkoutExerciseGroup } from "~/modules/fitness/domain/workout";
-import { Workout } from "~/modules/fitness/domain/workout";
-import { WorkoutSessionRepository } from "~/modules/fitness/infra/workout.repository.server";
-import { z } from "zod";
-import { zfd } from "zod-form-data";
-import { formOptionalText, formText } from "~/utils/form-data";
-import {
-  createWorkoutExerciseCardViewModel,
-  WorkoutExerciseCard,
-} from "~/modules/fitness/presentation";
-import type { Route } from "./+types/:id";
+import { duplicateWorkout } from "~/modules/fitness/application/duplicate-workout.service.server";
 import {
   addExerciseToWorkout,
   addSetToWorkout,
@@ -53,7 +45,15 @@ import {
   updateSetInWorkout,
   updateWorkoutName,
 } from "~/modules/fitness/application/workout-session.service.server";
-import { duplicateWorkout } from "~/modules/fitness/application/duplicate-workout.service.server";
+import type { WorkoutExerciseGroup } from "~/modules/fitness/domain/workout";
+import { Workout } from "~/modules/fitness/domain/workout";
+import { WorkoutSessionRepository } from "~/modules/fitness/infra/workout.repository.server";
+import {
+  createWorkoutExerciseCardViewModel,
+  WorkoutExerciseCard,
+} from "~/modules/fitness/presentation";
+import { formOptionalText, formText } from "~/utils/form-data";
+import type { Route } from "./+types/:id";
 import "./active-workout.css";
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -278,6 +278,24 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const { workoutSession, exercises } = loaderData;
   const isComplete = Workout.isComplete.call(workoutSession.workout);
 
+  const totalSets = workoutSession.exerciseGroups.reduce(
+    (sum, group) => sum + group.sets.length,
+    0,
+  );
+  const completedSets = workoutSession.exerciseGroups.reduce(
+    (sum, group) => sum + group.sets.filter((set) => set.isCompleted).length,
+    0,
+  );
+  const progressPercent = totalSets > 0 ? (completedSets / totalSets) * 100 : 0;
+  const totalVolume = workoutSession.exerciseGroups.reduce(
+    (sum, group) =>
+      sum +
+      group.sets
+        .filter((set) => set.isCompleted && set.reps && set.weight)
+        .reduce((s, set) => s + (set.reps ?? 0) * (set.weight ?? 0), 0),
+    0,
+  );
+
   const optimisticName =
     fetcher.formData?.get("name")?.toString() || workoutSession.workout.name;
 
@@ -407,7 +425,59 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
         </DropdownMenu.Root>
       </header>
 
-      {/* Content */}
+      {!isComplete && totalSets > 0 && (
+        <div className="active-workout-progress">
+          <div className="active-workout-progress__bar">
+            <div
+              className="active-workout-progress__fill"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <Text size="1" color="gray" className="active-workout-progress__text">
+            {completedSets}/{totalSets}
+          </Text>
+        </div>
+      )}
+
+      {isComplete && (
+        <div className="active-workout-summary">
+          <div className="active-workout-summary__grid">
+            <div className="active-workout-summary__stat">
+              <span className="active-workout-summary__stat-value">
+                {formattedDuration}
+              </span>
+              <span className="active-workout-summary__stat-label">
+                Duration
+              </span>
+            </div>
+            <div className="active-workout-summary__stat">
+              <span className="active-workout-summary__stat-value">
+                {workoutSession.exerciseGroups.length}
+              </span>
+              <span className="active-workout-summary__stat-label">
+                Exercises
+              </span>
+            </div>
+            <div className="active-workout-summary__stat">
+              <span className="active-workout-summary__stat-value">
+                {completedSets}/{totalSets}
+              </span>
+              <span className="active-workout-summary__stat-label">Sets</span>
+            </div>
+            <div className="active-workout-summary__stat">
+              <span className="active-workout-summary__stat-value">
+                {totalVolume >= 1000
+                  ? `${(totalVolume / 1000).toFixed(1)}t`
+                  : totalVolume > 0
+                    ? `${totalVolume}kg`
+                    : "—"}
+              </span>
+              <span className="active-workout-summary__stat-label">Volume</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="active-workout-content">
         {!isComplete ? (
           <DndContext
@@ -437,12 +507,23 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
           workoutSession.exerciseGroups.map((group) => {
             const viewModel = createWorkoutExerciseCardViewModel(group, true);
             return (
-              <WorkoutExerciseCard
-                key={group.exercise.id}
-                viewModel={viewModel}
-              />
+              <div key={group.exercise.id} className="active-workout-exercise">
+                <WorkoutExerciseCard viewModel={viewModel} />
+              </div>
             );
           })
+        )}
+
+        {!isComplete && workoutSession.exerciseGroups.length === 0 && (
+          <div className="active-workout-empty">
+            <div className="active-workout-empty__icon">🏋️</div>
+            <Text size="3" weight="medium">
+              No exercises yet
+            </Text>
+            <Text size="2" color="gray">
+              Add your first exercise to get started
+            </Text>
+          </div>
         )}
 
         {!isComplete && (
@@ -527,7 +608,7 @@ function SortableExerciseCard({
   const viewModel = createWorkoutExerciseCardViewModel(group, isComplete);
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} className="active-workout-exercise">
       <WorkoutExerciseCard
         viewModel={viewModel}
         onCompleteSet={onCompleteSet}

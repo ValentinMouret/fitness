@@ -1,3 +1,5 @@
+import type { DraggableAttributes } from "@dnd-kit/core";
+import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import {
   DotsVerticalIcon,
   DragHandleDots2Icon,
@@ -13,11 +15,9 @@ import {
   Text,
 } from "@radix-ui/themes";
 import { Brain } from "lucide-react";
-import { NumberInput } from "~/components/NumberInput";
-import type { DraggableAttributes } from "@dnd-kit/core";
-import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
+import { NumberInput } from "~/components/NumberInput";
 import type {
   WorkoutExerciseCardViewModel,
   WorkoutSetViewModel,
@@ -234,7 +234,7 @@ function SetRow({
     }
   };
 
-  const rowClassName = `set-row ${set.isCompleted ? "set-row--completed" : ""}`;
+  const rowClassName = `set-row ${set.isCompleted ? "set-row--completed" : canEdit ? "set-row--pending" : ""}`;
 
   return (
     <div className={rowClassName}>
