@@ -7,6 +7,7 @@ import { DeleteConfirmationDialog } from "~/components/workout/DeleteConfirmatio
 import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
 import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
+import "~/components/workout/WorkoutTimerBar.css";
 import { Workout } from "~/modules/fitness/domain/workout";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -178,7 +179,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { startedAgo, formattedDuration } = useLiveDuration({
+  const { formattedDuration } = useLiveDuration({
     startTime: loaderData?.workoutSession.workout.start || new Date(),
     endTime: loaderData?.workoutSession.workout.stop || undefined,
   });
@@ -249,7 +250,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     <Text size="2" color="gray">
       {isComplete
         ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
-        : `${formatDate(workoutSession.workout.start)} · ${startedAgo}`}
+        : formatDate(workoutSession.workout.start)}
     </Text>
   );
 
@@ -262,21 +263,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     >
       Delete
     </Button>
-  ) : (
-    <Flex gap="2">
-      <Button
-        variant="soft"
-        color="red"
-        size="2"
-        onClick={() => setShowCancelDialog(true)}
-      >
-        Cancel
-      </Button>
-      <Button size="2" onClick={() => setShowCompletionModal(true)}>
-        Complete
-      </Button>
-    </Flex>
-  );
+  ) : undefined;
 
   return (
     <Box>
@@ -286,6 +273,42 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
         backTo="/workouts"
         customRight={customRight}
       />
+
+      {/* Sticky workout timer */}
+      {!isComplete && (
+        <Flex
+          className="workout-timer-bar"
+          align="center"
+          justify="between"
+          py="2"
+        >
+          <Flex align="center" gap="2">
+            <Text
+              className="workout-timer-bar__duration"
+              size="4"
+              weight="bold"
+            >
+              {formattedDuration}
+            </Text>
+            <Text size="2" color="gray">
+              elapsed
+            </Text>
+          </Flex>
+          <Flex gap="2">
+            <Button
+              variant="soft"
+              color="red"
+              size="2"
+              onClick={() => setShowCancelDialog(true)}
+            >
+              Cancel
+            </Button>
+            <Button size="2" onClick={() => setShowCompletionModal(true)}>
+              Complete
+            </Button>
+          </Flex>
+        </Flex>
+      )}
 
       {/* Content */}
       <Box>

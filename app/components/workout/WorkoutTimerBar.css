@@ -1,0 +1,11 @@
+.workout-timer-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--brand-background, #fffbf5);
+  border-bottom: 1px solid var(--gray-a5);
+}
+
+.workout-timer-bar__duration {
+  font-variant-numeric: tabular-nums;
+}
