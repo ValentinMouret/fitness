@@ -1,56 +1,73 @@
+/* ================================================================
+   Rest Timer — Sticky bar below active workout header
+   ================================================================ */
+
 .rest-timer {
-  position: fixed;
-  bottom: 0;
+  position: sticky;
+  top: var(--header-height, 48px);
+  z-index: 9;
+  background: var(--brand-surface);
+  border-bottom: 1px solid var(--gray-4);
+  overflow: hidden;
+  animation: rest-timer-enter 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* --- Progress track (top edge) --- */
+
+.rest-timer__progress-track {
+  position: absolute;
+  top: 0;
   left: 0;
   right: 0;
-  z-index: 40;
-  background-color: var(--color-background);
-  border-top: 1px solid var(--gray-5);
-  overflow: hidden;
+  height: 3px;
+  background: var(--gray-4);
 }
 
-@media (max-width: 767px) {
-  .rest-timer {
-    bottom: calc(60px + env(safe-area-inset-bottom));
-  }
-}
-
-.rest-timer--finished {
-  animation: rest-timer-pulse 0.4s ease-in-out;
-}
-
-.rest-timer__progress {
-  position: absolute;
-  inset: 0;
-  background-color: var(--accent-3);
+.rest-timer__progress-fill {
+  height: 100%;
+  background: var(--tomato-9);
   transform-origin: left;
   transition: transform 1s linear;
+  border-radius: 0 2px 2px 0;
 }
 
-.rest-timer__content {
+/* --- Body content --- */
+
+.rest-timer__body {
   position: relative;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  padding-top: calc(var(--space-2) + 3px);
 }
 
-.rest-timer__top-row {
+/* --- Main row: timer info + action --- */
+
+.rest-timer__main-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 36px;
 }
 
-.rest-timer__timer {
+.rest-timer__info {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-}
-
-.rest-timer__countdown {
-  font-variant-numeric: tabular-nums;
+  gap: var(--space-2);
 }
 
 .rest-timer__label {
   color: var(--gray-11);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
+
+.rest-timer__countdown {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--tomato-11);
+  line-height: 1;
+}
+
+/* --- Preset buttons row --- */
 
 .rest-timer__presets {
   display: flex;
@@ -60,16 +77,55 @@
 
 .rest-timer__preset {
   flex: 1;
+  min-height: 32px;
+}
+
+/* --- Action button (Skip / OK) --- */
+
+.rest-timer__action {
+  min-width: 44px;
+  min-height: 36px;
+}
+
+/* ================================================================
+   Finished state
+   ================================================================ */
+
+.rest-timer--finished {
+  animation: rest-timer-pulse 0.4s ease-in-out;
+}
+
+.rest-timer--finished .rest-timer__progress-fill {
+  background: var(--brand-success);
+}
+
+.rest-timer--finished .rest-timer__countdown {
+  color: var(--brand-success);
+}
+
+/* ================================================================
+   Animations
+   ================================================================ */
+
+@keyframes rest-timer-enter {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 100px;
+  }
 }
 
 @keyframes rest-timer-pulse {
   0% {
-    background-color: var(--color-background);
+    background-color: var(--brand-surface);
   }
   50% {
     background-color: var(--green-3);
   }
   100% {
-    background-color: var(--color-background);
+    background-color: var(--brand-surface);
   }
 }

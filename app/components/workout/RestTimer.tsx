@@ -164,29 +164,31 @@ export function RestTimer({
 
   return (
     <div className={`rest-timer ${isFinished ? "rest-timer--finished" : ""}`}>
-      <div
-        className="rest-timer__progress"
-        style={{ transform: `scaleX(${progress})` }}
-      />
+      <div className="rest-timer__progress-track">
+        <div
+          className="rest-timer__progress-fill"
+          style={{ transform: `scaleX(${progress})` }}
+        />
+      </div>
 
-      <div className="rest-timer__content">
-        <div className="rest-timer__top-row">
-          <div className="rest-timer__timer">
+      <div className="rest-timer__body">
+        <div className="rest-timer__main-row">
+          <div className="rest-timer__info">
             <NotificationBell />
-            <Text size="2" weight="medium" className="rest-timer__label">
-              {isFinished ? "Rest complete" : "Rest"}
+            <Text size="1" weight="medium" className="rest-timer__label">
+              {isFinished ? "Done" : "Rest"}
             </Text>
-            <Text size="5" weight="bold" className="rest-timer__countdown">
+            <Text size="4" weight="bold" className="rest-timer__countdown">
               {formatCountdown(secondsRemaining)}
             </Text>
           </div>
 
           <Button
             size="1"
-            variant="soft"
-            color="gray"
+            variant={isFinished ? "solid" : "soft"}
+            color={isFinished ? "green" : "gray"}
             onClick={onDismiss}
-            className="rest-timer__dismiss"
+            className="rest-timer__action"
           >
             {isFinished ? "OK" : "Skip"}
           </Button>
