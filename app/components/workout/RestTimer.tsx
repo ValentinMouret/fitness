@@ -20,6 +20,7 @@ export function useRestTimer(defaultSeconds = DEFAULT_REST_SECONDS) {
     totalSeconds: defaultSeconds,
   });
   const intervalRef = useRef<ReturnType<typeof setInterval>>(null);
+  const endTimeRef = useRef<number>(0);
 
   const clear = useCallback(() => {
     if (intervalRef.current) {
@@ -28,51 +29,58 @@ export function useRestTimer(defaultSeconds = DEFAULT_REST_SECONDS) {
     }
   }, []);
 
+  const tick = useCallback(() => {
+    const remaining = Math.max(
+      0,
+      Math.ceil((endTimeRef.current - Date.now()) / 1000),
+    );
+    setState((prev) => ({ ...prev, secondsRemaining: remaining }));
+  }, []);
+
   const dismiss = useCallback(() => {
     clear();
     setState((prev) => ({ ...prev, isActive: false }));
   }, [clear]);
 
-  const start = useCallback(
-    (seconds?: number) => {
-      clear();
-      const total = seconds ?? state.totalSeconds;
-      setState({
-        isActive: true,
-        secondsRemaining: total,
-        totalSeconds: total,
-      });
-      intervalRef.current = setInterval(() => {
-        setState((prev) => {
-          if (prev.secondsRemaining <= 1) {
-            return { ...prev, secondsRemaining: 0 };
-          }
-          return { ...prev, secondsRemaining: prev.secondsRemaining - 1 };
-        });
-      }, 1000);
-    },
-    [clear, state.totalSeconds],
-  );
-
-  const setDuration = useCallback(
+  const startTimer = useCallback(
     (seconds: number) => {
       clear();
+      endTimeRef.current = Date.now() + seconds * 1000;
       setState({
         isActive: true,
         secondsRemaining: seconds,
         totalSeconds: seconds,
       });
-      intervalRef.current = setInterval(() => {
-        setState((prev) => {
-          if (prev.secondsRemaining <= 1) {
-            return { ...prev, secondsRemaining: 0 };
-          }
-          return { ...prev, secondsRemaining: prev.secondsRemaining - 1 };
-        });
-      }, 1000);
+      intervalRef.current = setInterval(tick, 1000);
     },
-    [clear],
+    [clear, tick],
   );
+
+  const start = useCallback(
+    (seconds?: number) => {
+      startTimer(seconds ?? state.totalSeconds);
+    },
+    [startTimer, state.totalSeconds],
+  );
+
+  const setDuration = useCallback(
+    (seconds: number) => {
+      startTimer(seconds);
+    },
+    [startTimer],
+  );
+
+  // Recalculate immediately when the tab becomes visible again
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible" && intervalRef.current) {
+        tick();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [tick]);
 
   // Notify on timer completion
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { formatStartedAgo } from "~/time";
 
 interface UseLiveDurationProps {
@@ -9,17 +9,28 @@ interface UseLiveDurationProps {
 export function useLiveDuration({ startTime, endTime }: UseLiveDurationProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  const refresh = useCallback(() => setCurrentTime(new Date()), []);
+
   useEffect(() => {
     if (endTime) {
       return;
     }
 
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+    const interval = setInterval(refresh, 1000);
 
-    return () => clearInterval(interval);
-  }, [endTime]);
+    // Recalculate immediately when the tab becomes visible again
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refresh();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [endTime, refresh]);
 
   const duration = Math.floor(
     ((endTime || currentTime).getTime() - startTime.getTime()) / 1000 / 60,
