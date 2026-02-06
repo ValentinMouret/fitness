@@ -425,6 +425,16 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
         </DropdownMenu.Root>
       </header>
 
+      {!isComplete && (
+        <RestTimer
+          isActive={restTimer.isActive}
+          secondsRemaining={restTimer.secondsRemaining}
+          totalSeconds={restTimer.totalSeconds}
+          onDismiss={restTimer.dismiss}
+          onSetDuration={restTimer.setDuration}
+        />
+      )}
+
       {!isComplete && totalSets > 0 && (
         <div className="active-workout-progress">
           <div className="active-workout-progress__bar">
@@ -570,16 +580,6 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
           workoutSession={workoutSession}
           open={showDeleteDialog}
           onOpenChange={setShowDeleteDialog}
-        />
-      )}
-
-      {!isComplete && (
-        <RestTimer
-          isActive={restTimer.isActive}
-          secondsRemaining={restTimer.secondsRemaining}
-          totalSeconds={restTimer.totalSeconds}
-          onDismiss={restTimer.dismiss}
-          onSetDuration={restTimer.setDuration}
         />
       )}
     </div>
