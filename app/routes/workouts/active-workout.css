@@ -50,6 +50,7 @@
 /* Exercise sections */
 .active-workout-exercise {
   animation: fadeSlideUp 0.3s ease-out both;
+  scroll-margin-top: 160px;
 }
 
 .active-workout-exercise:nth-child(1) {

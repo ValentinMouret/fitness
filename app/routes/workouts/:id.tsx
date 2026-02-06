@@ -239,6 +239,24 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 }
 
+function findNextIncompleteExerciseId(
+  groups: ReadonlyArray<WorkoutExerciseGroup>,
+  afterIndex?: number,
+): string | undefined {
+  const start = afterIndex !== undefined ? afterIndex + 1 : 0;
+  for (let i = start; i < groups.length; i++) {
+    if (groups[i].sets.some((s) => !s.isCompleted)) {
+      return groups[i].exercise.id;
+    }
+  }
+  return undefined;
+}
+
+function scrollToExercise(exerciseId: string): void {
+  const el = document.querySelector(`[data-exercise-id="${exerciseId}"]`);
+  el?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
   const [replaceExerciseId, setReplaceExerciseId] = useState<string>();
@@ -271,6 +289,24 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
       inputRef.current.select();
     }
   }, [isEditingName]);
+
+  const exerciseGroupsRef = useRef(loaderData?.workoutSession.exerciseGroups);
+  exerciseGroupsRef.current = loaderData?.workoutSession.exerciseGroups;
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== "visible") return;
+      const groups = exerciseGroupsRef.current;
+      if (!groups) return;
+      const id = findNextIncompleteExerciseId(groups);
+      if (id) {
+        setTimeout(() => scrollToExercise(id), 100);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, []);
 
   if (!loaderData) {
     return <div>Loading...</div>;
@@ -525,12 +561,26 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
               items={workoutSession.exerciseGroups.map((g) => g.exercise.id)}
               strategy={verticalListSortingStrategy}
             >
-              {workoutSession.exerciseGroups.map((group) => (
+              {workoutSession.exerciseGroups.map((group, index) => (
                 <SortableExerciseCard
                   key={group.exercise.id}
                   group={group}
                   isComplete={false}
-                  onCompleteSet={() => restTimer.start()}
+                  onCompleteSet={() => {
+                    restTimer.start();
+                    const incompleteSets = group.sets.filter(
+                      (s) => !s.isCompleted,
+                    ).length;
+                    if (incompleteSets <= 1) {
+                      const nextId = findNextIncompleteExerciseId(
+                        workoutSession.exerciseGroups,
+                        index,
+                      );
+                      if (nextId) {
+                        setTimeout(() => scrollToExercise(nextId), 300);
+                      }
+                    }
+                  }}
                   onReplaceExercise={(exerciseId) => {
                     setReplaceExerciseId(exerciseId);
                     setShowExerciseSelector(true);
@@ -633,7 +683,12 @@ function SortableExerciseCard({
   const viewModel = createWorkoutExerciseCardViewModel(group, isComplete);
 
   return (
-    <div ref={setNodeRef} style={style} className="active-workout-exercise">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="active-workout-exercise"
+      data-exercise-id={group.exercise.id}
+    >
       <WorkoutExerciseCard
         viewModel={viewModel}
         onCompleteSet={onCompleteSet}
