@@ -271,7 +271,7 @@ const AppLayout: React.FC = () => {
           transition: "margin-left 0.2s ease",
         }}
       >
-        <Container size="4" p="4">
+        <Container size="4" p={{ initial: "2", md: "4" }}>
           <PageTransition>
             {headerConfig && <PageHeader {...headerConfig} />}
             <Outlet />
