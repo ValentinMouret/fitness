@@ -16,6 +16,7 @@ import type {
   WorkoutExerciseGroup,
   WorkoutSession,
   WorkoutSet,
+  WorkoutWithSummary,
 } from "../domain/workout";
 
 export const WorkoutRepository: IWorkoutRepository = {
@@ -150,6 +151,92 @@ export const WorkoutRepository: IWorkoutRepository = {
     }));
   },
 
+  findAllWithSummary(
+    page = 1,
+    limit = 10,
+  ): ResultAsync<
+    { workouts: WorkoutWithSummary[]; totalCount: number },
+    ErrRepository
+  > {
+    const offset = (page - 1) * limit;
+
+    const summaryQuery = db
+      .select({
+        id: workouts.id,
+        name: workouts.name,
+        start: workouts.start,
+        stop: workouts.stop,
+        notes: workouts.notes,
+        imported_from_strong: workouts.imported_from_strong,
+        imported_from_fitbod: workouts.imported_from_fitbod,
+        exerciseCount:
+          sql<number>`count(distinct ${workoutExercises.exercise_id})`.as(
+            "exercise_count",
+          ),
+        setCount:
+          sql<number>`count(distinct (${workoutSets.exercise}, ${workoutSets.set}))`.as(
+            "set_count",
+          ),
+        totalVolume:
+          sql<number>`coalesce(sum(case when ${workoutSets.isCompleted} then ${workoutSets.reps} * ${workoutSets.weight} else 0 end), 0)`.as(
+            "total_volume",
+          ),
+      })
+      .from(workouts)
+      .leftJoin(
+        workoutExercises,
+        and(
+          eq(workouts.id, workoutExercises.workout_id),
+          isNull(workoutExercises.deleted_at),
+        ),
+      )
+      .leftJoin(
+        workoutSets,
+        and(
+          eq(workouts.id, workoutSets.workout),
+          isNull(workoutSets.deleted_at),
+        ),
+      )
+      .where(isNull(workouts.deleted_at))
+      .groupBy(workouts.id)
+      .orderBy(desc(workouts.start))
+      .limit(limit)
+      .offset(offset);
+
+    const countQuery = db
+      .select({ count: sql<number>`count(*)` })
+      .from(workouts)
+      .where(isNull(workouts.deleted_at));
+
+    return ResultAsync.combine([
+      executeQuery(summaryQuery, "findWorkoutsWithSummary"),
+      executeQuery(countQuery, "countWorkouts"),
+    ]).map(([records, countRecords]) => ({
+      workouts: records.map((r) => {
+        const start = r.start ?? new Date();
+        const stop = r.stop ?? undefined;
+        const durationMinutes =
+          stop && start
+            ? Math.round((stop.getTime() - start.getTime()) / 60000)
+            : undefined;
+        return {
+          id: r.id,
+          name: r.name,
+          start,
+          stop,
+          notes: r.notes ?? undefined,
+          importedFromStrong: r.imported_from_strong ?? false,
+          importedFromFitbod: r.imported_from_fitbod ?? false,
+          exerciseCount: Number(r.exerciseCount) || 0,
+          setCount: Number(r.setCount) || 0,
+          durationMinutes,
+          totalVolumeKg: Math.round(Number(r.totalVolume) || 0),
+        };
+      }),
+      totalCount: countRecords[0]?.count ?? 0,
+    }));
+  },
+
   delete(id: string): ResultAsync<void, ErrRepository> {
     return ResultAsync.fromPromise(
       db.transaction(async (tx) => {
@@ -260,6 +347,13 @@ export interface IWorkoutRepository {
     page?: number,
     limit?: number,
   ): ResultAsync<{ workouts: Workout[]; totalCount: number }, ErrRepository>;
+  findAllWithSummary(
+    page?: number,
+    limit?: number,
+  ): ResultAsync<
+    { workouts: WorkoutWithSummary[]; totalCount: number },
+    ErrRepository
+  >;
   findInProgress(): ResultAsync<Workout | null, ErrRepository>;
   delete(id: string): ResultAsync<void, ErrRepository>;
 }

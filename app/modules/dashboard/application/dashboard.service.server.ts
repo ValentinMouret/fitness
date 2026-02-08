@@ -1,21 +1,23 @@
 import { ResultAsync } from "neverthrow";
-import { MeasurementService } from "~/modules/core/application/measurement-service";
-import { Measure } from "~/modules/core/domain/measure";
+import {
+  MeasurementService,
+  TargetService,
+} from "~/modules/core/application/measurement-service";
 import type { Measure as MeasureRecord } from "~/modules/core/domain/measure";
+import { Measure } from "~/modules/core/domain/measure";
 import type { Measurement } from "~/modules/core/domain/measurements";
+import { baseMeasurements } from "~/modules/core/domain/measurements";
 import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
 import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
+import type { Workout } from "~/modules/fitness/domain/workout";
+import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { HabitService } from "~/modules/habits/application/service";
-import { HabitCompletion, type Habit } from "~/modules/habits/domain/entity";
+import { type Habit, HabitCompletion } from "~/modules/habits/domain/entity";
 import {
   HabitCompletionRepository,
   HabitRepository,
 } from "~/modules/habits/infra/repository.server";
-import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
-import type { Workout } from "~/modules/fitness/domain/workout";
 import { NutritionService } from "~/modules/nutrition/application/service";
-import { TargetService } from "~/modules/core/application/measurement-service";
-import { baseMeasurements } from "~/modules/core/domain/measurements";
 import { isSameDay, today } from "~/time";
 import { createServerError } from "~/utils/errors";
 
@@ -33,6 +35,7 @@ export type DashboardData = {
   readonly nutrition: {
     readonly calories: number;
     readonly calorieTarget: number;
+    readonly protein: number;
   };
 };
 
@@ -128,6 +131,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     nutrition: {
       calories: dailySummary.calories,
       calorieTarget,
+      protein: dailySummary.protein,
     },
   };
 }

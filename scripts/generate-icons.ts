@@ -6,7 +6,7 @@ const ICONS_DIR = join(import.meta.dirname, "../public/icons");
 function generateSvg(size: number): string {
   const fontSize = Math.round(size * 0.5);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <rect width="${size}" height="${size}" fill="#ff6b6b" rx="${Math.round(size * 0.15)}"/>
+  <rect width="${size}" height="${size}" fill="#e15a46" rx="${Math.round(size * 0.15)}"/>
   <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="${fontSize}" font-weight="700" fill="white">F</text>
 </svg>`;
 }

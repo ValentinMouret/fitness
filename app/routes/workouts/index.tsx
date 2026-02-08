@@ -1,19 +1,18 @@
-import { Badge, Box, Button, Card, Flex, Text } from "@radix-ui/themes";
-import { Link, useSearchParams, useFetcher } from "react-router";
+import { Box, Button, Flex, Text } from "@radix-ui/themes";
 import { useState } from "react";
-import { Pagination } from "~/components/Pagination";
-import { SectionHeader } from "~/components/SectionHeader";
+import { Link, useFetcher, useSearchParams } from "react-router";
+import { zfd } from "zod-form-data";
 import { EmptyState } from "~/components/EmptyState";
-import { AIFeedbackModal } from "~/modules/fitness/presentation/components";
-import type { Route } from "./+types/index";
-import type { Workout } from "~/modules/fitness/domain/workout";
-import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
+import { Pagination } from "~/components/Pagination";
 import {
   getAiFeedback,
   getWorkoutsPageData,
 } from "~/modules/fitness/application/workouts-page.service.server";
-import { zfd } from "zod-form-data";
+import type { WorkoutWithSummary } from "~/modules/fitness/domain/workout";
+import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
+import { AIFeedbackModal } from "~/modules/fitness/presentation/components";
 import { formOptionalText } from "~/utils/form-data";
+import type { Route } from "./+types/index";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const url = new URL(request.url);
@@ -26,6 +25,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 export const handle = {
   header: () => ({
     title: "Workouts",
+    subtitle: "Training log",
     primaryAction: {
       label: "Start Workout",
       type: "submit",
@@ -56,6 +56,30 @@ export const action = async ({ request }: Route.ActionArgs) => {
   return { error: "Invalid action" };
 };
 
+function formatWorkoutDate(date: Date): string {
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+
+  const time = date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  if (isToday) return `Today · ${time}`;
+  if (isYesterday) return `Yesterday · ${time}`;
+  return `${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })} · ${time}`;
+}
+
+function formatVolume(kg: number): string {
+  if (kg >= 1000) return `${(kg / 1000).toFixed(1).replace(/\.0$/, "")}t`;
+  return `${kg} kg`;
+}
+
 export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
   const { workouts, pagination } = loaderData;
   const [_searchParams, setSearchParams] = useSearchParams();
@@ -73,59 +97,108 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
     setShowAIModal(true);
     aiFetcher.submit({ intent: "get-ai-feedback" }, { method: "POST" });
   };
+
   return (
     <>
-      <Flex direction="column" gap="4">
+      <Box>
         {workouts.length === 0 ? (
           <EmptyState
             icon="💪"
             title="No workouts yet"
-            description="Ready to crush it? Hit 'Create Workout' to get started!"
+            description="Ready to crush it? Hit 'Start Workout' to get started!"
           />
         ) : (
-          workouts.map((workout: Workout) => (
-            <Card key={workout.id} asChild>
-              <Link
-                to={`/workouts/${workout.id}`}
-                style={{ textDecoration: "none" }}
-              >
-                <Flex justify="between" align="center" p="4">
-                  <Box>
-                    <Flex align="center" gap="2" mb="1">
-                      <Text weight="bold" size="4">
-                        {workout.name}
-                      </Text>
-                      {workout.importedFromStrong && (
-                        <Badge size="1" color="blue" variant="soft">
-                          Strong
-                        </Badge>
-                      )}
+          workouts.map((workout: WorkoutWithSummary, i: number) => {
+            const isActive = !workout.stop;
+            return (
+              <Box key={workout.id}>
+                {i > 0 && <hr className="rule-divider" />}
+                <Link
+                  to={`/workouts/${workout.id}`}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  <Box py="4">
+                    <Flex justify="between" align="start">
+                      <Box style={{ flex: 1, minWidth: 0 }}>
+                        <Text
+                          size="4"
+                          weight="bold"
+                          style={{
+                            fontFamily: "var(--font-display)",
+                            display: "block",
+                          }}
+                        >
+                          {workout.name}
+                        </Text>
+                        <Text
+                          as="p"
+                          size="2"
+                          mt="1"
+                          style={{ color: "var(--brand-text-secondary)" }}
+                        >
+                          {formatWorkoutDate(workout.start)}
+                        </Text>
+                        <Flex gap="3" mt="1">
+                          {workout.exerciseCount > 0 && (
+                            <Text
+                              size="1"
+                              style={{ color: "var(--brand-text-secondary)" }}
+                            >
+                              {workout.exerciseCount} exercises
+                            </Text>
+                          )}
+                          {workout.setCount > 0 && (
+                            <Text
+                              size="1"
+                              style={{ color: "var(--brand-text-secondary)" }}
+                            >
+                              {workout.setCount} sets
+                            </Text>
+                          )}
+                          {workout.durationMinutes != null && (
+                            <Text
+                              size="1"
+                              style={{ color: "var(--brand-text-secondary)" }}
+                            >
+                              {workout.durationMinutes} min
+                            </Text>
+                          )}
+                          {workout.totalVolumeKg > 0 && (
+                            <Text
+                              size="1"
+                              style={{ color: "var(--brand-text-secondary)" }}
+                            >
+                              {formatVolume(workout.totalVolumeKg)}
+                            </Text>
+                          )}
+                        </Flex>
+                      </Box>
+                      <span
+                        style={{
+                          fontSize: "0.65rem",
+                          fontWeight: 600,
+                          letterSpacing: "0.08em",
+                          textTransform: "uppercase",
+                          padding: "4px 10px",
+                          borderRadius: "100px",
+                          background: isActive
+                            ? "var(--brand-coral)"
+                            : "var(--gray-4)",
+                          color: isActive ? "white" : "var(--brand-text)",
+                          flexShrink: 0,
+                          marginTop: "2px",
+                        }}
+                      >
+                        {isActive ? "Active" : "Done"}
+                      </span>
                     </Flex>
-                    <Text size="2" color="gray">
-                      {workout.start.toLocaleDateString()} at{" "}
-                      {workout.start.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </Text>
                   </Box>
-                  <Box>
-                    {workout.stop ? (
-                      <Text size="2" color="tomato">
-                        Completed
-                      </Text>
-                    ) : (
-                      <Text size="2" color="orange">
-                        In Progress
-                      </Text>
-                    )}
-                  </Box>
-                </Flex>
-              </Link>
-            </Card>
-          ))
+                </Link>
+              </Box>
+            );
+          })
         )}
-      </Flex>
+      </Box>
 
       <Pagination
         currentPage={pagination.currentPage}
@@ -133,28 +206,25 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
         onPageChange={handlePageChange}
       />
 
-      <Card size="3" mt="6">
-        <SectionHeader title="Tools" />
-        <Flex gap="3" wrap="wrap">
-          <Button
-            variant="outline"
-            size="2"
-            onClick={handleAIFeedback}
-            disabled={aiFetcher.state === "submitting" || workouts.length < 5}
-          >
-            🤖 AI Feedback
-          </Button>
-          <Button variant="outline" size="2" asChild>
-            <Link to="/workouts/generate">Generate Smart Workout</Link>
-          </Button>
-          <Button variant="outline" size="2" asChild>
-            <Link to="/workouts/import">Import from Strong</Link>
-          </Button>
-          <Button variant="outline" size="2" asChild>
-            <Link to="/workouts/exercises">Manage Exercises</Link>
-          </Button>
-        </Flex>
-      </Card>
+      <Flex gap="3" wrap="wrap" mt="6">
+        <Button
+          variant="outline"
+          size="2"
+          onClick={handleAIFeedback}
+          disabled={aiFetcher.state === "submitting" || workouts.length < 5}
+        >
+          AI Feedback
+        </Button>
+        <Button variant="outline" size="2" asChild>
+          <Link to="/workouts/generate">Generate Workout</Link>
+        </Button>
+        <Button variant="outline" size="2" asChild>
+          <Link to="/workouts/import">Import from Strong</Link>
+        </Button>
+        <Button variant="outline" size="2" asChild>
+          <Link to="/workouts/exercises">Manage Exercises</Link>
+        </Button>
+      </Flex>
 
       <AIFeedbackModal
         open={showAIModal}

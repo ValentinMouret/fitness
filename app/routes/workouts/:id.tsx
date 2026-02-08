@@ -17,6 +17,7 @@ import { ArrowLeftIcon, DotsVerticalIcon } from "@radix-ui/react-icons";
 import {
   Button,
   DropdownMenu,
+  Flex,
   IconButton,
   Text,
   TextField,
@@ -287,14 +288,6 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     0,
   );
   const progressPercent = totalSets > 0 ? (completedSets / totalSets) * 100 : 0;
-  const totalVolume = workoutSession.exerciseGroups.reduce(
-    (sum, group) =>
-      sum +
-      group.sets
-        .filter((set) => set.isCompleted && set.reps && set.weight)
-        .reduce((s, set) => s + (set.reps ?? 0) * (set.weight ?? 0), 0),
-    0,
-  );
 
   const optimisticName =
     fetcher.formData?.get("name")?.toString() || workoutSession.workout.name;
@@ -331,98 +324,129 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     );
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
   return (
     <div className="active-workout-page">
-      {/* Header */}
+      {/* Header — editorial style */}
       <header className="active-workout-header">
-        <IconButton asChild variant="ghost" size="1">
-          <Link to="/workouts">
-            <ArrowLeftIcon />
-          </Link>
-        </IconButton>
-
-        <div className="active-workout-header__info">
-          {isEditingName ? (
-            <TextField.Root
-              ref={inputRef}
-              defaultValue={optimisticName}
-              size="2"
-              onBlur={(e) => handleNameSubmit(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleNameSubmit(e.currentTarget.value);
-                } else if (e.key === "Escape") {
-                  setIsEditingName(false);
-                }
-              }}
-            />
-          ) : (
-            <Text
-              size="3"
-              weight="bold"
-              className="active-workout-header__name"
-              onClick={() => !isComplete && setIsEditingName(true)}
+        <Flex justify="between" align="start" gap="2">
+          <Flex align="start" gap="2" style={{ flex: 1, minWidth: 0 }}>
+            <IconButton
+              asChild
+              variant="ghost"
+              size="1"
+              style={{ marginTop: "6px", flexShrink: 0 }}
             >
-              {optimisticName}
-            </Text>
-          )}
-          <Text size="1" color="gray" className="active-workout-header__meta">
-            {isComplete
-              ? `${formatDate(workoutSession.workout.start)} · ${formattedDuration}`
-              : startedAgo}
-          </Text>
-        </div>
-
-        {!isComplete && (
-          <Button size="1" onClick={() => setShowCompletionModal(true)}>
-            Complete
-          </Button>
-        )}
-
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger>
-            <IconButton variant="ghost" size="1">
-              <DotsVerticalIcon />
+              <Link to="/workouts">
+                <ArrowLeftIcon />
+              </Link>
             </IconButton>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content>
-            {isComplete ? (
-              <>
-                <DropdownMenu.Item
-                  onSelect={() =>
-                    fetcher.submit(
-                      { intent: "duplicate-workout" },
-                      { method: "post" },
-                    )
-                  }
+
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {isEditingName ? (
+                <TextField.Root
+                  ref={inputRef}
+                  defaultValue={optimisticName}
+                  size="3"
+                  onBlur={(e) => handleNameSubmit(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleNameSubmit(e.currentTarget.value);
+                    } else if (e.key === "Escape") {
+                      setIsEditingName(false);
+                    }
+                  }}
+                />
+              ) : (
+                <Text
+                  size="7"
+                  weight="bold"
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    display: "block",
+                    fontStyle: !isComplete ? "italic" : "normal",
+                    cursor: !isComplete ? "pointer" : "default",
+                    lineHeight: 1.1,
+                  }}
+                  onClick={() => !isComplete && setIsEditingName(true)}
                 >
-                  Repeat Workout
-                </DropdownMenu.Item>
-                <DropdownMenu.Item
-                  color="red"
-                  onSelect={() => setShowDeleteDialog(true)}
-                >
-                  Delete Workout
-                </DropdownMenu.Item>
-              </>
-            ) : (
-              <DropdownMenu.Item
-                color="red"
-                onSelect={() => setShowCancelDialog(true)}
+                  {optimisticName}
+                </Text>
+              )}
+              <Text
+                size="2"
+                style={{
+                  color: "var(--brand-text-secondary)",
+                  display: "block",
+                  marginTop: "4px",
+                }}
               >
-                Cancel Workout
-              </DropdownMenu.Item>
+                {startedAgo}
+              </Text>
+            </div>
+          </Flex>
+
+          <Flex align="center" gap="2" style={{ flexShrink: 0 }}>
+            {!isComplete && (
+              <span
+                style={{
+                  fontSize: "0.6rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  padding: "3px 8px",
+                  borderRadius: "100px",
+                  background: "var(--brand-coral)",
+                  color: "white",
+                }}
+              >
+                Live
+              </span>
             )}
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
+
+            {!isComplete && (
+              <Button size="1" onClick={() => setShowCompletionModal(true)}>
+                Complete
+              </Button>
+            )}
+
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger>
+                <IconButton variant="ghost" size="1">
+                  <DotsVerticalIcon />
+                </IconButton>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content>
+                {isComplete ? (
+                  <>
+                    <DropdownMenu.Item
+                      onSelect={() =>
+                        fetcher.submit(
+                          { intent: "duplicate-workout" },
+                          { method: "post" },
+                        )
+                      }
+                    >
+                      Repeat Workout
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item
+                      color="red"
+                      onSelect={() => setShowDeleteDialog(true)}
+                    >
+                      Delete Workout
+                    </DropdownMenu.Item>
+                  </>
+                ) : (
+                  <DropdownMenu.Item
+                    color="red"
+                    onSelect={() => setShowCancelDialog(true)}
+                  >
+                    Cancel Workout
+                  </DropdownMenu.Item>
+                )}
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+          </Flex>
+        </Flex>
       </header>
 
       {!isComplete && (
@@ -435,59 +459,61 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
         />
       )}
 
-      {!isComplete && totalSets > 0 && (
-        <div className="active-workout-progress">
-          <div className="active-workout-progress__bar">
-            <div
-              className="active-workout-progress__fill"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-          <Text size="1" color="gray" className="active-workout-progress__text">
-            {completedSets}/{totalSets}
-          </Text>
-        </div>
-      )}
-
-      {isComplete && (
-        <div className="active-workout-summary">
-          <div className="active-workout-summary__grid">
-            <div className="active-workout-summary__stat">
-              <span className="active-workout-summary__stat-value">
+      {/* Stats row */}
+      {totalSets > 0 && (
+        <div className="active-workout-stats">
+          <div className="active-workout-stats__grid">
+            <div>
+              <span className="display-number display-number--lg">
                 {formattedDuration}
               </span>
-              <span className="active-workout-summary__stat-label">
-                Duration
-              </span>
+              <Text
+                as="p"
+                size="1"
+                style={{ color: "var(--brand-text-secondary)" }}
+              >
+                elapsed
+              </Text>
             </div>
-            <div className="active-workout-summary__stat">
-              <span className="active-workout-summary__stat-value">
-                {workoutSession.exerciseGroups.length}
+            <div>
+              <span className="display-number display-number--lg">
+                {completedSets}
+                <span className="display-number--unit">/{totalSets}</span>
               </span>
-              <span className="active-workout-summary__stat-label">
-                Exercises
-              </span>
+              <Text
+                as="p"
+                size="1"
+                style={{ color: "var(--brand-text-secondary)" }}
+              >
+                sets
+              </Text>
             </div>
-            <div className="active-workout-summary__stat">
-              <span className="active-workout-summary__stat-value">
-                {completedSets}/{totalSets}
+            <div>
+              <span className="display-number display-number--lg">
+                {Math.round(progressPercent)}%
               </span>
-              <span className="active-workout-summary__stat-label">Sets</span>
+              <Text
+                as="p"
+                size="1"
+                style={{ color: "var(--brand-text-secondary)" }}
+              >
+                done
+              </Text>
             </div>
-            <div className="active-workout-summary__stat">
-              <span className="active-workout-summary__stat-value">
-                {totalVolume >= 1000
-                  ? `${(totalVolume / 1000).toFixed(1)}t`
-                  : totalVolume > 0
-                    ? `${totalVolume}kg`
-                    : "—"}
-              </span>
-              <span className="active-workout-summary__stat-label">Volume</span>
+          </div>
+
+          <div className="active-workout-progress">
+            <div className="active-workout-progress__bar">
+              <div
+                className="active-workout-progress__fill"
+                style={{ width: `${progressPercent}%` }}
+              />
             </div>
           </div>
         </div>
       )}
 
+      {/* Exercise sections */}
       <div className="active-workout-content">
         {!isComplete ? (
           <DndContext
@@ -552,7 +578,6 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
         )}
       </div>
 
-      {/* Modals */}
       <ExerciseSelector
         exercises={exercises}
         open={showExerciseSelector}

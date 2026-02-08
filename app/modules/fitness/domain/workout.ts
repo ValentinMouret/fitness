@@ -133,6 +133,13 @@ export interface Workout {
   readonly importedFromFitbod?: boolean;
 }
 
+export interface WorkoutWithSummary extends Workout {
+  readonly exerciseCount: number;
+  readonly setCount: number;
+  readonly durationMinutes?: number;
+  readonly totalVolumeKg: number;
+}
+
 interface WorkoutCreateInput {
   readonly name: string;
   readonly start?: Date;

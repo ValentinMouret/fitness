@@ -1,21 +1,21 @@
 :root {
-  --font-display: "Fraunces", serif;
-  --font-body: "Plus Jakarta Sans", sans-serif;
+  --font-display: "Crimson Pro", Georgia, serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
 
-  /* Warm brand colors */
-  --brand-background: #fffbf5;
-  --brand-surface: #fff8f0;
-  --brand-coral: #ff6b6b;
+  /* Brand colors — Signal C palette */
+  --brand-background: #faf9f7;
+  --brand-surface: #f3f1ed;
+  --brand-coral: #e15a46;
   --brand-amber: #f59e0b;
   --brand-success: #22c55e;
-  --brand-text: #292524;
-  --brand-text-secondary: #78716c;
+  --brand-text: #1c1917;
+  --brand-text-secondary: #79756d;
 
-  /* Warm shadows */
-  --shadow-warm-sm: 0 1px 3px rgba(120, 80, 60, 0.06);
-  --shadow-warm: 0 4px 12px rgba(120, 80, 60, 0.08);
-  --shadow-warm-lg: 0 8px 24px rgba(120, 80, 60, 0.12);
-  --shadow-warm-hover: 0 8px 20px rgba(120, 80, 60, 0.15);
+  /* Flat shadow system */
+  --shadow-warm-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-warm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-warm-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-warm-hover: 0 4px 12px rgba(0, 0, 0, 0.1);
 
   /* Responsive typography */
   --heading-page: 2rem;
@@ -45,9 +45,9 @@ html {
 
 body {
   margin: 0;
-  background: linear-gradient(180deg, #fffbf5 0%, #fef3e7 100%);
-  background-attachment: fixed;
+  background: #faf9f7;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Apply display font to all Radix headings */
@@ -114,10 +114,10 @@ button.rt-Card:hover,
 @keyframes pulse-glow {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);
+    box-shadow: 0 0 0 0 rgba(225, 90, 70, 0);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(255, 107, 107, 0.15);
+    box-shadow: 0 0 0 8px rgba(225, 90, 70, 0.15);
   }
 }
 
@@ -195,7 +195,7 @@ button.rt-Card:hover,
     height: 60px;
     background: var(--brand-surface);
     border-top: 1px solid var(--gray-4);
-    box-shadow: 0 -2px 10px rgba(120, 80, 60, 0.08);
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.06);
     z-index: 50;
     justify-content: space-around;
     align-items: center;
@@ -310,10 +310,10 @@ button.rt-Card:hover,
    Chart Tooltip
    ================================= */
 .chart-tooltip {
-  background-color: var(--brand-background, #fffbf5) !important;
+  background-color: var(--brand-background, #faf9f7) !important;
   border: 1px solid var(--gray-4) !important;
   border-radius: 12px !important;
-  box-shadow: 0 4px 16px rgba(120, 80, 60, 0.12) !important;
+  box-shadow: var(--shadow-warm-lg) !important;
   padding: 12px 16px !important;
 }
 
@@ -455,4 +455,45 @@ button.rt-Card:hover,
 
 .quick-action-sheet {
   animation: slideUp 0.2s ease-out;
+}
+
+/* =================================
+   Signal C — Shared Layout Utilities
+   ================================= */
+
+.section-label {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand-text-secondary);
+  margin-bottom: 1rem;
+}
+
+.display-number {
+  font-family: var(--font-display);
+  font-weight: 400;
+  color: var(--brand-text);
+  line-height: 1;
+}
+.display-number--xl {
+  font-size: 3.5rem;
+}
+.display-number--lg {
+  font-size: 2rem;
+}
+.display-number--md {
+  font-size: 1.5rem;
+}
+.display-number--unit {
+  font-size: 0.4em;
+  color: var(--brand-text-secondary);
+  margin-left: 0.15em;
+}
+
+.rule-divider {
+  border: none;
+  border-top: 1px solid var(--gray-4);
+  margin: 0;
 }

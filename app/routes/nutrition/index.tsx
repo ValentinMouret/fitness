@@ -1,31 +1,29 @@
-import {
-  Badge,
-  Box,
-  Button,
-  Card,
-  Flex,
-  Progress,
-  Text,
-} from "@radix-ui/themes";
-import type { Route } from "./+types";
+import { Box, Button, Flex, Progress, Text } from "@radix-ui/themes";
 import { Link } from "react-router";
 import { getNutritionPageData } from "~/modules/nutrition/application/nutrition-page.service.server";
-import { SectionHeader } from "~/components/SectionHeader";
+import type { Route } from "./+types";
 
 export async function loader() {
   return getNutritionPageData();
 }
 
-const mealLabels = {
-  breakfast: "B",
-  lunch: "L",
-  dinner: "D",
-  snack: "S",
-} as const;
+const mealTypes = ["breakfast", "lunch", "dinner", "snack"] as const;
+
+const mealLabels: Record<string, string> = {
+  breakfast: "Breakfast",
+  lunch: "Lunch",
+  dinner: "Dinner",
+  snack: "Snacks",
+};
 
 export const handle = {
   header: () => ({
     title: "Nutrition",
+    subtitle: new Date().toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    }),
     primaryAction: {
       label: "Log Meal",
       to: "/nutrition/meals",
@@ -44,96 +42,166 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <Box>
-      <Card size="3" mb="4">
-        <Flex justify="between" align="center" mb="3">
-          <Text size="3" weight="medium">
-            Today's Calories
-          </Text>
-          <Text size="2" color="gray">
-            {Math.round(dailyTotals.calories)} / {calorieTarget}
-          </Text>
-        </Flex>
-        <Progress value={calorieProgress} />
+      {/* Daily Intake */}
+      <Box mb="8">
+        <p className="section-label">Daily Intake</p>
+        <span className="display-number display-number--xl">
+          {Math.round(dailyTotals.calories)}
+          <span className="display-number--unit">kcal</span>
+        </span>
+        <Box mt="3">
+          <Progress value={calorieProgress} />
+          <Flex justify="between" mt="1">
+            <Text size="1" style={{ color: "var(--brand-text-secondary)" }}>
+              {Math.round(calorieProgress)}% of target
+            </Text>
+            <Text size="1" style={{ color: "var(--brand-text-secondary)" }}>
+              {calorieTarget} kcal
+            </Text>
+          </Flex>
+        </Box>
+      </Box>
 
-        <Flex gap="4" mt="4">
-          <Box>
-            <Text size="1" color="gray">
-              Protein
-            </Text>
-            <Text size="3" weight="medium">
-              {Math.round(dailyTotals.protein)}g
-            </Text>
-          </Box>
-          <Box>
-            <Text size="1" color="gray">
-              Carbs
-            </Text>
-            <Text size="3" weight="medium">
-              {Math.round(dailyTotals.carbs)}g
-            </Text>
-          </Box>
-          <Box>
-            <Text size="1" color="gray">
-              Fat
-            </Text>
-            <Text size="3" weight="medium">
-              {Math.round(dailyTotals.fat)}g
-            </Text>
-          </Box>
-        </Flex>
-      </Card>
+      {/* Macros */}
+      <Box mb="8">
+        <p className="section-label">Macros</p>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: "0.75rem",
+          }}
+        >
+          {[
+            { value: dailyTotals.protein, label: "Protein", unit: "g" },
+            { value: dailyTotals.carbs, label: "Carbs", unit: "g" },
+            { value: dailyTotals.fat, label: "Fat", unit: "g" },
+          ].map((macro) => (
+            <Box
+              key={macro.label}
+              p="4"
+              style={{
+                background: "var(--brand-surface)",
+                borderRadius: "12px",
+                textAlign: "center",
+              }}
+            >
+              <span className="display-number display-number--lg">
+                {Math.round(macro.value)}
+              </span>
+              <Text
+                as="p"
+                size="1"
+                mt="1"
+                style={{ color: "var(--brand-text-secondary)" }}
+              >
+                {macro.unit}
+              </Text>
+              <Text
+                as="p"
+                size="1"
+                mt="1"
+                weight="medium"
+                style={{
+                  color: "var(--brand-text-secondary)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  fontSize: "0.65rem",
+                }}
+              >
+                {macro.label}
+              </Text>
+            </Box>
+          ))}
+        </div>
+      </Box>
 
-      <Card size="3" mb="4">
-        <SectionHeader title="Today's Meals" />
-        <Flex gap="3">
-          {(["breakfast", "lunch", "dinner", "snack"] as const).map(
-            (mealType) => {
-              const meal = meals[mealType];
-              const hasLogged = meal !== null;
-              return (
-                <Badge
-                  key={mealType}
-                  size="2"
-                  color={hasLogged ? "tomato" : "gray"}
-                  variant={hasLogged ? "solid" : "outline"}
+      {/* Meals */}
+      <Box mb="8">
+        <p className="section-label">Meals</p>
+        <Box>
+          {mealTypes.map((mealType, i) => {
+            const meal = meals[mealType];
+            const hasLogged = meal !== null;
+            const ingredientNames = meal?.ingredients
+              ?.map((ing) => ing.ingredient.name)
+              .join(" · ");
+
+            return (
+              <Box key={mealType}>
+                {i > 0 && <hr className="rule-divider" />}
+                <Link
+                  to="/nutrition/meals"
+                  style={{ textDecoration: "none", color: "inherit" }}
                 >
-                  {mealLabels[mealType]}
-                </Badge>
-              );
-            },
-          )}
-        </Flex>
-        <Flex direction="column" gap="2" mt="4">
-          {(["breakfast", "lunch", "dinner", "snack"] as const).map(
-            (mealType) => {
-              const meal = meals[mealType];
-              if (!meal) return null;
-              return (
-                <Flex key={mealType} justify="between" align="center">
-                  <Text size="2" style={{ textTransform: "capitalize" }}>
-                    {mealType}
-                  </Text>
-                  <Text size="2" color="gray">
-                    {Math.round(meal.totals.calories)} cal
-                  </Text>
-                </Flex>
-              );
-            },
-          )}
-        </Flex>
-      </Card>
+                  <Box py="3">
+                    <Flex justify="between" align="center">
+                      <Flex align="center" gap="2">
+                        <span
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            background: hasLogged
+                              ? "var(--brand-coral)"
+                              : "var(--gray-5)",
+                            flexShrink: 0,
+                          }}
+                        />
+                        <Text size="3" weight="bold">
+                          {mealLabels[mealType]}
+                        </Text>
+                      </Flex>
+                      <Text
+                        size="2"
+                        style={{ color: "var(--brand-text-secondary)" }}
+                      >
+                        {hasLogged
+                          ? `${Math.round(meal.totals.calories)} kcal`
+                          : ""}
+                      </Text>
+                    </Flex>
+                    {hasLogged && ingredientNames ? (
+                      <Text
+                        as="p"
+                        size="2"
+                        mt="1"
+                        ml="5"
+                        style={{ color: "var(--brand-text-secondary)" }}
+                      >
+                        {ingredientNames}
+                      </Text>
+                    ) : !hasLogged ? (
+                      <Text
+                        as="p"
+                        size="2"
+                        mt="1"
+                        ml="5"
+                        style={{
+                          color: "var(--brand-text-secondary)",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        Tap to log
+                      </Text>
+                    ) : null}
+                  </Box>
+                </Link>
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
 
-      <Card size="3">
-        <SectionHeader title="Tools" />
-        <Flex direction="column" gap="3">
-          <Button variant="outline" asChild>
-            <Link to="/nutrition/meal-builder">Meal Builder</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/nutrition/calculate-targets">Calculate Targets</Link>
-          </Button>
-        </Flex>
-      </Card>
+      {/* Tools — flat buttons */}
+      <Flex gap="3" wrap="wrap">
+        <Button variant="outline" size="2" asChild>
+          <Link to="/nutrition/meal-builder">Meal Builder</Link>
+        </Button>
+        <Button variant="outline" size="2" asChild>
+          <Link to="/nutrition/calculate-targets">Calculate Targets</Link>
+        </Button>
+      </Flex>
     </Box>
   );
 }

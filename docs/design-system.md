@@ -21,40 +21,40 @@ All animations use consistent timing and easing to create cohesive, polished int
 ### Theme Configuration
 ```typescript
 // root.tsx
-<Theme accentColor="tomato" grayColor="sand" radius="large">
+<Theme accentColor="tomato" grayColor="sand" radius="medium">
 ```
 
 - **Accent Color**: Tomato — primary actions, completion states, active navigation
 - **Gray Scale**: Sand — warm, approachable neutral tones
-- **Border Radius**: Large — friendly, approachable interfaces
+- **Border Radius**: Medium (12px) — clean, modern feel
 
 ### Typography
-- **Display**: `Fraunces` (serif) — headings, stat values, display numbers
-- **Body**: `Plus Jakarta Sans` (sans-serif) — all body text, labels, inputs
+- **Display**: `Crimson Pro` (serif) — headings, stat values, display numbers
+- **Body**: `DM Sans` (sans-serif) — all body text, labels, inputs
 - **Scale**: Radix UI type scale (1-9)
 
 ```css
---font-display: "Fraunces", serif;
---font-body: "Plus Jakarta Sans", sans-serif;
+--font-display: "Crimson Pro", Georgia, serif;
+--font-body: "DM Sans", system-ui, sans-serif;
 ```
 
 ### Brand Tokens
 Defined in `app/app.css`:
 ```css
-/* Warm palette */
---brand-background: #fffbf5;       /* Page background */
---brand-surface: #fff8f0;          /* Card/header backgrounds */
---brand-coral: #ff6b6b;
+/* Signal C palette */
+--brand-background: #faf9f7;       /* Page background (flat, no gradient) */
+--brand-surface: #f3f1ed;          /* Card/header backgrounds */
+--brand-coral: #e15a46;            /* Accent */
 --brand-amber: #f59e0b;
 --brand-success: #22c55e;
---brand-text: #292524;
---brand-text-secondary: #78716c;
+--brand-text: #1c1917;
+--brand-text-secondary: #79756d;
 
-/* Warm shadows — use instead of generic box-shadow */
---shadow-warm-sm: 0 1px 3px rgba(120, 80, 60, 0.06);
---shadow-warm: 0 4px 12px rgba(120, 80, 60, 0.08);
---shadow-warm-lg: 0 8px 24px rgba(120, 80, 60, 0.12);
---shadow-warm-hover: 0 8px 20px rgba(120, 80, 60, 0.15);
+/* Flat neutral shadows */
+--shadow-warm-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+--shadow-warm: 0 2px 8px rgba(0, 0, 0, 0.06);
+--shadow-warm-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+--shadow-warm-hover: 0 4px 12px rgba(0, 0, 0, 0.10);
 ```
 
 ## Design Tokens
@@ -188,7 +188,7 @@ Page-level headers use warm surface with shadow:
 **Foundation Components**
 Direct extensions of Radix UI components with design system tokens applied.
 
-**Composite Components** 
+**Composite Components**
 Reusable patterns combining multiple foundation components.
 
 **Feature Components**
