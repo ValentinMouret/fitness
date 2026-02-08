@@ -1,11 +1,16 @@
-import { describe, it, expect, beforeEach } from "vitest";
 import { ResultAsync } from "neverthrow";
+import { beforeEach, describe, expect, it } from "vitest";
+import type { ErrRepository } from "~/repository";
+import type {
+  Exercise,
+  Workout,
+  WorkoutSession,
+  WorkoutWithSummary,
+} from "../domain/workout";
+import type { IExerciseRepository } from "../infra/repository.server";
+import type { IWorkoutRepository } from "../infra/workout.repository.server";
 import { importFitbodCSV } from "./fitbod-import.service.server";
 import { importWorkout as importStrongWorkout } from "./strong-import.service.server";
-import type { IWorkoutRepository } from "../infra/workout.repository.server";
-import type { IExerciseRepository } from "../infra/repository.server";
-import type { Workout, Exercise, WorkoutSession } from "../domain/workout";
-import type { ErrRepository } from "~/repository";
 
 class InMemoryWorkoutRepository implements IWorkoutRepository {
   workouts: Workout[] = [];
@@ -69,6 +74,31 @@ class InMemoryWorkoutRepository implements IWorkoutRepository {
           (w) => !w.stop && !w.importedFromFitbod && !w.importedFromStrong,
         ) ?? null,
       ),
+      () => "database_error",
+    );
+  }
+
+  findAllWithSummary(
+    page = 1,
+    limit = 10,
+  ): ResultAsync<
+    { workouts: WorkoutWithSummary[]; totalCount: number },
+    ErrRepository
+  > {
+    const offset = (page - 1) * limit;
+    const ordered = [...this.workouts].sort(
+      (a, b) => b.start.getTime() - a.start.getTime(),
+    );
+    return ResultAsync.fromPromise(
+      Promise.resolve({
+        workouts: ordered.slice(offset, offset + limit).map((w) => ({
+          ...w,
+          exerciseCount: 0,
+          setCount: 0,
+          totalVolumeKg: 0,
+        })),
+        totalCount: ordered.length,
+      }),
       () => "database_error",
     );
   }

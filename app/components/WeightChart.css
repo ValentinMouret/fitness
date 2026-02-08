@@ -14,7 +14,7 @@
   font-size: 1.2rem;
   font-weight: 600;
   font-family: var(--font-display);
-  color: var(--brand-text, #292524);
+  color: var(--brand-text, #1c1917);
 }
 
 .period-selector {
@@ -25,13 +25,13 @@
 .period-selector button {
   padding: 0.5rem 1rem;
   border: 1px solid var(--gray-5);
-  background: var(--brand-surface, #fff8f0);
+  background: var(--brand-surface, #f3f1ed);
   cursor: pointer;
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 500;
   transition: all 0.2s ease;
-  color: var(--brand-text-secondary, #78716c);
+  color: var(--brand-text-secondary, #79756d);
 }
 
 .period-selector button:hover {
@@ -40,25 +40,25 @@
 }
 
 .period-selector button.active {
-  background: var(--brand-coral, #ff6b6b);
+  background: var(--brand-coral, #e15a46);
   color: white;
-  border-color: var(--brand-coral, #ff6b6b);
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.25);
+  border-color: var(--brand-coral, #e15a46);
+  box-shadow: 0 2px 8px rgba(225, 90, 70, 0.25);
 }
 
 .weight-chart-container {
   background: white;
   border-radius: 12px;
   padding: 2rem 1rem;
-  box-shadow: var(--shadow-warm, 0 4px 12px rgba(120, 80, 60, 0.08));
+  box-shadow: var(--shadow-warm, 0 2px 8px rgba(0, 0, 0, 0.06));
 }
 
 .weight-chart-empty {
   text-align: center;
   padding: 3rem 2rem;
-  color: var(--brand-text-secondary, #78716c);
+  color: var(--brand-text-secondary, #79756d);
   border-radius: 12px;
-  background: var(--brand-surface, #fff8f0);
+  background: var(--brand-surface, #f3f1ed);
 }
 
 @media (max-width: 480px) {

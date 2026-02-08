@@ -15,10 +15,10 @@ export const designTokens = {
 
   // Warm shadow system for elevation
   shadows: {
-    subtle: "0 1px 3px rgba(120, 80, 60, 0.06)",
-    card: "0 4px 12px rgba(120, 80, 60, 0.08)",
-    elevated: "0 8px 24px rgba(120, 80, 60, 0.12)",
-    hover: "0 8px 20px rgba(120, 80, 60, 0.15)",
+    subtle: "0 1px 2px rgba(0, 0, 0, 0.04)",
+    card: "0 2px 8px rgba(0, 0, 0, 0.06)",
+    elevated: "0 4px 16px rgba(0, 0, 0, 0.08)",
+    hover: "0 4px 12px rgba(0, 0, 0, 0.10)",
   },
 
   // Interactive state colors
@@ -32,13 +32,13 @@ export const designTokens = {
 
 // Warm brand colors
 export const brandColors = {
-  background: "#fffbf5",
-  surface: "#fff8f0",
-  coral: "#ff6b6b",
+  background: "#faf9f7",
+  surface: "#f3f1ed",
+  coral: "#e15a46",
   amber: "#f59e0b",
   success: "#22c55e",
-  text: "#292524",
-  textSecondary: "#78716c",
+  text: "#1c1917",
+  textSecondary: "#79756d",
 } as const;
 
 /**
@@ -83,10 +83,10 @@ export const semanticColors = {
 
 // Chart colors for data visualization (warm palette)
 export const chartColors = {
-  protein: "#ff6b6b", // Coral
-  carbs: "#f59e0b", // Amber
-  fat: "#a3846f", // Warm brown
-  primary: "#ff6b6b",
+  protein: "#e15a46",
+  carbs: "#f59e0b",
+  fat: "#a3846f",
+  primary: "#e15a46",
   secondary: "#f59e0b",
   tertiary: "#22c55e",
 } as const;

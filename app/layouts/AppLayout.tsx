@@ -1,31 +1,31 @@
-import type React from "react";
-import { useState, useRef, useCallback } from "react";
-import { NavLink, Outlet, Form, useLocation, useMatches } from "react-router";
-import { z } from "zod";
 import {
-  Flex,
-  Container,
-  Box,
-  Button,
-  IconButton,
-  Text,
-  Heading,
-} from "@radix-ui/themes";
-import {
-  HamburgerMenuIcon,
+  CheckboxIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  DashboardIcon,
-  CheckboxIcon,
   CounterClockwiseClockIcon,
+  DashboardIcon,
+  ExitIcon,
+  HamburgerMenuIcon,
   ReaderIcon,
   RulerSquareIcon,
-  ExitIcon,
 } from "@radix-ui/react-icons";
+import {
+  Box,
+  Button,
+  Container,
+  Flex,
+  Heading,
+  IconButton,
+  Text,
+} from "@radix-ui/themes";
+import type React from "react";
+import { useCallback, useRef, useState } from "react";
+import { Form, NavLink, Outlet, useLocation, useMatches } from "react-router";
+import { z } from "zod";
+import { PageHeader, type PageHeaderProps } from "~/components/PageHeader";
 import { PageTransition } from "~/components/PageTransition";
 import { QuickActionFAB } from "~/components/QuickActionFAB";
 import { QuickActionSheet } from "~/components/QuickActionSheet";
-import { PageHeader, type PageHeaderProps } from "~/components/PageHeader";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
@@ -140,14 +140,14 @@ const AppLayout: React.FC = () => {
         style={{
           width: isCollapsed ? "60px" : "240px",
           borderRight: "1px solid var(--gray-4)",
-          background: "var(--brand-surface, #fff8f0)",
+          background: "var(--brand-surface, #f3f1ed)",
           transition: "width 0.2s ease",
           position: "fixed",
           top: 0,
           left: 0,
           height: "100vh",
           zIndex: 40,
-          boxShadow: "2px 0 8px rgba(120, 80, 60, 0.04)",
+          boxShadow: "2px 0 8px rgba(0, 0, 0, 0.03)",
           paddingLeft: "env(safe-area-inset-left)",
         }}
       >

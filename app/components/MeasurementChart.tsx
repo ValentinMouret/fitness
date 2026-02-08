@@ -1,12 +1,12 @@
 import { useState } from "react";
 import {
-  LineChart,
+  CartesianGrid,
   Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from "recharts";
 import type { Measure } from "~/modules/core/domain/measure";
 import "./WeightChart.css";
@@ -143,14 +143,14 @@ export default function MeasurementChart({
               scale="time"
               domain={["dataMin", "dataMax"]}
               tickFormatter={(value) => new Date(value).toLocaleDateString()}
-              stroke="var(--brand-text-secondary, #78716c)"
+              stroke="var(--brand-text-secondary, #79756d)"
               fontSize={12}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
               domain={["dataMin - 1", "dataMax + 1"]}
-              stroke="var(--brand-text-secondary, #78716c)"
+              stroke="var(--brand-text-secondary, #79756d)"
               fontSize={12}
               tickLine={false}
               axisLine={false}
@@ -160,7 +160,7 @@ export default function MeasurementChart({
                 position: "insideLeft",
                 style: {
                   textAnchor: "middle",
-                  fill: "var(--brand-text-secondary, #78716c)",
+                  fill: "var(--brand-text-secondary, #79756d)",
                 },
               }}
             />
@@ -172,16 +172,16 @@ export default function MeasurementChart({
             <Line
               type="monotone"
               dataKey="value"
-              stroke="#ff6b6b"
+              stroke="#e15a46"
               strokeWidth={2.5}
-              dot={{ fill: "#ff6b6b", strokeWidth: 0, r: 4 }}
+              dot={{ fill: "#e15a46", strokeWidth: 0, r: 4 }}
               activeDot={{
                 r: 6,
-                fill: "#ff6b6b",
+                fill: "#e15a46",
                 strokeWidth: 3,
                 stroke: "white",
                 style: {
-                  filter: "drop-shadow(0 2px 4px rgba(255, 107, 107, 0.3))",
+                  filter: "drop-shadow(0 2px 4px rgba(225, 90, 70, 0.3))",
                 },
               }}
               animationDuration={800}

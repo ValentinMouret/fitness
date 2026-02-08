@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -6,13 +7,12 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-import { useEffect } from "react";
 
 import type { Route } from "./+types/root";
 import "@radix-ui/themes/styles.css";
 import "./app.css";
+import { Code, Container, Heading, Text, Theme } from "@radix-ui/themes";
 import { AuthProvider } from "./components/AuthProvider";
-import { Theme, Container, Heading, Text, Code } from "@radix-ui/themes";
 
 export const headers: Route.HeadersFunction = () => ({
   "Cache-Control": "no-cache",
@@ -27,7 +27,7 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:wght@400;500;600;700&display=swap",
   },
   { rel: "manifest", href: "/manifest.json" },
   { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
@@ -42,7 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
-        <meta name="theme-color" content="#fffbf5" />
+        <meta name="theme-color" content="#faf9f7" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Fitness" />
@@ -50,7 +50,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <Theme accentColor="tomato" grayColor="sand" radius="large">
+        <Theme accentColor="tomato" grayColor="sand" radius="medium">
           {children}
         </Theme>
         <ScrollRestoration />

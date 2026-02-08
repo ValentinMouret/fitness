@@ -1,6 +1,6 @@
-import type React from "react";
-import { Flex, Heading, Button, IconButton, Box } from "@radix-ui/themes";
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import { Box, Button, Flex, Heading, IconButton } from "@radix-ui/themes";
+import type React from "react";
 import { Link } from "react-router";
 
 export interface PageHeaderProps {
@@ -71,7 +71,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           )}
         </Flex>
       </Flex>
-      {subtitle && <Box mt="1">{subtitle}</Box>}
+      {subtitle && (
+        <Box
+          mt="1"
+          style={{ color: "var(--brand-text-secondary)", fontSize: "0.95rem" }}
+        >
+          {subtitle}
+        </Box>
+      )}
     </Box>
   );
 };

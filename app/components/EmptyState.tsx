@@ -1,5 +1,5 @@
+import { Button, Flex, Heading, Text } from "@radix-ui/themes";
 import type { ReactNode } from "react";
-import { Flex, Text, Button, Heading } from "@radix-ui/themes";
 import { Link } from "react-router";
 
 interface EmptyStateProps {
@@ -29,7 +29,7 @@ export function EmptyState({
       className="animate-fade-slide-up"
       style={{
         opacity: 0,
-        background: "var(--brand-surface, #fff8f0)",
+        background: "var(--brand-surface, #f3f1ed)",
         borderRadius: "16px",
         border: "1px dashed var(--gray-5)",
       }}
@@ -44,13 +44,13 @@ export function EmptyState({
       </div>
 
       <Flex direction="column" align="center" gap="2">
-        <Heading size="4" style={{ color: "var(--brand-text, #292524)" }}>
+        <Heading size="4" style={{ color: "var(--brand-text, #1c1917)" }}>
           {title}
         </Heading>
         <Text
           size="2"
           style={{
-            color: "var(--brand-text-secondary, #78716c)",
+            color: "var(--brand-text-secondary, #79756d)",
             maxWidth: "280px",
             textAlign: "center",
           }}

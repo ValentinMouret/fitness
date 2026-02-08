@@ -1,8 +1,8 @@
-import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { WorkoutAnalysisService } from "~/modules/fitness/application/workout-analysis.service.server";
-import { AIFitnessCoachService } from "~/modules/fitness/infra/ai-fitness-coach.service";
-import { handleResultError } from "~/utils/errors";
 import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
+import { AIFitnessCoachService } from "~/modules/fitness/infra/ai-fitness-coach.service";
+import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
+import { handleResultError } from "~/utils/errors";
 
 export async function getWorkoutsPageData(input: {
   readonly page: number;
@@ -11,7 +11,7 @@ export async function getWorkoutsPageData(input: {
   const validPage = Math.max(1, input.page);
   const validLimit = Math.min(Math.max(1, input.limit), 10);
 
-  const result = await WorkoutRepository.findAllWithPagination(
+  const result = await WorkoutRepository.findAllWithSummary(
     validPage,
     validLimit,
   );

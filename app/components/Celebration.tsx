@@ -6,7 +6,7 @@ interface CelebrationProps {
   readonly onComplete?: () => void;
 }
 
-const CONFETTI_COLORS = ["#ff6b6b", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7"];
+const CONFETTI_COLORS = ["#e15a46", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7"];
 
 export function Celebration({ trigger, onComplete }: CelebrationProps) {
   const [particles, setParticles] = useState<
