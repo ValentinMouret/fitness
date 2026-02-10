@@ -2,7 +2,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "$SCRIPT_DIR/docker-compose.yml" ] || [ -f "$SCRIPT_DIR/docker-compose.yaml" ]; then
+CWD_DIR="$(pwd -P)"
+
+if [ -f "$CWD_DIR/docker-compose.yml" ] || [ -f "$CWD_DIR/docker-compose.yaml" ] || [ -d "$CWD_DIR/.git" ]; then
+  DEFAULT_REPO_DIR="$CWD_DIR"
+elif [ -f "$SCRIPT_DIR/docker-compose.yml" ] || [ -f "$SCRIPT_DIR/docker-compose.yaml" ] || [ -d "$SCRIPT_DIR/.git" ]; then
   DEFAULT_REPO_DIR="$SCRIPT_DIR"
 else
   DEFAULT_REPO_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
