@@ -247,6 +247,41 @@ CREATE TABLE "workout_sets" (
 	CONSTRAINT "weight_is_null_or_positive" CHECK ("workout_sets"."weight" is null or "workout_sets"."weight" > 0)
 );
 --> statement-breakpoint
+CREATE TABLE "workout_template_exercises" (
+	"template_id" uuid NOT NULL,
+	"exercise_id" uuid NOT NULL,
+	"order_index" integer NOT NULL,
+	"notes" text,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp,
+	"deleted_at" timestamp,
+	CONSTRAINT "workout_template_exercises_template_id_exercise_id_pk" PRIMARY KEY("template_id","exercise_id"),
+	CONSTRAINT "template_order_index_positive" CHECK ("workout_template_exercises"."order_index" >= 0)
+);
+--> statement-breakpoint
+CREATE TABLE "workout_template_sets" (
+	"template_id" uuid NOT NULL,
+	"exercise_id" uuid NOT NULL,
+	"set" integer NOT NULL,
+	"target_reps" integer,
+	"weight" double precision,
+	"is_warmup" boolean DEFAULT false NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp,
+	"deleted_at" timestamp,
+	CONSTRAINT "workout_template_sets_template_id_exercise_id_set_pk" PRIMARY KEY("template_id","exercise_id","set"),
+	CONSTRAINT "template_set_is_positive" CHECK ("workout_template_sets"."set" > 0)
+);
+--> statement-breakpoint
+CREATE TABLE "workout_templates" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" text NOT NULL,
+	"source_workout_id" uuid,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp,
+	"deleted_at" timestamp
+);
+--> statement-breakpoint
 CREATE TABLE "workouts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
@@ -254,6 +289,8 @@ CREATE TABLE "workouts" (
 	"stop" timestamp,
 	"notes" text,
 	"imported_from_strong" boolean DEFAULT false NOT NULL,
+	"imported_from_fitbod" boolean DEFAULT false NOT NULL,
+	"template_id" uuid,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp,
 	"deleted_at" timestamp
@@ -275,6 +312,11 @@ ALTER TABLE "workout_exercises" ADD CONSTRAINT "workout_exercises_workout_id_wor
 ALTER TABLE "workout_exercises" ADD CONSTRAINT "workout_exercises_exercise_id_exercises_id_fk" FOREIGN KEY ("exercise_id") REFERENCES "public"."exercises"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "workout_sets" ADD CONSTRAINT "workout_sets_workout_workouts_id_fk" FOREIGN KEY ("workout") REFERENCES "public"."workouts"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "workout_sets" ADD CONSTRAINT "workout_sets_exercise_exercises_id_fk" FOREIGN KEY ("exercise") REFERENCES "public"."exercises"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "workout_template_exercises" ADD CONSTRAINT "workout_template_exercises_template_id_workout_templates_id_fk" FOREIGN KEY ("template_id") REFERENCES "public"."workout_templates"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "workout_template_exercises" ADD CONSTRAINT "workout_template_exercises_exercise_id_exercises_id_fk" FOREIGN KEY ("exercise_id") REFERENCES "public"."exercises"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "workout_template_sets" ADD CONSTRAINT "workout_template_sets_template_id_workout_templates_id_fk" FOREIGN KEY ("template_id") REFERENCES "public"."workout_templates"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "workout_template_sets" ADD CONSTRAINT "workout_template_sets_exercise_id_exercises_id_fk" FOREIGN KEY ("exercise_id") REFERENCES "public"."exercises"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "workouts" ADD CONSTRAINT "workouts_template_id_workout_templates_id_fk" FOREIGN KEY ("template_id") REFERENCES "public"."workout_templates"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "equipment_instances_name_floor_unique_idx" ON "equipment_instances" USING btree ("name","gym_floor_id") WHERE "equipment_instances"."deleted_at" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX "exercises_name_type_unique_idx" ON "exercises" USING btree ("name","type") WHERE "exercises"."deleted_at" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX "gym_floors_number_unique_idx" ON "gym_floors" USING btree ("floor_number") WHERE "gym_floors"."deleted_at" is null;--> statement-breakpoint
