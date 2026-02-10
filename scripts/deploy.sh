@@ -3,7 +3,7 @@ set -euo pipefail
 
 REPO_DIR="/home/valentin/fitness"
 LOG_FILE="/var/log/fitness-deploy.log"
-LOCK_FILE="/tmp/fitness-deploy.lock"
+LOCK_FILE="/var/lock/fitness-deploy.lock"
 
 log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S'): $1" | tee -a "$LOG_FILE"
