@@ -341,7 +341,7 @@ function ProgressionChart({
               }}
             />
             <Line
-              type="monotone"
+              type="linear"
               dataKey={metric}
               stroke={color}
               strokeWidth={2}
