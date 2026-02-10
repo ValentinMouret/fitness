@@ -6,7 +6,6 @@
 /build/
 /.env
 
-/drizzle/meta
 .aider*
 /.direnv/
 

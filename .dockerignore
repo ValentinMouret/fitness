@@ -7,7 +7,6 @@
 *.md
 build
 node_modules
-drizzle/*.sql
 tests
 *.test.ts
 *.spec.ts
