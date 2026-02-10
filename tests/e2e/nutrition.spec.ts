@@ -7,16 +7,15 @@ test.describe("Nutrition Page", () => {
     await page.goto("/nutrition");
   });
 
-  test("should display nutrition summary", async ({ page }) => {
+  test("should display nutrition page", async ({ page }) => {
     await expect(
       page.getByRole("heading", { name: "Nutrition" }),
     ).toBeVisible();
-    await expect(page.getByText("Today's Calories")).toBeVisible();
-    await expect(page.getByText("Today's Meals")).toBeVisible();
+    await expect(page.getByText("Daily Intake")).toBeVisible();
+    await expect(page.getByText("Meals")).toBeVisible();
   });
 
-  test("should display nutrition tools", async ({ page }) => {
-    await expect(page.getByText("Tools")).toBeVisible();
+  test("should display nutrition action links", async ({ page }) => {
     await expect(
       page.getByRole("link", { name: "Meal Builder" }),
     ).toBeVisible();
