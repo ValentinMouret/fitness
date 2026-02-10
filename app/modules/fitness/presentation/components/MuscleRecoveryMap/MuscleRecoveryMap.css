@@ -1,0 +1,199 @@
+/* ── Body Map Container ──────────────────────────────────────────── */
+
+.body-map-container {
+  position: relative;
+}
+
+.body-map-views {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-6);
+  padding: var(--space-4) 0;
+}
+
+.body-map-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.body-map-label {
+  font-family: var(--font-display);
+  font-size: var(--font-size-2);
+  color: var(--gray-9);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.body-map-svg {
+  width: 140px;
+  height: auto;
+}
+
+.body-outline {
+  fill: var(--gray-3);
+  stroke: var(--gray-6);
+  stroke-width: 0.8;
+}
+
+.muscle-path {
+  stroke: var(--gray-1);
+  stroke-width: 0.5;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.muscle-path--hovered {
+  opacity: 1;
+  stroke: var(--gray-12);
+  stroke-width: 1;
+}
+
+/* ── Tooltip ─────────────────────────────────────────────────────── */
+
+.body-map-tooltip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-top: var(--space-2);
+  background: var(--brand-surface);
+  border-radius: var(--radius-2);
+  box-shadow: var(--shadow-warm-sm);
+}
+
+.body-map-tooltip-name {
+  font-family: var(--font-display);
+  font-size: var(--font-size-3);
+  font-weight: 600;
+  color: var(--gray-12);
+}
+
+.body-map-tooltip-pct {
+  font-size: var(--font-size-3);
+  font-weight: 500;
+  color: var(--gray-11);
+}
+
+.body-map-tooltip-time {
+  font-size: var(--font-size-1);
+  color: var(--gray-9);
+}
+
+/* ── Legend ───────────────────────────────────────────────────────── */
+
+.recovery-legend {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-5);
+  padding: var(--space-3) 0 var(--space-5);
+}
+
+.recovery-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.recovery-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.recovery-legend-label {
+  font-size: var(--font-size-1);
+  color: var(--gray-9);
+}
+
+/* ── Category Summary ────────────────────────────────────────────── */
+
+.recovery-categories {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.recovery-category {
+  padding: var(--space-4);
+  background: var(--brand-surface);
+  border-radius: var(--radius-3);
+  box-shadow: var(--shadow-warm-sm);
+}
+
+.recovery-category-title {
+  font-family: var(--font-display);
+  display: block;
+  margin-bottom: var(--space-3);
+  color: var(--gray-12);
+}
+
+.recovery-muscle-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.recovery-muscle-row {
+  min-height: 32px;
+}
+
+.recovery-muscle-name {
+  width: 100px;
+  flex-shrink: 0;
+  color: var(--gray-11);
+}
+
+.recovery-bar-track {
+  flex: 1;
+  height: 5px;
+  background: var(--gray-4);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.recovery-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.recovery-muscle-pct {
+  width: 40px;
+  text-align: right;
+  flex-shrink: 0;
+  color: var(--gray-11);
+}
+
+.recovery-muscle-eta {
+  width: 44px;
+  text-align: right;
+  flex-shrink: 0;
+  color: var(--gray-9);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .body-map-views {
+    gap: var(--space-3);
+  }
+
+  .body-map-svg {
+    width: 120px;
+  }
+
+  .recovery-legend {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .recovery-muscle-name {
+    width: 80px;
+  }
+}
