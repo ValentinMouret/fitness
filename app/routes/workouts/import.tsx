@@ -8,18 +8,18 @@ import {
   Tabs,
 } from "@radix-ui/themes";
 import { Link } from "react-router";
+import { zfd } from "zod-form-data";
+import {
+  importFromFitbod,
+  importFromStrong,
+} from "~/modules/fitness/application/import-workout.service.server";
 import type { ImportConfig } from "~/modules/fitness/domain/strong-import";
 import {
   FitbodImportForm,
   StrongImportForm,
 } from "~/modules/fitness/presentation/components";
-import type { Route } from "./+types/import";
-import {
-  importFromFitbod,
-  importFromStrong,
-} from "~/modules/fitness/application/import-workout.service.server";
-import { zfd } from "zod-form-data";
 import { formBoolean, formOptionalText } from "~/utils/form-data";
+import type { Route } from "./+types/import";
 
 export const action = async ({ request }: Route.ActionArgs) => {
   const formData = await request.formData();

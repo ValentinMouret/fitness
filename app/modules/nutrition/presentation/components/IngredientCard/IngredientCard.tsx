@@ -1,3 +1,4 @@
+import { Cross2Icon } from "@radix-ui/react-icons";
 import {
   Badge,
   Box,
@@ -7,7 +8,6 @@ import {
   Slider,
   Text,
 } from "@radix-ui/themes";
-import { Cross2Icon } from "@radix-ui/react-icons";
 import type { Ingredient } from "~/modules/nutrition/domain/ingredient";
 
 export interface SelectedIngredient extends Ingredient {

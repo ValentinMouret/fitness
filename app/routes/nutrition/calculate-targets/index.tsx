@@ -1,3 +1,4 @@
+import { ArrowLeftIcon } from "@radix-ui/react-icons";
 import {
   AlertDialog,
   Badge,
@@ -9,21 +10,20 @@ import {
   Heading,
   IconButton,
 } from "@radix-ui/themes";
-import { ArrowLeftIcon } from "@radix-ui/react-icons";
-import MaintenanceForm from "../MaintenanceForm";
-import type { Route } from "./+types";
-import { coerceFloat, coerceInt, expect } from "~/utils";
 import { Result } from "neverthrow";
-import MacrosChart from "~/components/MacrosChart";
-import { Form, Link } from "react-router";
 import { useState } from "react";
+import { Form, Link } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import MacrosChart from "~/components/MacrosChart";
 import {
   calculateTargets,
   saveNutritionTarget,
 } from "~/modules/nutrition/application/calculate-targets.service.server";
+import { coerceFloat, coerceInt, expect } from "~/utils";
 import { formNumber } from "~/utils/form-data";
+import MaintenanceForm from "../MaintenanceForm";
+import type { Route } from "./+types";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);

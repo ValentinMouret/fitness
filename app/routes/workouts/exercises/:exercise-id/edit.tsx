@@ -1,16 +1,16 @@
-import { Heading, Flex, IconButton } from "@radix-ui/themes";
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import { Flex, Heading, IconButton } from "@radix-ui/themes";
 import { Link } from "react-router";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
 import ExerciseForm from "~/components/ExerciseForm";
-import type { Route } from "./+types/edit";
 import {
   getExerciseForEdit,
   type MuscleGroupSplitInput,
   updateExercise,
 } from "~/modules/fitness/application/exercise-form.service.server";
-import { z } from "zod";
-import { zfd } from "zod-form-data";
 import { formOptionalText, formText } from "~/utils/form-data";
+import type { Route } from "./+types/edit";
 
 export const loader = async ({ params }: Route.LoaderArgs) => {
   const exerciseId = params["exercise-id"];

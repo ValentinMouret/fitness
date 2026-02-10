@@ -1,13 +1,13 @@
 import { redirect } from "react-router";
-import { Workout } from "~/modules/fitness/domain/workout";
 import type { WorkoutSession } from "~/modules/fitness/domain/workout";
-import { WorkoutTemplate } from "~/modules/fitness/domain/workout-template";
+import { Workout } from "~/modules/fitness/domain/workout";
 import type { WorkoutTemplateWithDetails } from "~/modules/fitness/domain/workout-template";
-import { WorkoutTemplateRepository } from "~/modules/fitness/infra/workout-template.repository.server";
+import { WorkoutTemplate } from "~/modules/fitness/domain/workout-template";
 import {
   WorkoutRepository,
   WorkoutSessionRepository,
 } from "~/modules/fitness/infra/workout.repository.server";
+import { WorkoutTemplateRepository } from "~/modules/fitness/infra/workout-template.repository.server";
 import { getOrdinalSuffix } from "~/time";
 import { createNotFoundError, handleResultError } from "~/utils/errors";
 

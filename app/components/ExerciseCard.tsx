@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
+import { ChevronDownIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 import {
-  Card,
-  Flex,
-  Text,
-  IconButton,
   AlertDialog,
   Button,
+  Card,
+  Flex,
+  IconButton,
+  Text,
 } from "@radix-ui/themes";
-import { ChevronDownIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
+import { useEffect, useState } from "react";
 import { Link, useFetcher } from "react-router";
 import type { ExerciseMuscleGroups } from "~/modules/fitness/domain/workout";
 import { ExerciseTypeBadge } from "~/modules/fitness/presentation/components";

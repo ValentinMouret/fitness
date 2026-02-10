@@ -1,39 +1,39 @@
-import type { ActionFunctionArgs } from "react-router";
-import { Form } from "react-router";
-import type { Route } from "./+types/generate";
-import {
-  Card,
-  Button,
-  Select,
-  Checkbox,
-  Badge,
-  Callout,
-  Progress,
-  Grid,
-  Flex,
-  Text,
-  Heading,
-  Box,
-} from "@radix-ui/themes";
-import { NumberInput } from "~/components/NumberInput";
 import {
   CheckCircledIcon,
   CrossCircledIcon,
   LightningBoltIcon,
   TargetIcon,
 } from "@radix-ui/react-icons";
-import { Dumbbell, Activity } from "lucide-react";
+import {
+  Badge,
+  Box,
+  Button,
+  Callout,
+  Card,
+  Checkbox,
+  Flex,
+  Grid,
+  Heading,
+  Progress,
+  Select,
+  Text,
+} from "@radix-ui/themes";
+import { Activity, Dumbbell } from "lucide-react";
+import type { ActionFunctionArgs } from "react-router";
+import { Form } from "react-router";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
+import { NumberInput } from "~/components/NumberInput";
 import {
   generateWorkout,
   getGenerateWorkoutData,
 } from "~/modules/fitness/application/generate-workout.service.server";
-import { z } from "zod";
-import { zfd } from "zod-form-data";
 import {
   formNumber,
   formOptionalText,
   formRepeatableText,
 } from "~/utils/form-data";
+import type { Route } from "./+types/generate";
 
 export async function loader() {
   return getGenerateWorkoutData();

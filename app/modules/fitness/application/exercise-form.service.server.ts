@@ -1,16 +1,16 @@
 import { redirect } from "react-router";
+import { ExerciseService } from "~/modules/fitness/application/service.server";
 import {
-  ExerciseMuscleGroupsAggregate,
-  parseExerciseType,
-  parseMuscleGroup,
-  parseMovementPattern,
   type Exercise,
+  ExerciseMuscleGroupsAggregate,
   type MuscleGroupSplit,
+  parseExerciseType,
+  parseMovementPattern,
+  parseMuscleGroup,
 } from "~/modules/fitness/domain/workout";
+import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 import { coerceEmpty, humanFormatting } from "~/strings";
 import { coerceInt } from "~/utils";
-import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
-import { ExerciseService } from "~/modules/fitness/application/service.server";
 
 export type MuscleGroupSplitInput = {
   readonly muscleGroup: string;

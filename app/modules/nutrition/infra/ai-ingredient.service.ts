@@ -4,9 +4,9 @@ import { z } from "zod";
 import { env } from "~/env.server";
 import { logger } from "~/logger.server";
 import {
+  type CreateIngredientInput,
   ingredientCategories,
   textureCategories,
-  type CreateIngredientInput,
 } from "../domain/ingredient";
 
 const AIIngredientResponseSchema = z

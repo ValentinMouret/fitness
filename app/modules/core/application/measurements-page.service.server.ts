@@ -1,6 +1,6 @@
-import { MeasurementRepository } from "../infra/measurements.repository.server";
-import { MeasureRepository } from "../infra/measure.repository.server";
 import { handleResultError } from "~/utils/errors";
+import { MeasureRepository } from "../infra/measure.repository.server";
+import { MeasurementRepository } from "../infra/measurements.repository.server";
 
 export async function getMeasurementsPageData() {
   const measurements = await MeasurementRepository.fetchAll();

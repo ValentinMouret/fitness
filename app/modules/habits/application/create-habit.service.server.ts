@@ -1,4 +1,4 @@
-import { Habit as HabitEntity, type Habit } from "../domain/entity";
+import { type Habit, Habit as HabitEntity } from "../domain/entity";
 import { HabitRepository } from "../infra/repository.server";
 
 export type CreateHabitResult =

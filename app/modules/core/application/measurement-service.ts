@@ -1,9 +1,9 @@
-import { type ResultAsync, ok } from "neverthrow";
+import { ok, type ResultAsync } from "neverthrow";
 import type { ErrRepository } from "~/repository";
 import { addOneDay, isSameDay, removeOneDay, today } from "~/time";
+import type { Target } from "../domain/target";
 import { MeasureRepository } from "../infra/measure.repository.server";
 import { TargetRepository } from "../infra/repository";
-import type { Target } from "../domain/target";
 
 export const MeasurementService = {
   fetchStreak(measurementName: string): ResultAsync<number, ErrRepository> {

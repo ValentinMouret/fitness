@@ -1,4 +1,10 @@
 import {
+  ActivityLogIcon,
+  ArrowDownIcon,
+  ArrowUpIcon,
+  Cross2Icon,
+} from "@radix-ui/react-icons";
+import {
   Badge,
   Box,
   Button,
@@ -6,18 +12,12 @@ import {
   Dialog,
   Flex,
   Heading,
+  IconButton,
   Progress,
   Spinner,
   Strong,
   Text,
-  IconButton,
 } from "@radix-ui/themes";
-import {
-  Cross2Icon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  ActivityLogIcon,
-} from "@radix-ui/react-icons";
 import type { AIFitnessCoachResult } from "../../../infra/ai-fitness-coach.service";
 
 interface AIFeedbackModalProps {

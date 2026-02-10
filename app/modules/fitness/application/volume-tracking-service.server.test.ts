@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ResultAsync } from "neverthrow";
-import { VolumeTrackingService } from "./volume-tracking-service.server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
-  WeeklyVolumeTracker as WeeklyVolumeTrackerType,
-  WorkoutSession,
-  MuscleGroup,
   Exercise,
+  MuscleGroup,
+  WeeklyVolumeTracker as WeeklyVolumeTrackerType,
   Workout,
   WorkoutExerciseGroup,
+  WorkoutSession,
   WorkoutSet,
 } from "~/modules/fitness/domain/workout";
+import { VolumeTrackingService } from "./volume-tracking-service.server";
 
 vi.mock("~/modules/fitness/infra/volume-tracking-repository.server", () => ({
   VolumeTrackingRepository: {
@@ -25,8 +25,8 @@ vi.mock("~/modules/fitness/domain/workout", () => ({
   },
 }));
 
-import { VolumeTrackingRepository } from "~/modules/fitness/infra/volume-tracking-repository.server";
 import { WeeklyVolumeTracker } from "~/modules/fitness/domain/workout";
+import { VolumeTrackingRepository } from "~/modules/fitness/infra/volume-tracking-repository.server";
 
 const mockGetWeeklyVolume =
   VolumeTrackingRepository.getWeeklyVolume as ReturnType<typeof vi.fn>;

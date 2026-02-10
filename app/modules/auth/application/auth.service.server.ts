@@ -1,6 +1,6 @@
 import { redirect } from "react-router";
-import { authenticate } from "~/auth.server";
 import type { User } from "~/auth";
+import { authenticate } from "~/auth.server";
 import {
   SESSION_COOKIE_MAX_AGE_SECONDS,
   SESSION_COOKIE_NAME,

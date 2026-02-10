@@ -1,29 +1,29 @@
+import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
+import {
+  AlertDialog,
+  Box,
+  Button,
+  Callout,
+  Card,
+  Flex,
+  IconButton,
+  Table,
+  Text,
+  TextField,
+} from "@radix-ui/themes";
 import { data, useFetcher, useLoaderData } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
-import { SectionHeader } from "~/components/SectionHeader";
-import {
-  Box,
-  Text,
-  Flex,
-  Card,
-  Button,
-  Table,
-  TextField,
-  Callout,
-  AlertDialog,
-  IconButton,
-} from "@radix-ui/themes";
+import MeasurementChart from "~/components/MeasurementChart";
 import { NumberInput } from "~/components/NumberInput";
-import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
+import { SectionHeader } from "~/components/SectionHeader";
 import {
   addMeasure,
   deleteMeasure,
   getMeasurementDetail,
 } from "~/modules/core/application/measurement-detail.service.server";
-import { formNumber, formOptionalText } from "~/utils/form-data";
 import { today } from "~/time";
-import MeasurementChart from "~/components/MeasurementChart";
+import { formNumber, formOptionalText } from "~/utils/form-data";
 import type { Route } from "./+types/name";
 
 export async function loader({ params }: Route.LoaderArgs) {

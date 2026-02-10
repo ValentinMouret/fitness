@@ -1,19 +1,19 @@
-import { Form, useSearchParams } from "react-router";
-import type { Route } from "./+types/login";
-import { loginWithCredentials } from "~/modules/auth/application/auth.service.server";
-import { syncSessionFromCookie } from "~/modules/auth/application/session-sync";
-import { z } from "zod";
-import { zfd } from "zod-form-data";
-import { formOptionalText, formText } from "~/utils/form-data";
 import {
-  Container,
+  Button,
+  Callout,
   Card,
+  Container,
   Heading,
   Text,
   TextField,
-  Button,
-  Callout,
 } from "@radix-ui/themes";
+import { Form, useSearchParams } from "react-router";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
+import { loginWithCredentials } from "~/modules/auth/application/auth.service.server";
+import { syncSessionFromCookie } from "~/modules/auth/application/session-sync";
+import { formOptionalText, formText } from "~/utils/form-data";
+import type { Route } from "./+types/login";
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();

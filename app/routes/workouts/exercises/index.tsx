@@ -1,17 +1,17 @@
-import { Container, Flex, Select, Text, TextField } from "@radix-ui/themes";
-import type { Route } from "./+types";
-import { exerciseTypes } from "~/modules/fitness/domain/workout";
-import { Form, useSearchParams } from "react-router";
-import ExerciseCard from "~/components/ExerciseCard";
-import { humanFormatting } from "~/strings";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import { Container, Flex, Select, Text, TextField } from "@radix-ui/themes";
+import { Form, useSearchParams } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import ExerciseCard from "~/components/ExerciseCard";
 import {
   deleteExercise,
   getExercisesPageData,
 } from "~/modules/fitness/application/exercises-page.service.server";
+import { exerciseTypes } from "~/modules/fitness/domain/workout";
+import { humanFormatting } from "~/strings";
 import { formText } from "~/utils/form-data";
+import type { Route } from "./+types";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const url = new URL(request.url);

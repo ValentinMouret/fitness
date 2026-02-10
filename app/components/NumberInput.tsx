@@ -1,5 +1,5 @@
 import { TextField } from "@radix-ui/themes";
-import type { ComponentProps, ChangeEvent, FocusEvent } from "react";
+import type { ChangeEvent, ComponentProps, FocusEvent } from "react";
 
 type TextFieldRootProps = ComponentProps<typeof TextField.Root>;
 

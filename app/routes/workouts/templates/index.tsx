@@ -8,6 +8,7 @@ import {
   Text,
 } from "@radix-ui/themes";
 import { Form, Link, useFetcher } from "react-router";
+import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { EmptyState } from "~/components/EmptyState";
 import {
@@ -16,7 +17,6 @@ import {
 } from "~/modules/fitness/application/workout-template.service.server";
 import { createWorkoutTemplateCardViewModel } from "~/modules/fitness/presentation/view-models/workout-template-card.view-model";
 import { formText } from "~/utils/form-data";
-import { z } from "zod";
 import type { Route } from "./+types/index";
 
 export const handle = {

@@ -10,8 +10,9 @@
     "db:migrate": "tsx app/db/migrate.ts",
     "db:seed": "tsx app/db/index.ts",
     "dev": "react-router dev",
+    "check": "biome check --write",
     "fmt": "biome format --write",
-    "lint": "biome lint --write ./app",
+    "lint": "biome lint --write",
     "prepare": "husky",
     "start": "react-router-serve ./build/server/index.js",
     "tc": "bun typecheck",
@@ -22,9 +23,8 @@
     "typecheck": "react-router typegen && tsc"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "bun fmt",
-      "bun lint"
+    "*.{ts,tsx,css}": [
+      "biome check --write --no-errors-on-unmatched"
     ]
   },
   "dependencies": {

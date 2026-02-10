@@ -1,10 +1,10 @@
-import { eq, and, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { Result, ResultAsync } from "neverthrow";
 import { db } from "~/db/index";
 import {
-  mealTemplates,
-  mealTemplateIngredients,
   ingredients,
+  mealTemplateIngredients,
+  mealTemplates,
 } from "~/db/schema";
 import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";
@@ -13,14 +13,14 @@ import {
   fetchSingleRecord,
   type Transaction,
 } from "~/repository.server";
-import type {
-  MealTemplate,
-  MealTemplateWithIngredients,
-  CreateMealTemplateInput,
-  UpdateMealTemplateInput,
-} from "../domain/meal-template";
 import type { IngredientWithQuantity } from "../domain/ingredient";
 import { Ingredient } from "../domain/ingredient";
+import type {
+  CreateMealTemplateInput,
+  MealTemplate,
+  MealTemplateWithIngredients,
+  UpdateMealTemplateInput,
+} from "../domain/meal-template";
 import { recordToIngredient, recordToMealTemplate } from "./record-mappers";
 
 export const MealTemplateRepository = {

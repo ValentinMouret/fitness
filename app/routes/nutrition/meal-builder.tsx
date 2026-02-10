@@ -1,7 +1,11 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { z } from "zod";
-import { zfd } from "zod-form-data";
 import {
+  Cross2Icon,
+  DownloadIcon,
+  MagicWandIcon,
+  PlusIcon,
+} from "@radix-ui/react-icons";
+import {
+  AlertDialog,
   Box,
   Button,
   Card,
@@ -15,40 +19,17 @@ import {
   Tabs,
   Text,
   TextField,
-  AlertDialog,
 } from "@radix-ui/themes";
-import { SectionHeader } from "~/components/SectionHeader";
-import { PageHeader } from "~/components/PageHeader";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Cross2Icon,
-  PlusIcon,
-  MagicWandIcon,
-  DownloadIcon,
-} from "@radix-ui/react-icons";
-import {
-  useFetcher,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
+  useFetcher,
 } from "react-router";
-import type {
-  CreateAIIngredientInput,
-  Ingredient,
-} from "~/modules/nutrition/domain/ingredient";
-import {
-  ingredientCategories,
-  Ingredient as IngredientDomain,
-} from "~/modules/nutrition/domain/ingredient";
-import { calculateSatietyScore } from "~/modules/nutrition/domain/meal-template";
-import {
-  ObjectivesPanel,
-  CurrentTotalsPanel,
-  IngredientCard,
-  AIIngredientReviewModal,
-  type Objectives,
-  type SelectedIngredient,
-} from "~/modules/nutrition/presentation";
-import type { Route } from "./+types/meal-builder";
-import { humanFormatting } from "~/strings";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
+import { PageHeader } from "~/components/PageHeader";
+import { SectionHeader } from "~/components/SectionHeader";
 import {
   getMealBuilderData,
   saveAiIngredient,
@@ -56,7 +37,26 @@ import {
   saveMealTemplate,
   searchAiIngredient,
 } from "~/modules/nutrition/application/meal-builder.service.server";
+import type {
+  CreateAIIngredientInput,
+  Ingredient,
+} from "~/modules/nutrition/domain/ingredient";
+import {
+  Ingredient as IngredientDomain,
+  ingredientCategories,
+} from "~/modules/nutrition/domain/ingredient";
+import { calculateSatietyScore } from "~/modules/nutrition/domain/meal-template";
+import {
+  AIIngredientReviewModal,
+  CurrentTotalsPanel,
+  IngredientCard,
+  type Objectives,
+  ObjectivesPanel,
+  type SelectedIngredient,
+} from "~/modules/nutrition/presentation";
+import { humanFormatting } from "~/strings";
 import { formOptionalText, formText } from "~/utils/form-data";
+import type { Route } from "./+types/meal-builder";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
