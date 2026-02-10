@@ -48,7 +48,7 @@ for i in $(seq 1 30); do
 done
 
 log "Running migrations"
-docker compose exec -T app bun db:migrate 2>&1 | tee -a "$LOG_FILE"
+docker compose exec -T app sh -lc 'if command -v bun >/dev/null 2>&1; then bun db:migrate; else npm run db:migrate; fi' 2>&1 | tee -a "$LOG_FILE"
 
 docker image prune -f >> "$LOG_FILE" 2>&1
 
