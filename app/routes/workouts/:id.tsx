@@ -46,6 +46,7 @@ import {
   updateSetInWorkout,
   updateWorkoutName,
 } from "~/modules/fitness/application/workout-session.service.server";
+import { createTemplateFromWorkout } from "~/modules/fitness/application/workout-template.service.server";
 import type { WorkoutExerciseGroup } from "~/modules/fitness/domain/workout";
 import { Workout } from "~/modules/fitness/domain/workout";
 import { WorkoutSessionRepository } from "~/modules/fitness/infra/workout.repository.server";
@@ -216,6 +217,13 @@ export async function action({ request, params }: Route.ActionArgs) {
       }
 
       case "complete-workout": {
+        const saveAsTemplate = formData.get("saveAsTemplate")?.toString();
+        const templateName = formData.get("templateName")?.toString();
+
+        if (saveAsTemplate === "true" && templateName) {
+          await createTemplateFromWorkout(id, templateName);
+        }
+
         return completeWorkout({ workoutId: id });
       }
 
@@ -646,6 +654,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
         workoutSession={workoutSession}
         open={showCompletionModal}
         onOpenChange={setShowCompletionModal}
+        fromTemplate={!!workoutSession.workout.templateId}
       />
 
       <CancelConfirmationDialog

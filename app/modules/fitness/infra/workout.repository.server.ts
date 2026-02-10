@@ -32,6 +32,7 @@ export const WorkoutRepository: IWorkoutRepository = {
       notes: workout.notes ?? null,
       imported_from_strong: workout.importedFromStrong ?? false,
       imported_from_fitbod: workout.importedFromFitbod ?? false,
+      template_id: workout.templateId ?? null,
     };
 
     if ("id" in workout) {
@@ -171,6 +172,7 @@ export const WorkoutRepository: IWorkoutRepository = {
         notes: workouts.notes,
         imported_from_strong: workouts.imported_from_strong,
         imported_from_fitbod: workouts.imported_from_fitbod,
+        template_id: workouts.template_id,
         exerciseCount:
           sql<number>`count(distinct ${workoutExercises.exercise_id})`.as(
             "exercise_count",
@@ -229,6 +231,7 @@ export const WorkoutRepository: IWorkoutRepository = {
           notes: r.notes ?? undefined,
           importedFromStrong: r.imported_from_strong ?? false,
           importedFromFitbod: r.imported_from_fitbod ?? false,
+          templateId: r.template_id ?? undefined,
           exerciseCount: Number(r.exerciseCount) || 0,
           setCount: Number(r.setCount) || 0,
           durationMinutes,
@@ -998,6 +1001,7 @@ function workoutRecordToDomain(
     notes: record.notes ?? undefined,
     importedFromStrong: record.imported_from_strong ?? false,
     importedFromFitbod: record.imported_from_fitbod ?? false,
+    templateId: record.template_id ?? undefined,
   };
 }
 
