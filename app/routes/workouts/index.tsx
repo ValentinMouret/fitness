@@ -1,5 +1,5 @@
 import { Box, Button, Flex, Text } from "@radix-ui/themes";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useFetcher, useSearchParams } from "react-router";
 import { zfd } from "zod-form-data";
 import { EmptyState } from "~/components/EmptyState";
@@ -10,7 +10,11 @@ import {
 } from "~/modules/fitness/application/workouts-page.service.server";
 import type { WorkoutWithSummary } from "~/modules/fitness/domain/workout";
 import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
-import { AIFeedbackModal } from "~/modules/fitness/presentation/components";
+import {
+  AIFeedbackModal,
+  StartWorkoutDialog,
+} from "~/modules/fitness/presentation/components";
+import { createWorkoutTemplateCardViewModel } from "~/modules/fitness/presentation/view-models/workout-template-card.view-model";
 import { formOptionalText } from "~/utils/form-data";
 import type { Route } from "./+types/index";
 
@@ -28,14 +32,9 @@ export const handle = {
     subtitle: "Training log",
     primaryAction: {
       label: "Start Workout",
-      type: "submit",
+      type: "button" as const,
       onClick: () => {
-        const form = document.createElement("form");
-        form.method = "post";
-        form.action = "/workouts/create";
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
+        window.dispatchEvent(new CustomEvent("open-start-workout-dialog"));
       },
     },
   }),
@@ -70,9 +69,9 @@ function formatWorkoutDate(date: Date): string {
     hour12: true,
   });
 
-  if (isToday) return `Today · ${time}`;
-  if (isYesterday) return `Yesterday · ${time}`;
-  return `${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })} · ${time}`;
+  if (isToday) return `Today \u00B7 ${time}`;
+  if (isYesterday) return `Yesterday \u00B7 ${time}`;
+  return `${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })} \u00B7 ${time}`;
 }
 
 function formatVolume(kg: number): string {
@@ -81,13 +80,21 @@ function formatVolume(kg: number): string {
 }
 
 export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
-  const { workouts, pagination } = loaderData;
+  const { workouts, templates, pagination } = loaderData;
   const [_searchParams, setSearchParams] = useSearchParams();
   const [showAIModal, setShowAIModal] = useState(false);
+  const [showStartDialog, setShowStartDialog] = useState(false);
   const aiFetcher = useFetcher<{
     aiFeedback?: AIFitnessCoachResult;
     error?: string;
   }>();
+
+  useEffect(() => {
+    const handler = () => setShowStartDialog(true);
+    window.addEventListener("open-start-workout-dialog", handler);
+    return () =>
+      window.removeEventListener("open-start-workout-dialog", handler);
+  }, []);
 
   const handlePageChange = (page: number) => {
     setSearchParams({ page: page.toString() });
@@ -97,6 +104,8 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
     setShowAIModal(true);
     aiFetcher.submit({ intent: "get-ai-feedback" }, { method: "POST" });
   };
+
+  const templateViewModels = templates.map(createWorkoutTemplateCardViewModel);
 
   return (
     <>
@@ -216,6 +225,9 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
           AI Feedback
         </Button>
         <Button variant="outline" size="2" asChild>
+          <Link to="/workouts/templates">Templates</Link>
+        </Button>
+        <Button variant="outline" size="2" asChild>
           <Link to="/workouts/generate">Generate Workout</Link>
         </Button>
         <Button variant="outline" size="2" asChild>
@@ -225,6 +237,12 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
           <Link to="/workouts/exercises">Manage Exercises</Link>
         </Button>
       </Flex>
+
+      <StartWorkoutDialog
+        open={showStartDialog}
+        onOpenChange={setShowStartDialog}
+        templates={templateViewModels}
+      />
 
       <AIFeedbackModal
         open={showAIModal}

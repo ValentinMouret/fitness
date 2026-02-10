@@ -1,6 +1,7 @@
 import { WorkoutAnalysisService } from "~/modules/fitness/application/workout-analysis.service.server";
 import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
 import { AIFitnessCoachService } from "~/modules/fitness/infra/ai-fitness-coach.service";
+import { WorkoutTemplateRepository } from "~/modules/fitness/infra/workout-template.repository.server";
 import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { handleResultError } from "~/utils/errors";
 
@@ -19,11 +20,15 @@ export async function getWorkoutsPageData(input: {
     handleResultError(result, "Failed to load workouts");
   }
 
+  const templatesResult = await WorkoutTemplateRepository.findAllWithDetails();
+  const templates = templatesResult.isOk() ? templatesResult.value : [];
+
   const { workouts, totalCount } = result.value;
   const totalPages = Math.ceil(totalCount / validLimit);
 
   return {
     workouts,
+    templates,
     pagination: {
       currentPage: validPage,
       totalPages,

@@ -131,6 +131,7 @@ export interface Workout {
   readonly notes?: string;
   readonly importedFromStrong?: boolean;
   readonly importedFromFitbod?: boolean;
+  readonly templateId?: string;
 }
 
 export interface WorkoutWithSummary extends Workout {
@@ -146,6 +147,7 @@ interface WorkoutCreateInput {
   readonly notes?: string;
   readonly importedFromStrong?: boolean;
   readonly importedFromFitbod?: boolean;
+  readonly templateId?: string;
 }
 
 export const Workout = {
@@ -156,6 +158,7 @@ export const Workout = {
       notes: input.notes,
       importedFromStrong: input.importedFromStrong ?? false,
       importedFromFitbod: input.importedFromFitbod ?? false,
+      templateId: input.templateId,
     };
   },
   stop(this: Workout): Workout {

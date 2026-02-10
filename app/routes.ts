@@ -25,6 +25,7 @@ export default [
       route("workouts/import", "routes/workouts/import.tsx"),
       route("workouts/create", "routes/workouts/create.tsx"),
       route("workouts/generate", "routes/workouts/generate.tsx"),
+      route("workouts/templates", "routes/workouts/templates/index.tsx"),
       route("workouts/:id", "routes/workouts/:id.tsx"),
       route(
         "workouts/:id/substitute/:exerciseId",

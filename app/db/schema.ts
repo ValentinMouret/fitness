@@ -145,6 +145,53 @@ export const exerciseMuscleGroups = pgTable(
   ],
 );
 
+export const workoutTemplates = pgTable("workout_templates", {
+  id: uuid().defaultRandom().primaryKey(),
+  name: text().notNull(),
+  source_workout_id: uuid(),
+  ...timestampColumns(),
+});
+
+export const workoutTemplateExercises = pgTable(
+  "workout_template_exercises",
+  {
+    template_id: uuid()
+      .references(() => workoutTemplates.id)
+      .notNull(),
+    exercise_id: uuid()
+      .references(() => exercises.id)
+      .notNull(),
+    order_index: integer().notNull(),
+    notes: text(),
+    ...timestampColumns(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.template_id, table.exercise_id] }),
+    check("template_order_index_positive", sql`${table.order_index} >= 0`),
+  ],
+);
+
+export const workoutTemplateSets = pgTable(
+  "workout_template_sets",
+  {
+    template_id: uuid()
+      .references(() => workoutTemplates.id)
+      .notNull(),
+    exercise_id: uuid()
+      .references(() => exercises.id)
+      .notNull(),
+    set: integer().notNull(),
+    target_reps: integer(),
+    weight: doublePrecision(),
+    is_warmup: boolean().notNull().default(false),
+    ...timestampColumns(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.template_id, table.exercise_id, table.set] }),
+    check("template_set_is_positive", sql`${table.set} > 0`),
+  ],
+);
+
 export const workouts = pgTable("workouts", {
   id: uuid().defaultRandom().primaryKey(),
   name: text().notNull(),
@@ -153,6 +200,7 @@ export const workouts = pgTable("workouts", {
   notes: text(),
   imported_from_strong: boolean().notNull().default(false),
   imported_from_fitbod: boolean().notNull().default(false),
+  template_id: uuid().references(() => workoutTemplates.id),
   ...timestampColumns(),
 });
 
