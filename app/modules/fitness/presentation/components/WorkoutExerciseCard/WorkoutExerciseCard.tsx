@@ -40,6 +40,7 @@ interface WorkoutExerciseCardProps {
   ) => void;
   readonly onCompleteSet?: (exerciseId: string, setNumber: number) => void;
   readonly onRemoveSet?: (exerciseId: string, setNumber: number) => void;
+  readonly onExerciseNameClick?: (exerciseId: string) => void;
   readonly dragHandleListeners?: SyntheticListenerMap;
   readonly dragHandleAttributes?: DraggableAttributes;
 }
@@ -52,6 +53,7 @@ export function WorkoutExerciseCard({
   onUpdateSet,
   onCompleteSet,
   onRemoveSet,
+  onExerciseNameClick,
   dragHandleListeners,
   dragHandleAttributes,
 }: WorkoutExerciseCardProps) {
@@ -103,9 +105,15 @@ export function WorkoutExerciseCard({
             <DragHandleDots2Icon />
           </button>
         )}
-        <Text size="3" weight="medium" className="exercise-card__name">
-          {viewModel.exerciseName}
-        </Text>
+        <button
+          type="button"
+          className="exercise-card__name exercise-card__name--clickable"
+          onClick={() => onExerciseNameClick?.(viewModel.exerciseId)}
+        >
+          <Text size="3" weight="medium">
+            {viewModel.exerciseName}
+          </Text>
+        </button>
 
         {viewModel.canRemoveExercise && (
           <DropdownMenu.Root>

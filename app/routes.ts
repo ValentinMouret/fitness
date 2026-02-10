@@ -9,6 +9,7 @@ export default [
   route("login", "routes/login.tsx"),
   route("logout", "routes/logout.tsx"),
   route("api/quick-actions", "routes/api/quick-actions.ts"),
+  route("api/exercises/history", "routes/api/exercises/history.ts"),
 
   layout("layouts/ProtectedLayout.tsx", [
     layout("layouts/AppLayout.tsx", [

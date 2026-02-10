@@ -1,0 +1,136 @@
+.exercise-history-modal {
+  max-width: 480px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.exercise-history-modal__title {
+  font-family: var(--font-display);
+}
+
+.exercise-history-modal__tabs {
+  margin-top: var(--space-3);
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.exercise-history-modal__tabs [role="tab"] {
+  min-height: 44px;
+}
+
+.exercise-history-modal__tabs [role="tabpanel"] {
+  flex: 1;
+  min-height: 0;
+}
+
+.exercise-history-modal__scroll {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-top: var(--space-3);
+  -webkit-overflow-scrolling: touch;
+}
+
+.exercise-history-modal__loading,
+.exercise-history-modal__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+}
+
+.exercise-history-modal__loading-more,
+.exercise-history-modal__end {
+  text-align: center;
+  padding: var(--space-3) 0;
+}
+
+.exercise-history-modal__charts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Session card */
+
+.history-session-card {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--gray-4);
+}
+
+.history-session-card:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.history-session-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-2);
+}
+
+.history-session-card__volume {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.history-session-card__date {
+  display: block;
+  margin-top: 2px;
+}
+
+.history-session-card__table {
+  font-variant-numeric: tabular-nums;
+}
+
+.history-session-card__row {
+  display: grid;
+  grid-template-columns: 28px 1fr 1fr 1fr;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+}
+
+.history-session-card__row--header {
+  border-bottom: 1px solid var(--gray-4);
+  color: var(--gray-9);
+  font-size: var(--font-size-1);
+}
+
+.history-session-card__row--warmup {
+  opacity: 0.5;
+}
+
+.history-session-card__cell {
+  font-size: var(--font-size-2);
+}
+
+.history-session-card__cell--num {
+  text-align: center;
+  color: var(--gray-9);
+}
+
+.history-session-card__cell--right {
+  text-align: right;
+}
+
+/* Progression chart */
+
+.progression-chart {
+  padding-bottom: var(--space-2);
+}
+
+.progression-chart__label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-display);
+}
+
+.progression-chart__container {
+  border: 1px solid var(--gray-4);
+  border-radius: var(--radius-3);
+  padding: var(--space-2);
+  background: var(--brand-surface);
+}
