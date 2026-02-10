@@ -40,7 +40,8 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun x biome ci .
       - run: bun run typecheck
+      - run: bun x drizzle-kit check
       - run: bun run build
-      - run: bun run db:dev
+      - run: bun run db:migrate
       - run: bun run db:seed
       - run: bun run test
