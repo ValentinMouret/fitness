@@ -34,7 +34,8 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: "bun run build && bun run start",
+    command:
+      "bun run build && bun run db:dev && bun run db:seed && bun run start",
     url: "http://localhost:5175",
     reuseExistingServer: !process.env.CI,
     env: {

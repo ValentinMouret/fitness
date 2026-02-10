@@ -32,7 +32,18 @@ export default defineConfig({
     environment: "node",
     silent: true,
     logHeapUsage: false,
-    setupFiles: ["./vitest.setup.ts"],
-    exclude: ["**/node_modules/**", ".direnv/**", "tests/e2e/**"],
+    env: {
+      NODE_ENV: "test",
+      ANTHROPIC_API_KEY: "test",
+      AUTH_USERNAME: "test",
+      AUTH_PASSWORD: "test",
+      DATABASE_URL: "postgresql://localhost:5432/fitness_test",
+    },
+    exclude: [
+      "**/node_modules/**",
+      ".direnv/**",
+      "tests/e2e/**",
+      "**/*.integration.test.*",
+    ],
   },
 });
