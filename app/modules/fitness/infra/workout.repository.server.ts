@@ -12,12 +12,14 @@ import type { ErrRepository } from "~/repository";
 import { executeQuery } from "~/repository.server";
 import type {
   Exercise,
+  ExerciseHistoryPage,
   Workout,
   WorkoutExerciseGroup,
   WorkoutSession,
   WorkoutSet,
   WorkoutWithSummary,
 } from "../domain/workout";
+import { ExerciseHistorySession } from "../domain/workout";
 
 export const WorkoutRepository: IWorkoutRepository = {
   save(
@@ -828,6 +830,111 @@ export const WorkoutSessionRepository = {
         return "database_error" as const;
       },
     ).map(() => undefined);
+  },
+
+  getExerciseHistory(
+    exerciseId: string,
+    cursor?: string,
+    limit = 10,
+  ): ResultAsync<ExerciseHistoryPage, ErrRepository> {
+    const cursorDate = cursor ? new Date(cursor) : null;
+    const cursorCondition = cursorDate
+      ? sql`AND w.start < ${cursorDate}`
+      : sql``;
+
+    const query = sql`
+      SELECT
+        w.id      AS workout_id,
+        w.name    AS workout_name,
+        w.start   AS workout_date,
+        ws.set,
+        ws.reps,
+        ws.weight,
+        ws."isWarmup" AS is_warmup
+      FROM workout_sets ws
+      INNER JOIN workouts w ON ws.workout = w.id
+      WHERE ws.exercise = ${exerciseId}
+        AND w.stop IS NOT NULL
+        AND ws."isCompleted" = true
+        AND ws.deleted_at IS NULL
+        AND w.deleted_at IS NULL
+        ${cursorCondition}
+      ORDER BY w.start DESC, ws.set ASC
+    `;
+
+    return ResultAsync.fromPromise(db.execute(query), (error) => {
+      logger.error({ err: error }, "Error fetching exercise history");
+      return "database_error" as const;
+    }).map((result) => {
+      const rows = result.rows as Array<{
+        workout_id: string;
+        workout_name: string;
+        workout_date: Date;
+        set: number;
+        reps: number | null;
+        weight: string | null;
+        is_warmup: boolean;
+      }>;
+
+      // Group rows by workout
+      const workoutMap = new Map<
+        string,
+        {
+          workoutId: string;
+          workoutName: string;
+          date: Date;
+          sets: Array<{
+            set: number;
+            reps?: number;
+            weight?: number;
+            isWarmup: boolean;
+          }>;
+        }
+      >();
+
+      for (const row of rows) {
+        let entry = workoutMap.get(row.workout_id);
+        if (!entry) {
+          entry = {
+            workoutId: row.workout_id,
+            workoutName: row.workout_name,
+            date:
+              row.workout_date instanceof Date
+                ? row.workout_date
+                : new Date(row.workout_date),
+            sets: [],
+          };
+          workoutMap.set(row.workout_id, entry);
+        }
+        entry.sets.push({
+          set: row.set,
+          reps: row.reps ?? undefined,
+          weight: row.weight
+            ? Number.parseFloat(row.weight as string)
+            : undefined,
+          isWarmup: row.is_warmup,
+        });
+      }
+
+      const allSessions = Array.from(workoutMap.values()).map((entry) =>
+        ExerciseHistorySession.fromSets(
+          entry.workoutId,
+          entry.workoutName,
+          entry.date,
+          entry.sets,
+        ),
+      );
+
+      // Take limit + 1 to determine if there are more
+      const sessions = allSessions.slice(0, limit);
+      const hasMore = allSessions.length > limit;
+      const nextCursor =
+        hasMore && sessions.length > 0
+          ? sessions[sessions.length - 1].date.toISOString()
+          : undefined;
+
+      return { sessions, nextCursor, hasMore };
+    });
   },
 
   getLastCompletedSetsForExercise(

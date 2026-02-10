@@ -494,6 +494,77 @@ export const WeeklyVolumeTracker = {
   },
 };
 
+// Exercise History
+
+export interface ExerciseHistorySet {
+  readonly set: number;
+  readonly reps?: number;
+  readonly weight?: number;
+  readonly isWarmup: boolean;
+}
+
+export interface ExerciseHistorySession {
+  readonly workoutId: string;
+  readonly workoutName: string;
+  readonly date: Date;
+  readonly sets: ReadonlyArray<ExerciseHistorySet>;
+  readonly totalVolume: number;
+  readonly bestSetVolume: number;
+  readonly maxWeight?: number;
+  readonly estimatedOneRepMax?: number;
+}
+
+export interface ExerciseHistoryPage {
+  readonly sessions: ReadonlyArray<ExerciseHistorySession>;
+  readonly nextCursor?: string;
+  readonly hasMore: boolean;
+}
+
+/** Epley formula: 1RM = weight * (1 + reps / 30) */
+function estimateOneRepMax(weight: number, reps: number): number {
+  if (reps <= 0 || weight <= 0) return 0;
+  if (reps === 1) return weight;
+  return Math.round(weight * (1 + reps / 30) * 10) / 10;
+}
+
+export const ExerciseHistorySession = {
+  fromSets(
+    workoutId: string,
+    workoutName: string,
+    date: Date,
+    sets: ReadonlyArray<ExerciseHistorySet>,
+  ): ExerciseHistorySession {
+    const workingSets = sets.filter((s) => !s.isWarmup);
+
+    let totalVolume = 0;
+    let bestSetVolume = 0;
+    let maxWeight = 0;
+    let bestE1rm = 0;
+
+    for (const s of workingSets) {
+      const reps = s.reps ?? 0;
+      const weight = s.weight ?? 0;
+      const setVolume = reps * weight;
+      totalVolume += setVolume;
+      if (setVolume > bestSetVolume) bestSetVolume = setVolume;
+      if (weight > maxWeight) maxWeight = weight;
+      const e1rm = estimateOneRepMax(weight, reps);
+      if (e1rm > bestE1rm) bestE1rm = e1rm;
+    }
+
+    return {
+      workoutId,
+      workoutName,
+      date,
+      sets,
+      totalVolume: Math.round(totalVolume),
+      bestSetVolume: Math.round(bestSetVolume),
+      maxWeight: maxWeight > 0 ? maxWeight : undefined,
+      estimatedOneRepMax: bestE1rm > 0 ? bestE1rm : undefined,
+    };
+  },
+};
+
 export const MovementPatternSequencer = {
   getNextPattern(
     currentSequence: ReadonlyArray<MovementPattern>,

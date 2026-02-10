@@ -51,6 +51,7 @@ import { Workout } from "~/modules/fitness/domain/workout";
 import { WorkoutSessionRepository } from "~/modules/fitness/infra/workout.repository.server";
 import {
   createWorkoutExerciseCardViewModel,
+  ExerciseHistoryModal,
   WorkoutExerciseCard,
 } from "~/modules/fitness/presentation";
 import { formOptionalText, formText } from "~/utils/form-data";
@@ -246,6 +247,10 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
+  const [historyExercise, setHistoryExercise] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const fetcher = useFetcher();
   const reorderFetcher = useFetcher();
@@ -535,6 +540,16 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                     setReplaceExerciseId(exerciseId);
                     setShowExerciseSelector(true);
                   }}
+                  onExerciseNameClick={(exerciseId) => {
+                    const g = workoutSession.exerciseGroups.find(
+                      (eg) => eg.exercise.id === exerciseId,
+                    );
+                    if (g)
+                      setHistoryExercise({
+                        id: g.exercise.id,
+                        name: g.exercise.name,
+                      });
+                  }}
                 />
               ))}
             </SortableContext>
@@ -544,7 +559,15 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
             const viewModel = createWorkoutExerciseCardViewModel(group, true);
             return (
               <div key={group.exercise.id} className="active-workout-exercise">
-                <WorkoutExerciseCard viewModel={viewModel} />
+                <WorkoutExerciseCard
+                  viewModel={viewModel}
+                  onExerciseNameClick={() =>
+                    setHistoryExercise({
+                      id: group.exercise.id,
+                      name: group.exercise.name,
+                    })
+                  }
+                />
               </div>
             );
           })
@@ -607,6 +630,17 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
           onOpenChange={setShowDeleteDialog}
         />
       )}
+
+      {historyExercise && (
+        <ExerciseHistoryModal
+          exerciseId={historyExercise.id}
+          exerciseName={historyExercise.name}
+          open={!!historyExercise}
+          onOpenChange={(open) => {
+            if (!open) setHistoryExercise(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -616,11 +650,13 @@ function SortableExerciseCard({
   isComplete,
   onCompleteSet,
   onReplaceExercise,
+  onExerciseNameClick,
 }: {
   readonly group: WorkoutExerciseGroup;
   readonly isComplete: boolean;
   readonly onCompleteSet?: () => void;
   readonly onReplaceExercise?: (exerciseId: string) => void;
+  readonly onExerciseNameClick?: (exerciseId: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: group.exercise.id });
@@ -638,6 +674,7 @@ function SortableExerciseCard({
         viewModel={viewModel}
         onCompleteSet={onCompleteSet}
         onReplaceExercise={onReplaceExercise}
+        onExerciseNameClick={onExerciseNameClick}
         dragHandleListeners={listeners}
         dragHandleAttributes={attributes}
       />
