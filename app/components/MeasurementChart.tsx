@@ -170,7 +170,7 @@ export default function MeasurementChart({
               wrapperClassName="chart-tooltip"
             />
             <Line
-              type="monotone"
+              type="linear"
               dataKey="value"
               stroke="#e15a46"
               strokeWidth={2.5}
