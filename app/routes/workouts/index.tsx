@@ -225,6 +225,9 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
           AI Feedback
         </Button>
         <Button variant="outline" size="2" asChild>
+          <Link to="/workouts/recovery">Recovery Map</Link>
+        </Button>
+        <Button variant="outline" size="2" asChild>
           <Link to="/workouts/templates">Templates</Link>
         </Button>
         <Button variant="outline" size="2" asChild>
