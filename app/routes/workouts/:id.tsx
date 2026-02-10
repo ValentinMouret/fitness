@@ -365,19 +365,19 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
       {/* Header — editorial style */}
       <header className="active-workout-header">
         <Flex justify="between" align="start" gap="2">
-          <Flex align="start" gap="2" style={{ flex: 1, minWidth: 0 }}>
+          <Flex align="start" gap="2" className="active-workout-header__left">
             <IconButton
               asChild
               variant="ghost"
               size="1"
-              style={{ marginTop: "6px", flexShrink: 0 }}
+              className="active-workout-header__back"
             >
               <Link to="/workouts">
                 <ArrowLeftIcon />
               </Link>
             </IconButton>
 
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="active-workout-header__title-group">
               {isEditingName ? (
                 <TextField.Root
                   ref={inputRef}
@@ -396,49 +396,30 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                 <Text
                   size="7"
                   weight="bold"
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    display: "block",
-                    fontStyle: !isComplete ? "italic" : "normal",
-                    cursor: !isComplete ? "pointer" : "default",
-                    lineHeight: 1.1,
-                  }}
+                  className={`active-workout-header__name${!isComplete ? " active-workout-header__name--live" : ""}`}
                   onClick={() => !isComplete && setIsEditingName(true)}
                 >
                   {optimisticName}
                 </Text>
               )}
-              <Text
-                size="2"
-                style={{
-                  color: "var(--brand-text-secondary)",
-                  display: "block",
-                  marginTop: "4px",
-                }}
-              >
-                {startedAgo}
-              </Text>
+              <div className="active-workout-header__subtitle">
+                {!isComplete && (
+                  <span className="active-workout-header__live-badge">
+                    Live
+                  </span>
+                )}
+                <Text size="2" className="active-workout-header__started-ago">
+                  {startedAgo}
+                </Text>
+              </div>
             </div>
           </Flex>
 
-          <Flex align="center" gap="2" style={{ flexShrink: 0 }}>
-            {!isComplete && (
-              <span
-                style={{
-                  fontSize: "0.6rem",
-                  fontWeight: 700,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                  padding: "3px 8px",
-                  borderRadius: "100px",
-                  background: "var(--brand-coral)",
-                  color: "white",
-                }}
-              >
-                Live
-              </span>
-            )}
-
+          <Flex
+            align="center"
+            gap="2"
+            className="active-workout-header__actions"
+          >
             {!isComplete && (
               <Button size="1" onClick={() => setShowCompletionModal(true)}>
                 Complete
