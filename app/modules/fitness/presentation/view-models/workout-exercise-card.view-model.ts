@@ -1,7 +1,7 @@
 import type {
+  ExerciseType,
   WorkoutExerciseGroup,
   WorkoutSet,
-  ExerciseType,
 } from "~/modules/fitness/domain/workout";
 
 export interface WorkoutSetViewModel {

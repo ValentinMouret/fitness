@@ -4,7 +4,6 @@ import {
   DotsHorizontalIcon,
   PlusIcon,
 } from "@radix-ui/react-icons";
-import { z } from "zod";
 import {
   AlertDialog,
   Box,
@@ -22,13 +21,22 @@ import {
 } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import {
+  type ActionFunctionArgs,
   Link,
+  type LoaderFunctionArgs,
   useFetcher,
   useSearchParams,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
 } from "react-router";
+import { z } from "zod";
 import { zfd } from "zod-form-data";
+import { PageHeader } from "~/components/PageHeader";
+import { SectionHeader } from "~/components/SectionHeader";
+import {
+  applyMealTemplate,
+  deleteMealLog,
+  getMealsPageData,
+  saveMealAsTemplate,
+} from "~/modules/nutrition/application/meals-page.service.server";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import {
@@ -38,17 +46,9 @@ import {
   MealCard,
   TemplateSelectionModal,
 } from "~/modules/nutrition/presentation";
-import { PageHeader } from "~/components/PageHeader";
-import { SectionHeader } from "~/components/SectionHeader";
 import { addOneDay, removeOneDay, toDateString, today } from "~/time";
-import type { Route } from "./+types/meals";
-import {
-  applyMealTemplate,
-  deleteMealLog,
-  getMealsPageData,
-  saveMealAsTemplate,
-} from "~/modules/nutrition/application/meals-page.service.server";
 import { formOptionalText, formText } from "~/utils/form-data";
+import type { Route } from "./+types/meals";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);

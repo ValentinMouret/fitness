@@ -1,11 +1,11 @@
+import { redirect } from "react-router";
 import { AdaptiveWorkoutService } from "~/modules/fitness/application/adaptive-workout-service.server";
-import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
 import { VolumeTrackingService } from "~/modules/fitness/application/volume-tracking-service.server";
+import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
 import {
   WorkoutRepository,
   WorkoutSessionRepository,
 } from "~/modules/fitness/infra/workout.repository.server";
-import { redirect } from "react-router";
 
 export async function getGenerateWorkoutData() {
   const availableEquipmentResult =

@@ -1,21 +1,21 @@
-import { type Result, ResultAsync, err, ok } from "neverthrow";
-import type { ErrRepository } from "~/repository";
+import { err, ok, type Result, ResultAsync } from "neverthrow";
 import type {
   AdaptiveWorkoutRequest,
   AdaptiveWorkoutResult,
+  EquipmentInstance,
   Exercise,
   ExerciseMuscleGroups,
-  EquipmentInstance,
   MovementPattern,
   MuscleGroup,
 } from "~/modules/fitness/domain/workout";
 import {
   MovementPatternSequencer,
-  WorkoutSession as WorkoutSessionNamespace,
   Workout as WorkoutNamespace,
+  WorkoutSession as WorkoutSessionNamespace,
 } from "~/modules/fitness/domain/workout";
 import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
 import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
+import type { ErrRepository } from "~/repository";
 
 type ErrWorkoutGeneration =
   | "no_available_equipment"

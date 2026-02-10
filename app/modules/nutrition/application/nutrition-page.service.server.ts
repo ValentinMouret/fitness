@@ -2,8 +2,8 @@ import { ResultAsync } from "neverthrow";
 import { TargetService } from "~/modules/core/application/measurement-service";
 import { baseMeasurements } from "~/modules/core/domain/measurements";
 import { NutritionService } from "~/modules/nutrition/application/service";
-import { createServerError } from "~/utils/errors";
 import { today } from "~/time";
+import { createServerError } from "~/utils/errors";
 
 export async function getNutritionPageData(date: Date = today()) {
   const result = await ResultAsync.combine([

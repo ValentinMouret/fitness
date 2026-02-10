@@ -1,14 +1,14 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
+  addOneDay,
   allDays,
   Day,
+  formatStartedAgo,
+  getOrdinalSuffix,
   isSameDay,
+  removeOneDay,
   toDate,
   today,
-  addOneDay,
-  removeOneDay,
-  getOrdinalSuffix,
-  formatStartedAgo,
 } from "./time";
 
 describe("time module", () => {

@@ -1,9 +1,9 @@
+export type { Color } from "~/colors";
 export {
-  designTokens,
-  semanticColors,
   animations,
-  layout,
   brandColors,
   chartColors,
+  designTokens,
+  layout,
+  semanticColors,
 } from "./tokens";
-export type { Color } from "~/colors";

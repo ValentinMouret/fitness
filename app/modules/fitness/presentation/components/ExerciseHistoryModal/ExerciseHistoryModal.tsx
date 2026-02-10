@@ -1,3 +1,5 @@
+import { Dialog, Tabs, Text } from "@radix-ui/themes";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   CartesianGrid,
   Line,
@@ -7,8 +9,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Dialog, Tabs, Text } from "@radix-ui/themes";
-import { useCallback, useEffect, useRef, useState } from "react";
 import type { ExerciseHistoryPage } from "~/modules/fitness/domain/workout";
 import {
   createExerciseHistoryChartData,

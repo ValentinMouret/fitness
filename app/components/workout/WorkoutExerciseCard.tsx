@@ -1,28 +1,28 @@
-import { useState, useEffect } from "react";
-import {
-  Card,
-  Flex,
-  Text,
-  Button,
-  IconButton,
-  Heading,
-  Box,
-  Table,
-  TextField,
-  DropdownMenu,
-} from "@radix-ui/themes";
-import { NumberInput } from "~/components/NumberInput";
-import { ExerciseTypeBadge } from "~/modules/fitness/presentation/components";
 import {
   ChevronRightIcon,
-  TrashIcon,
   DotsVerticalIcon,
+  TrashIcon,
 } from "@radix-ui/react-icons";
+import {
+  Box,
+  Button,
+  Card,
+  DropdownMenu,
+  Flex,
+  Heading,
+  IconButton,
+  Table,
+  Text,
+  TextField,
+} from "@radix-ui/themes";
+import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
+import { NumberInput } from "~/components/NumberInput";
 import type {
   WorkoutExerciseGroup,
   WorkoutSet,
 } from "~/modules/fitness/domain/workout";
+import { ExerciseTypeBadge } from "~/modules/fitness/presentation/components";
 
 interface WorkoutExerciseCardProps {
   readonly exerciseGroup: WorkoutExerciseGroup;

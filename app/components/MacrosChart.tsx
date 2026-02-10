@@ -1,9 +1,9 @@
-import { useId } from "react";
 import { Flex, Text } from "@radix-ui/themes";
+import { useId } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { chartColors } from "~/design-system";
 import { macrosEnergyPerGram } from "~/modules/nutrition/domain/macros";
 import type { MacrosSplit } from "~/modules/nutrition/domain/nutrition-calculation-service";
-import { chartColors } from "~/design-system";
 
 interface MacrosChartProps {
   readonly macrosSplit: MacrosSplit;

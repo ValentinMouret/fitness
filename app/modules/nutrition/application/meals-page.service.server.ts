@@ -1,8 +1,8 @@
 import { TargetService } from "~/modules/core/application/measurement-service";
 import { baseMeasurements } from "~/modules/core/domain/measurements";
 import { NutritionService } from "~/modules/nutrition/application/service";
-import { handleResultError } from "~/utils/errors";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
+import { handleResultError } from "~/utils/errors";
 
 export async function getMealsPageData(date: Date) {
   const dailySummaryResult = await NutritionService.getDailySummary(date);

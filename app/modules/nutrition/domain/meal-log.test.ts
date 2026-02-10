@@ -1,18 +1,18 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+import type { Ingredient, IngredientWithQuantity } from "./ingredient";
 import {
-  createMealLog,
+  type CreateMealLogInput,
+  calculateDailyTotals,
   calculateMealLogNutrition,
   canAddIngredient,
-  updateIngredientQuantity,
-  removeIngredient,
-  calculateDailyTotals,
   createDailySummary,
+  createMealLog,
   isValidMealLogDate,
-  type CreateMealLogInput,
-  type MealLogWithNutrition,
   type MealCategory,
+  type MealLogWithNutrition,
+  removeIngredient,
+  updateIngredientQuantity,
 } from "./meal-log";
-import type { Ingredient, IngredientWithQuantity } from "./ingredient";
 
 const createTestIngredient = (overrides?: Partial<Ingredient>): Ingredient => ({
   id: "ingredient-1",

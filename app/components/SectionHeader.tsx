@@ -1,5 +1,5 @@
-import type React from "react";
 import { Flex, Heading } from "@radix-ui/themes";
+import type React from "react";
 
 export interface SectionHeaderProps {
   title: React.ReactNode;

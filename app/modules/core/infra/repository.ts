@@ -1,17 +1,17 @@
-import { db } from "~/db";
-import type { Target } from "../domain/target";
-import { targets } from "~/db/schema";
-import { ok, Result, ResultAsync } from "neverthrow";
 import {
   eq,
-  isNull,
-  sql,
   type InferInsertModel,
   type InferSelectModel,
+  isNull,
+  sql,
 } from "drizzle-orm";
+import { ok, Result, ResultAsync } from "neverthrow";
+import { db } from "~/db";
+import { targets } from "~/db/schema";
 import { logger } from "~/logger.server";
 import type { ErrValidation } from "~/repository";
 import { executeQuery, type Transaction } from "~/repository.server";
+import type { Target } from "../domain/target";
 
 export const TargetRepository = {
   save(target: Target, tx?: Transaction) {

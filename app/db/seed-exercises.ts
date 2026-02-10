@@ -7,8 +7,8 @@ import type { MuscleGroup } from "~/modules/fitness/domain/workout";
 import {
   equipmentPreferences,
   exerciseMuscleGroups,
-  exercises,
   exerciseSubstitutions,
+  exercises,
 } from "./schema";
 
 export const db = drizzle({

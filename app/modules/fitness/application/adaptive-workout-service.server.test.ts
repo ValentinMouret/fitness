@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ResultAsync } from "neverthrow";
-import { AdaptiveWorkoutService } from "./adaptive-workout-service.server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   AdaptiveWorkoutRequest,
-  ExerciseMuscleGroups,
-  Exercise,
   EquipmentInstance,
+  Exercise,
+  ExerciseMuscleGroups,
   MuscleGroup,
 } from "~/modules/fitness/domain/workout";
+import { AdaptiveWorkoutService } from "./adaptive-workout-service.server";
 
 vi.mock("~/modules/fitness/infra/repository.server", () => ({
   ExerciseMuscleGroupsRepository: {
@@ -21,8 +21,8 @@ vi.mock("~/modules/fitness/infra/adaptive-workout-repository.server", () => ({
   },
 }));
 
-import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
+import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 
 const mockExerciseMuscleGroupsListAll =
   ExerciseMuscleGroupsRepository.listAll as ReturnType<typeof vi.fn>;

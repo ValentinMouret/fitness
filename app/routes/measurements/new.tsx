@@ -1,19 +1,18 @@
-import { Form, redirect, useActionData, Link } from "react-router";
-import { data } from "react-router";
-import type { Route } from "./+types/new";
-import { createMeasurement } from "~/modules/core/application/create-measurement.service.server";
-import { z } from "zod";
-import { zfd } from "zod-form-data";
-import { formOptionalText, formText } from "~/utils/form-data";
 import {
   Box,
-  TextField,
-  TextArea,
   Button,
-  Text,
-  Flex,
   Callout,
+  Flex,
+  Text,
+  TextArea,
+  TextField,
 } from "@radix-ui/themes";
+import { data, Form, Link, redirect, useActionData } from "react-router";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
+import { createMeasurement } from "~/modules/core/application/create-measurement.service.server";
+import { formOptionalText, formText } from "~/utils/form-data";
+import type { Route } from "./+types/new";
 
 export const handle = {
   header: () => ({

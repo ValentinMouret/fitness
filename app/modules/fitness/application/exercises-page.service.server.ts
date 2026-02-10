@@ -1,5 +1,5 @@
-import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 import { parseExerciseType } from "~/modules/fitness/domain/workout";
+import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 
 export async function getExercisesPageData(input: {
   readonly typeParam?: string | null;

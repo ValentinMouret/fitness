@@ -1,9 +1,13 @@
-import { NutritionCalculationService } from "~/modules/nutrition/domain/nutrition-calculation-service";
-import { Age, Height, Weight } from "~/modules/core/domain/measurements";
-import { Activity } from "~/modules/nutrition/domain/activity";
-import { Target } from "~/modules/core/domain/target";
-import { baseMeasurements } from "~/modules/core/domain/measurements";
 import { TargetService } from "~/modules/core/application/measurement-service";
+import {
+  Age,
+  baseMeasurements,
+  Height,
+  Weight,
+} from "~/modules/core/domain/measurements";
+import { Target } from "~/modules/core/domain/target";
+import { Activity } from "~/modules/nutrition/domain/activity";
+import { NutritionCalculationService } from "~/modules/nutrition/domain/nutrition-calculation-service";
 
 export function calculateTargets(input: {
   readonly age: number;

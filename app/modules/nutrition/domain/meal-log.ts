@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { IngredientWithQuantity, NutritionalTotals } from "./ingredient";
 import { Ingredient } from "./ingredient";
-import { mealCategories, type MealCategory } from "./meal-template";
+import { type MealCategory, mealCategories } from "./meal-template";
 
 export type { MealCategory };
 

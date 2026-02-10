@@ -3,10 +3,10 @@ import { ResultAsync } from "neverthrow";
 import { db } from "~/db";
 import {
   exercises,
+  workouts,
   workoutTemplateExercises,
   workoutTemplateSets,
   workoutTemplates,
-  workouts,
 } from "~/db/schema";
 import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";

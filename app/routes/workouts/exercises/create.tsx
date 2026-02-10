@@ -1,12 +1,12 @@
+import { z } from "zod";
+import { zfd } from "zod-form-data";
 import ExerciseForm from "~/components/ExerciseForm";
-import type { Route } from "./+types";
 import {
   createExercise,
   type MuscleGroupSplitInput,
 } from "~/modules/fitness/application/exercise-form.service.server";
-import { z } from "zod";
-import { zfd } from "zod-form-data";
 import { formOptionalText, formText } from "~/utils/form-data";
+import type { Route } from "./+types";
 
 export const action = async ({ request }: Route.ActionArgs) => {
   const form = await request.formData();

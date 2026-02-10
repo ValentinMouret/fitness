@@ -1,18 +1,18 @@
-import { describe, it, expect, afterEach } from "vitest";
-import { importWorkout } from "./strong-import.service.server";
-import { WorkoutSessionRepository } from "../infra/workout.repository.server";
-import {
-  STRONG_EXPORT_COMMA_DECIMALS_FAILURE,
-  STRONG_EXPORT_BODYWEIGHT_REPS_ONLY,
-} from "../domain/strong-import.fixtures";
+import { eq } from "drizzle-orm";
+import { afterEach, describe, expect, it } from "vitest";
 import { db } from "~/db";
 import {
-  workouts,
-  workoutSets,
   exercises,
   workoutExercises,
+  workoutSets,
+  workouts,
 } from "~/db/schema";
-import { eq } from "drizzle-orm";
+import {
+  STRONG_EXPORT_BODYWEIGHT_REPS_ONLY,
+  STRONG_EXPORT_COMMA_DECIMALS_FAILURE,
+} from "../domain/strong-import.fixtures";
+import { WorkoutSessionRepository } from "../infra/workout.repository.server";
+import { importWorkout } from "./strong-import.service.server";
 
 describe("StrongImportService Integration Tests", () => {
   let createdWorkoutId: string | null = null;

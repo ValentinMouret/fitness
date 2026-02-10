@@ -1,11 +1,11 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import type { Route } from "./+types/substitute";
+import { zfd } from "zod-form-data";
 import {
   getSubstituteExerciseData,
   substituteExercise,
 } from "~/modules/fitness/application/substitute-exercise.service.server";
-import { zfd } from "zod-form-data";
 import { formRepeatableText } from "~/utils/form-data";
+import type { Route } from "./+types/substitute";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const { id: workoutId, exerciseId } = params;

@@ -1,6 +1,6 @@
+import { handleResultError } from "~/utils/errors";
 import type { Habit } from "../domain/entity";
 import { HabitRepository } from "../infra/repository.server";
-import { handleResultError } from "~/utils/errors";
 
 export async function getHabitForEdit(id: string): Promise<Habit> {
   const result = await HabitRepository.fetchById(id);

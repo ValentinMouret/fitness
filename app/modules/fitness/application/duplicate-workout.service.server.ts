@@ -1,6 +1,6 @@
 import { redirect } from "react-router";
-import { Workout } from "~/modules/fitness/domain/workout";
 import type { WorkoutSession } from "~/modules/fitness/domain/workout";
+import { Workout } from "~/modules/fitness/domain/workout";
 import {
   WorkoutRepository,
   WorkoutSessionRepository,

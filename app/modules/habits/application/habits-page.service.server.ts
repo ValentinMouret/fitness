@@ -1,11 +1,11 @@
-import { HabitService } from "./service";
+import { isSameDay, today } from "~/time";
+import { handleResultError } from "~/utils/errors";
 import { HabitCompletion } from "../domain/entity";
 import {
   HabitCompletionRepository,
   HabitRepository,
 } from "../infra/repository.server";
-import { handleResultError } from "~/utils/errors";
-import { isSameDay, today } from "~/time";
+import { HabitService } from "./service";
 
 const STREAK_MILESTONES = [7, 30, 90, 365];
 

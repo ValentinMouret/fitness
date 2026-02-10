@@ -30,6 +30,9 @@
         "rules": {
           "complexity": {
             "noImportantStyles": "off"
+          },
+          "style": {
+            "noDescendingSpecificity": "off"
           }
         }
       }

@@ -1,27 +1,26 @@
-import { Form, redirect, useActionData, Link } from "react-router";
-import { data } from "react-router";
-import { z } from "zod";
-import type { Route } from "./+types/new";
-import { createHabit } from "../../modules/habits/application/create-habit.service.server";
+import {
+  Box,
+  Button,
+  Callout,
+  Checkbox,
+  Flex,
+  Grid,
+  Select,
+  Text,
+  TextArea,
+  TextField,
+} from "@radix-ui/themes";
 import * as React from "react";
+import { data, Form, Link, redirect, useActionData } from "react-router";
+import { z } from "zod";
 import { zfd } from "zod-form-data";
 import {
   formOptionalText,
   formRepeatableText,
   formText,
 } from "~/utils/form-data";
-import {
-  Box,
-  TextField,
-  TextArea,
-  Select,
-  Button,
-  Text,
-  Flex,
-  Callout,
-  Checkbox,
-  Grid,
-} from "@radix-ui/themes";
+import { createHabit } from "../../modules/habits/application/create-habit.service.server";
+import type { Route } from "./+types/new";
 
 export const handle = {
   header: () => ({

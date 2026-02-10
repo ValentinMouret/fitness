@@ -1,4 +1,4 @@
-import { AlertDialog, Button, Flex, Text, Card, Box } from "@radix-ui/themes";
+import { AlertDialog, Box, Button, Card, Flex, Text } from "@radix-ui/themes";
 import { Form, useNavigation } from "react-router";
 import type { WorkoutSession } from "~/modules/fitness/domain/workout";
 

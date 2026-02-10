@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Pencil1Icon, PlusIcon } from "@radix-ui/react-icons";
 import {
   Badge,
@@ -10,20 +9,21 @@ import {
   Grid,
   Text,
 } from "@radix-ui/themes";
+import { useEffect, useState } from "react";
 import { data, Form, Link, useNavigation } from "react-router";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
+import { Celebration } from "~/components/Celebration";
 import { EmptyState } from "~/components/EmptyState";
 import { SectionHeader } from "~/components/SectionHeader";
-import { Celebration } from "~/components/Celebration";
-import HabitCheckbox from "../../components/HabitCheckbox";
-import { Day } from "../../time";
-import type { Route } from "./+types/index";
 import {
   getHabitsPageData,
   toggleHabitCompletion,
 } from "~/modules/habits/application/habits-page.service.server";
-import { z } from "zod";
-import { zfd } from "zod-form-data";
 import { formBoolean, formOptionalText, formText } from "~/utils/form-data";
+import HabitCheckbox from "../../components/HabitCheckbox";
+import { Day } from "../../time";
+import type { Route } from "./+types/index";
 
 export async function loader() {
   return getHabitsPageData();
