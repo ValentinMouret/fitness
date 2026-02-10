@@ -1,9 +1,18 @@
 #!/bin/bash
 set -euo pipefail
 
-REPO_DIR="/home/valentin/fitness"
-LOG_FILE="/var/log/fitness-deploy.log"
-LOCK_FILE="/var/lock/fitness-deploy.lock"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/docker-compose.yml" ] || [ -f "$SCRIPT_DIR/docker-compose.yaml" ]; then
+  DEFAULT_REPO_DIR="$SCRIPT_DIR"
+else
+  DEFAULT_REPO_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+fi
+REPO_DIR="${REPO_DIR:-$DEFAULT_REPO_DIR}"
+DEPLOY_STATE_DIR="${DEPLOY_STATE_DIR:-$REPO_DIR/.deploy}"
+LOG_FILE="${LOG_FILE:-$DEPLOY_STATE_DIR/deploy.log}"
+LOCK_FILE="${LOCK_FILE:-$DEPLOY_STATE_DIR/deploy.lock}"
+
+mkdir -p "$DEPLOY_STATE_DIR"
 
 log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S'): $1" | tee -a "$LOG_FILE"
