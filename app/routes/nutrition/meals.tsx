@@ -6,6 +6,7 @@ import {
 } from "@radix-ui/react-icons";
 import { z } from "zod";
 import {
+  AlertDialog,
   Box,
   Button,
   Card,
@@ -15,9 +16,11 @@ import {
   Heading,
   IconButton,
   Progress,
+  RadioGroup,
   Text,
+  TextField,
 } from "@radix-ui/themes";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Link,
   useFetcher,
@@ -43,6 +46,7 @@ import {
   applyMealTemplate,
   deleteMealLog,
   getMealsPageData,
+  saveMealAsTemplate,
 } from "~/modules/nutrition/application/meals-page.service.server";
 import { formOptionalText, formText } from "~/utils/form-data";
 
@@ -99,6 +103,29 @@ export async function action({ request }: ActionFunctionArgs) {
     return { success: true };
   }
 
+  if (intent === "save-as-template") {
+    const schema = zfd.formData({
+      mealId: formText(z.string().min(1)),
+      name: formText(z.string().min(1)),
+      category: formText(z.enum(["breakfast", "lunch", "dinner", "snack"])),
+      notes: formOptionalText(),
+    });
+    const parsed = schema.parse(formData);
+
+    const result = await saveMealAsTemplate({
+      mealId: parsed.mealId,
+      name: parsed.name,
+      category: parsed.category,
+      notes: parsed.notes ?? undefined,
+    });
+
+    if (!result.ok) {
+      return { success: false, error: result.error };
+    }
+
+    return { success: true };
+  }
+
   return { success: false, error: "Unknown intent" };
 }
 
@@ -144,6 +171,10 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
   const [currentMealType, setCurrentMealType] = useState<MealCategory | null>(
     null,
   );
+  const [saveAsTemplateMeal, setSaveAsTemplateMeal] = useState<{
+    id: string;
+    category: MealCategory;
+  } | null>(null);
   const fetcher = useFetcher();
 
   const templateSelectionViewModel = currentMealType
@@ -365,6 +396,18 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content>
                           <DropdownMenu.Item
+                            onClick={() =>
+                              setSaveAsTemplateMeal({
+                                id: meal.id,
+                                category: mealType,
+                              })
+                            }
+                          >
+                            Save as Template
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Separator />
+                          <DropdownMenu.Item
+                            color="red"
                             onClick={() => handleClearMeal(mealType)}
                           >
                             Clear Meal
@@ -406,6 +449,135 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
         viewModel={templateSelectionViewModel}
         onApply={handleApplyTemplate}
       />
+
+      <SaveAsTemplateDialog
+        meal={saveAsTemplateMeal}
+        onClose={() => setSaveAsTemplateMeal(null)}
+        fetcher={fetcher}
+      />
     </>
+  );
+}
+
+function SaveAsTemplateDialog({
+  meal,
+  onClose,
+  fetcher,
+}: {
+  readonly meal: {
+    readonly id: string;
+    readonly category: MealCategory;
+  } | null;
+  readonly onClose: () => void;
+  readonly fetcher: ReturnType<typeof useFetcher>;
+}) {
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState<MealCategory>("lunch");
+  const [notes, setNotes] = useState("");
+
+  // Sync category when a new meal is selected
+  useEffect(() => {
+    if (meal) {
+      setCategory(meal.category);
+      setName("");
+      setNotes("");
+    }
+  }, [meal]);
+
+  const handleSave = () => {
+    if (!meal || !name) return;
+
+    fetcher.submit(
+      {
+        intent: "save-as-template",
+        mealId: meal.id,
+        name,
+        category,
+        notes,
+      },
+      { method: "post" },
+    );
+
+    onClose();
+  };
+
+  return (
+    <AlertDialog.Root
+      open={meal !== null}
+      onOpenChange={(open) => !open && onClose()}
+    >
+      <AlertDialog.Content>
+        <AlertDialog.Title>Save as Template</AlertDialog.Title>
+        <AlertDialog.Description>
+          Save this meal as a reusable template.
+        </AlertDialog.Description>
+
+        <Flex direction="column" gap="3" mt="4">
+          <Box>
+            <Text as="label" size="2" weight="medium" mb="1">
+              Template Name *
+            </Text>
+            <TextField.Root
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Post-workout meal"
+            />
+          </Box>
+
+          <Box>
+            <Text as="label" size="2" weight="medium" mb="1">
+              Category
+            </Text>
+            <RadioGroup.Root
+              value={category}
+              onValueChange={(value: MealCategory) => setCategory(value)}
+            >
+              <Flex gap="4">
+                <Flex align="center" gap="2">
+                  <RadioGroup.Item value="breakfast" />
+                  <Text size="2">Breakfast</Text>
+                </Flex>
+                <Flex align="center" gap="2">
+                  <RadioGroup.Item value="lunch" />
+                  <Text size="2">Lunch</Text>
+                </Flex>
+                <Flex align="center" gap="2">
+                  <RadioGroup.Item value="dinner" />
+                  <Text size="2">Dinner</Text>
+                </Flex>
+                <Flex align="center" gap="2">
+                  <RadioGroup.Item value="snack" />
+                  <Text size="2">Snack</Text>
+                </Flex>
+              </Flex>
+            </RadioGroup.Root>
+          </Box>
+
+          <Box>
+            <Text as="label" size="2" weight="medium" mb="1">
+              Notes (optional)
+            </Text>
+            <TextField.Root
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add any notes about this meal..."
+            />
+          </Box>
+        </Flex>
+
+        <Flex gap="3" mt="4" justify="end">
+          <AlertDialog.Cancel>
+            <Button variant="soft" onClick={onClose}>
+              Cancel
+            </Button>
+          </AlertDialog.Cancel>
+          <AlertDialog.Action>
+            <Button onClick={handleSave} disabled={!name}>
+              Save Template
+            </Button>
+          </AlertDialog.Action>
+        </Flex>
+      </AlertDialog.Content>
+    </AlertDialog.Root>
   );
 }

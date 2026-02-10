@@ -73,3 +73,32 @@ export async function deleteMealLog(input: {
 
   return { ok: true };
 }
+
+export async function saveMealAsTemplate(input: {
+  readonly mealId: string;
+  readonly name: string;
+  readonly category: MealCategory;
+  readonly notes?: string;
+}): Promise<MealActionResult> {
+  const mealResult = await NutritionService.getMealLogWithIngredients(
+    input.mealId,
+  );
+
+  if (mealResult.isErr()) {
+    return { ok: false, error: "Failed to load meal" };
+  }
+
+  const meal = mealResult.value;
+  const templateResult = await NutritionService.createMealTemplate({
+    name: input.name,
+    category: input.category,
+    notes: input.notes,
+    ingredients: meal.ingredients,
+  });
+
+  if (templateResult.isErr()) {
+    return { ok: false, error: "Failed to save template" };
+  }
+
+  return { ok: true };
+}
