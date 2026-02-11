@@ -25,6 +25,11 @@
   },
   "overrides": [
     {
+      "includes": ["drizzle/meta/**"],
+      "formatter": { "enabled": false },
+      "linter": { "enabled": false }
+    },
+    {
       "includes": ["**/*.css"],
       "linter": {
         "rules": {
