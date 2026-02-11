@@ -53,7 +53,7 @@ export async function duplicateWorkout(
         exerciseId: group.exercise.id,
         set: set.set,
         targetReps: set.reps ?? set.targetReps,
-        reps: undefined,
+        reps: set.reps ?? set.targetReps,
         weight: set.weight,
         note: undefined,
         isCompleted: false,
