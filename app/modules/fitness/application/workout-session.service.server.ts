@@ -216,6 +216,7 @@ type SetUpdate = {
   reps?: number;
   weight?: number;
   note?: string;
+  rpe?: number;
   isCompleted?: boolean;
 };
 
@@ -226,6 +227,7 @@ export async function updateSetInWorkout(input: {
   readonly repsStr?: string;
   readonly weightStr?: string;
   readonly note?: string;
+  readonly rpeStr?: string;
   readonly isCompletedStr?: string;
 }): Promise<WorkoutActionResult> {
   if (!input.exerciseId || !input.setNumberStr) {
@@ -258,6 +260,17 @@ export async function updateSetInWorkout(input: {
       return { error: "Weight must be a positive number" };
     } else {
       updateData.weight = weight;
+    }
+  }
+
+  if (input.rpeStr !== undefined) {
+    const rpe = Number.parseFloat(input.rpeStr);
+    if (input.rpeStr === "") {
+      // Leave undefined to avoid updating the field.
+    } else if (Number.isNaN(rpe) || rpe < 6 || rpe > 10) {
+      return { error: "RPE must be between 6 and 10" };
+    } else {
+      updateData.rpe = rpe;
     }
   }
 

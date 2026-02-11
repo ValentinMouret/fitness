@@ -3,6 +3,8 @@ export { ExerciseHistoryModal } from "./ExerciseHistoryModal";
 export * from "./ExerciseTypeBadge";
 export { FitbodImportForm } from "./FitbodImportForm/FitbodImportForm";
 export { MuscleRecoveryMap } from "./MuscleRecoveryMap";
+export { RefinementChat } from "./RefinementChat/RefinementChat";
 export { StartWorkoutDialog } from "./StartWorkoutDialog/StartWorkoutDialog";
 export { StrongImportForm } from "./StrongImportForm/StrongImportForm";
 export * from "./WorkoutExerciseCard";
+export { WorkoutPreview } from "./WorkoutPreview/WorkoutPreview";
