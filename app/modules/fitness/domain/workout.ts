@@ -180,6 +180,7 @@ export interface WorkoutSet {
   readonly isCompleted: boolean;
   readonly isFailure: boolean;
   readonly isWarmup: boolean;
+  readonly rpe?: number;
 }
 
 interface WorkoutSetCreateInput {
@@ -193,6 +194,7 @@ interface WorkoutSetCreateInput {
   readonly isCompleted?: boolean;
   readonly isFailure?: boolean;
   readonly isWarmup?: boolean;
+  readonly rpe?: number;
 }
 
 type ErrInvalidSet = "Invalid set";
@@ -242,6 +244,7 @@ export const WorkoutSet = {
       isCompleted: input.isCompleted ?? false,
       isFailure: input.isFailure ?? false,
       isWarmup: input.isWarmup ?? false,
+      rpe: input.rpe,
     });
   },
 };
@@ -504,6 +507,7 @@ export interface ExerciseHistorySet {
   readonly reps?: number;
   readonly weight?: number;
   readonly isWarmup: boolean;
+  readonly rpe?: number;
 }
 
 export interface ExerciseHistorySession {

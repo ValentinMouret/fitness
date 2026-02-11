@@ -9,6 +9,7 @@ export interface WorkoutSetViewModel {
   readonly reps?: number;
   readonly weight?: number;
   readonly note?: string;
+  readonly rpe?: number;
   readonly isCompleted: boolean;
   readonly isFailure: boolean;
   readonly isWarmup: boolean;
@@ -37,6 +38,7 @@ function createWorkoutSetViewModel(set: WorkoutSet): WorkoutSetViewModel {
     reps: set.reps,
     weight: set.weight,
     note: set.note,
+    rpe: set.rpe,
     isCompleted: set.isCompleted,
     isFailure: set.isFailure,
     isWarmup: set.isWarmup,

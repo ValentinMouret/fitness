@@ -176,6 +176,7 @@ export async function action({ request, params }: Route.ActionArgs) {
           reps: formOptionalText(),
           weight: formOptionalText(),
           note: formOptionalText(),
+          rpe: formOptionalText(),
           isCompleted: formOptionalText(),
         });
         const parsed = schema.parse(formData);
@@ -186,6 +187,7 @@ export async function action({ request, params }: Route.ActionArgs) {
           repsStr: parsed.reps ?? undefined,
           weightStr: parsed.weight ?? undefined,
           note: parsed.note ?? undefined,
+          rpeStr: parsed.rpe ?? undefined,
           isCompletedStr: parsed.isCompleted ?? undefined,
         });
       }

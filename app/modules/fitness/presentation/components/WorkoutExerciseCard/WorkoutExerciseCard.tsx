@@ -162,6 +162,9 @@ export function WorkoutExerciseCard({
           <span className="set-table-header__label set-table-header__label--right">
             Reps
           </span>
+          <span className="set-table-header__label set-table-header__label--right">
+            RPE
+          </span>
           <span className="set-table-header__label set-table-header__label--center" />
         </div>
 
@@ -217,12 +220,14 @@ function SetRow({
 }: SetRowProps) {
   const [localReps, setLocalReps] = useState(set.reps?.toString() ?? "");
   const [localWeight, setLocalWeight] = useState(set.weight?.toString() ?? "");
+  const [localRpe, setLocalRpe] = useState(set.rpe?.toString() ?? "");
   const fetcher = useFetcher();
 
   useEffect(() => {
     setLocalReps(set.reps?.toString() ?? "");
     setLocalWeight(set.weight?.toString() ?? "");
-  }, [set.reps, set.weight]);
+    setLocalRpe(set.rpe?.toString() ?? "");
+  }, [set.reps, set.weight, set.rpe]);
 
   const handleUpdateSet = (field: string, value: string) => {
     if (onUpdateSet) {
@@ -255,6 +260,9 @@ function SetRow({
           </Text>
           <Text size="2" className="set-row__value">
             {set.reps ?? "—"}
+          </Text>
+          <Text size="2" className="set-row__value">
+            {set.rpe ?? "—"}
           </Text>
         </>
       ) : (
@@ -300,6 +308,27 @@ function SetRow({
               size="2"
               variant="surface"
               className="set-row__input"
+            />
+          </fetcher.Form>
+          <fetcher.Form
+            method="post"
+            onChange={(e) => e.currentTarget.requestSubmit()}
+          >
+            <input type="hidden" name="intent" value="update-set" />
+            <input type="hidden" name="exerciseId" value={exerciseId} />
+            <input type="hidden" name="setNumber" value={set.set} />
+            <NumberInput
+              name="rpe"
+              value={localRpe}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const value = e.target.value;
+                setLocalRpe(value);
+                handleUpdateSet("rpe", value);
+              }}
+              placeholder="RPE"
+              size="2"
+              variant="surface"
+              className="set-row__input set-row__input--rpe"
             />
           </fetcher.Form>
         </>

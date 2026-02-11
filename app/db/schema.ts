@@ -339,6 +339,7 @@ export const workoutSets = pgTable(
     isCompleted: boolean().notNull().default(false),
     isFailure: boolean().notNull().default(false),
     isWarmup: boolean().notNull().default(false),
+    rpe: doublePrecision(),
     ...timestampColumns(),
   },
   (table) => [
@@ -356,8 +357,30 @@ export const workoutSets = pgTable(
       "weight_is_null_or_positive",
       sql`${table.weight} is null or ${table.weight} > 0`,
     ),
+    check(
+      "rpe_range",
+      sql`${table.rpe} is null or (${table.rpe} >= 6 and ${table.rpe} <= 10)`,
+    ),
   ],
 );
+
+// AI Workout Generation
+export const trainingPreferences = pgTable("training_preferences", {
+  id: uuid().primaryKey().defaultRandom(),
+  content: text().notNull(),
+  source: text().notNull().default("refinement"),
+  ...timestampColumns(),
+});
+
+export const generationConversations = pgTable("generation_conversations", {
+  id: uuid().primaryKey().defaultRandom(),
+  workout_id: uuid().references(() => workouts.id),
+  messages: jsonb().notNull().default([]),
+  context_snapshot: jsonb().notNull(),
+  model: text().notNull(),
+  total_tokens: integer().notNull().default(0),
+  ...timestampColumns(),
+});
 
 // Nutrition
 export const ingredientCategory = pgEnum(

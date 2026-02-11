@@ -311,6 +311,7 @@ export const WorkoutRepository: IWorkoutRepository = {
                 isCompleted: set.isCompleted,
                 isFailure: set.isFailure,
                 isWarmup: set.isWarmup,
+                rpe: set.rpe ?? null,
               })
               .onConflictDoUpdate({
                 target: [
@@ -326,6 +327,7 @@ export const WorkoutRepository: IWorkoutRepository = {
                   isCompleted: set.isCompleted,
                   isFailure: set.isFailure,
                   isWarmup: set.isWarmup,
+                  rpe: set.rpe ?? null,
                   updated_at: new Date(),
                   deleted_at: null,
                 },
@@ -575,6 +577,7 @@ export const WorkoutSessionRepository = {
           isCompleted: workoutSet.isCompleted,
           isFailure: workoutSet.isFailure,
           isWarmup: workoutSet.isWarmup,
+          rpe: workoutSet.rpe ?? null,
         })
         .onConflictDoUpdate({
           target: [workoutSets.workout, workoutSets.exercise, workoutSets.set],
@@ -586,6 +589,7 @@ export const WorkoutSessionRepository = {
             isCompleted: workoutSet.isCompleted,
             isFailure: workoutSet.isFailure,
             isWarmup: workoutSet.isWarmup,
+            rpe: workoutSet.rpe ?? null,
             updated_at: new Date(),
             deleted_at: null, // Restore if it was soft deleted
           },
@@ -645,6 +649,7 @@ export const WorkoutSessionRepository = {
         | "isCompleted"
         | "isFailure"
         | "isWarmup"
+        | "rpe"
       >
     >,
   ): ResultAsync<void, ErrRepository> {
@@ -659,6 +664,7 @@ export const WorkoutSessionRepository = {
           isCompleted: updates.isCompleted ?? undefined,
           isFailure: updates.isFailure ?? undefined,
           isWarmup: updates.isWarmup ?? undefined,
+          rpe: updates.rpe ?? undefined,
           updated_at: new Date(),
         })
         .where(
@@ -853,7 +859,8 @@ export const WorkoutSessionRepository = {
         ws.set,
         ws.reps,
         ws.weight,
-        ws."isWarmup" AS is_warmup
+        ws."isWarmup" AS is_warmup,
+        ws.rpe
       FROM workout_sets ws
       INNER JOIN workouts w ON ws.workout = w.id
       WHERE ws.exercise = ${exerciseId}
@@ -877,6 +884,7 @@ export const WorkoutSessionRepository = {
         reps: number | null;
         weight: string | null;
         is_warmup: boolean;
+        rpe: number | null;
       }>;
 
       // Group rows by workout
@@ -891,6 +899,7 @@ export const WorkoutSessionRepository = {
             reps?: number;
             weight?: number;
             isWarmup: boolean;
+            rpe?: number;
           }>;
         }
       >();
@@ -916,6 +925,7 @@ export const WorkoutSessionRepository = {
             ? Number.parseFloat(row.weight as string)
             : undefined,
           isWarmup: row.is_warmup,
+          rpe: row.rpe ?? undefined,
         });
       }
 
@@ -1032,5 +1042,6 @@ function workoutSetRecordToDomain(
     isCompleted: record.isCompleted,
     isFailure: record.isFailure,
     isWarmup: record.isWarmup,
+    rpe: record.rpe ?? undefined,
   };
 }
