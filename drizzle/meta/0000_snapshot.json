@@ -97,12 +97,8 @@
           "name": "equipment_instances_gym_floor_id_gym_floors_id_fk",
           "tableFrom": "equipment_instances",
           "tableTo": "gym_floors",
-          "columnsFrom": [
-            "gym_floor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["gym_floor_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -167,10 +163,7 @@
       "compositePrimaryKeys": {
         "equipment_preferences_muscle_group_exercise_type_pk": {
           "name": "equipment_preferences_muscle_group_exercise_type_pk",
-          "columns": [
-            "muscle_group",
-            "exercise_type"
-          ]
+          "columns": ["muscle_group", "exercise_type"]
         }
       },
       "uniqueConstraints": {},
@@ -232,12 +225,8 @@
           "name": "exercise_muscle_groups_exercise_exercises_id_fk",
           "tableFrom": "exercise_muscle_groups",
           "tableTo": "exercises",
-          "columnsFrom": [
-            "exercise"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["exercise"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -245,10 +234,7 @@
       "compositePrimaryKeys": {
         "exercise_muscle_groups_exercise_muscle_group_pk": {
           "name": "exercise_muscle_groups_exercise_muscle_group_pk",
-          "columns": [
-            "exercise",
-            "muscle_group"
-          ]
+          "columns": ["exercise", "muscle_group"]
         }
       },
       "uniqueConstraints": {},
@@ -322,12 +308,8 @@
           "name": "exercise_substitutions_primary_exercise_id_exercises_id_fk",
           "tableFrom": "exercise_substitutions",
           "tableTo": "exercises",
-          "columnsFrom": [
-            "primary_exercise_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["primary_exercise_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -335,12 +317,8 @@
           "name": "exercise_substitutions_substitute_exercise_id_exercises_id_fk",
           "tableFrom": "exercise_substitutions",
           "tableTo": "exercises",
-          "columnsFrom": [
-            "substitute_exercise_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["substitute_exercise_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -348,10 +326,7 @@
       "compositePrimaryKeys": {
         "exercise_substitutions_primary_exercise_id_substitute_exercise_id_pk": {
           "name": "exercise_substitutions_primary_exercise_id_substitute_exercise_id_pk",
-          "columns": [
-            "primary_exercise_id",
-            "substitute_exercise_id"
-          ]
+          "columns": ["primary_exercise_id", "substitute_exercise_id"]
         }
       },
       "uniqueConstraints": {},
@@ -640,12 +615,8 @@
           "name": "habit_completions_habit_id_habits_id_fk",
           "tableFrom": "habit_completions",
           "tableTo": "habits",
-          "columnsFrom": [
-            "habit_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["habit_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -653,10 +624,7 @@
       "compositePrimaryKeys": {
         "habit_completions_habit_id_completion_date_pk": {
           "name": "habit_completions_habit_id_completion_date_pk",
-          "columns": [
-            "habit_id",
-            "completion_date"
-          ]
+          "columns": ["habit_id", "completion_date"]
         }
       },
       "uniqueConstraints": {},
@@ -995,12 +963,8 @@
           "name": "meal_log_ingredients_meal_log_id_meal_logs_id_fk",
           "tableFrom": "meal_log_ingredients",
           "tableTo": "meal_logs",
-          "columnsFrom": [
-            "meal_log_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["meal_log_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1008,12 +972,8 @@
           "name": "meal_log_ingredients_ingredient_id_ingredients_id_fk",
           "tableFrom": "meal_log_ingredients",
           "tableTo": "ingredients",
-          "columnsFrom": [
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ingredient_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1021,10 +981,7 @@
       "compositePrimaryKeys": {
         "meal_log_ingredients_meal_log_id_ingredient_id_pk": {
           "name": "meal_log_ingredients_meal_log_id_ingredient_id_pk",
-          "columns": [
-            "meal_log_id",
-            "ingredient_id"
-          ]
+          "columns": ["meal_log_id", "ingredient_id"]
         }
       },
       "uniqueConstraints": {},
@@ -1129,12 +1086,8 @@
           "name": "meal_logs_meal_template_id_meal_templates_id_fk",
           "tableFrom": "meal_logs",
           "tableTo": "meal_templates",
-          "columnsFrom": [
-            "meal_template_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["meal_template_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1193,12 +1146,8 @@
           "name": "meal_template_ingredients_meal_template_id_meal_templates_id_fk",
           "tableFrom": "meal_template_ingredients",
           "tableTo": "meal_templates",
-          "columnsFrom": [
-            "meal_template_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["meal_template_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1206,12 +1155,8 @@
           "name": "meal_template_ingredients_ingredient_id_ingredients_id_fk",
           "tableFrom": "meal_template_ingredients",
           "tableTo": "ingredients",
-          "columnsFrom": [
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ingredient_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1219,10 +1164,7 @@
       "compositePrimaryKeys": {
         "meal_template_ingredients_meal_template_id_ingredient_id_pk": {
           "name": "meal_template_ingredients_meal_template_id_ingredient_id_pk",
-          "columns": [
-            "meal_template_id",
-            "ingredient_id"
-          ]
+          "columns": ["meal_template_id", "ingredient_id"]
         }
       },
       "uniqueConstraints": {},
@@ -1416,12 +1358,8 @@
           "name": "measures_measurement_name_measurements_name_fk",
           "tableFrom": "measures",
           "tableTo": "measurements",
-          "columnsFrom": [
-            "measurement_name"
-          ],
-          "columnsTo": [
-            "name"
-          ],
+          "columnsFrom": ["measurement_name"],
+          "columnsTo": ["name"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1429,10 +1367,7 @@
       "compositePrimaryKeys": {
         "measures_measurement_name_t_pk": {
           "name": "measures_measurement_name_t_pk",
-          "columns": [
-            "measurement_name",
-            "t"
-          ]
+          "columns": ["measurement_name", "t"]
         }
       },
       "uniqueConstraints": {},
@@ -1506,12 +1441,8 @@
           "name": "targets_measurement_name_measurements_name_fk",
           "tableFrom": "targets",
           "tableTo": "measurements",
-          "columnsFrom": [
-            "measurement_name"
-          ],
-          "columnsTo": [
-            "name"
-          ],
+          "columnsFrom": ["measurement_name"],
+          "columnsTo": ["name"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1621,12 +1552,8 @@
           "name": "workout_exercises_workout_id_workouts_id_fk",
           "tableFrom": "workout_exercises",
           "tableTo": "workouts",
-          "columnsFrom": [
-            "workout_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workout_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1634,12 +1561,8 @@
           "name": "workout_exercises_exercise_id_exercises_id_fk",
           "tableFrom": "workout_exercises",
           "tableTo": "exercises",
-          "columnsFrom": [
-            "exercise_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["exercise_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1647,10 +1570,7 @@
       "compositePrimaryKeys": {
         "workout_exercises_workout_id_exercise_id_pk": {
           "name": "workout_exercises_workout_id_exercise_id_pk",
-          "columns": [
-            "workout_id",
-            "exercise_id"
-          ]
+          "columns": ["workout_id", "exercise_id"]
         }
       },
       "uniqueConstraints": {},
@@ -1756,12 +1676,8 @@
           "name": "workout_sets_workout_workouts_id_fk",
           "tableFrom": "workout_sets",
           "tableTo": "workouts",
-          "columnsFrom": [
-            "workout"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workout"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1769,12 +1685,8 @@
           "name": "workout_sets_exercise_exercises_id_fk",
           "tableFrom": "workout_sets",
           "tableTo": "exercises",
-          "columnsFrom": [
-            "exercise"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["exercise"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1782,11 +1694,7 @@
       "compositePrimaryKeys": {
         "workout_sets_workout_exercise_set_pk": {
           "name": "workout_sets_workout_exercise_set_pk",
-          "columns": [
-            "workout",
-            "exercise",
-            "set"
-          ]
+          "columns": ["workout", "exercise", "set"]
         }
       },
       "uniqueConstraints": {},
@@ -1865,12 +1773,8 @@
           "name": "workout_template_exercises_template_id_workout_templates_id_fk",
           "tableFrom": "workout_template_exercises",
           "tableTo": "workout_templates",
-          "columnsFrom": [
-            "template_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["template_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1878,12 +1782,8 @@
           "name": "workout_template_exercises_exercise_id_exercises_id_fk",
           "tableFrom": "workout_template_exercises",
           "tableTo": "exercises",
-          "columnsFrom": [
-            "exercise_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["exercise_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1891,10 +1791,7 @@
       "compositePrimaryKeys": {
         "workout_template_exercises_template_id_exercise_id_pk": {
           "name": "workout_template_exercises_template_id_exercise_id_pk",
-          "columns": [
-            "template_id",
-            "exercise_id"
-          ]
+          "columns": ["template_id", "exercise_id"]
         }
       },
       "uniqueConstraints": {},
@@ -1974,12 +1871,8 @@
           "name": "workout_template_sets_template_id_workout_templates_id_fk",
           "tableFrom": "workout_template_sets",
           "tableTo": "workout_templates",
-          "columnsFrom": [
-            "template_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["template_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1987,12 +1880,8 @@
           "name": "workout_template_sets_exercise_id_exercises_id_fk",
           "tableFrom": "workout_template_sets",
           "tableTo": "exercises",
-          "columnsFrom": [
-            "exercise_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["exercise_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2000,11 +1889,7 @@
       "compositePrimaryKeys": {
         "workout_template_sets_template_id_exercise_id_set_pk": {
           "name": "workout_template_sets_template_id_exercise_id_set_pk",
-          "columns": [
-            "template_id",
-            "exercise_id",
-            "set"
-          ]
+          "columns": ["template_id", "exercise_id", "set"]
         }
       },
       "uniqueConstraints": {},
@@ -2150,12 +2035,8 @@
           "name": "workouts_template_id_workout_templates_id_fk",
           "tableFrom": "workouts",
           "tableTo": "workout_templates",
-          "columnsFrom": [
-            "template_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["template_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2171,13 +2052,7 @@
     "public.exercise_type": {
       "name": "exercise_type",
       "schema": "public",
-      "values": [
-        "barbell",
-        "bodyweight",
-        "cable",
-        "dumbbells",
-        "machine"
-      ]
+      "values": ["barbell", "bodyweight", "cable", "dumbbells", "machine"]
     },
     "public.ingredient_category": {
       "name": "ingredient_category",
@@ -2201,12 +2076,7 @@
     "public.meal_category": {
       "name": "meal_category",
       "schema": "public",
-      "values": [
-        "breakfast",
-        "lunch",
-        "dinner",
-        "snack"
-      ]
+      "values": ["breakfast", "lunch", "dinner", "snack"]
     },
     "public.movement_pattern": {
       "name": "movement_pattern",
@@ -2244,13 +2114,7 @@
     "public.texture_category": {
       "name": "texture_category",
       "schema": "public",
-      "values": [
-        "liquid",
-        "semi_liquid",
-        "soft_solid",
-        "firm_solid",
-        "powder"
-      ]
+      "values": ["liquid", "semi_liquid", "soft_solid", "firm_solid", "powder"]
     }
   },
   "schemas": {},
