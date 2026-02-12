@@ -109,6 +109,58 @@ export async function addExerciseToWorkout(input: {
   return { success: true };
 }
 
+export async function addExercisesToWorkout(input: {
+  readonly workoutId: string;
+  readonly exerciseIds: ReadonlyArray<string>;
+}): Promise<WorkoutActionResult> {
+  if (input.exerciseIds.length === 0) {
+    return { error: "At least one exercise ID is required" };
+  }
+
+  const workoutSessionResult = await WorkoutSessionRepository.findById(
+    input.workoutId,
+  );
+  if (workoutSessionResult.isErr() || !workoutSessionResult.value) {
+    return { error: "Workout not found" };
+  }
+
+  let orderIndex =
+    Math.max(
+      ...workoutSessionResult.value.exerciseGroups.map((g) => g.orderIndex),
+      -1,
+    ) + 1;
+
+  for (const exerciseId of input.exerciseIds) {
+    const historicalResult =
+      await WorkoutSessionRepository.getLastCompletedSetsForExercise(
+        exerciseId,
+      );
+    const defaultSetValues =
+      historicalResult.isOk() && historicalResult.value.length > 0
+        ? {
+            reps: historicalResult.value[0].reps,
+            weight: historicalResult.value[0].weight,
+          }
+        : undefined;
+
+    const result = await WorkoutSessionRepository.addExercise(
+      input.workoutId,
+      exerciseId,
+      orderIndex,
+      undefined,
+      defaultSetValues,
+    );
+
+    if (result.isErr()) {
+      return { error: "Failed to add exercises" };
+    }
+
+    orderIndex++;
+  }
+
+  return { success: true };
+}
+
 export async function removeExerciseFromWorkout(input: {
   readonly workoutId: string;
   readonly exerciseId?: string;
