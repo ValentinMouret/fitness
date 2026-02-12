@@ -1,5 +1,6 @@
-import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import { CheckIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import {
+  Badge,
   Box,
   Button,
   Dialog,
@@ -32,6 +33,9 @@ export function ExerciseSelector({
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
     null,
   );
+  const [selectedExercises, setSelectedExercises] = useState<
+    ReadonlyArray<Exercise>
+  >([]);
   const fetcher = useFetcher();
 
   const typeFiltered = useMemo(() => {
@@ -56,40 +60,63 @@ export function ExerciseSelector({
 
   const isReplaceMode = !!replaceExerciseId;
 
+  const toggleExercise = (exercise: Exercise) => {
+    setSelectedExercises((prev) => {
+      const isAlreadySelected = prev.some((e) => e.id === exercise.id);
+      if (isAlreadySelected) {
+        return prev.filter((e) => e.id !== exercise.id);
+      }
+      return [...prev, exercise];
+    });
+  };
+
   const handleSubmit = () => {
-    if (!selectedExercise) return;
-
-    const formData = new FormData();
-
     if (isReplaceMode) {
+      if (!selectedExercise) return;
+      const formData = new FormData();
       formData.append("intent", "replace-exercise");
       formData.append("oldExerciseId", replaceExerciseId);
       formData.append("newExerciseId", selectedExercise.id);
+      fetcher.submit(formData, { method: "post" });
     } else {
-      formData.append("intent", "add-exercise");
-      formData.append("exerciseId", selectedExercise.id);
+      if (selectedExercises.length === 0) return;
+      const formData = new FormData();
+      formData.append("intent", "add-exercises");
+      for (const exercise of selectedExercises) {
+        formData.append("exerciseIds", exercise.id);
+      }
+      fetcher.submit(formData, { method: "post" });
     }
 
-    fetcher.submit(formData, { method: "post" });
+    resetAndClose();
+  };
 
+  const resetAndClose = () => {
     setSelectedExercise(null);
+    setSelectedExercises([]);
     setSearchQuery("");
     setSelectedType("all");
     onOpenChange(false);
   };
 
-  const handleClose = () => {
-    setSelectedExercise(null);
-    setSearchQuery("");
-    setSelectedType("all");
-    onOpenChange(false);
+  const canSubmit = isReplaceMode
+    ? !!selectedExercise
+    : selectedExercises.length > 0;
+
+  const addButtonLabel = () => {
+    if (fetcher.state === "submitting") {
+      return isReplaceMode ? "Replacing..." : "Adding...";
+    }
+    if (isReplaceMode) return "Replace";
+    if (selectedExercises.length === 0) return "Add";
+    return `Add (${selectedExercises.length})`;
   };
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content style={{ maxWidth: 480, maxHeight: "80vh" }}>
         <Dialog.Title size="4">
-          {isReplaceMode ? "Replace Exercise" : "Add Exercise"}
+          {isReplaceMode ? "Replace Exercise" : "Add Exercises"}
         </Dialog.Title>
 
         <Flex direction="column" gap="4" mt="4">
@@ -137,13 +164,21 @@ export function ExerciseSelector({
                 </Text>
               ) : (
                 filteredExercises.map((exercise, index) => {
-                  const isSelected = selectedExercise?.id === exercise.id;
+                  const isSelected = isReplaceMode
+                    ? selectedExercise?.id === exercise.id
+                    : selectedExercises.some((e) => e.id === exercise.id);
                   return (
                     <Box
                       key={exercise.id}
                       py="3"
                       px="2"
-                      onClick={() => setSelectedExercise(exercise)}
+                      onClick={() => {
+                        if (isReplaceMode) {
+                          setSelectedExercise(exercise);
+                        } else {
+                          toggleExercise(exercise);
+                        }
+                      }}
                       style={{
                         cursor: "pointer",
                         borderTop:
@@ -154,16 +189,28 @@ export function ExerciseSelector({
                         borderRadius: isSelected ? 4 : undefined,
                       }}
                     >
-                      <Text size="2" weight={isSelected ? "medium" : undefined}>
-                        {exercise.name}
-                      </Text>
-                      <Text
-                        size="1"
-                        color="gray"
-                        style={{ display: "block", marginTop: 2 }}
-                      >
-                        {exercise.type}
-                      </Text>
+                      <Flex justify="between" align="center">
+                        <div>
+                          <Text
+                            size="2"
+                            weight={isSelected ? "medium" : undefined}
+                          >
+                            {exercise.name}
+                          </Text>
+                          <Text
+                            size="1"
+                            color="gray"
+                            style={{ display: "block", marginTop: 2 }}
+                          >
+                            {exercise.type}
+                          </Text>
+                        </div>
+                        {!isReplaceMode && isSelected && (
+                          <Badge size="1" variant="solid" radius="full">
+                            <CheckIcon width="12" height="12" />
+                          </Badge>
+                        )}
+                      </Flex>
                     </Box>
                   );
                 })
@@ -175,7 +222,7 @@ export function ExerciseSelector({
             <Button
               variant="soft"
               size="2"
-              onClick={handleClose}
+              onClick={resetAndClose}
               disabled={fetcher.state !== "idle"}
             >
               Cancel
@@ -183,15 +230,9 @@ export function ExerciseSelector({
             <Button
               size="2"
               onClick={handleSubmit}
-              disabled={!selectedExercise || fetcher.state !== "idle"}
+              disabled={!canSubmit || fetcher.state !== "idle"}
             >
-              {fetcher.state === "submitting"
-                ? isReplaceMode
-                  ? "Replacing..."
-                  : "Adding..."
-                : isReplaceMode
-                  ? "Replace"
-                  : "Add"}
+              {addButtonLabel()}
             </Button>
           </Flex>
         </Flex>

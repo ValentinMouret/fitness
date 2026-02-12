@@ -34,6 +34,7 @@ import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
 import { duplicateWorkout } from "~/modules/fitness/application/duplicate-workout.service.server";
 import {
+  addExercisesToWorkout,
   addExerciseToWorkout,
   addSetToWorkout,
   cancelWorkout,
@@ -97,6 +98,14 @@ export async function action({ request, params }: Route.ActionArgs) {
           workoutId: id,
           exerciseId: parsed.exerciseId,
           notes: parsed.notes ?? undefined,
+        });
+      }
+
+      case "add-exercises": {
+        const exerciseIds = formData.getAll("exerciseIds").map(String);
+        return addExercisesToWorkout({
+          workoutId: id,
+          exerciseIds,
         });
       }
 
