@@ -6,6 +6,7 @@
     "build": "react-router build",
     "ci": "bun run typecheck && bun run lint && bun run test && bun run test:e2e",
     "db:check": "drizzle-kit check",
+    "db:check-drift": "bash scripts/check-migrations.sh",
     "db:dev": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx app/db/migrate.ts",
