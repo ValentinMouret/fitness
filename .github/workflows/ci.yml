@@ -41,6 +41,8 @@ jobs:
       - run: bun x biome ci .
       - run: bun run typecheck
       - run: bun x drizzle-kit check
+      - name: Check schema/migration drift
+        run: bash scripts/check-migrations.sh
       - run: bun run build
       - run: bun run db:dev
       - run: bun run db:seed
