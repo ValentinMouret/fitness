@@ -23,6 +23,7 @@ describe("WorkoutExerciseCardViewModel", () => {
       reps: 10,
       weight: 80,
       note: "Warm up",
+      rpe: 6,
       isCompleted: true,
       isFailure: false,
       isWarmup: true,
@@ -34,6 +35,7 @@ describe("WorkoutExerciseCardViewModel", () => {
       reps: 8,
       weight: 90,
       note: "",
+      rpe: 8.5,
       isCompleted: true,
       isFailure: false,
       isWarmup: false,
@@ -201,6 +203,25 @@ describe("WorkoutExerciseCardViewModel", () => {
       expect(viewModel.lastSet).toBeUndefined();
       expect(viewModel.hasCompletedSets).toBe(false);
       expect(viewModel.totalVolumeDisplay).toBe("");
+    });
+
+    it("should pass through RPE values to set view models", () => {
+      const viewModel = createWorkoutExerciseCardViewModel(
+        mockExerciseGroup,
+        false,
+      );
+
+      expect(viewModel.sets[0].rpe).toBe(6);
+      expect(viewModel.sets[1].rpe).toBe(8.5);
+    });
+
+    it("should leave RPE undefined when not set on the domain object", () => {
+      const viewModel = createWorkoutExerciseCardViewModel(
+        mockExerciseGroup,
+        false,
+      );
+
+      expect(viewModel.sets[2].rpe).toBeUndefined();
     });
   });
 });
