@@ -32,14 +32,7 @@ interface WorkoutExerciseCardProps {
   ) => void;
   readonly onRemoveExercise?: (exerciseId: string) => void;
   readonly onReplaceExercise?: (exerciseId: string) => void;
-  readonly onUpdateSet?: (
-    exerciseId: string,
-    setNumber: number,
-    field: string,
-    value: string,
-  ) => void;
-  readonly onCompleteSet?: (exerciseId: string, setNumber: number) => void;
-  readonly onRemoveSet?: (exerciseId: string, setNumber: number) => void;
+  readonly onCompleteSet?: () => void;
   readonly onExerciseNameClick?: (exerciseId: string) => void;
   readonly dragHandleListeners?: SyntheticListenerMap;
   readonly dragHandleAttributes?: DraggableAttributes;
@@ -50,9 +43,7 @@ export function WorkoutExerciseCard({
   onAddSet,
   onRemoveExercise,
   onReplaceExercise,
-  onUpdateSet,
   onCompleteSet,
-  onRemoveSet,
   onExerciseNameClick,
   dragHandleListeners,
   dragHandleAttributes,
@@ -174,9 +165,7 @@ export function WorkoutExerciseCard({
             set={set}
             exerciseId={viewModel.exerciseId}
             canEdit={viewModel.canAddSets}
-            onUpdateSet={onUpdateSet}
             onCompleteSet={onCompleteSet}
-            onRemoveSet={onRemoveSet}
           />
         ))}
       </div>
@@ -200,24 +189,10 @@ interface SetRowProps {
   readonly set: WorkoutSetViewModel;
   readonly exerciseId: string;
   readonly canEdit: boolean;
-  readonly onUpdateSet?: (
-    exerciseId: string,
-    setNumber: number,
-    field: string,
-    value: string,
-  ) => void;
-  readonly onCompleteSet?: (exerciseId: string, setNumber: number) => void;
-  readonly onRemoveSet?: (exerciseId: string, setNumber: number) => void;
+  readonly onCompleteSet?: () => void;
 }
 
-function SetRow({
-  set,
-  exerciseId,
-  canEdit,
-  onUpdateSet,
-  onCompleteSet,
-  onRemoveSet,
-}: SetRowProps) {
+function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
   const [localReps, setLocalReps] = useState(set.reps?.toString() ?? "");
   const [localWeight, setLocalWeight] = useState(set.weight?.toString() ?? "");
   const [localRpe, setLocalRpe] = useState(set.rpe?.toString() ?? "");
@@ -229,24 +204,6 @@ function SetRow({
     setLocalWeight(set.weight?.toString() ?? "");
     setLocalRpe(set.rpe?.toString() ?? "");
   }, [set.reps, set.weight, set.rpe]);
-
-  const handleUpdateSet = (field: string, value: string) => {
-    if (onUpdateSet) {
-      onUpdateSet(exerciseId, set.set, field, value);
-    }
-  };
-
-  const handleCompleteSet = () => {
-    if (onCompleteSet) {
-      onCompleteSet(exerciseId, set.set);
-    }
-  };
-
-  const handleRemoveSet = () => {
-    if (onRemoveSet) {
-      onRemoveSet(exerciseId, set.set);
-    }
-  };
 
   const rowClassName = `set-row ${set.isCompleted ? "set-row--completed" : canEdit ? "set-row--pending" : ""}`;
 
@@ -279,9 +236,7 @@ function SetRow({
               name="weight"
               value={localWeight}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                const value = e.target.value;
-                setLocalWeight(value);
-                handleUpdateSet("weight", value);
+                setLocalWeight(e.target.value);
               }}
               placeholder="kg"
               size="2"
@@ -301,9 +256,7 @@ function SetRow({
               allowDecimals={false}
               value={localReps}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                const value = e.target.value;
-                setLocalReps(value);
-                handleUpdateSet("reps", value);
+                setLocalReps(e.target.value);
               }}
               placeholder="reps"
               size="2"
@@ -322,9 +275,7 @@ function SetRow({
               name="rpe"
               value={localRpe}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                const value = e.target.value;
-                setLocalRpe(value);
-                handleUpdateSet("rpe", value);
+                setLocalRpe(e.target.value);
               }}
               placeholder="RPE"
               size="2"
@@ -348,7 +299,7 @@ function SetRow({
               variant="soft"
               color="green"
               disabled={actionFetcher.state !== "idle"}
-              onClick={handleCompleteSet}
+              onClick={onCompleteSet}
             >
               ✓
             </IconButton>
@@ -366,7 +317,6 @@ function SetRow({
               variant="ghost"
               color="red"
               disabled={actionFetcher.state !== "idle"}
-              onClick={handleRemoveSet}
             >
               <TrashIcon />
             </IconButton>
