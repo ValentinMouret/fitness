@@ -161,12 +161,6 @@ export const Workout = {
       templateId: input.templateId,
     };
   },
-  stop(this: Workout): Workout {
-    return { ...this, stop: new Date() };
-  },
-  isComplete(this: Workout): boolean {
-    return this.stop !== undefined;
-  },
 };
 
 export interface WorkoutSet {
@@ -288,96 +282,6 @@ export const WorkoutSession = {
           notes,
           orderIndex,
         }),
-      ),
-    };
-  },
-
-  addExercise(
-    this: WorkoutSession,
-    exercise: Exercise,
-    notes?: string,
-  ): WorkoutSession {
-    const maxOrder = Math.max(
-      ...this.exerciseGroups.map((g) => g.orderIndex),
-      -1,
-    );
-    const newGroup: WorkoutExerciseGroup = {
-      exercise,
-      sets: [],
-      notes,
-      orderIndex: maxOrder + 1,
-    };
-
-    return {
-      ...this,
-      exerciseGroups: [...this.exerciseGroups, newGroup],
-    };
-  },
-
-  removeExercise(
-    this: WorkoutSession,
-    exerciseId: Exercise["id"],
-  ): WorkoutSession {
-    return {
-      ...this,
-      exerciseGroups: this.exerciseGroups.filter(
-        (group) => group.exercise.id !== exerciseId,
-      ),
-    };
-  },
-
-  replaceExercise(
-    this: WorkoutSession,
-    exerciseId: Exercise["id"],
-    newExercise: Exercise,
-  ): WorkoutSession {
-    return {
-      ...this,
-      exerciseGroups: this.exerciseGroups.map((group) =>
-        group.exercise.id === exerciseId
-          ? { ...group, exercise: newExercise }
-          : group,
-      ),
-    };
-  },
-
-  addSet(
-    this: WorkoutSession,
-    exerciseId: Exercise["id"],
-    set: Omit<WorkoutSet, "workoutId" | "exerciseId">,
-  ): WorkoutSession {
-    return {
-      ...this,
-      exerciseGroups: this.exerciseGroups.map((group) =>
-        group.exercise.id === exerciseId
-          ? {
-              ...group,
-              sets: [
-                ...group.sets,
-                { ...set, workoutId: this.workout.id, exerciseId },
-              ],
-            }
-          : group,
-      ),
-    };
-  },
-
-  completeSet(
-    this: WorkoutSession,
-    exerciseId: Exercise["id"],
-    setNumber: number,
-  ): WorkoutSession {
-    return {
-      ...this,
-      exerciseGroups: this.exerciseGroups.map((group) =>
-        group.exercise.id === exerciseId
-          ? {
-              ...group,
-              sets: group.sets.map((s) =>
-                s.set === setNumber ? { ...s, isCompleted: true } : s,
-              ),
-            }
-          : group,
       ),
     };
   },
