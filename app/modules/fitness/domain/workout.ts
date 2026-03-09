@@ -185,7 +185,7 @@ export interface WorkoutSet {
 
 interface WorkoutSetCreateInput {
   readonly workout: Workout | string;
-  readonly exercise: Exercise;
+  readonly exercise: Exercise | Exercise["id"];
   readonly set: number;
   readonly targetReps?: number;
   readonly reps?: number;

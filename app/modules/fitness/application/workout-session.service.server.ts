@@ -239,12 +239,7 @@ export async function addSetToWorkout(input: {
 
   const workoutSetResult = WorkoutSet.create({
     workout: input.workoutId,
-    exercise: {
-      id: input.exerciseId,
-      name: "",
-      type: "barbell",
-      movementPattern: "push",
-    },
+    exercise: input.exerciseId,
     set: setNumber,
     reps,
     weight,
