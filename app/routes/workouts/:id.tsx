@@ -44,13 +44,14 @@ import {
   getWorkoutSessionData,
   removeExerciseFromWorkout,
   removeSetFromWorkout,
+  reorderExercisesInWorkout,
+  replaceExerciseInWorkout,
   updateSetInWorkout,
   updateWorkoutName,
 } from "~/modules/fitness/application/workout-session.service.server";
 import { createTemplateFromWorkout } from "~/modules/fitness/application/workout-template.service.server";
 import type { WorkoutExerciseGroup } from "~/modules/fitness/domain/workout";
 import { Workout } from "~/modules/fitness/domain/workout";
-import { WorkoutSessionRepository } from "~/modules/fitness/infra/workout.repository.server";
 import {
   createWorkoutExerciseCardViewModel,
   ExerciseHistoryModal,
@@ -121,24 +122,16 @@ export async function action({ request, params }: Route.ActionArgs) {
       }
 
       case "replace-exercise": {
-        const oldExerciseId = formData.get("oldExerciseId")?.toString();
-        const newExerciseId = formData.get("newExerciseId")?.toString();
-
-        if (!oldExerciseId || !newExerciseId) {
-          return { error: "Both old and new exercise IDs are required" };
-        }
-
-        const replaceResult = await WorkoutSessionRepository.replaceExercise(
-          id,
-          oldExerciseId,
-          newExerciseId,
-        );
-
-        if (replaceResult.isErr()) {
-          return { error: "Failed to replace exercise" };
-        }
-
-        return { success: true };
+        const schema = zfd.formData({
+          oldExerciseId: formText(z.string().min(1)),
+          newExerciseId: formText(z.string().min(1)),
+        });
+        const parsed = schema.parse(formData);
+        return replaceExerciseInWorkout({
+          workoutId: id,
+          oldExerciseId: parsed.oldExerciseId,
+          newExerciseId: parsed.newExerciseId,
+        });
       }
 
       case "reorder-exercises": {
@@ -149,16 +142,10 @@ export async function action({ request, params }: Route.ActionArgs) {
         }
 
         const exerciseIds: string[] = JSON.parse(exerciseIdsJson);
-        const reorderResult = await WorkoutSessionRepository.reorderExercises(
-          id,
+        return reorderExercisesInWorkout({
+          workoutId: id,
           exerciseIds,
-        );
-
-        if (reorderResult.isErr()) {
-          return { error: "Failed to reorder exercises" };
-        }
-
-        return { success: true };
+        });
       }
 
       case "add-set": {
