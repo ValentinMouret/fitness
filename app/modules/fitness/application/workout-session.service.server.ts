@@ -376,6 +376,48 @@ export async function completeSetInWorkout(input: {
   return { success: true };
 }
 
+export async function replaceExerciseInWorkout(input: {
+  readonly workoutId: string;
+  readonly oldExerciseId?: string;
+  readonly newExerciseId?: string;
+}): Promise<WorkoutActionResult> {
+  if (!input.oldExerciseId || !input.newExerciseId) {
+    return { error: "Both old and new exercise IDs are required" };
+  }
+
+  const result = await WorkoutSessionRepository.replaceExercise(
+    input.workoutId,
+    input.oldExerciseId,
+    input.newExerciseId,
+  );
+
+  if (result.isErr()) {
+    return { error: "Failed to replace exercise" };
+  }
+
+  return { success: true };
+}
+
+export async function reorderExercisesInWorkout(input: {
+  readonly workoutId: string;
+  readonly exerciseIds: ReadonlyArray<string>;
+}): Promise<WorkoutActionResult> {
+  if (input.exerciseIds.length === 0) {
+    return { error: "Exercise IDs are required" };
+  }
+
+  const result = await WorkoutSessionRepository.reorderExercises(
+    input.workoutId,
+    [...input.exerciseIds],
+  );
+
+  if (result.isErr()) {
+    return { error: "Failed to reorder exercises" };
+  }
+
+  return { success: true };
+}
+
 export async function removeSetFromWorkout(input: {
   readonly workoutId: string;
   readonly exerciseId?: string;
