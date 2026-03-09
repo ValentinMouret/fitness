@@ -535,7 +535,6 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                 <SortableExerciseCard
                   key={group.exercise.id}
                   group={group}
-                  isComplete={false}
                   onCompleteSet={() => {
                     restTimer.start();
                     const incompleteSets = group.sets.filter(
@@ -663,13 +662,11 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
 
 function SortableExerciseCard({
   group,
-  isComplete,
   onCompleteSet,
   onReplaceExercise,
   onExerciseNameClick,
 }: {
   readonly group: WorkoutExerciseGroup;
-  readonly isComplete: boolean;
   readonly onCompleteSet?: () => void;
   readonly onReplaceExercise?: (exerciseId: string) => void;
   readonly onExerciseNameClick?: (exerciseId: string) => void;
@@ -682,7 +679,7 @@ function SortableExerciseCard({
     transition,
   };
 
-  const viewModel = createWorkoutExerciseCardViewModel(group, isComplete);
+  const viewModel = createWorkoutExerciseCardViewModel(group, false);
 
   return (
     <div
