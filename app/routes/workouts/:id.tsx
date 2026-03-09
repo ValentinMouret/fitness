@@ -51,7 +51,6 @@ import {
 } from "~/modules/fitness/application/workout-session.service.server";
 import { createTemplateFromWorkout } from "~/modules/fitness/application/workout-template.service.server";
 import type { WorkoutExerciseGroup } from "~/modules/fitness/domain/workout";
-import { Workout } from "~/modules/fitness/domain/workout";
 import {
   createWorkoutExerciseCardViewModel,
   ExerciseHistoryModal,
@@ -284,9 +283,12 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     }),
   );
 
+  const { workoutSession, exercises } = loaderData;
+  const isComplete = !!workoutSession.workout.stop;
+
   const { startedAgo, formattedDuration } = useLiveDuration({
-    startTime: loaderData?.workoutSession.workout.start || new Date(),
-    endTime: loaderData?.workoutSession.workout.stop || undefined,
+    startTime: workoutSession.workout.start,
+    endTime: workoutSession.workout.stop ?? undefined,
   });
 
   const restTimer = useRestTimer();
@@ -298,8 +300,8 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     }
   }, [isEditingName]);
 
-  const exerciseGroupsRef = useRef(loaderData?.workoutSession.exerciseGroups);
-  exerciseGroupsRef.current = loaderData?.workoutSession.exerciseGroups;
+  const exerciseGroupsRef = useRef(workoutSession.exerciseGroups);
+  exerciseGroupsRef.current = workoutSession.exerciseGroups;
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -315,13 +317,6 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     return () =>
       document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
-
-  if (!loaderData) {
-    return <div>Loading...</div>;
-  }
-
-  const { workoutSession, exercises } = loaderData;
-  const isComplete = Workout.isComplete.call(workoutSession.workout);
 
   const totalSets = workoutSession.exerciseGroups.reduce(
     (sum, group) => sum + group.sets.length,
