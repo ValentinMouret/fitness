@@ -143,7 +143,7 @@ export function ExerciseSelector({
               <Select.Content>
                 <Select.Item value="all">All</Select.Item>
                 <Select.Item value="barbell">Barbell</Select.Item>
-                <Select.Item value="dumbbell">Dumbbell</Select.Item>
+                <Select.Item value="dumbbells">Dumbbell</Select.Item>
                 <Select.Item value="bodyweight">Bodyweight</Select.Item>
                 <Select.Item value="machine">Machine</Select.Item>
                 <Select.Item value="cable">Cable</Select.Item>
