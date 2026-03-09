@@ -343,34 +343,6 @@ export async function updateSetInWorkout(input: {
   return { success: true };
 }
 
-export async function completeSetInWorkout(input: {
-  readonly workoutId: string;
-  readonly exerciseId?: string;
-  readonly setNumberStr?: string;
-}): Promise<WorkoutActionResult> {
-  if (!input.exerciseId || !input.setNumberStr) {
-    return { error: "Exercise ID and set number are required" };
-  }
-
-  const setNumber = Number.parseInt(input.setNumberStr, 10);
-  if (Number.isNaN(setNumber) || setNumber <= 0) {
-    return { error: "Set number must be a positive integer" };
-  }
-
-  const result = await WorkoutSessionRepository.updateSet(
-    input.workoutId,
-    input.exerciseId,
-    setNumber,
-    { isCompleted: true },
-  );
-
-  if (result.isErr()) {
-    return { error: "Failed to complete set" };
-  }
-
-  return { success: true };
-}
-
 export async function replaceExerciseInWorkout(input: {
   readonly workoutId: string;
   readonly oldExerciseId?: string;

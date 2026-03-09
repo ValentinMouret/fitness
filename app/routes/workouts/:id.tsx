@@ -38,7 +38,6 @@ import {
   addExercisesToWorkout,
   addExerciseToWorkout,
   addSetToWorkout,
-  completeSetInWorkout,
   completeWorkout,
   destroyWorkout,
   getWorkoutSessionData,
@@ -184,19 +183,6 @@ export async function action({ request, params }: Route.ActionArgs) {
           note: parsed.note ?? undefined,
           rpeStr: parsed.rpe ?? undefined,
           isCompletedStr: parsed.isCompleted ?? undefined,
-        });
-      }
-
-      case "complete-set": {
-        const schema = zfd.formData({
-          exerciseId: formText(z.string().min(1)),
-          setNumber: formText(z.string().min(1)),
-        });
-        const parsed = schema.parse(formData);
-        return completeSetInWorkout({
-          workoutId: id,
-          exerciseId: parsed.exerciseId,
-          setNumberStr: parsed.setNumber,
         });
       }
 

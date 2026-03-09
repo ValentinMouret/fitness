@@ -338,9 +338,10 @@ function SetRow({
       <div className="set-row__actions">
         {canEdit && !set.isCompleted && (
           <actionFetcher.Form method="post">
-            <input type="hidden" name="intent" value="complete-set" />
+            <input type="hidden" name="intent" value="update-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />
             <input type="hidden" name="setNumber" value={set.set} />
+            <input type="hidden" name="isCompleted" value="true" />
             <IconButton
               type="submit"
               size="2"
