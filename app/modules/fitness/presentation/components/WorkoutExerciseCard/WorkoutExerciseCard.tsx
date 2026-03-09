@@ -221,7 +221,8 @@ function SetRow({
   const [localReps, setLocalReps] = useState(set.reps?.toString() ?? "");
   const [localWeight, setLocalWeight] = useState(set.weight?.toString() ?? "");
   const [localRpe, setLocalRpe] = useState(set.rpe?.toString() ?? "");
-  const fetcher = useFetcher();
+  const updateFetcher = useFetcher();
+  const actionFetcher = useFetcher();
 
   useEffect(() => {
     setLocalReps(set.reps?.toString() ?? "");
@@ -267,7 +268,7 @@ function SetRow({
         </>
       ) : (
         <>
-          <fetcher.Form
+          <updateFetcher.Form
             method="post"
             onChange={(e) => e.currentTarget.requestSubmit()}
           >
@@ -287,8 +288,8 @@ function SetRow({
               variant="surface"
               className="set-row__input"
             />
-          </fetcher.Form>
-          <fetcher.Form
+          </updateFetcher.Form>
+          <updateFetcher.Form
             method="post"
             onChange={(e) => e.currentTarget.requestSubmit()}
           >
@@ -309,8 +310,8 @@ function SetRow({
               variant="surface"
               className="set-row__input"
             />
-          </fetcher.Form>
-          <fetcher.Form
+          </updateFetcher.Form>
+          <updateFetcher.Form
             method="post"
             onChange={(e) => e.currentTarget.requestSubmit()}
           >
@@ -330,13 +331,13 @@ function SetRow({
               variant="surface"
               className="set-row__input set-row__input--rpe"
             />
-          </fetcher.Form>
+          </updateFetcher.Form>
         </>
       )}
 
       <div className="set-row__actions">
         {canEdit && !set.isCompleted && (
-          <fetcher.Form method="post">
+          <actionFetcher.Form method="post">
             <input type="hidden" name="intent" value="complete-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />
             <input type="hidden" name="setNumber" value={set.set} />
@@ -345,16 +346,16 @@ function SetRow({
               size="2"
               variant="soft"
               color="green"
-              disabled={fetcher.state !== "idle"}
+              disabled={actionFetcher.state !== "idle"}
               onClick={handleCompleteSet}
             >
               ✓
             </IconButton>
-          </fetcher.Form>
+          </actionFetcher.Form>
         )}
 
         {canEdit && (
-          <fetcher.Form method="post">
+          <actionFetcher.Form method="post">
             <input type="hidden" name="intent" value="remove-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />
             <input type="hidden" name="setNumber" value={set.set} />
@@ -363,12 +364,12 @@ function SetRow({
               size="1"
               variant="ghost"
               color="red"
-              disabled={fetcher.state !== "idle"}
+              disabled={actionFetcher.state !== "idle"}
               onClick={handleRemoveSet}
             >
               <TrashIcon />
             </IconButton>
-          </fetcher.Form>
+          </actionFetcher.Form>
         )}
       </div>
     </div>
