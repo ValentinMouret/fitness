@@ -60,8 +60,6 @@ export function createWorkoutExerciseCardViewModel(
   exerciseGroup: WorkoutExerciseGroup,
   isWorkoutComplete = false,
 ): WorkoutExerciseCardViewModel {
-  // console.log(`[View Model] Creating view model...`);
-
   const setViewModels = exerciseGroup.sets.map(createWorkoutSetViewModel);
   const lastSet = setViewModels[setViewModels.length - 1];
   const hasCompletedSets = exerciseGroup.sets.some((set) => set.isCompleted);
