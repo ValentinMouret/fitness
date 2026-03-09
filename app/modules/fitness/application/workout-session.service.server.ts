@@ -461,19 +461,7 @@ export async function completeWorkout(input: {
   return redirect("/dashboard");
 }
 
-export async function cancelWorkout(input: {
-  readonly workoutId: string;
-}): Promise<WorkoutActionResult> {
-  const result = await WorkoutRepository.delete(input.workoutId);
-
-  if (result.isErr()) {
-    return { error: "Failed to cancel workout" };
-  }
-
-  return redirect("/workouts");
-}
-
-export async function deleteWorkout(input: {
+export async function destroyWorkout(input: {
   readonly workoutId: string;
 }): Promise<WorkoutActionResult> {
   const result = await WorkoutRepository.delete(input.workoutId);

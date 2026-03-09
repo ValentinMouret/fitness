@@ -37,10 +37,9 @@ import {
   addExercisesToWorkout,
   addExerciseToWorkout,
   addSetToWorkout,
-  cancelWorkout,
   completeSetInWorkout,
   completeWorkout,
-  deleteWorkout,
+  destroyWorkout,
   getWorkoutSessionData,
   removeExerciseFromWorkout,
   removeSetFromWorkout,
@@ -225,12 +224,9 @@ export async function action({ request, params }: Route.ActionArgs) {
         return completeWorkout({ workoutId: id });
       }
 
-      case "cancel-workout": {
-        return cancelWorkout({ workoutId: id });
-      }
-
+      case "cancel-workout":
       case "delete-workout": {
-        return deleteWorkout({ workoutId: id });
+        return destroyWorkout({ workoutId: id });
       }
 
       case "duplicate-workout": {
