@@ -32,6 +32,7 @@ import { DeleteConfirmationDialog } from "~/components/workout/DeleteConfirmatio
 import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
 import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
+import { logger } from "~/logger.server";
 import { duplicateWorkout } from "~/modules/fitness/application/duplicate-workout.service.server";
 import {
   addExercisesToWorkout,
@@ -237,7 +238,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         return { error: "Unknown intent" };
     }
   } catch (error) {
-    console.error("Action error:", error);
+    logger.error({ err: error }, "Workout action error");
     return { error: "Internal server error" };
   }
 }
