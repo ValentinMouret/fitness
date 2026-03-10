@@ -1,26 +1,30 @@
 import { redirect } from "react-router";
-import type { GeneratedWorkout } from "~/modules/fitness/domain/ai-generation";
-import type { WorkoutSession } from "~/modules/fitness/domain/workout";
-import { Workout } from "~/modules/fitness/domain/workout";
+import { db } from "~/db";
+import { workoutExercises, workoutSets, workouts } from "~/db/schema";
+import { logger } from "~/logger.server";
+import type {
+  GeneratedExerciseSet,
+  GeneratedWorkout,
+} from "~/modules/fitness/domain/ai-generation";
 import { AIWorkoutGenerationRepository } from "~/modules/fitness/infra/ai-workout-generation.repository.server";
 import { ExerciseRepository } from "~/modules/fitness/infra/repository.server";
-import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
-import { handleResultError } from "~/utils/errors";
+import { createServerError, handleResultError } from "~/utils/errors";
+
+/** Convert zero to undefined so the DB column stays NULL (check constraints require > 0). */
+function positiveOrNull(value: number | undefined): number | null {
+  if (value === undefined || value <= 0) return null;
+  return value;
+}
+
+/** Ensure set number is at least 1 (DB constraint: set > 0). */
+function sanitizeSetNumber(set: GeneratedExerciseSet, index: number): number {
+  return set.setNumber > 0 ? set.setNumber : index + 1;
+}
 
 export async function createWorkoutFromGeneration(
   generatedWorkout: GeneratedWorkout,
   conversationId: string,
 ): Promise<Response> {
-  const workout = Workout.create({ name: generatedWorkout.name });
-  const saveResult = await WorkoutRepository.save(workout);
-
-  if (saveResult.isErr()) {
-    handleResultError(saveResult, "Failed to create workout");
-  }
-
-  const savedWorkout = saveResult.value;
-
-  // Fetch exercise details for the generated workout
   const exercisesResult = await ExerciseRepository.listAll();
   if (exercisesResult.isErr()) {
     handleResultError(exercisesResult, "Failed to load exercises");
@@ -28,46 +32,79 @@ export async function createWorkoutFromGeneration(
 
   const exerciseMap = new Map(exercisesResult.value.map((e) => [e.id, e]));
 
-  const newSession: WorkoutSession = {
-    workout: savedWorkout,
-    exerciseGroups: generatedWorkout.exercises.map((genExercise, index) => {
-      const exercise = exerciseMap.get(genExercise.exerciseId) ?? {
-        id: genExercise.exerciseId,
-        name: genExercise.exerciseName,
-        type: "barbell" as const,
-        movementPattern: "push" as const,
-      };
+  // Filter out exercises that don't exist in the catalog
+  const validExercises = generatedWorkout.exercises.filter((genExercise) => {
+    if (!exerciseMap.has(genExercise.exerciseId)) {
+      logger.warn(
+        { exerciseId: genExercise.exerciseId, name: genExercise.exerciseName },
+        "AI generated exercise not found in catalog, skipping",
+      );
+      return false;
+    }
+    return true;
+  });
 
-      return {
-        exercise,
-        orderIndex: index,
-        notes: genExercise.notes,
-        sets: genExercise.sets.map((s) => ({
-          workoutId: savedWorkout.id,
-          exerciseId: genExercise.exerciseId,
-          set: s.setNumber,
-          targetReps: s.targetReps,
-          reps: undefined,
-          weight: s.targetWeight,
-          note: undefined,
-          isCompleted: false,
-          isFailure: false,
-          isWarmup: s.isWarmup,
-        })),
-      };
-    }),
-  };
-
-  const sessionSaveResult = await WorkoutRepository.saveSession(newSession);
-  if (sessionSaveResult.isErr()) {
-    handleResultError(sessionSaveResult, "Failed to save workout session");
+  if (validExercises.length === 0) {
+    throw createServerError("No valid exercises in generated workout", 422);
   }
 
-  // Link the generation conversation to the created workout
+  let workoutId: string;
+
+  try {
+    workoutId = await db.transaction(async (tx) => {
+      // Create the workout
+      const [workoutRecord] = await tx
+        .insert(workouts)
+        .values({
+          name: generatedWorkout.name,
+          start: new Date(),
+          imported_from_strong: false,
+          imported_from_fitbod: false,
+        })
+        .returning({ id: workouts.id });
+
+      const wId = workoutRecord.id;
+
+      // Insert exercises and sets
+      for (let i = 0; i < validExercises.length; i++) {
+        const genExercise = validExercises[i];
+
+        await tx.insert(workoutExercises).values({
+          workout_id: wId,
+          exercise_id: genExercise.exerciseId,
+          order_index: i,
+          notes: genExercise.notes ?? null,
+        });
+
+        for (let j = 0; j < genExercise.sets.length; j++) {
+          const s = genExercise.sets[j];
+          await tx.insert(workoutSets).values({
+            workout: wId,
+            exercise: genExercise.exerciseId,
+            set: sanitizeSetNumber(s, j),
+            targetReps: positiveOrNull(s.targetReps),
+            reps: null,
+            weight: positiveOrNull(s.targetWeight),
+            note: null,
+            isCompleted: false,
+            isFailure: false,
+            isWarmup: s.isWarmup,
+          });
+        }
+      }
+
+      return wId;
+    });
+  } catch (error) {
+    logger.error({ err: error }, "Failed to create workout from generation");
+    throw createServerError("Failed to create workout from generation", 500);
+  }
+
+  // Link the generation conversation to the created workout (non-critical)
   await AIWorkoutGenerationRepository.linkConversationToWorkout(
     conversationId,
-    savedWorkout.id,
+    workoutId,
   );
 
-  return redirect(`/workouts/${savedWorkout.id}`);
+  return redirect(`/workouts/${workoutId}`);
 }
