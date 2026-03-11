@@ -2,6 +2,7 @@ import { Flex, Text } from "@radix-ui/themes";
 import { useId } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { chartColors } from "~/design-system";
+import "./MacrosChart.css";
 
 interface MacrosChartData {
   readonly protein: number;
@@ -45,7 +46,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps) => {
         <Text weight="medium" size="2" style={{ color: data.color }}>
           {data.name}
         </Text>
-        <div style={{ marginTop: "6px" }}>
+        <div className="macros-chart__tooltip-body">
           <Text size="1" color="gray" className="d-block">
             {data.grams}g · {Math.round(data.calories)} kcal
           </Text>
@@ -81,7 +82,7 @@ export default function MacrosChart({ macrosSplit }: MacrosChartProps) {
 
   return (
     <div className="macros-chart-container">
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="macros-chart__canvas">
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <defs>
@@ -110,7 +111,8 @@ export default function MacrosChart({ macrosSplit }: MacrosChartProps) {
                 <Cell
                   key={entry.name}
                   fill={entry.color}
-                  style={{ filter: `url(#${glowId})`, opacity: 0.9 }}
+                  filter={`url(#${glowId})`}
+                  fillOpacity={0.9}
                 />
               ))}
             </Pie>
@@ -120,21 +122,18 @@ export default function MacrosChart({ macrosSplit }: MacrosChartProps) {
       </div>
 
       <Flex
-        className="macros-legend"
+        className="macros-legend macros-chart__legend"
         direction="column"
         gap="3"
         justify="center"
-        style={{ minWidth: "120px" }}
       >
         {data.map((entry) => (
           <Flex key={entry.name} direction="column" gap="1">
             <Flex align="center" gap="2">
               <div
+                className="macros-chart__legend-swatch"
                 style={{
-                  width: "14px",
-                  height: "14px",
                   backgroundColor: entry.color,
-                  borderRadius: "4px",
                   boxShadow: `0 2px 4px ${entry.color}40`,
                 }}
               />
@@ -142,7 +141,7 @@ export default function MacrosChart({ macrosSplit }: MacrosChartProps) {
                 {entry.name}
               </Text>
             </Flex>
-            <Text size="1" color="gray" style={{ marginLeft: "22px" }}>
+            <Text size="1" color="gray" className="macros-chart__legend-detail">
               {entry.grams}g · {Math.round(entry.calories)} kcal
             </Text>
           </Flex>

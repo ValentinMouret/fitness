@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { EmptyState } from "~/components/EmptyState";
 import { getMeasurementsPageData } from "~/modules/core/application/measurements-page.service.server";
 import type { Route } from "./+types/index";
+import "./index.css";
 
 export async function loader() {
   return getMeasurementsPageData();
@@ -38,13 +39,13 @@ export default function MeasurementsPage({ loaderData }: Route.ComponentProps) {
             <Card key={measurement.name} size="3" asChild>
               <Link
                 to={`/measurements/${measurement.name}`}
-                style={{ textDecoration: "none", color: "inherit" }}
+                className="measurements-index__link"
               >
                 <Flex direction="column" gap="3">
                   <Flex justify="between" align="start">
                     <Flex align="center" gap="2">
                       <RulerSquareIcon />
-                      <Heading size="4" style={{ textTransform: "capitalize" }}>
+                      <Heading size="4" className="measurements-index__name">
                         {measurement.name.replace(/_/g, " ")}
                       </Heading>
                     </Flex>
@@ -69,7 +70,11 @@ export default function MeasurementsPage({ loaderData }: Route.ComponentProps) {
                       </Text>
                     </Flex>
                   ) : (
-                    <Text size="2" color="gray" style={{ fontStyle: "italic" }}>
+                    <Text
+                      size="2"
+                      color="gray"
+                      className="measurements-index__empty-copy"
+                    >
                       No measurements recorded
                     </Text>
                   )}
