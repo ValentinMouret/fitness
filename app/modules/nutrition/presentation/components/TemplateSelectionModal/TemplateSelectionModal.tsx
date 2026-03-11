@@ -1,6 +1,7 @@
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { Box, Card, Dialog, Flex, IconButton, Text } from "@radix-ui/themes";
 import type { TemplateSelectionViewModel } from "../../view-models/template-selection.view-model";
+import "./TemplateSelectionModal.css";
 
 interface TemplateSelectionModalProps {
   readonly isOpen: boolean;
@@ -43,14 +44,14 @@ export function TemplateSelectionModal({
               </Text>
             </Box>
           ) : (
-            <Box style={{ height: "400px", overflow: "auto" }}>
+            <Box className="template-selection-modal__list">
               <Flex direction="column" gap="2">
                 {viewModel.templates.map((template) => (
                   <Card key={template.id} size="1" asChild>
                     <button
                       type="button"
                       onClick={() => onApply(template.id)}
-                      style={{ cursor: "pointer", textAlign: "left" }}
+                      className="template-selection-modal__button"
                     >
                       <Flex justify="between" align="start" mb="2">
                         <Text weight="medium" size="3">
@@ -72,7 +73,7 @@ export function TemplateSelectionModal({
                         <Text
                           size="1"
                           color="gray"
-                          style={{ fontStyle: "italic" }}
+                          className="template-selection-modal__notes"
                         >
                           {template.notes}
                         </Text>

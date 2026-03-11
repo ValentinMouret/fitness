@@ -7,11 +7,27 @@ import {
   Text,
 } from "@radix-ui/themes";
 import { Form, useNavigation } from "react-router";
-import type { WorkoutSession } from "~/modules/fitness/domain/workout";
 import { useLiveDuration } from "./useLiveDuration";
+import "./CancelConfirmationDialog.css";
+
+interface WorkoutSummarySet {
+  readonly isCompleted: boolean;
+}
+
+interface WorkoutSummaryGroup {
+  readonly sets: ReadonlyArray<WorkoutSummarySet>;
+}
+
+interface CancelWorkoutSession {
+  readonly workout: {
+    readonly start: Date;
+    readonly stop?: Date;
+  };
+  readonly exerciseGroups: ReadonlyArray<WorkoutSummaryGroup>;
+}
 
 interface CancelConfirmationDialogProps {
-  readonly workoutSession: WorkoutSession;
+  readonly workoutSession: CancelWorkoutSession;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
 }
@@ -44,7 +60,7 @@ export function CancelConfirmationDialog({
 
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
-      <AlertDialog.Content style={{ maxWidth: 400 }}>
+      <AlertDialog.Content className="cancel-workout-dialog">
         <Heading size="4" mb="2">
           Cancel Workout
         </Heading>
@@ -53,7 +69,7 @@ export function CancelConfirmationDialog({
           This will permanently delete all workout data.
         </Text>
 
-        <Box py="4" mt="3" style={{ borderTop: "1px solid var(--gray-4)" }}>
+        <Box py="4" mt="3" className="cancel-workout-dialog__section">
           <Flex direction="column" gap="3">
             <Flex justify="between">
               <Text size="2" color="gray">

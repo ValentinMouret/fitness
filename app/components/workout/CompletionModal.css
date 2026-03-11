@@ -1,0 +1,7 @@
+.completion-modal {
+  max-width: 400px;
+}
+
+.completion-modal__section {
+  border-top: 1px solid var(--gray-4);
+}

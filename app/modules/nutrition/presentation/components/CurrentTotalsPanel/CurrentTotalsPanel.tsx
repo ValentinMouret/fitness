@@ -1,5 +1,7 @@
 import { Box, Card, Flex, Heading, Text } from "@radix-ui/themes";
+import type { CSSProperties } from "react";
 import type { Objectives } from "../ObjectivesPanel";
+import "./CurrentTotalsPanel.css";
 
 export interface NutritionTotals {
   readonly calories: number;
@@ -28,7 +30,7 @@ const getProgressColor = (current: number, target: number | null) => {
   if (percentage < 33) return "var(--red-9)";
   if (percentage < 66) return "var(--yellow-9)";
   if (percentage <= 120) return "var(--green-9)";
-  return "var(--red-9)"; // Over 120% shows red
+  return "var(--red-9)";
 };
 
 const formatProgress = (current: number, target: number | null) => {
@@ -52,8 +54,6 @@ const MacroProgressBar = ({
   const progress = target ? getProgress(current, target) : 0;
   const color = target ? getProgressColor(current, target) : "var(--blue-9)";
 
-  // For visual display: if no target, show current value as a proportion of a reasonable max
-  // Use different reasonable maxes for different macros
   const getReasonableMax = () => {
     if (label === "Calories") return 3000;
     if (label === "Protein") return 200;
@@ -64,7 +64,17 @@ const MacroProgressBar = ({
 
   const displayProgress = target
     ? Math.min(progress, 120)
-    : Math.min((current / getReasonableMax()) * 100, 100); // Show current value as % of reasonable max
+    : Math.min((current / getReasonableMax()) * 100, 100);
+
+  const trackClassName =
+    size === "large"
+      ? "current-totals-panel__progress-track current-totals-panel__progress-track--large"
+      : "current-totals-panel__progress-track";
+
+  const fillStyle = {
+    width: `${displayProgress}%`,
+    backgroundColor: color,
+  } as CSSProperties;
 
   return (
     <Box>
@@ -79,27 +89,10 @@ const MacroProgressBar = ({
         </Text>
         {target && <Text size="2">{Math.round(progress)}%</Text>}
       </Flex>
-      <Box
-        style={{
-          position: "relative",
-          width: "100%",
-          height: size === "large" ? "12px" : "8px",
-          backgroundColor: "var(--gray-4)",
-          borderRadius: "6px",
-          overflow: "hidden",
-        }}
-      >
+      <Box className={trackClassName}>
         <Box
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            height: "100%",
-            width: `${displayProgress}%`,
-            backgroundColor: color,
-            borderRadius: "6px",
-            transition: "width 0.3s ease, background-color 0.3s ease",
-          }}
+          className="current-totals-panel__progress-fill"
+          style={fillStyle}
         />
       </Box>
     </Box>
@@ -162,12 +155,11 @@ export function CurrentTotalsPanel({
                 <Text
                   key={level}
                   size="4"
-                  style={{
-                    color:
-                      level <= satietyScore
-                        ? "var(--green-9)"
-                        : "var(--gray-6)",
-                  }}
+                  className={
+                    level <= satietyScore
+                      ? "current-totals-panel__satiety-dot current-totals-panel__satiety-dot--active"
+                      : "current-totals-panel__satiety-dot"
+                  }
                 >
                   ●
                 </Text>

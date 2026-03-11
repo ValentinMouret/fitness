@@ -1,0 +1,12 @@
+.measurements-index__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.measurements-index__name {
+  text-transform: capitalize;
+}
+
+.measurements-index__empty-copy {
+  font-style: italic;
+}

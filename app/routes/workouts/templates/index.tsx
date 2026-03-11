@@ -18,6 +18,7 @@ import {
 import { createWorkoutTemplateCardViewModel } from "~/modules/fitness/presentation/view-models/workout-template-card.view-model";
 import { formText } from "~/utils/form-data";
 import type { Route } from "./+types/index";
+import "./index.css";
 
 export const handle = {
   header: () => ({
@@ -68,14 +69,11 @@ export default function TemplatesPage({ loaderData }: Route.ComponentProps) {
             {i > 0 && <hr className="rule-divider" />}
             <Box py="4">
               <Flex justify="between" align="start">
-                <Box style={{ flex: 1, minWidth: 0 }}>
+                <Box className="workout-templates__main">
                   <Text
                     size="4"
                     weight="bold"
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      display: "block",
-                    }}
+                    className="workout-templates__title"
                   >
                     {template.name}
                   </Text>
@@ -83,7 +81,7 @@ export default function TemplatesPage({ loaderData }: Route.ComponentProps) {
                     as="p"
                     size="2"
                     mt="1"
-                    style={{ color: "var(--brand-text-secondary)" }}
+                    className="workout-templates__muted"
                   >
                     {template.exerciseCount} exercises
                     {template.usageCount > 0 &&
@@ -93,7 +91,7 @@ export default function TemplatesPage({ loaderData }: Route.ComponentProps) {
                     as="p"
                     size="1"
                     mt="1"
-                    style={{ color: "var(--brand-text-secondary)" }}
+                    className="workout-templates__muted"
                   >
                     {template.lastUsedLabel}
                   </Text>
@@ -102,7 +100,7 @@ export default function TemplatesPage({ loaderData }: Route.ComponentProps) {
                       as="p"
                       size="1"
                       mt="2"
-                      style={{ color: "var(--brand-text-secondary)" }}
+                      className="workout-templates__muted"
                     >
                       {template.exerciseNames.join(", ")}
                       {template.exerciseCount > template.exerciseNames.length &&
@@ -111,7 +109,11 @@ export default function TemplatesPage({ loaderData }: Route.ComponentProps) {
                   )}
                 </Box>
 
-                <Flex align="center" gap="2" style={{ flexShrink: 0 }}>
+                <Flex
+                  align="center"
+                  gap="2"
+                  className="workout-templates__actions"
+                >
                   <Form method="post" action="/workouts/create">
                     <input
                       type="hidden"

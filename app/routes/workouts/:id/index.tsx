@@ -473,11 +473,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
               <span className="display-number display-number--lg">
                 {formattedDuration}
               </span>
-              <Text
-                as="p"
-                size="1"
-                style={{ color: "var(--brand-text-secondary)" }}
-              >
+              <Text as="p" size="1" className="active-workout-stats__label">
                 elapsed
               </Text>
             </div>
@@ -486,11 +482,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                 {completedSets}
                 <span className="display-number--unit">/{totalSets}</span>
               </span>
-              <Text
-                as="p"
-                size="1"
-                style={{ color: "var(--brand-text-secondary)" }}
-              >
+              <Text as="p" size="1" className="active-workout-stats__label">
                 sets
               </Text>
             </div>
@@ -498,11 +490,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
               <span className="display-number display-number--lg">
                 {Math.round(progressPercent)}%
               </span>
-              <Text
-                as="p"
-                size="1"
-                style={{ color: "var(--brand-text-secondary)" }}
-              >
+              <Text as="p" size="1" className="active-workout-stats__label">
                 done
               </Text>
             </div>

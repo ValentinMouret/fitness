@@ -1,0 +1,10 @@
+.quick-action-fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  z-index: 45;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}

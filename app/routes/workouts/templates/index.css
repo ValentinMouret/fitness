@@ -1,0 +1,17 @@
+.workout-templates__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.workout-templates__title {
+  display: block;
+  font-family: var(--font-display);
+}
+
+.workout-templates__muted {
+  color: var(--brand-text-secondary);
+}
+
+.workout-templates__actions {
+  flex-shrink: 0;
+}

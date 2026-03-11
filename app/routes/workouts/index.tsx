@@ -17,6 +17,7 @@ import {
 import { createWorkoutTemplateCardViewModel } from "~/modules/fitness/presentation/view-models/workout-template-card.view-model";
 import { formOptionalText } from "~/utils/form-data";
 import type { Route } from "./+types/index";
+import "./index.css";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const url = new URL(request.url);
@@ -124,18 +125,15 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
                 {i > 0 && <hr className="rule-divider" />}
                 <Link
                   to={`/workouts/${workout.id}`}
-                  style={{ textDecoration: "none", color: "inherit" }}
+                  className="workouts-index__link"
                 >
                   <Box py="4">
                     <Flex justify="between" align="start">
-                      <Box style={{ flex: 1, minWidth: 0 }}>
+                      <Box className="workouts-index__main">
                         <Text
                           size="4"
                           weight="bold"
-                          style={{
-                            fontFamily: "var(--font-display)",
-                            display: "block",
-                          }}
+                          className="workouts-index__title"
                         >
                           {workout.name}
                         </Text>
@@ -143,60 +141,35 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
                           as="p"
                           size="2"
                           mt="1"
-                          style={{ color: "var(--brand-text-secondary)" }}
+                          className="workouts-index__muted"
                         >
                           {formatWorkoutDate(workout.start)}
                         </Text>
                         <Flex gap="3" mt="1">
                           {workout.exerciseCount > 0 && (
-                            <Text
-                              size="1"
-                              style={{ color: "var(--brand-text-secondary)" }}
-                            >
+                            <Text size="1" className="workouts-index__muted">
                               {workout.exerciseCount} exercises
                             </Text>
                           )}
                           {workout.setCount > 0 && (
-                            <Text
-                              size="1"
-                              style={{ color: "var(--brand-text-secondary)" }}
-                            >
+                            <Text size="1" className="workouts-index__muted">
                               {workout.setCount} sets
                             </Text>
                           )}
                           {workout.durationMinutes != null && (
-                            <Text
-                              size="1"
-                              style={{ color: "var(--brand-text-secondary)" }}
-                            >
+                            <Text size="1" className="workouts-index__muted">
                               {workout.durationMinutes} min
                             </Text>
                           )}
                           {workout.totalVolumeKg > 0 && (
-                            <Text
-                              size="1"
-                              style={{ color: "var(--brand-text-secondary)" }}
-                            >
+                            <Text size="1" className="workouts-index__muted">
                               {formatVolume(workout.totalVolumeKg)}
                             </Text>
                           )}
                         </Flex>
                       </Box>
                       <span
-                        style={{
-                          fontSize: "0.65rem",
-                          fontWeight: 600,
-                          letterSpacing: "0.08em",
-                          textTransform: "uppercase",
-                          padding: "4px 10px",
-                          borderRadius: "100px",
-                          background: isActive
-                            ? "var(--brand-coral)"
-                            : "var(--gray-4)",
-                          color: isActive ? "white" : "var(--brand-text)",
-                          flexShrink: 0,
-                          marginTop: "2px",
-                        }}
+                        className={`workouts-index__status ${isActive ? "workouts-index__status--active" : "workouts-index__status--done"}`}
                       >
                         {isActive ? "Active" : "Done"}
                       </span>

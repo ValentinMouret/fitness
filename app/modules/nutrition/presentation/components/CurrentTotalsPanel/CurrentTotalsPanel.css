@@ -1,0 +1,31 @@
+.current-totals-panel__progress-track {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 6px;
+  background-color: var(--gray-4);
+}
+
+.current-totals-panel__progress-track--large {
+  height: 12px;
+}
+
+.current-totals-panel__progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 6px;
+  transition:
+    width 0.3s ease,
+    background-color 0.3s ease;
+}
+
+.current-totals-panel__satiety-dot {
+  color: var(--gray-6);
+}
+
+.current-totals-panel__satiety-dot--active {
+  color: var(--green-9);
+}

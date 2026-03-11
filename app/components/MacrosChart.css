@@ -1,0 +1,22 @@
+.macros-chart__tooltip-body {
+  margin-top: 6px;
+}
+
+.macros-chart__canvas {
+  flex: 1;
+  min-width: 0;
+}
+
+.macros-chart__legend {
+  min-width: 120px;
+}
+
+.macros-chart__legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.macros-chart__legend-detail {
+  margin-left: 22px;
+}

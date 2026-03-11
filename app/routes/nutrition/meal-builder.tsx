@@ -57,6 +57,7 @@ import {
 import { humanFormatting } from "~/strings";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/meal-builder";
+import "./meal-builder.css";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -575,7 +576,7 @@ function AddIngredientModal({
           </Tabs.List>
         </Tabs.Root>
 
-        <Box style={{ height: "300px", overflow: "auto" }}>
+        <Box className="meal-builder__ingredient-list">
           <Flex direction="column" gap="2">
             {ingredients.length === 0 ? (
               <Flex
@@ -583,7 +584,7 @@ function AddIngredientModal({
                 gap="3"
                 align="center"
                 justify="center"
-                style={{ height: "200px" }}
+                className="meal-builder__ingredient-empty"
               >
                 <Text color="gray" size="2">
                   No ingredients found
@@ -605,7 +606,7 @@ function AddIngredientModal({
                       <Text
                         color="red"
                         size="2"
-                        style={{ textAlign: "center" }}
+                        className="meal-builder__ai-search-error"
                       >
                         {aiSearchError}
                       </Text>
@@ -619,7 +620,7 @@ function AddIngredientModal({
                   <button
                     type="button"
                     onClick={() => onAdd(ingredient)}
-                    style={{ cursor: "pointer", textAlign: "left" }}
+                    className="meal-builder__ingredient-button"
                   >
                     <Flex justify="between" align="center">
                       <Flex align="center" gap="2">
@@ -665,7 +666,7 @@ function AISuggestionsPanel({
           <Card
             key={suggestion.reason}
             size="2"
-            style={{ backgroundColor: "var(--gray-2)" }}
+            className="meal-builder__suggestion-card"
           >
             <Text>{suggestion.reason}</Text>
           </Card>

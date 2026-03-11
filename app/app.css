@@ -497,3 +497,13 @@ button.rt-Card:hover,
   border-top: 1px solid var(--gray-4);
   margin: 0;
 }
+
+.root-error-boundary {
+  padding-top: 4rem;
+}
+
+.root-error-boundary__stack {
+  display: block;
+  padding: 1rem;
+  overflow: auto;
+}

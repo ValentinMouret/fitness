@@ -19,6 +19,7 @@ import {
   Text,
 } from "@radix-ui/themes";
 import type React from "react";
+import "./AppLayout.css";
 import { useCallback, useRef, useState } from "react";
 import { Form, NavLink, Outlet, useLocation, useMatches } from "react-router";
 import { z } from "zod";
@@ -116,41 +117,29 @@ const AppLayout: React.FC = () => {
   );
 
   return (
-    <Flex direction="row" style={{ height: "100vh" }} onKeyDown={handleKeyDown}>
+    <Flex
+      direction="row"
+      className="app-layout"
+      style={
+        {
+          "--sidebar-width": isCollapsed ? "60px" : "240px",
+        } as React.CSSProperties
+      }
+      onKeyDown={handleKeyDown}
+    >
       <IconButton
         ref={hamburgerRef}
-        className="hamburger-mobile"
+        className="hamburger-mobile app-layout__hamburger"
         variant="ghost"
         size="3"
         onClick={openMobileSidebar}
         aria-label="Open navigation menu"
         aria-expanded={isMobileOpen}
-        style={{
-          position: "fixed",
-          top: "1rem",
-          left: "1rem",
-          zIndex: 50,
-        }}
       >
         <HamburgerMenuIcon />
       </IconButton>
 
-      <Box
-        className="sidebar-desktop"
-        style={{
-          width: isCollapsed ? "60px" : "240px",
-          borderRight: "1px solid var(--gray-4)",
-          background: "var(--brand-surface, #f3f1ed)",
-          transition: "width 0.2s ease",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          height: "100vh",
-          zIndex: 40,
-          boxShadow: "2px 0 8px rgba(0, 0, 0, 0.03)",
-          paddingLeft: "env(safe-area-inset-left)",
-        }}
-      >
+      <Box className="sidebar-desktop app-layout__sidebar">
         <Flex direction="column" height="100%" p="3">
           <Flex align="center" justify="between" mb="4">
             <Flex align="center" gap="2">
@@ -172,31 +161,31 @@ const AppLayout: React.FC = () => {
             direction="column"
             gap="0.5"
             flexGrow="1"
-            style={{ overflow: "hidden" }}
+            className="app-layout__nav"
           >
             {navItems.map(({ path, label, icon }) => (
               <Box key={path} px="1">
                 <NavLink
                   to={path}
                   onClick={closeMobileSidebar}
-                  style={{ textDecoration: "none" }}
+                  className="app-layout__nav-link"
                 >
                   {({ isActive }) => (
                     <Button
                       variant="soft"
                       color={isActive ? "tomato" : undefined}
                       size="3"
-                      style={{
-                        width: "100%",
-                        justifyContent: "flex-start",
-                        backgroundColor: isActive ? undefined : "transparent",
-                      }}
+                      className={
+                        isActive
+                          ? "app-layout__nav-button"
+                          : "app-layout__nav-button app-layout__nav-button--inactive"
+                      }
                     >
                       <Flex
                         align="center"
                         gap={isCollapsed ? "0" : "3"}
                         justify={isCollapsed ? "center" : "start"}
-                        style={{ width: "100%" }}
+                        className="app-layout__nav-button-inner"
                       >
                         {icon}
                         {!isCollapsed && (
@@ -215,30 +204,20 @@ const AppLayout: React.FC = () => {
             ))}
           </Flex>
 
-          <Box
-            mt="4"
-            px="1"
-            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-          >
+          <Box mt="4" px="1" className="app-layout__logout">
             <Form method="post" action="/logout">
               <Button
                 type="submit"
                 variant="soft"
                 size="3"
                 color="red"
-                style={{
-                  width: "100%",
-                  justifyContent: "center",
-                  padding: "8px 12px",
-                  margin: "0",
-                  borderRadius: "6px",
-                }}
+                className="app-layout__logout-button"
               >
                 <Flex
                   align="center"
                   gap={isCollapsed ? "0" : "2"}
                   justify="center"
-                  style={{ width: "100%" }}
+                  className="app-layout__nav-button-inner"
                 >
                   <ExitIcon />
                   {!isCollapsed && (
@@ -262,15 +241,7 @@ const AppLayout: React.FC = () => {
         onKeyDown={handleKeyDown}
       />
 
-      <Box
-        className="main-content"
-        flexGrow="1"
-        style={{
-          overflow: "auto",
-          marginLeft: isCollapsed ? "60px" : "240px",
-          transition: "margin-left 0.2s ease",
-        }}
-      >
+      <Box className="main-content app-layout__main" flexGrow="1">
         <Container size="4" p={{ initial: "2", md: "4" }}>
           <PageTransition>
             {headerConfig && <PageHeader {...headerConfig} />}

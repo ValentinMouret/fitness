@@ -1,9 +1,24 @@
 import { AlertDialog, Box, Button, Card, Flex, Text } from "@radix-ui/themes";
 import { Form, useNavigation } from "react-router";
-import type { WorkoutSession } from "~/modules/fitness/domain/workout";
+import "./DeleteConfirmationDialog.css";
+
+interface WorkoutSummarySet {
+  readonly isCompleted: boolean;
+}
+
+interface WorkoutSummaryGroup {
+  readonly sets: ReadonlyArray<WorkoutSummarySet>;
+}
+
+interface DeleteWorkoutSession {
+  readonly workout: {
+    readonly stop?: Date;
+  };
+  readonly exerciseGroups: ReadonlyArray<WorkoutSummaryGroup>;
+}
 
 interface DeleteConfirmationDialogProps {
-  readonly workoutSession: WorkoutSession;
+  readonly workoutSession: DeleteWorkoutSession;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
 }
@@ -35,7 +50,7 @@ export function DeleteConfirmationDialog({
 
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
-      <AlertDialog.Content style={{ maxWidth: "500px" }}>
+      <AlertDialog.Content className="delete-workout-dialog">
         <AlertDialog.Title>Delete Workout</AlertDialog.Title>
 
         <Flex direction="column" gap="4" mt="4">
@@ -46,7 +61,6 @@ export function DeleteConfirmationDialog({
             </Text>
           </AlertDialog.Description>
 
-          {/* Workout Summary */}
           <Card>
             <Text weight="bold" size="2" mb="2" as="div">
               Workout Summary
@@ -79,7 +93,6 @@ export function DeleteConfirmationDialog({
             </Text>
           </Box>
 
-          {/* Action Buttons */}
           <Flex gap="3" justify="end">
             <AlertDialog.Cancel>
               <Button variant="soft" disabled={isBusy}>

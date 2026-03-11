@@ -14,6 +14,7 @@ import {
 import { useState } from "react";
 import { useFetcher } from "react-router";
 import type { ImportResult } from "../../../domain/strong-import";
+import "./StrongImportForm.css";
 
 interface StrongImportFormProps {
   onImportSuccess?: (result: ImportResult) => void;
@@ -164,13 +165,7 @@ Set 2: 20 kg × 14
                   value={customImportTime}
                   onChange={(e) => setCustomImportTime(e.target.value)}
                   disabled={isSubmitting}
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid var(--gray-7)",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                    width: "100%",
-                  }}
+                  className="fitness-import-form__input"
                 />
               </Box>
             )}

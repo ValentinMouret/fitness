@@ -1,3 +1,5 @@
+import "./RequiredStar.css";
+
 export default function RequiredStar() {
-  return <span style={{ color: "red" }}>*</span>;
+  return <span className="required-star">*</span>;
 }

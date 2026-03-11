@@ -1,0 +1,33 @@
+.start-workout-dialog {
+  max-width: 480px;
+}
+
+.start-workout-dialog__option {
+  all: unset;
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  padding: var(--space-3);
+  border: 1px solid var(--gray-5);
+  border-radius: var(--radius-2);
+  transition: background 0.15s;
+}
+
+.start-workout-dialog__option:hover:not(:disabled) {
+  background: var(--gray-3);
+}
+
+.start-workout-dialog__option--disabled {
+  cursor: default;
+}
+
+.start-workout-dialog__section-label {
+  display: block;
+  color: var(--brand-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.start-workout-dialog__templates {
+  max-height: 300px;
+}

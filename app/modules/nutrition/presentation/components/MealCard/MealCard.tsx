@@ -1,5 +1,6 @@
 import { Box, Flex, Text } from "@radix-ui/themes";
 import type { MealCardViewModel } from "../../view-models/meal-card.view-model";
+import "./MealCard.css";
 
 interface MealCardProps {
   readonly viewModel: MealCardViewModel;
@@ -24,7 +25,7 @@ export function MealCard({ viewModel }: MealCardProps) {
         g fat
       </Text>
 
-      <Box style={{ borderTop: "1px solid var(--gray-6)", paddingTop: "12px" }}>
+      <Box className="meal-card__ingredients">
         {viewModel.ingredients.map((ingredient) => (
           <Flex key={ingredient.id} align="center" gap="2" mb="2">
             <Text size="2">{ingredient.icon}</Text>

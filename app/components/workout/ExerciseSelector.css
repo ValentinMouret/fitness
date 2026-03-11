@@ -1,0 +1,33 @@
+.exercise-selector__dialog {
+  max-width: 480px;
+  max-height: 80vh;
+}
+
+.exercise-selector__search {
+  flex-grow: 1;
+}
+
+.exercise-selector__type-trigger {
+  min-width: 120px;
+}
+
+.exercise-selector__results {
+  height: 300px;
+}
+
+.exercise-selector__empty-state {
+  padding: 2rem 0;
+}
+
+.exercise-selector__item {
+  cursor: pointer;
+}
+
+.exercise-selector__item--separated {
+  border-top: 1px solid var(--gray-3);
+}
+
+.exercise-selector__item--selected {
+  background-color: var(--accent-3);
+  border-radius: 4px;
+}

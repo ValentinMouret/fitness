@@ -157,3 +157,7 @@
     padding-bottom: calc(60px + env(safe-area-inset-bottom));
   }
 }
+
+.active-workout-stats__label {
+  color: var(--brand-text-secondary);
+}

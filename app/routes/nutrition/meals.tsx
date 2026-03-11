@@ -49,6 +49,7 @@ import {
 import { addOneDay, removeOneDay, toDateString, today } from "~/time";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/meals";
+import "./meals.css";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -418,7 +419,7 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
                       <IconButton
                         variant="ghost"
                         size="2"
-                        style={{ visibility: "hidden" }}
+                        className="nutrition-meals__actions-placeholder"
                       >
                         <DotsHorizontalIcon width="16" height="16" />
                       </IconButton>

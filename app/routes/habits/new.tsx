@@ -91,13 +91,7 @@ export default function NewHabit() {
       <Form method="post">
         <Flex direction="column" gap="4">
           <Box>
-            <Text
-              as="label"
-              size="2"
-              weight="medium"
-              mb="2"
-              style={{ display: "block" }}
-            >
+            <Text as="div" size="2" weight="medium" mb="2">
               Name
             </Text>
             <TextField.Root
@@ -108,13 +102,7 @@ export default function NewHabit() {
           </Box>
 
           <Box>
-            <Text
-              as="label"
-              size="2"
-              weight="medium"
-              mb="2"
-              style={{ display: "block" }}
-            >
+            <Text as="div" size="2" weight="medium" mb="2">
               Description (optional)
             </Text>
             <TextArea
@@ -125,13 +113,7 @@ export default function NewHabit() {
           </Box>
 
           <Box>
-            <Text
-              as="label"
-              size="2"
-              weight="medium"
-              mb="2"
-              style={{ display: "block" }}
-            >
+            <Text as="div" size="2" weight="medium" mb="2">
               Frequency
             </Text>
             <Select.Root
@@ -152,12 +134,7 @@ export default function NewHabit() {
 
           {(frequencyType === "weekly" || frequencyType === "custom") && (
             <Box>
-              <Text
-                size="2"
-                weight="medium"
-                mb="3"
-                style={{ display: "block" }}
-              >
+              <Text size="2" weight="medium" mb="3" as="div">
                 Days of the Week
               </Text>
               <Grid columns="2" gap="2">

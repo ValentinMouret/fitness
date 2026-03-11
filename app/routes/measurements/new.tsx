@@ -59,13 +59,7 @@ export default function NewMeasurement() {
       <Form method="post">
         <Flex direction="column" gap="4">
           <Box>
-            <Text
-              as="label"
-              size="2"
-              weight="medium"
-              mb="2"
-              style={{ display: "block" }}
-            >
+            <Text as="div" size="2" weight="medium" mb="2">
               Name
             </Text>
             <TextField.Root
@@ -79,13 +73,7 @@ export default function NewMeasurement() {
           </Box>
 
           <Box>
-            <Text
-              as="label"
-              size="2"
-              weight="medium"
-              mb="2"
-              style={{ display: "block" }}
-            >
+            <Text as="div" size="2" weight="medium" mb="2">
               Unit
             </Text>
             <TextField.Root
@@ -96,13 +84,7 @@ export default function NewMeasurement() {
           </Box>
 
           <Box>
-            <Text
-              as="label"
-              size="2"
-              weight="medium"
-              mb="2"
-              style={{ display: "block" }}
-            >
+            <Text as="div" size="2" weight="medium" mb="2">
               Description (optional)
             </Text>
             <TextArea

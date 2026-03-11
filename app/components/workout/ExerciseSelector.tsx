@@ -13,10 +13,16 @@ import {
 import Fuse from "fuse.js";
 import { useMemo, useState } from "react";
 import { useFetcher } from "react-router";
-import type { Exercise, ExerciseType } from "~/modules/fitness/domain/workout";
+import "./ExerciseSelector.css";
+
+interface ExerciseSelectorExercise {
+  readonly id: string;
+  readonly name: string;
+  readonly type: string;
+}
 
 interface ExerciseSelectorProps {
-  readonly exercises: ReadonlyArray<Exercise>;
+  readonly exercises: ReadonlyArray<ExerciseSelectorExercise>;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
   readonly replaceExerciseId?: string;
@@ -29,14 +35,19 @@ export function ExerciseSelector({
   replaceExerciseId,
 }: ExerciseSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedType, setSelectedType] = useState<ExerciseType | "all">("all");
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
-    null,
-  );
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedExercise, setSelectedExercise] =
+    useState<ExerciseSelectorExercise | null>(null);
   const [selectedExercises, setSelectedExercises] = useState<
-    ReadonlyArray<Exercise>
+    ReadonlyArray<ExerciseSelectorExercise>
   >([]);
   const fetcher = useFetcher();
+
+  const availableTypes = useMemo(() => {
+    return Array.from(
+      new Set(exercises.map((exercise) => exercise.type)),
+    ).sort();
+  }, [exercises]);
 
   const typeFiltered = useMemo(() => {
     if (selectedType === "all") return exercises;
@@ -60,11 +71,11 @@ export function ExerciseSelector({
 
   const isReplaceMode = !!replaceExerciseId;
 
-  const toggleExercise = (exercise: Exercise) => {
+  const toggleExercise = (exercise: ExerciseSelectorExercise) => {
     setSelectedExercises((prev) => {
-      const isAlreadySelected = prev.some((e) => e.id === exercise.id);
+      const isAlreadySelected = prev.some((item) => item.id === exercise.id);
       if (isAlreadySelected) {
-        return prev.filter((e) => e.id !== exercise.id);
+        return prev.filter((item) => item.id !== exercise.id);
       }
       return [...prev, exercise];
     });
@@ -114,7 +125,7 @@ export function ExerciseSelector({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content style={{ maxWidth: 480, maxHeight: "80vh" }}>
+      <Dialog.Content className="exercise-selector__dialog">
         <Dialog.Title size="4">
           {isReplaceMode ? "Replace Exercise" : "Add Exercises"}
         </Dialog.Title>
@@ -124,8 +135,8 @@ export function ExerciseSelector({
             <TextField.Root
               placeholder="Search exercises..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ flexGrow: 1 }}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              className="exercise-selector__search"
               size="2"
             >
               <TextField.Slot>
@@ -133,20 +144,15 @@ export function ExerciseSelector({
               </TextField.Slot>
             </TextField.Root>
 
-            <Select.Root
-              value={selectedType}
-              onValueChange={(value) =>
-                setSelectedType(value as ExerciseType | "all")
-              }
-            >
-              <Select.Trigger style={{ minWidth: 120 }} />
+            <Select.Root value={selectedType} onValueChange={setSelectedType}>
+              <Select.Trigger className="exercise-selector__type-trigger" />
               <Select.Content>
                 <Select.Item value="all">All</Select.Item>
-                <Select.Item value="barbell">Barbell</Select.Item>
-                <Select.Item value="dumbbells">Dumbbell</Select.Item>
-                <Select.Item value="bodyweight">Bodyweight</Select.Item>
-                <Select.Item value="machine">Machine</Select.Item>
-                <Select.Item value="cable">Cable</Select.Item>
+                {availableTypes.map((type) => (
+                  <Select.Item key={type} value={type}>
+                    {type}
+                  </Select.Item>
+                ))}
               </Select.Content>
             </Select.Root>
           </Flex>
@@ -156,17 +162,22 @@ export function ExerciseSelector({
             {filteredExercises.length !== 1 ? "s" : ""}
           </Text>
 
-          <ScrollArea style={{ height: 300 }}>
+          <ScrollArea className="exercise-selector__results">
             <Box>
               {filteredExercises.length === 0 ? (
-                <Text size="2" color="gray" style={{ padding: "2rem 0" }}>
+                <Text
+                  size="2"
+                  color="gray"
+                  className="exercise-selector__empty-state"
+                >
                   No exercises found.
                 </Text>
               ) : (
                 filteredExercises.map((exercise, index) => {
                   const isSelected = isReplaceMode
                     ? selectedExercise?.id === exercise.id
-                    : selectedExercises.some((e) => e.id === exercise.id);
+                    : selectedExercises.some((item) => item.id === exercise.id);
+
                   return (
                     <Box
                       key={exercise.id}
@@ -179,15 +190,7 @@ export function ExerciseSelector({
                           toggleExercise(exercise);
                         }
                       }}
-                      style={{
-                        cursor: "pointer",
-                        borderTop:
-                          index === 0 ? undefined : "1px solid var(--gray-3)",
-                        backgroundColor: isSelected
-                          ? "var(--accent-3)"
-                          : undefined,
-                        borderRadius: isSelected ? 4 : undefined,
-                      }}
+                      className={`exercise-selector__item ${index > 0 ? "exercise-selector__item--separated" : ""} ${isSelected ? "exercise-selector__item--selected" : ""}`}
                     >
                       <Flex justify="between" align="center">
                         <div>
@@ -197,11 +200,7 @@ export function ExerciseSelector({
                           >
                             {exercise.name}
                           </Text>
-                          <Text
-                            size="1"
-                            color="gray"
-                            style={{ display: "block", marginTop: 2 }}
-                          >
+                          <Text as="div" size="1" color="gray" mt="1">
                             {exercise.type}
                           </Text>
                         </div>
@@ -218,20 +217,11 @@ export function ExerciseSelector({
             </Box>
           </ScrollArea>
 
-          <Flex gap="3" justify="end">
-            <Button
-              variant="soft"
-              size="2"
-              onClick={resetAndClose}
-              disabled={fetcher.state !== "idle"}
-            >
+          <Flex justify="end" gap="2">
+            <Button variant="soft" color="gray" onClick={resetAndClose}>
               Cancel
             </Button>
-            <Button
-              size="2"
-              onClick={handleSubmit}
-              disabled={!canSubmit || fetcher.state !== "idle"}
-            >
+            <Button onClick={handleSubmit} disabled={!canSubmit}>
               {addButtonLabel()}
             </Button>
           </Flex>

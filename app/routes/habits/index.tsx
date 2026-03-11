@@ -197,12 +197,7 @@ export default function HabitsPage({
                   </Flex>
 
                   {habit.description && (
-                    <Text
-                      color="gray"
-                      size="2"
-                      mb="3"
-                      style={{ display: "block" }}
-                    >
+                    <Text color="gray" size="2" mb="3" as="div">
                       {habit.description}
                     </Text>
                   )}
