@@ -25,10 +25,12 @@ Submitting forms create a navigation. Sometimes, it’s desireable. Sometimes, i
 ## Component Architecture
 
 ### Component Categories
-1. **Shared Components** (`app/components/`): Generic, reusable UI components with zero domain knowledge
-   - Accept generic props only
-   - No imports from module domain/application layers
-   - Examples: `Button`, `Modal`, `Chart`, form primitives
+1. **Shared Components** (`app/components/`): Dumb frontend components reused across routes and modules
+   - Accept UI-shaped props only
+   - Keep business logic and data loading out of the component
+   - Do not import from module `application/`, `domain/`, or `presentation/`
+   - If a component needs richer domain data, transform it before rendering and pass plain props instead
+   - Examples: `Button`, `Modal`, `Chart`, form primitives, small app-wide cards and inputs
 
 2. **Feature Components** (`modules/{feature}/presentation/components/`): Domain-specific UI components
    - Can import from same module's domain/application layers
@@ -48,12 +50,13 @@ Submitting forms create a navigation. Sometimes, it’s desireable. Sometimes, i
 - Feature-specific components belong in `modules/{feature}/presentation/components/`
 - Generic components belong in `app/components/`
 - Route-specific components can stay next to routes if they're simple orchestration only
+- `app/components/` is allowed to contain app-level components as long as they stay dumb and depend on plain props instead of domain/application types
 
 ### View Model Pattern
-Feature components should accept view models instead of domain entities:
+Route modules and feature services should adapt domain objects into UI-facing props before they reach components:
 
 ```tsx
-// ❌ Bad: Direct domain entity usage
+// ❌ Bad: Direct domain entity usage inside a component boundary
 interface WorkoutCardProps {
   readonly workout: WorkoutSession; // Domain entity
 }
@@ -65,6 +68,18 @@ interface WorkoutCardProps {
 ```
 
 View model files should be named: `{feature-name}-{component}.view-model.ts`
+
+## Route Conventions
+- Keep the file tree aligned with the URL tree, including dynamic segments
+- Prefer nested route folders over flattened aliases for dynamic routes
+- Use kebab-case for dynamic param names
+
+Examples:
+- `/workouts` -> `app/routes/workouts/index.tsx`
+- `/workouts/:id` -> `app/routes/workouts/:id/index.tsx`
+- `/workouts/:id/substitute/:exercise-id` -> `app/routes/workouts/:id/substitute/:exercise-id.tsx`
+- `/habits/:id/edit` -> `app/routes/habits/:id/edit.tsx`
+- `/measurements/:name` -> `app/routes/measurements/:name.tsx`
 
 ### Module Structure
 ```
