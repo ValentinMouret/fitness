@@ -1,4 +1,3 @@
-import { TargetService } from "~/modules/core/application/measurement-service";
 import {
   Age,
   baseMeasurements,
@@ -6,6 +5,7 @@ import {
   Weight,
 } from "~/modules/core/domain/measurements";
 import { Target } from "~/modules/core/domain/target";
+import { TargetService } from "~/modules/core/infra/measurement-service";
 import { Activity } from "~/modules/nutrition/domain/activity";
 import { NutritionCalculationService } from "~/modules/nutrition/domain/nutrition-calculation-service";
 

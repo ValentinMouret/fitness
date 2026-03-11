@@ -1,6 +1,6 @@
 import { redirect } from "react-router";
-import { AdaptiveWorkoutService } from "~/modules/fitness/application/adaptive-workout-service.server";
 import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
+import { AdaptiveWorkoutService } from "~/modules/fitness/infra/adaptive-workout-service.server";
 
 export async function getSubstituteExerciseData(input: {
   readonly workoutId: string;

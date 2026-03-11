@@ -4,7 +4,7 @@ import ExerciseForm from "~/components/ExerciseForm";
 import {
   createExercise,
   type MuscleGroupSplitInput,
-} from "~/modules/fitness/application/exercise-form.service.server";
+} from "~/modules/fitness/infra/exercise-form.service.server";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types";
 

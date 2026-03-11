@@ -1,5 +1,4 @@
 import { redirect } from "react-router";
-import { ExerciseService } from "~/modules/fitness/application/service.server";
 import {
   type Exercise,
   ExerciseMuscleGroupsAggregate,
@@ -9,6 +8,7 @@ import {
   parseMuscleGroup,
 } from "~/modules/fitness/domain/workout";
 import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
+import { ExerciseService } from "~/modules/fitness/infra/service.server";
 import { coerceEmpty, humanFormatting } from "~/strings";
 import { coerceInt } from "~/utils";
 

@@ -1,4 +1,4 @@
-import { MeasurementRepository } from "../infra/measurements.repository.server";
+import { MeasurementRepository } from "./measurements.repository.server";
 
 function toSnakeCase(str: string): string {
   return str

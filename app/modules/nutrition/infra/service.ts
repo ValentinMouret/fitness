@@ -24,10 +24,10 @@ import type {
 import {
   type AIIngredientSearchResult,
   AIIngredientService,
-} from "../infra/ai-ingredient.service";
-import { IngredientRepository } from "../infra/ingredient.repository.server";
-import { MealLogRepository } from "../infra/meal-log.repository.server";
-import { MealTemplateRepository } from "../infra/meal-template.repository.server";
+} from "./ai-ingredient.service";
+import { IngredientRepository } from "./ingredient.repository.server";
+import { MealLogRepository } from "./meal-log.repository.server";
+import { MealTemplateRepository } from "./meal-template.repository.server";
 
 export const NutritionService = {
   // Ingredient operations

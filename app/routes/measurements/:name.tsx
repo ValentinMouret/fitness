@@ -21,7 +21,7 @@ import {
   addMeasure,
   deleteMeasure,
   getMeasurementDetail,
-} from "~/modules/core/application/measurement-detail.service.server";
+} from "~/modules/core/infra/measurement-detail.service.server";
 import { today } from "~/time";
 import { formNumber, formOptionalText } from "~/utils/form-data";
 import type { Route } from "./+types/:name";

@@ -30,13 +30,6 @@ import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { PageHeader } from "~/components/PageHeader";
 import { SectionHeader } from "~/components/SectionHeader";
-import {
-  getMealBuilderData,
-  saveAiIngredient,
-  saveMealLog,
-  saveMealTemplate,
-  searchAiIngredient,
-} from "~/modules/nutrition/application/meal-builder.service.server";
 import type {
   CreateAIIngredientInput,
   Ingredient,
@@ -46,6 +39,13 @@ import {
   ingredientCategories,
 } from "~/modules/nutrition/domain/ingredient";
 import { calculateSatietyScore } from "~/modules/nutrition/domain/meal-template";
+import {
+  getMealBuilderData,
+  saveAiIngredient,
+  saveMealLog,
+  saveMealTemplate,
+  searchAiIngredient,
+} from "~/modules/nutrition/infra/meal-builder.service.server";
 import {
   AIIngredientReviewModal,
   CurrentTotalsPanel,

@@ -4,11 +4,11 @@ import { Form, useSearchParams } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import ExerciseCard from "~/components/ExerciseCard";
+import { exerciseTypes } from "~/modules/fitness/domain/workout";
 import {
   deleteExercise,
   getExercisesPageData,
-} from "~/modules/fitness/application/exercises-page.service.server";
-import { exerciseTypes } from "~/modules/fitness/domain/workout";
+} from "~/modules/fitness/infra/exercises-page.service.server";
 import { humanFormatting } from "~/strings";
 import { formText } from "~/utils/form-data";
 import type { Route } from "./+types";

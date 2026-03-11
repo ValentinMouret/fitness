@@ -10,7 +10,7 @@ import {
 import { data, Form, Link, redirect, useActionData } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
-import { createMeasurement } from "~/modules/core/application/create-measurement.service.server";
+import { createMeasurement } from "~/modules/core/infra/create-measurement.service.server";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/new";
 

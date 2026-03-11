@@ -9,7 +9,7 @@ import {
   getDashboardData,
   logWeight,
   toggleHabitCompletion,
-} from "~/modules/dashboard/application/dashboard.service.server";
+} from "~/modules/dashboard/infra/dashboard.service.server";
 import { formatStartedAgo } from "~/time";
 import { createValidationError } from "~/utils/errors";
 import { formBoolean, formNumber, formText } from "~/utils/form-data";

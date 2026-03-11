@@ -19,7 +19,7 @@ import MacrosChart from "~/components/MacrosChart";
 import {
   calculateTargets,
   saveNutritionTarget,
-} from "~/modules/nutrition/application/calculate-targets.service.server";
+} from "~/modules/nutrition/infra/calculate-targets.service.server";
 import { coerceFloat, coerceInt, expect } from "~/utils";
 import { formNumber } from "~/utils/form-data";
 import MaintenanceForm from "../MaintenanceForm";

@@ -1,10 +1,10 @@
 import { redirect } from "react-router";
-import { NutritionService } from "~/modules/nutrition/application/service";
 import type { CreateAIIngredientInput } from "~/modules/nutrition/domain/ingredient";
 import type {
   CreateMealTemplateInput,
   MealCategory,
 } from "~/modules/nutrition/domain/meal-template";
+import { NutritionService } from "~/modules/nutrition/infra/service";
 
 export async function getMealBuilderData(input: {
   readonly searchTerm?: string;

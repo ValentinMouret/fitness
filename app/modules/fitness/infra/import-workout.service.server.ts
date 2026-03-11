@@ -1,13 +1,13 @@
 import { redirect } from "react-router";
+import type { ImportConfig } from "~/modules/fitness/domain/strong-import";
 import {
   importFitbodCSV,
   validateFitbodCSV,
-} from "~/modules/fitness/application/fitbod-import.service.server";
+} from "~/modules/fitness/infra/fitbod-import.service.server";
 import {
   importWorkout,
   validateStrongText,
-} from "~/modules/fitness/application/strong-import.service.server";
-import type { ImportConfig } from "~/modules/fitness/domain/strong-import";
+} from "~/modules/fitness/infra/strong-import.service.server";
 
 export async function importFromStrong(input: {
   readonly strongText: string;

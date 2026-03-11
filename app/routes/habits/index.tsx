@@ -19,7 +19,7 @@ import { SectionHeader } from "~/components/SectionHeader";
 import {
   getHabitsPageData,
   toggleHabitCompletion,
-} from "~/modules/habits/application/habits-page.service.server";
+} from "~/modules/habits/infra/habits-page.service.server";
 import { formBoolean, formOptionalText, formText } from "~/utils/form-data";
 import HabitCheckbox from "../../components/HabitCheckbox";
 import { Day } from "../../time";

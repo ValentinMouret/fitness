@@ -1,4 +1,4 @@
-import { MuscleRecoveryService } from "~/modules/fitness/application/muscle-recovery.service.server";
+import { MuscleRecoveryService } from "~/modules/fitness/infra/muscle-recovery.service.server";
 import { MuscleRecoveryMap } from "~/modules/fitness/presentation/components";
 import { createRecoveryViewModels } from "~/modules/fitness/presentation/view-models/muscle-recovery.view-model";
 import type { Route } from "./+types/recovery";

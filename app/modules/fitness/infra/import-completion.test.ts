@@ -7,10 +7,10 @@ import type {
   WorkoutSession,
   WorkoutWithSummary,
 } from "../domain/workout";
-import type { IExerciseRepository } from "../infra/repository.server";
-import type { IWorkoutRepository } from "../infra/workout.repository.server";
 import { importFitbodCSV } from "./fitbod-import.service.server";
+import type { IExerciseRepository } from "./repository.server";
 import { importWorkout as importStrongWorkout } from "./strong-import.service.server";
+import type { IWorkoutRepository } from "./workout.repository.server";
 
 class InMemoryWorkoutRepository implements IWorkoutRepository {
   workouts: Workout[] = [];

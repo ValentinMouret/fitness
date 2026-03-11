@@ -14,16 +14,16 @@ import * as React from "react";
 import { data, Form, Link, redirect, useActionData } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import {
+  getHabitForEdit,
+  updateHabit,
+} from "~/modules/habits/infra/edit-habit.service.server";
 import { allDays } from "~/time";
 import {
   formOptionalText,
   formRepeatableText,
   formText,
 } from "~/utils/form-data";
-import {
-  getHabitForEdit,
-  updateHabit,
-} from "~/modules/habits/application/edit-habit.service.server";
 import type { Route } from "./+types/edit";
 
 export const handle = {

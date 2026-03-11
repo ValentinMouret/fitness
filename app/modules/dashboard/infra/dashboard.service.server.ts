@@ -1,13 +1,13 @@
 import { ResultAsync } from "neverthrow";
-import {
-  MeasurementService,
-  TargetService,
-} from "~/modules/core/application/measurement-service";
 import type { Measure as MeasureRecord } from "~/modules/core/domain/measure";
 import { Measure } from "~/modules/core/domain/measure";
 import type { Measurement } from "~/modules/core/domain/measurements";
 import { baseMeasurements } from "~/modules/core/domain/measurements";
 import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
+import {
+  MeasurementService,
+  TargetService,
+} from "~/modules/core/infra/measurement-service";
 import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
 import type { Workout } from "~/modules/fitness/domain/workout";
 import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
@@ -17,7 +17,7 @@ import {
   HabitCompletionRepository,
   HabitRepository,
 } from "~/modules/habits/infra/repository.server";
-import { NutritionService } from "~/modules/nutrition/application/service";
+import { NutritionService } from "~/modules/nutrition/infra/service";
 import { isSameDay, today } from "~/time";
 import { createServerError } from "~/utils/errors";
 

@@ -1,7 +1,7 @@
 import { redirect } from "react-router";
-import { AdaptiveWorkoutService } from "~/modules/fitness/application/adaptive-workout-service.server";
-import { VolumeTrackingService } from "~/modules/fitness/application/volume-tracking-service.server";
 import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
+import { AdaptiveWorkoutService } from "~/modules/fitness/infra/adaptive-workout-service.server";
+import { VolumeTrackingService } from "~/modules/fitness/infra/volume-tracking-service.server";
 import {
   WorkoutRepository,
   WorkoutSessionRepository,

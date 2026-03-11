@@ -1,6 +1,6 @@
 import { Box, Button, Flex, Progress, Text } from "@radix-ui/themes";
 import { Link } from "react-router";
-import { getNutritionPageData } from "~/modules/nutrition/application/nutrition-page.service.server";
+import { getNutritionPageData } from "~/modules/nutrition/infra/nutrition-page.service.server";
 import type { Route } from "./+types";
 
 export async function loader() {

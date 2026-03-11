@@ -11,8 +11,8 @@ import {
   STRONG_EXPORT_BODYWEIGHT_REPS_ONLY,
   STRONG_EXPORT_COMMA_DECIMALS_FAILURE,
 } from "../domain/strong-import.fixtures";
-import { WorkoutSessionRepository } from "../infra/workout.repository.server";
 import { importWorkout } from "./strong-import.service.server";
+import { WorkoutSessionRepository } from "./workout.repository.server";
 
 describe("StrongImportService Integration Tests", () => {
   let createdWorkoutId: string | null = null;

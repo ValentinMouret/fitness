@@ -2,7 +2,7 @@ import { RulerSquareIcon } from "@radix-ui/react-icons";
 import { Badge, Box, Card, Flex, Grid, Heading, Text } from "@radix-ui/themes";
 import { Link } from "react-router";
 import { EmptyState } from "~/components/EmptyState";
-import { getMeasurementsPageData } from "~/modules/core/application/measurements-page.service.server";
+import { getMeasurementsPageData } from "~/modules/core/infra/measurements-page.service.server";
 import type { Route } from "./+types/index";
 
 export async function loader() {

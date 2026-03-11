@@ -1,7 +1,7 @@
-import { WorkoutAnalysisService } from "~/modules/fitness/application/workout-analysis.service.server";
 import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
 import { AIFitnessCoachService } from "~/modules/fitness/infra/ai-fitness-coach.service";
 import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
+import { WorkoutAnalysisService } from "~/modules/fitness/infra/workout-analysis.service.server";
 import { WorkoutTemplateRepository } from "~/modules/fitness/infra/workout-template.repository.server";
 import { handleResultError } from "~/utils/errors";
 

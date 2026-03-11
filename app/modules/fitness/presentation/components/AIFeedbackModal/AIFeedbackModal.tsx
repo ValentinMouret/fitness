@@ -18,7 +18,7 @@ import {
   Strong,
   Text,
 } from "@radix-ui/themes";
-import type { AIFitnessCoachResult } from "../../../infra/ai-fitness-coach.service";
+import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
 
 interface AIFeedbackModalProps {
   readonly open: boolean;

@@ -17,7 +17,7 @@ import {
   AIWorkoutGenerationRepository,
   type ProgressionRow,
   type RecentWorkoutRow,
-} from "../infra/ai-workout-generation.repository.server";
+} from "./ai-workout-generation.repository.server";
 import { VolumeTrackingService } from "./volume-tracking-service.server";
 
 let anthropic: Anthropic | null = null;

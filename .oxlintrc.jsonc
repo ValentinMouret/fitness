@@ -1,0 +1,37 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "overrides": [
+    {
+      "files": ["app/modules/**/domain/**/*.ts", "app/modules/**/domain/**/*.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^(~\\/modules\\/[^/]+\\/(application|infra)(\\/.*)?|(\\.\\.?\\/)+(application|infra)(\\/.*)?)$",
+                "message": "Domain code must stay pure and cannot import application or infra."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["app/modules/**/application/**/*.ts", "app/modules/**/application/**/*.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^(~\\/modules\\/[^/]+\\/infra(\\/.*)?|(\\.\\.?\\/)+infra(\\/.*)?)$",
+                "message": "Application code must depend on domain, not infra."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import { handleResultError } from "~/utils/errors";
 import { Measure } from "../domain/measure";
-import { MeasureRepository } from "../infra/measure.repository.server";
-import { MeasurementRepository } from "../infra/measurements.repository.server";
+import { MeasureRepository } from "./measure.repository.server";
+import { MeasurementRepository } from "./measurements.repository.server";
 
 export async function getMeasurementDetail(name: string) {
   const measurement = await MeasurementRepository.fetchByName(name);
