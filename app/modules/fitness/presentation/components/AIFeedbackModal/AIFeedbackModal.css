@@ -1,0 +1,12 @@
+.ai-feedback-modal {
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.ai-feedback-modal__progress {
+  flex: 1;
+}
+
+.ai-feedback-modal__item {
+  flex: 1;
+}

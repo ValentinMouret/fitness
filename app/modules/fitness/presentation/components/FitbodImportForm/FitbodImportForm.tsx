@@ -13,6 +13,7 @@ import {
 import { useCallback, useState } from "react";
 import { useFetcher } from "react-router";
 import type { ImportResult } from "../../../domain/fitbod-import";
+import "./FitbodImportForm.css";
 
 interface FitbodImportFormProps {
   onImportSuccess?: (result: ImportResult) => void;
@@ -140,13 +141,7 @@ export function FitbodImportForm({
                 accept=".csv"
                 onChange={handleFileChange}
                 disabled={isSubmitting}
-                style={{
-                  padding: "8px 12px",
-                  border: "1px solid var(--gray-7)",
-                  borderRadius: "4px",
-                  fontSize: "14px",
-                  width: "100%",
-                }}
+                className="fitness-import-form__input"
               />
               {fileError && (
                 <Text size="1" color="red" mt="1">
@@ -212,13 +207,7 @@ export function FitbodImportForm({
                   value={customImportTime}
                   onChange={(e) => setCustomImportTime(e.target.value)}
                   disabled={isSubmitting}
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid var(--gray-7)",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                    width: "100%",
-                  }}
+                  className="fitness-import-form__input"
                 />
               </Box>
             )}

@@ -476,7 +476,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
               <Text
                 as="p"
                 size="1"
-                style={{ color: "var(--brand-text-secondary)" }}
+                className="active-workout-stats__label"
               >
                 elapsed
               </Text>
@@ -489,7 +489,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
               <Text
                 as="p"
                 size="1"
-                style={{ color: "var(--brand-text-secondary)" }}
+                className="active-workout-stats__label"
               >
                 sets
               </Text>
@@ -501,7 +501,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
               <Text
                 as="p"
                 size="1"
-                style={{ color: "var(--brand-text-secondary)" }}
+                className="active-workout-stats__label"
               >
                 done
               </Text>

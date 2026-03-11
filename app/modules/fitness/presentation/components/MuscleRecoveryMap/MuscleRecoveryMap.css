@@ -197,3 +197,15 @@
     width: 80px;
   }
 }
+
+.recovery-legend-dot--fresh {
+  background-color: #30a46c;
+}
+
+.recovery-legend-dot--recovering {
+  background-color: #f59e0b;
+}
+
+.recovery-legend-dot--fatigued {
+  background-color: #e5484d;
+}

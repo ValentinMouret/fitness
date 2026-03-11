@@ -19,6 +19,7 @@ import {
   Text,
 } from "@radix-ui/themes";
 import type { AIFitnessCoachResult } from "../../../infra/ai-fitness-coach.service";
+import "./AIFeedbackModal.css";
 
 interface AIFeedbackModalProps {
   readonly open: boolean;
@@ -41,10 +42,7 @@ export function AIFeedbackModal({
     <Dialog.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <Dialog.Content
         maxWidth="800px"
-        style={{
-          maxHeight: "90vh",
-          overflow: "auto",
-        }}
+        className="ai-feedback-modal"
       >
         <Flex justify="between" align="center" mb="4">
           <Heading size="6">🤖 AI Fitness Coach Feedback</Heading>
@@ -104,7 +102,7 @@ export function AIFeedbackModal({
                         feedback.analysis.progressionAnalysis.consistencyScore *
                         10
                       }
-                      style={{ flex: 1 }}
+                      className="ai-feedback-modal__progress"
                     />
                     <Text size="2" weight="bold">
                       {feedback.analysis.progressionAnalysis.consistencyScore}
@@ -292,7 +290,7 @@ function SuggestionSection({
             <Badge size="1" color={color} variant="soft">
               {index + 1}
             </Badge>
-            <Text size="2" style={{ flex: 1 }}>
+            <Text size="2" className="ai-feedback-modal__item">
               {item}
             </Text>
           </Flex>
