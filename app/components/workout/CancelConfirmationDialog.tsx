@@ -8,6 +8,7 @@ import {
 } from "@radix-ui/themes";
 import { Form, useNavigation } from "react-router";
 import { useLiveDuration } from "./useLiveDuration";
+import "./CancelConfirmationDialog.css";
 
 interface WorkoutSummarySet {
   readonly isCompleted: boolean;
@@ -59,7 +60,7 @@ export function CancelConfirmationDialog({
 
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
-      <AlertDialog.Content style={{ maxWidth: 400 }}>
+      <AlertDialog.Content className="cancel-workout-dialog">
         <Heading size="4" mb="2">
           Cancel Workout
         </Heading>
@@ -68,7 +69,7 @@ export function CancelConfirmationDialog({
           This will permanently delete all workout data.
         </Text>
 
-        <Box py="4" mt="3" style={{ borderTop: "1px solid var(--gray-4)" }}>
+        <Box py="4" mt="3" className="cancel-workout-dialog__section">
           <Flex direction="column" gap="3">
             <Flex justify="between">
               <Text size="2" color="gray">

@@ -13,6 +13,7 @@ import {
 import Fuse from "fuse.js";
 import { useMemo, useState } from "react";
 import { useFetcher } from "react-router";
+import "./ExerciseSelector.css";
 
 interface ExerciseSelectorExercise {
   readonly id: string;
@@ -35,9 +36,8 @@ export function ExerciseSelector({
 }: ExerciseSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedExercise, setSelectedExercise] = useState<ExerciseSelectorExercise | null>(
-    null,
-  );
+  const [selectedExercise, setSelectedExercise] =
+    useState<ExerciseSelectorExercise | null>(null);
   const [selectedExercises, setSelectedExercises] = useState<
     ReadonlyArray<ExerciseSelectorExercise>
   >([]);
@@ -123,7 +123,7 @@ export function ExerciseSelector({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content style={{ maxWidth: 480, maxHeight: "80vh" }}>
+      <Dialog.Content className="exercise-selector__dialog">
         <Dialog.Title size="4">
           {isReplaceMode ? "Replace Exercise" : "Add Exercises"}
         </Dialog.Title>
@@ -134,7 +134,7 @@ export function ExerciseSelector({
               placeholder="Search exercises..."
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              style={{ flexGrow: 1 }}
+              className="exercise-selector__search"
               size="2"
             >
               <TextField.Slot>
@@ -143,7 +143,7 @@ export function ExerciseSelector({
             </TextField.Root>
 
             <Select.Root value={selectedType} onValueChange={setSelectedType}>
-              <Select.Trigger style={{ minWidth: 120 }} />
+              <Select.Trigger className="exercise-selector__type-trigger" />
               <Select.Content>
                 <Select.Item value="all">All</Select.Item>
                 {availableTypes.map((type) => (
@@ -160,10 +160,14 @@ export function ExerciseSelector({
             {filteredExercises.length !== 1 ? "s" : ""}
           </Text>
 
-          <ScrollArea style={{ height: 300 }}>
+          <ScrollArea className="exercise-selector__results">
             <Box>
               {filteredExercises.length === 0 ? (
-                <Text size="2" color="gray" style={{ padding: "2rem 0" }}>
+                <Text
+                  size="2"
+                  color="gray"
+                  className="exercise-selector__empty-state"
+                >
                   No exercises found.
                 </Text>
               ) : (
@@ -184,15 +188,7 @@ export function ExerciseSelector({
                           toggleExercise(exercise);
                         }
                       }}
-                      style={{
-                        cursor: "pointer",
-                        borderTop:
-                          index === 0 ? undefined : "1px solid var(--gray-3)",
-                        backgroundColor: isSelected
-                          ? "var(--accent-3)"
-                          : undefined,
-                        borderRadius: isSelected ? 4 : undefined,
-                      }}
+                      className={`exercise-selector__item ${index > 0 ? "exercise-selector__item--separated" : ""} ${isSelected ? "exercise-selector__item--selected" : ""}`}
                     >
                       <Flex justify="between" align="center">
                         <div>
@@ -203,9 +199,10 @@ export function ExerciseSelector({
                             {exercise.name}
                           </Text>
                           <Text
+                            as="div"
                             size="1"
                             color="gray"
-                            style={{ display: "block", marginTop: 2 }}
+                            mt="1"
                           >
                             {exercise.type}
                           </Text>

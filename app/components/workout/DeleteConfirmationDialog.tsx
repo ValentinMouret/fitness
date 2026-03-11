@@ -1,5 +1,6 @@
 import { AlertDialog, Box, Button, Card, Flex, Text } from "@radix-ui/themes";
 import { Form, useNavigation } from "react-router";
+import "./DeleteConfirmationDialog.css";
 
 interface WorkoutSummarySet {
   readonly isCompleted: boolean;
@@ -49,7 +50,7 @@ export function DeleteConfirmationDialog({
 
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
-      <AlertDialog.Content style={{ maxWidth: "500px" }}>
+      <AlertDialog.Content className="delete-workout-dialog">
         <AlertDialog.Title>Delete Workout</AlertDialog.Title>
 
         <Flex direction="column" gap="4" mt="4">

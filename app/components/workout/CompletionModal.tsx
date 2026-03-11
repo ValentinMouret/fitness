@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import { Form, useNavigation } from "react-router";
 import { useLiveDuration } from "./useLiveDuration";
+import "./CompletionModal.css";
 
 interface WorkoutSummarySet {
   readonly isCompleted: boolean;
@@ -66,7 +67,7 @@ export function CompletionModal({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content style={{ maxWidth: 400 }}>
+      <Dialog.Content className="completion-modal">
         <Form method="post">
           <input type="hidden" name="intent" value="complete-workout" />
           {saveAsTemplate && (
@@ -77,7 +78,7 @@ export function CompletionModal({
             Complete Workout
           </Heading>
 
-          <Box py="4" style={{ borderTop: "1px solid var(--gray-4)" }}>
+          <Box py="4" className="completion-modal__section">
             <Flex direction="column" gap="3">
               <Flex justify="between">
                 <Text size="2" color="gray">
@@ -105,7 +106,7 @@ export function CompletionModal({
           </Box>
 
           {!fromTemplate && (
-            <Box py="3" style={{ borderTop: "1px solid var(--gray-4)" }}>
+            <Box py="3" className="completion-modal__section">
               <Text as="label" size="2" weight="medium">
                 <Flex align="center" gap="2">
                   <Checkbox

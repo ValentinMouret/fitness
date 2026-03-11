@@ -11,6 +11,7 @@ import {
 import { useEffect, useState } from "react";
 import { Link, useFetcher } from "react-router";
 import { humanFormatting } from "~/strings";
+import "./ExerciseCard.css";
 
 interface ExerciseSummary {
   readonly id: string;
@@ -56,7 +57,7 @@ export default function ExerciseCard({
           gap="2"
           align="center"
           justify="between"
-          style={{ cursor: "pointer" }}
+          className="exercise-card__header"
           onClick={toggleExpanded}
         >
           <Flex gap="2" align="center">
