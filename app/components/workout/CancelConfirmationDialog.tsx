@@ -7,11 +7,26 @@ import {
   Text,
 } from "@radix-ui/themes";
 import { Form, useNavigation } from "react-router";
-import type { WorkoutSession } from "~/modules/fitness/domain/workout";
 import { useLiveDuration } from "./useLiveDuration";
 
+interface WorkoutSummarySet {
+  readonly isCompleted: boolean;
+}
+
+interface WorkoutSummaryGroup {
+  readonly sets: ReadonlyArray<WorkoutSummarySet>;
+}
+
+interface CancelWorkoutSession {
+  readonly workout: {
+    readonly start: Date;
+    readonly stop?: Date;
+  };
+  readonly exerciseGroups: ReadonlyArray<WorkoutSummaryGroup>;
+}
+
 interface CancelConfirmationDialogProps {
-  readonly workoutSession: WorkoutSession;
+  readonly workoutSession: CancelWorkoutSession;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
 }

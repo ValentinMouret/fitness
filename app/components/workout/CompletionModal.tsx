@@ -10,11 +10,27 @@ import {
 } from "@radix-ui/themes";
 import { useState } from "react";
 import { Form, useNavigation } from "react-router";
-import type { WorkoutSession } from "~/modules/fitness/domain/workout";
 import { useLiveDuration } from "./useLiveDuration";
 
+interface WorkoutSummarySet {
+  readonly isCompleted: boolean;
+}
+
+interface WorkoutSummaryGroup {
+  readonly sets: ReadonlyArray<WorkoutSummarySet>;
+}
+
+interface CompletionWorkoutSession {
+  readonly workout: {
+    readonly start: Date;
+    readonly stop?: Date;
+    readonly name: string;
+  };
+  readonly exerciseGroups: ReadonlyArray<WorkoutSummaryGroup>;
+}
+
 interface CompletionModalProps {
-  readonly workoutSession: WorkoutSession;
+  readonly workoutSession: CompletionWorkoutSession;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
   readonly fromTemplate?: boolean;

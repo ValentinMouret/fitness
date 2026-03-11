@@ -14,17 +14,50 @@ import { useState } from "react";
 import { Form } from "react-router";
 import { NumberInput } from "~/components/NumberInput";
 import RequiredStar from "~/components/RequiredStar";
-import {
-  type Exercise,
-  exerciseTypes,
-  type MuscleGroup,
-  type MuscleGroupSplit,
-  muscleGroups,
-} from "~/modules/fitness/domain/workout";
 import { humanFormatting } from "~/strings";
 
+const EXERCISE_TYPES = [
+  "barbell",
+  "bodyweight",
+  "cable",
+  "dumbbells",
+  "machine",
+] as const;
+
+const MUSCLE_GROUPS = [
+  "abs",
+  "armstrings",
+  "biceps",
+  "calves",
+  "delts",
+  "forearm",
+  "glutes",
+  "lats",
+  "lower_back",
+  "pecs",
+  "quads",
+  "trapezes",
+  "triceps",
+] as const;
+
+type ExerciseFormExerciseType = (typeof EXERCISE_TYPES)[number];
+type MuscleGroup = (typeof MUSCLE_GROUPS)[number];
+
+interface ExerciseFormExercise {
+  readonly id: string;
+  readonly name: string;
+  readonly type: ExerciseFormExerciseType;
+  readonly description?: string;
+  readonly mmcInstructions?: string;
+}
+
+interface MuscleGroupSplit {
+  readonly muscleGroup: MuscleGroup;
+  readonly split: number;
+}
+
 interface ExerciseFormProps {
-  readonly initialExercise?: Exercise;
+  readonly initialExercise?: ExerciseFormExercise;
   readonly initialSplits?: ReadonlyArray<MuscleGroupSplit>;
   readonly mode: "create" | "edit";
 }
@@ -37,7 +70,7 @@ export default function ExerciseForm({
   const [splits, setSplits] = useState<MuscleGroupSplit[]>([...initialSplits]);
 
   const usedMuscleGroups = new Set(splits.map((s) => s.muscleGroup));
-  const availableMuscleGroups = muscleGroups.filter(
+  const availableMuscleGroups = MUSCLE_GROUPS.filter(
     (muscleGroup) => !usedMuscleGroups.has(muscleGroup),
   );
 
@@ -77,7 +110,7 @@ export default function ExerciseForm({
           >
             <Select.Trigger />
             <Select.Content>
-              {exerciseTypes.map((exerciseType) => (
+              {EXERCISE_TYPES.map((exerciseType) => (
                 <Select.Item key={exerciseType} value={exerciseType}>
                   {humanFormatting(exerciseType)}
                 </Select.Item>
@@ -136,11 +169,11 @@ export default function ExerciseForm({
                       required
                       name={`${index}-muscle-group`}
                       defaultValue={muscleGroupSplit.muscleGroup}
-                      onValueChange={(v) =>
+                      onValueChange={(value) =>
                         updateSplitMuscleGroup(
                           {
                             ...muscleGroupSplit,
-                            muscleGroup: v as MuscleGroup,
+                            muscleGroup: value as MuscleGroup,
                           },
                           index,
                         )

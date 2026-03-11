@@ -1,9 +1,23 @@
 import { AlertDialog, Box, Button, Card, Flex, Text } from "@radix-ui/themes";
 import { Form, useNavigation } from "react-router";
-import type { WorkoutSession } from "~/modules/fitness/domain/workout";
+
+interface WorkoutSummarySet {
+  readonly isCompleted: boolean;
+}
+
+interface WorkoutSummaryGroup {
+  readonly sets: ReadonlyArray<WorkoutSummarySet>;
+}
+
+interface DeleteWorkoutSession {
+  readonly workout: {
+    readonly stop?: Date;
+  };
+  readonly exerciseGroups: ReadonlyArray<WorkoutSummaryGroup>;
+}
 
 interface DeleteConfirmationDialogProps {
-  readonly workoutSession: WorkoutSession;
+  readonly workoutSession: DeleteWorkoutSession;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
 }
@@ -46,7 +60,6 @@ export function DeleteConfirmationDialog({
             </Text>
           </AlertDialog.Description>
 
-          {/* Workout Summary */}
           <Card>
             <Text weight="bold" size="2" mb="2" as="div">
               Workout Summary
@@ -79,7 +92,6 @@ export function DeleteConfirmationDialog({
             </Text>
           </Box>
 
-          {/* Action Buttons */}
           <Flex gap="3" justify="end">
             <AlertDialog.Cancel>
               <Button variant="soft" disabled={isBusy}>
