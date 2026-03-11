@@ -2,12 +2,22 @@ import { Flex, Text } from "@radix-ui/themes";
 import { useId } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { chartColors } from "~/design-system";
-import { macrosEnergyPerGram } from "~/modules/nutrition/domain/macros";
-import type { MacrosSplit } from "~/modules/nutrition/domain/nutrition-calculation-service";
+
+interface MacrosChartData {
+  readonly protein: number;
+  readonly fat: number;
+  readonly carbs: number;
+}
 
 interface MacrosChartProps {
-  readonly macrosSplit: MacrosSplit;
+  readonly macrosSplit: MacrosChartData;
 }
+
+const MACROS_ENERGY_PER_GRAM = {
+  protein: 4,
+  fat: 9,
+  carbs: 4,
+} as const;
 
 const COLORS = {
   protein: chartColors.protein,
@@ -52,19 +62,19 @@ export default function MacrosChart({ macrosSplit }: MacrosChartProps) {
     {
       name: "Protein",
       grams: macrosSplit.protein,
-      calories: macrosSplit.protein * macrosEnergyPerGram.protein,
+      calories: macrosSplit.protein * MACROS_ENERGY_PER_GRAM.protein,
       color: COLORS.protein,
     },
     {
       name: "Fat",
       grams: macrosSplit.fat,
-      calories: macrosSplit.fat * macrosEnergyPerGram.fat,
+      calories: macrosSplit.fat * MACROS_ENERGY_PER_GRAM.fat,
       color: COLORS.fat,
     },
     {
       name: "Carbs",
       grams: macrosSplit.carbs,
-      calories: macrosSplit.carbs * macrosEnergyPerGram.carbs,
+      calories: macrosSplit.carbs * MACROS_ENERGY_PER_GRAM.carbs,
       color: COLORS.carbs,
     },
   ];

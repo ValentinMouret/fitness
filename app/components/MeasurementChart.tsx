@@ -8,13 +8,17 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { Measure } from "~/modules/core/domain/measure";
 import "./WeightChart.css";
 
 export type TimePeriod = "week" | "month" | "3months";
 
+interface MeasurementChartDatum {
+  readonly t: Date;
+  readonly value: number;
+}
+
 interface MeasurementChartProps {
-  readonly data: readonly Measure[];
+  readonly data: readonly MeasurementChartDatum[];
   readonly unit: string;
   readonly measurementName: string;
 }
