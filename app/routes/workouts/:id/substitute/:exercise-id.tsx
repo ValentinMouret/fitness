@@ -1,14 +1,14 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { zfd } from "zod-form-data";
 import {
   getSubstituteExerciseData,
   substituteExercise,
 } from "~/modules/fitness/application/substitute-exercise.service.server";
 import { formRepeatableText } from "~/utils/form-data";
-import type { Route } from "./+types/substitute";
+import type { Route } from "./+types/:exercise-id";
 
-export async function loader({ params }: LoaderFunctionArgs) {
-  const { id: workoutId, exerciseId } = params;
+export async function loader({ params }: Route.LoaderArgs) {
+  const workoutId = params.id;
+  const exerciseId = params["exercise-id"];
 
   if (!workoutId || !exerciseId) {
     throw new Response("Workout ID and Exercise ID are required", {
@@ -19,8 +19,9 @@ export async function loader({ params }: LoaderFunctionArgs) {
   return getSubstituteExerciseData({ workoutId, exerciseId });
 }
 
-export async function action({ params, request }: ActionFunctionArgs) {
-  const { id: workoutId, exerciseId } = params;
+export async function action({ params, request }: Route.ActionArgs) {
+  const workoutId = params.id;
+  const exerciseId = params["exercise-id"];
   const formData = await request.formData();
   const schema = zfd.formData({
     equipment: formRepeatableText(),
