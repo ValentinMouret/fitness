@@ -21,6 +21,7 @@ import {
   type TextureCategory,
   textureCategories,
 } from "../../../domain/ingredient";
+import "./AIIngredientReviewModal.css";
 
 interface AIIngredientReviewModalProps {
   isOpen: boolean;
@@ -83,7 +84,7 @@ export function AIIngredientReviewModal({
           it to the database.
         </Text>
 
-        <Box style={{ maxHeight: "60vh", overflow: "auto" }}>
+        <Box className="ai-ingredient-review-modal__body">
           <Grid columns="2" gap="4">
             {/* Basic Information */}
             <Box>

@@ -1,0 +1,13 @@
+.template-selection-modal__list {
+  height: 400px;
+  overflow: auto;
+}
+
+.template-selection-modal__button {
+  cursor: pointer;
+  text-align: left;
+}
+
+.template-selection-modal__notes {
+  font-style: italic;
+}

@@ -1,0 +1,21 @@
+.meal-builder__ingredient-list {
+  height: 300px;
+  overflow: auto;
+}
+
+.meal-builder__ingredient-empty {
+  height: 200px;
+}
+
+.meal-builder__ai-search-error {
+  text-align: center;
+}
+
+.meal-builder__ingredient-button {
+  cursor: pointer;
+  text-align: left;
+}
+
+.meal-builder__suggestion-card {
+  background-color: var(--gray-2);
+}

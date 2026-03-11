@@ -1,0 +1,4 @@
+.ai-ingredient-review-modal__body {
+  max-height: 60vh;
+  overflow: auto;
+}
