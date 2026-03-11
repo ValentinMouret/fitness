@@ -1,6 +1,7 @@
 import { Button, Flex, Heading, Text } from "@radix-ui/themes";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
+import "./EmptyState.css";
 
 interface EmptyStateProps {
   readonly icon: ReactNode;
@@ -26,47 +27,27 @@ export function EmptyState({
       justify="center"
       gap="4"
       py="9"
-      className="animate-fade-slide-up"
-      style={{
-        opacity: 0,
-        background: "var(--brand-surface, #f3f1ed)",
-        borderRadius: "16px",
-        border: "1px dashed var(--gray-5)",
-      }}
+      className="empty-state animate-fade-slide-up"
     >
-      <div
-        style={{
-          fontSize: "3rem",
-          opacity: 0.8,
-        }}
-      >
-        {icon}
-      </div>
+      <div className="empty-state__icon">{icon}</div>
 
       <Flex direction="column" align="center" gap="2">
-        <Heading size="4" style={{ color: "var(--brand-text, #1c1917)" }}>
+        <Heading size="4" className="empty-state__title">
           {title}
         </Heading>
-        <Text
-          size="2"
-          style={{
-            color: "var(--brand-text-secondary, #79756d)",
-            maxWidth: "280px",
-            textAlign: "center",
-          }}
-        >
+        <Text size="2" className="empty-state__description">
           {description}
         </Text>
       </Flex>
 
       {actionLabel && (actionTo || onAction) && (
-        <div style={{ marginTop: "8px" }}>
+        <div className="empty-state__action">
           {actionTo ? (
-            <Button asChild size="3" style={{ cursor: "pointer" }}>
+            <Button asChild size="3">
               <Link to={actionTo}>{actionLabel}</Link>
             </Button>
           ) : (
-            <Button size="3" onClick={onAction} style={{ cursor: "pointer" }}>
+            <Button size="3" onClick={onAction}>
               {actionLabel}
             </Button>
           )}

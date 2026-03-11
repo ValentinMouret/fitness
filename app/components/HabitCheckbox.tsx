@@ -1,5 +1,6 @@
 import { CheckIcon } from "@radix-ui/react-icons";
 import { Button, Flex, Text } from "@radix-ui/themes";
+import "./HabitCheckbox.css";
 
 interface HabitCheckboxProps {
   readonly habitId: string;
@@ -30,12 +31,7 @@ export default function HabitCheckbox({
         variant={isCompleted ? "solid" : "outline"}
         color={isCompleted ? "tomato" : "gray"}
         size="2"
-        style={{
-          width: "28px",
-          height: "28px",
-          flexShrink: 0,
-          padding: 0,
-        }}
+        className="habit-checkbox__button"
         disabled={isSubmitting}
       >
         {isCompleted && <CheckIcon />}
@@ -44,16 +40,13 @@ export default function HabitCheckbox({
       <Text
         size="3"
         weight="medium"
-        style={{
-          flex: 1,
-          color: isCompleted ? "var(--gray-9)" : "var(--gray-12)",
-        }}
+        className={`habit-checkbox__label ${isCompleted ? "habit-checkbox__label--completed" : ""}`}
       >
         {habitName}
       </Text>
 
       {streak > 0 && (
-        <Text size="2" style={{ color: "var(--brand-text-secondary)" }}>
+        <Text size="2" className="habit-checkbox__streak">
           {streak}d
         </Text>
       )}

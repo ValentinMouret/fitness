@@ -1,0 +1,25 @@
+.empty-state {
+  opacity: 0;
+  background: var(--brand-surface, #f3f1ed);
+  border-radius: 16px;
+  border: 1px dashed var(--gray-5);
+}
+
+.empty-state__icon {
+  font-size: 3rem;
+  opacity: 0.8;
+}
+
+.empty-state__title {
+  color: var(--brand-text, #1c1917);
+}
+
+.empty-state__description {
+  color: var(--brand-text-secondary, #79756d);
+  max-width: 280px;
+  text-align: center;
+}
+
+.empty-state__action {
+  margin-top: 8px;
+}

@@ -1,0 +1,19 @@
+.habit-checkbox__button {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.habit-checkbox__label {
+  flex: 1;
+  color: var(--gray-12);
+}
+
+.habit-checkbox__label--completed {
+  color: var(--gray-9);
+}
+
+.habit-checkbox__streak {
+  color: var(--brand-text-secondary);
+}
