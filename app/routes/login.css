@@ -1,0 +1,12 @@
+.login-page {
+  min-height: 100vh;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-submit {
+  width: 100%;
+}

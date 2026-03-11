@@ -25,6 +25,7 @@ import {
 import { today } from "~/time";
 import { formNumber, formOptionalText } from "~/utils/form-data";
 import type { Route } from "./+types/:name";
+import "./measurement-detail.css";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { name } = params;
@@ -108,7 +109,7 @@ export default function MeasurementPage(_: Route.ComponentProps) {
   return (
     <Box>
       {measurement.description && (
-        <Text color="gray" mb="4" style={{ display: "block" }}>
+        <Text as="div" color="gray" mb="4">
           {measurement.description}
         </Text>
       )}
@@ -131,7 +132,7 @@ export default function MeasurementPage(_: Route.ComponentProps) {
           <input type="hidden" name="intent" value="add-measure" />
           <Flex gap="3" align="end" wrap="wrap">
             <Box>
-              <Text size="2" mb="1" style={{ display: "block" }}>
+              <Text as="div" size="2" mb="1">
                 Value ({measurement.unit})
               </Text>
               <NumberInput
@@ -142,7 +143,7 @@ export default function MeasurementPage(_: Route.ComponentProps) {
               />
             </Box>
             <Box>
-              <Text size="2" mb="1" style={{ display: "block" }}>
+              <Text as="div" size="2" mb="1">
                 Date
               </Text>
               <TextField.Root
@@ -173,10 +174,7 @@ export default function MeasurementPage(_: Route.ComponentProps) {
       <Card size="3">
         <SectionHeader title="Measurement History" />
         {measures.length === 0 ? (
-          <Text
-            color="gray"
-            style={{ textAlign: "center", display: "block", padding: "2rem" }}
-          >
+          <Text color="gray" className="measurement-detail__empty-state">
             No measurements recorded yet. Add your first measurement above.
           </Text>
         ) : (

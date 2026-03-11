@@ -92,11 +92,11 @@ export default function NewHabit() {
         <Flex direction="column" gap="4">
           <Box>
             <Text
-              as="label"
+              as="div"
               size="2"
               weight="medium"
               mb="2"
-              style={{ display: "block" }}
+
             >
               Name
             </Text>
@@ -109,11 +109,11 @@ export default function NewHabit() {
 
           <Box>
             <Text
-              as="label"
+              as="div"
               size="2"
               weight="medium"
               mb="2"
-              style={{ display: "block" }}
+
             >
               Description (optional)
             </Text>
@@ -126,11 +126,11 @@ export default function NewHabit() {
 
           <Box>
             <Text
-              as="label"
+              as="div"
               size="2"
               weight="medium"
               mb="2"
-              style={{ display: "block" }}
+
             >
               Frequency
             </Text>
@@ -156,7 +156,7 @@ export default function NewHabit() {
                 size="2"
                 weight="medium"
                 mb="3"
-                style={{ display: "block" }}
+                as="div"
               >
                 Days of the Week
               </Text>

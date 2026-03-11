@@ -60,11 +60,11 @@ export default function NewMeasurement() {
         <Flex direction="column" gap="4">
           <Box>
             <Text
-              as="label"
+              as="div"
               size="2"
               weight="medium"
               mb="2"
-              style={{ display: "block" }}
+
             >
               Name
             </Text>
@@ -80,11 +80,11 @@ export default function NewMeasurement() {
 
           <Box>
             <Text
-              as="label"
+              as="div"
               size="2"
               weight="medium"
               mb="2"
-              style={{ display: "block" }}
+
             >
               Unit
             </Text>
@@ -97,11 +97,11 @@ export default function NewMeasurement() {
 
           <Box>
             <Text
-              as="label"
+              as="div"
               size="2"
               weight="medium"
               mb="2"
-              style={{ display: "block" }}
+
             >
               Description (optional)
             </Text>

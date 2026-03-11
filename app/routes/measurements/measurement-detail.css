@@ -1,0 +1,5 @@
+.measurement-detail__empty-state {
+  display: block;
+  padding: 2rem;
+  text-align: center;
+}

@@ -2,7 +2,7 @@ import {
   Button,
   Callout,
   Card,
-  Container,
+  Flex,
   Heading,
   Text,
   TextField,
@@ -14,6 +14,7 @@ import { loginWithCredentials } from "~/modules/auth/application/auth.service.se
 import { syncSessionFromCookie } from "~/modules/auth/application/session-sync";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/login";
+import "./login.css";
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
@@ -41,16 +42,8 @@ export default function Login({ actionData }: Route.ComponentProps) {
   const redirectTo = searchParams.get("redirectTo") || "/dashboard";
 
   return (
-    <Container
-      size="1"
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "100vh",
-      }}
-    >
-      <Card size="4" style={{ width: "100%", maxWidth: "400px" }}>
+    <Flex align="center" justify="center" className="login-page">
+      <Card size="4" className="login-card">
         <Heading as="h1" size="6" align="center" mb="6">
           Login
         </Heading>
@@ -58,11 +51,11 @@ export default function Login({ actionData }: Route.ComponentProps) {
           <input type="hidden" name="redirectTo" value={redirectTo} />
 
           <Text
-            as="label"
+            as="div"
             size="2"
             weight="medium"
             mb="2"
-            style={{ display: "block" }}
+
           >
             Username
           </Text>
@@ -74,11 +67,11 @@ export default function Login({ actionData }: Route.ComponentProps) {
           />
 
           <Text
-            as="label"
+            as="div"
             size="2"
             weight="medium"
             mb="2"
-            style={{ display: "block" }}
+
           >
             Password
           </Text>
@@ -96,11 +89,11 @@ export default function Login({ actionData }: Route.ComponentProps) {
             </Callout.Root>
           )}
 
-          <Button type="submit" size="3" style={{ width: "100%" }}>
+          <Button type="submit" size="3" className="login-submit">
             Login
           </Button>
         </Form>
       </Card>
-    </Container>
+    </Flex>
   );
 }
