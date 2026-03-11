@@ -2,7 +2,10 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "overrides": [
     {
-      "files": ["app/modules/**/domain/**/*.ts", "app/modules/**/domain/**/*.tsx"],
+      "files": [
+        "app/modules/**/domain/**/*.ts",
+        "app/modules/**/domain/**/*.tsx"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -18,7 +21,10 @@
       }
     },
     {
-      "files": ["app/modules/**/application/**/*.ts", "app/modules/**/application/**/*.tsx"],
+      "files": [
+        "app/modules/**/application/**/*.ts",
+        "app/modules/**/application/**/*.tsx"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",

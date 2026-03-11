@@ -30,7 +30,9 @@
       "biome check --write --no-errors-on-unmatched",
       "oxlint -A all -D no-restricted-imports -c .oxlintrc.jsonc --quiet"
     ],
-    "*.css": ["biome check --write --no-errors-on-unmatched"]
+    "*.css": [
+      "biome check --write --no-errors-on-unmatched"
+    ]
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.62.0",
