@@ -56,7 +56,7 @@ import {
   WorkoutExerciseCard,
 } from "~/modules/fitness/presentation";
 import { formOptionalText, formText } from "~/utils/form-data";
-import type { Route } from "./+types/:id";
+import type { Route } from "./+types/index";
 import "./active-workout.css";
 
 export async function loader({ params }: Route.LoaderArgs) {

@@ -28,10 +28,10 @@ export default [
       route("workouts/create", "routes/workouts/create.tsx"),
       route("workouts/generate", "routes/workouts/generate.tsx"),
       route("workouts/templates", "routes/workouts/templates/index.tsx"),
-      route("workouts/:id", "routes/workouts/:id.tsx"),
+      route("workouts/:id", "routes/workouts/:id/index.tsx"),
       route(
-        "workouts/:id/substitute/:exerciseId",
-        "routes/workouts/substitute.tsx",
+        "workouts/:id/substitute/:exercise-id",
+        "routes/workouts/:id/substitute/:exercise-id.tsx",
       ),
       route("workouts/exercises", "routes/workouts/exercises/index.tsx"),
       route(
@@ -44,10 +44,10 @@ export default [
       ),
       route("habits", "routes/habits/index.tsx"),
       route("habits/new", "routes/habits/new.tsx"),
-      route("habits/:id/edit", "routes/habits/edit.tsx"),
+      route("habits/:id/edit", "routes/habits/:id/edit.tsx"),
       route("measurements", "routes/measurements/index.tsx"),
       route("measurements/new", "routes/measurements/new.tsx"),
-      route("measurements/:name", "routes/measurements/name.tsx"),
+      route("measurements/:name", "routes/measurements/:name.tsx"),
     ]),
   ]),
 ] satisfies RouteConfig;

@@ -24,7 +24,7 @@ import {
 } from "~/modules/core/application/measurement-detail.service.server";
 import { today } from "~/time";
 import { formNumber, formOptionalText } from "~/utils/form-data";
-import type { Route } from "./+types/name";
+import type { Route } from "./+types/:name";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { name } = params;

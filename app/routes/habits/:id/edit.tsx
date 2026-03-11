@@ -23,7 +23,7 @@ import {
 import {
   getHabitForEdit,
   updateHabit,
-} from "../../modules/habits/application/edit-habit.service.server";
+} from "~/modules/habits/application/edit-habit.service.server";
 import type { Route } from "./+types/edit";
 
 export const handle = {
