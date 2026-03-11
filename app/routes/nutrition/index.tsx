@@ -72,20 +72,11 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             { value: dailyTotals.carbs, label: "Carbs", unit: "g" },
             { value: dailyTotals.fat, label: "Fat", unit: "g" },
           ].map((macro) => (
-            <Box
-              key={macro.label}
-              p="4"
-              className="nutrition__macro-card"
-            >
+            <Box key={macro.label} p="4" className="nutrition__macro-card">
               <span className="display-number display-number--lg">
                 {Math.round(macro.value)}
               </span>
-              <Text
-                as="p"
-                size="1"
-                mt="1"
-                className="nutrition__muted"
-              >
+              <Text as="p" size="1" mt="1" className="nutrition__muted">
                 {macro.unit}
               </Text>
               <Text
@@ -116,10 +107,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             return (
               <Box key={mealType}>
                 {i > 0 && <hr className="rule-divider" />}
-                <Link
-                  to="/nutrition/meals"
-                  className="nutrition__meal-link"
-                >
+                <Link to="/nutrition/meals" className="nutrition__meal-link">
                   <Box py="3">
                     <Flex justify="between" align="center">
                       <Flex align="center" gap="2">
@@ -130,11 +118,10 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                           {mealLabels[mealType]}
                         </Text>
                       </Flex>
-                      <Text
-                        size="2"
-                        className="nutrition__muted"
-                      >
-                        {hasLogged ? `${Math.round(meal.totals.calories)} kcal` : ""}
+                      <Text size="2" className="nutrition__muted">
+                        {hasLogged
+                          ? `${Math.round(meal.totals.calories)} kcal`
+                          : ""}
                       </Text>
                     </Flex>
                     {hasLogged && ingredientNames ? (

@@ -147,34 +147,22 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
                         </Text>
                         <Flex gap="3" mt="1">
                           {workout.exerciseCount > 0 && (
-                            <Text
-                              size="1"
-                              className="workouts-index__muted"
-                            >
+                            <Text size="1" className="workouts-index__muted">
                               {workout.exerciseCount} exercises
                             </Text>
                           )}
                           {workout.setCount > 0 && (
-                            <Text
-                              size="1"
-                              className="workouts-index__muted"
-                            >
+                            <Text size="1" className="workouts-index__muted">
                               {workout.setCount} sets
                             </Text>
                           )}
                           {workout.durationMinutes != null && (
-                            <Text
-                              size="1"
-                              className="workouts-index__muted"
-                            >
+                            <Text size="1" className="workouts-index__muted">
                               {workout.durationMinutes} min
                             </Text>
                           )}
                           {workout.totalVolumeKg > 0 && (
-                            <Text
-                              size="1"
-                              className="workouts-index__muted"
-                            >
+                            <Text size="1" className="workouts-index__muted">
                               {formatVolume(workout.totalVolumeKg)}
                             </Text>
                           )}

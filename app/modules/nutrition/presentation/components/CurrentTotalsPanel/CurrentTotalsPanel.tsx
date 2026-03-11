@@ -83,12 +83,17 @@ const MacroProgressBar = ({
           size={size === "large" ? "3" : "2"}
           weight={size === "large" ? "medium" : "regular"}
         >
-          {label}: {target ? formatProgress(current, target) : Math.round(current)} {unit}
+          {label}:{" "}
+          {target ? formatProgress(current, target) : Math.round(current)}{" "}
+          {unit}
         </Text>
         {target && <Text size="2">{Math.round(progress)}%</Text>}
       </Flex>
       <Box className={trackClassName}>
-        <Box className="current-totals-panel__progress-fill" style={fillStyle} />
+        <Box
+          className="current-totals-panel__progress-fill"
+          style={fillStyle}
+        />
       </Box>
     </Box>
   );
@@ -150,14 +155,23 @@ export function CurrentTotalsPanel({
                 <Text
                   key={level}
                   size="4"
-                  className={level <= satietyScore ? "current-totals-panel__satiety-dot current-totals-panel__satiety-dot--active" : "current-totals-panel__satiety-dot"}
+                  className={
+                    level <= satietyScore
+                      ? "current-totals-panel__satiety-dot current-totals-panel__satiety-dot--active"
+                      : "current-totals-panel__satiety-dot"
+                  }
                 >
                   ●
                 </Text>
               ))}
             </Flex>
             <Text size="3" weight="medium">
-              {["", "Low", "Light", "Moderate", "High", "Very High"][satietyScore]} ({satietyScore}/5)
+              {
+                ["", "Low", "Light", "Moderate", "High", "Very High"][
+                  satietyScore
+                ]
+              }{" "}
+              ({satietyScore}/5)
             </Text>
           </Flex>
           <Text size="2">{satietyDuration} fullness</Text>

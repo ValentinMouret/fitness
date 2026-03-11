@@ -89,7 +89,7 @@ export function QuickActionSheet({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-<Dialog.Content className="quick-action-sheet">
+      <Dialog.Content className="quick-action-sheet">
         <Flex justify="between" align="center" mb="4">
           <Dialog.Title>
             <Heading size="5">Quick Actions</Heading>
@@ -130,10 +130,18 @@ export function QuickActionSheet({
                         disabled={habitFetcher.state !== "idle"}
                         className="quick-action-sheet__habit-button"
                       >
-                        <Flex align="center" gap="2" className="quick-action-sheet__habit-content">
+                        <Flex
+                          align="center"
+                          gap="2"
+                          className="quick-action-sheet__habit-content"
+                        >
                           {isOptimisticCompleted && <CheckIcon />}
                           <Text
-                            className={isOptimisticCompleted ? "quick-action-sheet__habit-name quick-action-sheet__habit-name--completed" : "quick-action-sheet__habit-name"}
+                            className={
+                              isOptimisticCompleted
+                                ? "quick-action-sheet__habit-name quick-action-sheet__habit-name--completed"
+                                : "quick-action-sheet__habit-name"
+                            }
                           >
                             {habit.name}
                           </Text>

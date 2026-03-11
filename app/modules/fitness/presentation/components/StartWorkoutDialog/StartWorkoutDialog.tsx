@@ -74,12 +74,15 @@ export function StartWorkoutDialog({
                           {template.name}
                         </Text>
                         <Text size="1" color="gray">
-                          {template.usageCount > 0 ? `${template.usageCount}x` : ""}
+                          {template.usageCount > 0
+                            ? `${template.usageCount}x`
+                            : ""}
                         </Text>
                       </Flex>
                       <Text size="2" color="gray" as="p" mt="1">
                         {template.exerciseCount} exercises
-                        {template.usageCount > 0 && ` · ${template.lastUsedLabel}`}
+                        {template.usageCount > 0 &&
+                          ` · ${template.lastUsedLabel}`}
                       </Text>
                     </button>
                   </Form>

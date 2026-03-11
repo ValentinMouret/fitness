@@ -99,10 +99,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         {details}
       </Text>
       {stack && (
-        <Code
-          variant="soft"
-          className="root-error-boundary__stack"
-        >
+        <Code variant="soft" className="root-error-boundary__stack">
           {stack}
         </Code>
       )}

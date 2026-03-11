@@ -118,7 +118,10 @@ export default function ExerciseCard({
         )}
       </Flex>
 
-      <AlertDialog.Root open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialog.Root
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+      >
         <AlertDialog.Content maxWidth="450px">
           <AlertDialog.Title>Delete exercise</AlertDialog.Title>
           <AlertDialog.Description size="2">

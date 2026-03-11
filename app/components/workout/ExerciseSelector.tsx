@@ -44,7 +44,9 @@ export function ExerciseSelector({
   const fetcher = useFetcher();
 
   const availableTypes = useMemo(() => {
-    return Array.from(new Set(exercises.map((exercise) => exercise.type))).sort();
+    return Array.from(
+      new Set(exercises.map((exercise) => exercise.type)),
+    ).sort();
   }, [exercises]);
 
   const typeFiltered = useMemo(() => {
@@ -198,12 +200,7 @@ export function ExerciseSelector({
                           >
                             {exercise.name}
                           </Text>
-                          <Text
-                            as="div"
-                            size="1"
-                            color="gray"
-                            mt="1"
-                          >
+                          <Text as="div" size="1" color="gray" mt="1">
                             {exercise.type}
                           </Text>
                         </div>

@@ -38,7 +38,11 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
               </Link>
             </IconButton>
           )}
-          {typeof title === "string" ? <Heading size="7">{title}</Heading> : title}
+          {typeof title === "string" ? (
+            <Heading size="7">{title}</Heading>
+          ) : (
+            title
+          )}
         </Flex>
 
         <Flex align="center" gap="3">

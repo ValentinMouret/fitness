@@ -120,7 +120,11 @@ const AppLayout: React.FC = () => {
     <Flex
       direction="row"
       className="app-layout"
-      style={{ "--sidebar-width": isCollapsed ? "60px" : "240px" } as React.CSSProperties}
+      style={
+        {
+          "--sidebar-width": isCollapsed ? "60px" : "240px",
+        } as React.CSSProperties
+      }
       onKeyDown={handleKeyDown}
     >
       <IconButton
@@ -135,9 +139,7 @@ const AppLayout: React.FC = () => {
         <HamburgerMenuIcon />
       </IconButton>
 
-      <Box
-        className="sidebar-desktop app-layout__sidebar"
-      >
+      <Box className="sidebar-desktop app-layout__sidebar">
         <Flex direction="column" height="100%" p="3">
           <Flex align="center" justify="between" mb="4">
             <Flex align="center" gap="2">
@@ -173,7 +175,11 @@ const AppLayout: React.FC = () => {
                       variant="soft"
                       color={isActive ? "tomato" : undefined}
                       size="3"
-className={isActive ? "app-layout__nav-button" : "app-layout__nav-button app-layout__nav-button--inactive"}
+                      className={
+                        isActive
+                          ? "app-layout__nav-button"
+                          : "app-layout__nav-button app-layout__nav-button--inactive"
+                      }
                     >
                       <Flex
                         align="center"
@@ -198,18 +204,14 @@ className={isActive ? "app-layout__nav-button" : "app-layout__nav-button app-lay
             ))}
           </Flex>
 
-          <Box
-            mt="4"
-            px="1"
-            className="app-layout__logout"
-          >
+          <Box mt="4" px="1" className="app-layout__logout">
             <Form method="post" action="/logout">
               <Button
                 type="submit"
                 variant="soft"
                 size="3"
                 color="red"
-className="app-layout__logout-button"
+                className="app-layout__logout-button"
               >
                 <Flex
                   align="center"
@@ -239,10 +241,7 @@ className="app-layout__logout-button"
         onKeyDown={handleKeyDown}
       />
 
-      <Box
-        className="main-content app-layout__main"
-        flexGrow="1"
-      >
+      <Box className="main-content app-layout__main" flexGrow="1">
         <Container size="4" p={{ initial: "2", md: "4" }}>
           <PageTransition>
             {headerConfig && <PageHeader {...headerConfig} />}

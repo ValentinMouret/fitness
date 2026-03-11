@@ -163,12 +163,7 @@ export default function DashboardPage({
               <span className="display-number--unit">{weight.unit}</span>
             </span>
             {streak > 0 && (
-              <Text
-                as="p"
-                size="2"
-                mt="2"
-                className="dashboard__muted"
-              >
+              <Text as="p" size="2" mt="2" className="dashboard__muted">
                 {streak} day streak
               </Text>
             )}
@@ -215,11 +210,7 @@ export default function DashboardPage({
             <span className="display-number display-number--lg">
               {Math.round(nutrition.calories)}
             </span>
-            <Text
-              as="p"
-              size="1"
-              className="dashboard__muted"
-            >
+            <Text as="p" size="1" className="dashboard__muted">
               consumed
             </Text>
           </Box>
@@ -227,11 +218,7 @@ export default function DashboardPage({
             <span className="display-number display-number--lg">
               {Math.round(nutrition.calorieTarget - nutrition.calories)}
             </span>
-            <Text
-              as="p"
-              size="1"
-              className="dashboard__muted"
-            >
+            <Text as="p" size="1" className="dashboard__muted">
               remaining
             </Text>
           </Box>
@@ -239,11 +226,7 @@ export default function DashboardPage({
             <span className="display-number display-number--lg">
               {Math.round(nutrition.protein)}
             </span>
-            <Text
-              as="p"
-              size="1"
-              className="dashboard__muted"
-            >
+            <Text as="p" size="1" className="dashboard__muted">
               protein (g)
             </Text>
           </Box>

@@ -52,7 +52,9 @@ export function StaggeredItem({
   const staggerClass = `stagger-${Math.min(index + 1, 8)}`;
 
   return (
-    <div className={`page-transition animate-fade-slide-up ${staggerClass} ${className}`}>
+    <div
+      className={`page-transition animate-fade-slide-up ${staggerClass} ${className}`}
+    >
       {children}
     </div>
   );

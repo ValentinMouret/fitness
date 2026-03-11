@@ -40,10 +40,7 @@ export function AIFeedbackModal({
 
   return (
     <Dialog.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <Dialog.Content
-        maxWidth="800px"
-        className="ai-feedback-modal"
-      >
+      <Dialog.Content maxWidth="800px" className="ai-feedback-modal">
         <Flex justify="between" align="center" mb="4">
           <Heading size="6">🤖 AI Fitness Coach Feedback</Heading>
           <IconButton variant="ghost" onClick={onClose}>

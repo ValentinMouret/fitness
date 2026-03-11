@@ -94,13 +94,7 @@ export default function EditHabit({
       <Form method="post">
         <Flex direction="column" gap="4">
           <Box>
-            <Text
-              as="div"
-              size="2"
-              weight="medium"
-              mb="2"
-
-            >
+            <Text as="div" size="2" weight="medium" mb="2">
               Name
             </Text>
             <TextField.Root
@@ -112,13 +106,7 @@ export default function EditHabit({
           </Box>
 
           <Box>
-            <Text
-              as="div"
-              size="2"
-              weight="medium"
-              mb="2"
-
-            >
+            <Text as="div" size="2" weight="medium" mb="2">
               Description (optional)
             </Text>
             <TextArea
@@ -130,13 +118,7 @@ export default function EditHabit({
           </Box>
 
           <Box>
-            <Text
-              as="div"
-              size="2"
-              weight="medium"
-              mb="2"
-
-            >
+            <Text as="div" size="2" weight="medium" mb="2">
               Frequency
             </Text>
             <Select.Root
@@ -157,12 +139,7 @@ export default function EditHabit({
 
           {(frequencyType === "weekly" || frequencyType === "custom") && (
             <Box>
-              <Text
-                size="2"
-                weight="medium"
-                mb="3"
-                as="div"
-              >
+              <Text size="2" weight="medium" mb="3" as="div">
                 Days of the Week
               </Text>
               <Grid columns="2" gap="2">

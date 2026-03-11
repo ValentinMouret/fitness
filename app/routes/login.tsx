@@ -50,13 +50,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
         <Form method="post">
           <input type="hidden" name="redirectTo" value={redirectTo} />
 
-          <Text
-            as="div"
-            size="2"
-            weight="medium"
-            mb="2"
-
-          >
+          <Text as="div" size="2" weight="medium" mb="2">
             Username
           </Text>
           <TextField.Root
@@ -66,13 +60,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
             placeholder="Enter your username"
           />
 
-          <Text
-            as="div"
-            size="2"
-            weight="medium"
-            mb="2"
-
-          >
+          <Text as="div" size="2" weight="medium" mb="2">
             Password
           </Text>
           <TextField.Root

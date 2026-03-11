@@ -109,7 +109,11 @@ export default function TemplatesPage({ loaderData }: Route.ComponentProps) {
                   )}
                 </Box>
 
-                <Flex align="center" gap="2" className="workout-templates__actions">
+                <Flex
+                  align="center"
+                  gap="2"
+                  className="workout-templates__actions"
+                >
                   <Form method="post" action="/workouts/create">
                     <input
                       type="hidden"
