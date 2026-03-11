@@ -33,7 +33,8 @@ import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
 import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
 import { logger } from "~/logger.server";
-import { duplicateWorkout } from "~/modules/fitness/application/duplicate-workout.service.server";
+import type { WorkoutExerciseGroup } from "~/modules/fitness/domain/workout";
+import { duplicateWorkout } from "~/modules/fitness/infra/duplicate-workout.service.server";
 import {
   addExercisesToWorkout,
   addExerciseToWorkout,
@@ -47,9 +48,8 @@ import {
   replaceExerciseInWorkout,
   updateSetInWorkout,
   updateWorkoutName,
-} from "~/modules/fitness/application/workout-session.service.server";
-import { createTemplateFromWorkout } from "~/modules/fitness/application/workout-template.service.server";
-import type { WorkoutExerciseGroup } from "~/modules/fitness/domain/workout";
+} from "~/modules/fitness/infra/workout-session.service.server";
+import { createTemplateFromWorkout } from "~/modules/fitness/infra/workout-template.service.server";
 import {
   createWorkoutExerciseCardViewModel,
   ExerciseHistoryModal,

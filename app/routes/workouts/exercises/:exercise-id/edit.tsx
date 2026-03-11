@@ -8,7 +8,7 @@ import {
   getExerciseForEdit,
   type MuscleGroupSplitInput,
   updateExercise,
-} from "~/modules/fitness/application/exercise-form.service.server";
+} from "~/modules/fitness/infra/exercise-form.service.server";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/edit";
 

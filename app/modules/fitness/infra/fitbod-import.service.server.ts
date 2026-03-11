@@ -22,11 +22,11 @@ import {
 import {
   ExerciseRepository as DefaultExerciseRepository,
   type IExerciseRepository,
-} from "../infra/repository.server";
+} from "./repository.server";
 import {
   WorkoutRepository as DefaultWorkoutRepository,
   type IWorkoutRepository,
-} from "../infra/workout.repository.server";
+} from "./workout.repository.server";
 
 export interface FitbodImportDependencies {
   readonly exerciseRepository: IExerciseRepository;

@@ -9,11 +9,11 @@ import {
 } from "@radix-ui/themes";
 import { Link } from "react-router";
 import { zfd } from "zod-form-data";
+import type { ImportConfig } from "~/modules/fitness/domain/strong-import";
 import {
   importFromFitbod,
   importFromStrong,
-} from "~/modules/fitness/application/import-workout.service.server";
-import type { ImportConfig } from "~/modules/fitness/domain/strong-import";
+} from "~/modules/fitness/infra/import-workout.service.server";
 import {
   FitbodImportForm,
   StrongImportForm,

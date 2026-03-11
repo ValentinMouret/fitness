@@ -20,14 +20,14 @@ import { useFetcher } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { NumberInput } from "~/components/NumberInput";
-import { AIWorkoutGenerationService } from "~/modules/fitness/application/ai-workout-generation.service.server";
-import { createWorkoutFromGeneration } from "~/modules/fitness/application/create-workout-from-generation.service.server";
-import { VolumeTrackingService } from "~/modules/fitness/application/volume-tracking-service.server";
 import type {
   ConversationMessage,
   GeneratedWorkout,
 } from "~/modules/fitness/domain/ai-generation";
 import { AIWorkoutGenerationRepository } from "~/modules/fitness/infra/ai-workout-generation.repository.server";
+import { AIWorkoutGenerationService } from "~/modules/fitness/infra/ai-workout-generation.service.server";
+import { createWorkoutFromGeneration } from "~/modules/fitness/infra/create-workout-from-generation.service.server";
+import { VolumeTrackingService } from "~/modules/fitness/infra/volume-tracking-service.server";
 import {
   RefinementChat,
   WorkoutPreview,

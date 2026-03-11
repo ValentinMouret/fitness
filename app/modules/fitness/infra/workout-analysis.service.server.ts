@@ -8,12 +8,12 @@ import type {
   WeeklyVolumeTracker,
   WorkoutSession,
 } from "../domain/workout";
-import type { WorkoutAnalysisData } from "../infra/ai-fitness-coach.service";
+import type { WorkoutAnalysisData } from "./ai-fitness-coach.service";
+import { VolumeTrackingService } from "./volume-tracking-service.server";
 import {
   WorkoutRepository,
   WorkoutSessionRepository,
-} from "../infra/workout.repository.server";
-import { VolumeTrackingService } from "./volume-tracking-service.server";
+} from "./workout.repository.server";
 
 type ErrWorkoutAnalysis = "insufficient_data" | "calculation_error";
 

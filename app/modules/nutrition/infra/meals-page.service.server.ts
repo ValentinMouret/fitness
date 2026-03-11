@@ -1,7 +1,7 @@
-import { TargetService } from "~/modules/core/application/measurement-service";
 import { baseMeasurements } from "~/modules/core/domain/measurements";
-import { NutritionService } from "~/modules/nutrition/application/service";
+import { TargetService } from "~/modules/core/infra/measurement-service";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
+import { NutritionService } from "~/modules/nutrition/infra/service";
 import { handleResultError } from "~/utils/errors";
 
 export async function getMealsPageData(date: Date) {

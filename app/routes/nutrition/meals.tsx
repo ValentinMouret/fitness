@@ -31,14 +31,14 @@ import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { PageHeader } from "~/components/PageHeader";
 import { SectionHeader } from "~/components/SectionHeader";
+import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
+import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import {
   applyMealTemplate,
   deleteMealLog,
   getMealsPageData,
   saveMealAsTemplate,
-} from "~/modules/nutrition/application/meals-page.service.server";
-import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
-import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
+} from "~/modules/nutrition/infra/meals-page.service.server";
 import {
   createMealCardViewModel,
   createTemplateSelectionViewModel,

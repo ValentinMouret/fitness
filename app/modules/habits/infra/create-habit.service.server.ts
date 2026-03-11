@@ -1,5 +1,5 @@
 import { type Habit, Habit as HabitEntity } from "../domain/entity";
-import { HabitRepository } from "../infra/repository.server";
+import { HabitRepository } from "./repository.server";
 
 export type CreateHabitResult =
   | { readonly ok: true }

@@ -1,7 +1,7 @@
 import { ResultAsync } from "neverthrow";
-import { TargetService } from "~/modules/core/application/measurement-service";
 import { baseMeasurements } from "~/modules/core/domain/measurements";
-import { NutritionService } from "~/modules/nutrition/application/service";
+import { TargetService } from "~/modules/core/infra/measurement-service";
+import { NutritionService } from "~/modules/nutrition/infra/service";
 import { today } from "~/time";
 import { createServerError } from "~/utils/errors";
 

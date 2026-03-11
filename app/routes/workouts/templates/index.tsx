@@ -14,7 +14,7 @@ import { EmptyState } from "~/components/EmptyState";
 import {
   deleteTemplate,
   getTemplatesForStartDialog,
-} from "~/modules/fitness/application/workout-template.service.server";
+} from "~/modules/fitness/infra/workout-template.service.server";
 import { createWorkoutTemplateCardViewModel } from "~/modules/fitness/presentation/view-models/workout-template-card.view-model";
 import { formText } from "~/utils/form-data";
 import type { Route } from "./+types/index";

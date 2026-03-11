@@ -2,7 +2,7 @@ import { zfd } from "zod-form-data";
 import {
   getSubstituteExerciseData,
   substituteExercise,
-} from "~/modules/fitness/application/substitute-exercise.service.server";
+} from "~/modules/fitness/infra/substitute-exercise.service.server";
 import { formRepeatableText } from "~/utils/form-data";
 import type { Route } from "./+types/:exercise-id";
 

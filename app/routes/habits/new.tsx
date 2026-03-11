@@ -19,7 +19,7 @@ import {
   formRepeatableText,
   formText,
 } from "~/utils/form-data";
-import { createHabit } from "../../modules/habits/application/create-habit.service.server";
+import { createHabit } from "../../modules/habits/infra/create-habit.service.server";
 import type { Route } from "./+types/new";
 
 export const handle = {

@@ -4,12 +4,12 @@ import { Link, useFetcher, useSearchParams } from "react-router";
 import { zfd } from "zod-form-data";
 import { EmptyState } from "~/components/EmptyState";
 import { Pagination } from "~/components/Pagination";
+import type { WorkoutWithSummary } from "~/modules/fitness/domain/workout";
+import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
 import {
   getAiFeedback,
   getWorkoutsPageData,
-} from "~/modules/fitness/application/workouts-page.service.server";
-import type { WorkoutWithSummary } from "~/modules/fitness/domain/workout";
-import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
+} from "~/modules/fitness/infra/workouts-page.service.server";
 import {
   AIFeedbackModal,
   StartWorkoutDialog,
