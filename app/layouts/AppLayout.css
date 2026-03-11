@@ -1,0 +1,63 @@
+.app-layout {
+  height: 100vh;
+}
+
+.app-layout__hamburger {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 50;
+}
+
+.app-layout__sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  height: 100vh;
+  width: var(--sidebar-width);
+  border-right: 1px solid var(--gray-4);
+  background: var(--brand-surface, #f3f1ed);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.03);
+  transition: width 0.2s ease;
+  padding-left: env(safe-area-inset-left);
+}
+
+.app-layout__nav {
+  overflow: hidden;
+}
+
+.app-layout__nav-link {
+  text-decoration: none;
+}
+
+.app-layout__nav-button {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.app-layout__nav-button--inactive {
+  background-color: transparent;
+}
+
+.app-layout__nav-button-inner {
+  width: 100%;
+}
+
+.app-layout__logout {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.app-layout__logout-button {
+  width: 100%;
+  justify-content: center;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.app-layout__main {
+  overflow: auto;
+  margin-left: var(--sidebar-width);
+  transition: margin-left 0.2s ease;
+}

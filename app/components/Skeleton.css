@@ -1,0 +1,20 @@
+.skeleton {
+  margin-bottom: var(--skeleton-margin-bottom);
+  border-radius: var(--skeleton-border-radius);
+  background: linear-gradient(90deg, var(--gray-3) 25%, var(--gray-4) 50%, var(--gray-3) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeleton-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeleton-card {
+  padding: 1.5rem;
+  border-radius: var(--radius-3);
+  background: var(--color-panel-solid);
+  box-shadow: var(--shadow-warm);
+}

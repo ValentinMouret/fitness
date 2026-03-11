@@ -91,7 +91,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <Container size="3" style={{ paddingTop: "4rem" }}>
+    <Container size="3" className="root-error-boundary">
       <Heading as="h1" size="8" mb="4">
         {message}
       </Heading>
@@ -101,7 +101,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       {stack && (
         <Code
           variant="soft"
-          style={{ display: "block", padding: "1rem", overflow: "auto" }}
+          className="root-error-boundary__stack"
         >
           {stack}
         </Code>

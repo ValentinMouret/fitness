@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useRef } from "react";
+import "./PageTransition.css";
 
 interface PageTransitionProps {
   readonly children: ReactNode;
@@ -18,7 +19,7 @@ export function PageTransition({
   }, []);
 
   return (
-    <div ref={ref} className={className} style={{ opacity: 0 }}>
+    <div ref={ref} className={`page-transition ${className}`}>
       {children}
     </div>
   );
@@ -31,10 +32,7 @@ interface AnimatedListProps {
 
 export function AnimatedList({ children, className = "" }: AnimatedListProps) {
   return (
-    <div
-      className={`animate-fade-slide-up ${className}`}
-      style={{ opacity: 0 }}
-    >
+    <div className={`page-transition animate-fade-slide-up ${className}`}>
       {children}
     </div>
   );
@@ -54,10 +52,7 @@ export function StaggeredItem({
   const staggerClass = `stagger-${Math.min(index + 1, 8)}`;
 
   return (
-    <div
-      className={`animate-fade-slide-up ${staggerClass} ${className}`}
-      style={{ opacity: 0 }}
-    >
+    <div className={`page-transition animate-fade-slide-up ${staggerClass} ${className}`}>
       {children}
     </div>
   );

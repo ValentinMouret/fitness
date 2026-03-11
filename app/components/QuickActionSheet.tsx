@@ -12,6 +12,7 @@ import {
 import { useEffect, useState } from "react";
 import { useFetcher, useNavigate } from "react-router";
 import { NumberInput } from "./NumberInput";
+import "./QuickActionSheet.css";
 
 interface Habit {
   readonly id: string;
@@ -88,20 +89,7 @@ export function QuickActionSheet({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content
-        className="quick-action-sheet"
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          top: "auto",
-          margin: 0,
-          borderRadius: "16px 16px 0 0",
-          maxHeight: "80vh",
-          paddingBottom: "calc(16px + env(safe-area-inset-bottom))",
-        }}
-      >
+<Dialog.Content className="quick-action-sheet">
         <Flex justify="between" align="center" mb="4">
           <Dialog.Title>
             <Heading size="5">Quick Actions</Heading>
@@ -140,16 +128,12 @@ export function QuickActionSheet({
                           handleToggleHabit(habit.id, isOptimisticCompleted)
                         }
                         disabled={habitFetcher.state !== "idle"}
-                        style={{ justifyContent: "flex-start" }}
+                        className="quick-action-sheet__habit-button"
                       >
-                        <Flex align="center" gap="2" style={{ width: "100%" }}>
+                        <Flex align="center" gap="2" className="quick-action-sheet__habit-content">
                           {isOptimisticCompleted && <CheckIcon />}
                           <Text
-                            style={{
-                              textDecoration: isOptimisticCompleted
-                                ? "line-through"
-                                : "none",
-                            }}
+                            className={isOptimisticCompleted ? "quick-action-sheet__habit-name quick-action-sheet__habit-name--completed" : "quick-action-sheet__habit-name"}
                           >
                             {habit.name}
                           </Text>
@@ -157,7 +141,7 @@ export function QuickActionSheet({
                             <Text
                               size="1"
                               color="gray"
-                              style={{ marginLeft: "auto" }}
+                              className="quick-action-sheet__habit-streak"
                             >
                               🔥 {habit.streak}
                             </Text>
