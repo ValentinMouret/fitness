@@ -2,6 +2,7 @@ import { Box, Button, Flex, Progress, Text } from "@radix-ui/themes";
 import { Link } from "react-router";
 import { getNutritionPageData } from "~/modules/nutrition/application/nutrition-page.service.server";
 import type { Route } from "./+types";
+import "./index.css";
 
 export async function loader() {
   return getNutritionPageData();
@@ -52,10 +53,10 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
         <Box mt="3">
           <Progress value={calorieProgress} />
           <Flex justify="between" mt="1">
-            <Text size="1" style={{ color: "var(--brand-text-secondary)" }}>
+            <Text size="1" className="nutrition__muted">
               {Math.round(calorieProgress)}% of target
             </Text>
-            <Text size="1" style={{ color: "var(--brand-text-secondary)" }}>
+            <Text size="1" className="nutrition__muted">
               {calorieTarget} kcal
             </Text>
           </Flex>
@@ -65,13 +66,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
       {/* Macros */}
       <Box mb="8">
         <p className="section-label">Macros</p>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
-            gap: "0.75rem",
-          }}
-        >
+        <div className="nutrition__macro-grid">
           {[
             { value: dailyTotals.protein, label: "Protein", unit: "g" },
             { value: dailyTotals.carbs, label: "Carbs", unit: "g" },
@@ -80,11 +75,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             <Box
               key={macro.label}
               p="4"
-              style={{
-                background: "var(--brand-surface)",
-                borderRadius: "12px",
-                textAlign: "center",
-              }}
+              className="nutrition__macro-card"
             >
               <span className="display-number display-number--lg">
                 {Math.round(macro.value)}
@@ -93,7 +84,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                 as="p"
                 size="1"
                 mt="1"
-                style={{ color: "var(--brand-text-secondary)" }}
+                className="nutrition__muted"
               >
                 {macro.unit}
               </Text>
@@ -102,12 +93,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                 size="1"
                 mt="1"
                 weight="medium"
-                style={{
-                  color: "var(--brand-text-secondary)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  fontSize: "0.65rem",
-                }}
+                className="nutrition__macro-label"
               >
                 {macro.label}
               </Text>
@@ -132,21 +118,13 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                 {i > 0 && <hr className="rule-divider" />}
                 <Link
                   to="/nutrition/meals"
-                  style={{ textDecoration: "none", color: "inherit" }}
+                  className="nutrition__meal-link"
                 >
                   <Box py="3">
                     <Flex justify="between" align="center">
                       <Flex align="center" gap="2">
                         <span
-                          style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: "50%",
-                            background: hasLogged
-                              ? "var(--brand-coral)"
-                              : "var(--gray-5)",
-                            flexShrink: 0,
-                          }}
+                          className={`nutrition__meal-status ${hasLogged ? "nutrition__meal-status--logged" : "nutrition__meal-status--empty"}`}
                         />
                         <Text size="3" weight="bold">
                           {mealLabels[mealType]}
@@ -154,11 +132,9 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                       </Flex>
                       <Text
                         size="2"
-                        style={{ color: "var(--brand-text-secondary)" }}
+                        className="nutrition__muted"
                       >
-                        {hasLogged
-                          ? `${Math.round(meal.totals.calories)} kcal`
-                          : ""}
+                        {hasLogged ? `${Math.round(meal.totals.calories)} kcal` : ""}
                       </Text>
                     </Flex>
                     {hasLogged && ingredientNames ? (
@@ -167,7 +143,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                         size="2"
                         mt="1"
                         ml="5"
-                        style={{ color: "var(--brand-text-secondary)" }}
+                        className="nutrition__meal-detail"
                       >
                         {ingredientNames}
                       </Text>
@@ -177,10 +153,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                         size="2"
                         mt="1"
                         ml="5"
-                        style={{
-                          color: "var(--brand-text-secondary)",
-                          fontStyle: "italic",
-                        }}
+                        className="nutrition__meal-empty"
                       >
                         Tap to log
                       </Text>

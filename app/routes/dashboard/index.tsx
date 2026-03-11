@@ -14,6 +14,7 @@ import { formatStartedAgo } from "~/time";
 import { createValidationError } from "~/utils/errors";
 import { formBoolean, formNumber, formText } from "~/utils/form-data";
 import type { Route } from "./+types/index";
+import "./index.css";
 
 export async function loader() {
   return getDashboardData();
@@ -84,7 +85,7 @@ export default function DashboardPage({
       {inProgressWorkout && (
         <Link
           to={`/workouts/${inProgressWorkout.id}`}
-          style={{ textDecoration: "none" }}
+          className="dashboard__active-workout-link"
         >
           <Flex
             justify="between"
@@ -92,21 +93,18 @@ export default function DashboardPage({
             px="5"
             py="4"
             mb="6"
-            style={{
-              background: "var(--brand-coral)",
-              borderRadius: "16px",
-              color: "white",
-            }}
+            className="dashboard__active-workout"
           >
             <Box>
               <Text
+                as="div"
                 size="3"
                 weight="bold"
-                style={{ color: "white", display: "block" }}
+                className="dashboard__active-workout-title"
               >
                 {inProgressWorkout.name}
               </Text>
-              <Text size="2" style={{ color: "rgba(255,255,255,0.8)" }}>
+              <Text size="2" className="dashboard__active-workout-subtitle">
                 {formatStartedAgo(
                   Math.floor(
                     (Date.now() - inProgressWorkout.start.getTime()) / 60000,
@@ -117,10 +115,7 @@ export default function DashboardPage({
             <Button
               variant="outline"
               size="2"
-              style={{
-                color: "white",
-                borderColor: "rgba(255,255,255,0.5)",
-              }}
+              className="dashboard__active-workout-button"
             >
               Continue
             </Button>
@@ -133,7 +128,7 @@ export default function DashboardPage({
         <Box mb="8">
           <Flex justify="between" align="baseline">
             <p className="section-label">Habits</p>
-            <Text size="2" style={{ color: "var(--brand-text-secondary)" }}>
+            <Text size="2" className="dashboard__muted">
               {completedHabitsCount}/{todayHabits.length}
             </Text>
           </Flex>
@@ -172,7 +167,7 @@ export default function DashboardPage({
                 as="p"
                 size="2"
                 mt="2"
-                style={{ color: "var(--brand-text-secondary)" }}
+                className="dashboard__muted"
               >
                 {streak} day streak
               </Text>
@@ -181,7 +176,7 @@ export default function DashboardPage({
         ) : (
           <weightFetcher.Form method="post">
             <Flex gap="2" align="center">
-              <Box style={{ width: "100px" }}>
+              <Box className="dashboard__weight-input">
                 <NumberInput
                   name="weight"
                   min={0}
@@ -223,7 +218,7 @@ export default function DashboardPage({
             <Text
               as="p"
               size="1"
-              style={{ color: "var(--brand-text-secondary)" }}
+              className="dashboard__muted"
             >
               consumed
             </Text>
@@ -235,7 +230,7 @@ export default function DashboardPage({
             <Text
               as="p"
               size="1"
-              style={{ color: "var(--brand-text-secondary)" }}
+              className="dashboard__muted"
             >
               remaining
             </Text>
@@ -247,7 +242,7 @@ export default function DashboardPage({
             <Text
               as="p"
               size="1"
-              style={{ color: "var(--brand-text-secondary)" }}
+              className="dashboard__muted"
             >
               protein (g)
             </Text>
@@ -261,10 +256,10 @@ export default function DashboardPage({
           )}
         />
         <Flex justify="between" mt="1">
-          <Text size="1" style={{ color: "var(--brand-text-secondary)" }}>
+          <Text size="1" className="dashboard__muted">
             {Math.round((nutrition.calories / nutrition.calorieTarget) * 100)}%
           </Text>
-          <Text size="1" style={{ color: "var(--brand-text-secondary)" }}>
+          <Text size="1" className="dashboard__muted">
             {nutrition.calorieTarget} kcal goal
           </Text>
         </Flex>
