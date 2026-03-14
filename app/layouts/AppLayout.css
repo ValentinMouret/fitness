@@ -1,5 +1,5 @@
 .app-layout {
-  height: 100vh;
+  height: 100dvh;
 }
 
 .app-layout__hamburger {
@@ -14,7 +14,7 @@
   top: 0;
   left: 0;
   z-index: 40;
-  height: 100vh;
+  height: 100dvh;
   width: var(--sidebar-width);
   border-right: 1px solid var(--gray-4);
   background: var(--brand-surface, #f3f1ed);

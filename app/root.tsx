@@ -6,6 +6,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -34,22 +35,27 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const pageChromeColor = location.pathname.startsWith("/habits")
+    ? "#1c1917"
+    : "#faf9f7";
+
   return (
-    <html lang="en">
+    <html lang="en" style={{ backgroundColor: pageChromeColor }}>
       <head>
         <meta charSet="utf-8" />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
-        <meta name="theme-color" content="#faf9f7" />
+        <meta name="theme-color" content={pageChromeColor} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Fitness" />
         <Meta />
         <Links />
       </head>
-      <body>
+      <body style={{ backgroundColor: pageChromeColor }}>
         <Theme accentColor="tomato" grayColor="sand" radius="medium">
           {children}
         </Theme>
