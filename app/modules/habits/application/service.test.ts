@@ -6,7 +6,12 @@ import { HabitService } from "./service";
 const createHabit = (overrides?: Partial<Habit>): Habit => ({
   id: "habit-1",
   name: "Test Habit",
-  description: "Test description",
+  identityPhrase: "",
+  timeOfDay: "",
+  location: "",
+  isKeystone: false,
+  minimalVersion: "",
+  color: "#e15a46",
   frequencyType: "daily",
   frequencyConfig: {},
   targetCount: 1,

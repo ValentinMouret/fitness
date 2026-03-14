@@ -63,6 +63,14 @@ export async function getHabitsPageData() {
     (habit) => completionMap[habit.id],
   ).length;
 
+  const completionCounts: Record<string, number> = {};
+  for (const habit of habits) {
+    const habitCompletions = completionsByHabit.get(habit.id) ?? [];
+    completionCounts[habit.id] = habitCompletions.filter(
+      (c) => c.completed,
+    ).length;
+  }
+
   return {
     habits,
     todayHabits,
@@ -70,6 +78,7 @@ export async function getHabitsPageData() {
     habitStreaks,
     todayHabitsCount: todayHabits.length,
     completedTodayCount,
+    completionCounts,
   };
 }
 

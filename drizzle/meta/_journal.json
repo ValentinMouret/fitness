@@ -15,6 +15,13 @@
       "when": 1770881599790,
       "tag": "0001_solid_doctor_doom",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773511719551,
+      "tag": "0002_new_patriot",
+      "breakpoints": true
     }
   ]
 }

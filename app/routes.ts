@@ -8,6 +8,9 @@ import {
 export default [
   route("login", "routes/login.tsx"),
   route("logout", "routes/logout.tsx"),
+  route("habits/preview", "routes/habits/preview.tsx"),
+  route("habits/preview-create", "routes/habits/preview-create.tsx"),
+  route("habits/preview-week", "routes/habits/preview-week.tsx"),
   route("api/quick-actions", "routes/api/quick-actions.ts"),
   route("api/exercises/history", "routes/api/exercises/history.ts"),
 
@@ -42,12 +45,13 @@ export default [
         "workouts/exercises/:exercise-id/edit",
         "routes/workouts/exercises/:exercise-id/edit.tsx",
       ),
-      route("habits", "routes/habits/index.tsx"),
-      route("habits/new", "routes/habits/new.tsx"),
-      route("habits/:id/edit", "routes/habits/:id/edit.tsx"),
       route("measurements", "routes/measurements/index.tsx"),
       route("measurements/new", "routes/measurements/new.tsx"),
       route("measurements/:name", "routes/measurements/:name.tsx"),
     ]),
+    route("habits", "routes/habits/index.tsx"),
+    route("habits/week", "routes/habits/week.tsx"),
+    route("habits/new", "routes/habits/new.tsx"),
+    route("habits/:id/edit", "routes/habits/:id/edit.tsx"),
   ]),
 ] satisfies RouteConfig;

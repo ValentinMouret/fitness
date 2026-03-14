@@ -54,6 +54,12 @@ export const habits = pgTable("habits", {
   id: uuid().primaryKey().defaultRandom(),
   name: text().notNull(),
   description: text(),
+  identity_phrase: text().notNull().default(""),
+  time_of_day: text().notNull().default(""),
+  location: text().notNull().default(""),
+  is_keystone: boolean().notNull().default(false),
+  minimal_version: text().notNull().default(""),
+  color: text().notNull().default("#e15a46"),
   frequency_type: text().notNull(), // 'daily', 'weekly', 'monthly', 'custom'
   frequency_config: jsonb().notNull().default({}),
   target_count: integer().notNull().default(1),

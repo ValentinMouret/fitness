@@ -7,7 +7,12 @@ export type CreateHabitResult =
 
 export async function createHabit(input: {
   readonly name: string;
-  readonly description?: string;
+  readonly identityPhrase: string;
+  readonly timeOfDay: string;
+  readonly location: string;
+  readonly isKeystone: boolean;
+  readonly minimalVersion: string;
+  readonly color: string;
   readonly frequencyType: Habit["frequencyType"];
   readonly frequencyConfig: Habit["frequencyConfig"];
 }): Promise<CreateHabitResult> {
@@ -16,7 +21,12 @@ export async function createHabit(input: {
     input.frequencyType,
     input.frequencyConfig,
     {
-      description: input.description,
+      identityPhrase: input.identityPhrase,
+      timeOfDay: input.timeOfDay,
+      location: input.location,
+      isKeystone: input.isKeystone,
+      minimalVersion: input.minimalVersion,
+      color: input.color,
     },
   );
 

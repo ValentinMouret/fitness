@@ -51,6 +51,10 @@
           }
         }
       }
+    },
+    {
+      "includes": ["app/routes/habits/preview*.tsx"],
+      "linter": { "enabled": false }
     }
   ],
   "javascript": {

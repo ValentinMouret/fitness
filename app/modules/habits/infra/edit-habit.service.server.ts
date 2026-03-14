@@ -19,7 +19,12 @@ export type UpdateHabitResult =
 export async function updateHabit(input: {
   readonly id: string;
   readonly name: string;
-  readonly description?: string;
+  readonly identityPhrase: string;
+  readonly timeOfDay: string;
+  readonly location: string;
+  readonly isKeystone: boolean;
+  readonly minimalVersion: string;
+  readonly color: string;
   readonly frequencyType: Habit["frequencyType"];
   readonly frequencyConfig: Habit["frequencyConfig"];
 }): Promise<UpdateHabitResult> {
@@ -31,7 +36,12 @@ export async function updateHabit(input: {
   const updatedHabit: Habit = {
     ...existingHabit.value,
     name: input.name,
-    description: input.description,
+    identityPhrase: input.identityPhrase,
+    timeOfDay: input.timeOfDay,
+    location: input.location,
+    isKeystone: input.isKeystone,
+    minimalVersion: input.minimalVersion,
+    color: input.color,
     frequencyType: input.frequencyType,
     frequencyConfig: input.frequencyConfig,
   };

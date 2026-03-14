@@ -4,7 +4,7 @@
  * A habit completion tracks whether you completed the habit on a specific date.
  */
 
-import type { Day } from "../../../time";
+import { allDays, type Day } from "../../../time";
 
 export interface FrequencyConfig {
   days_of_week?: Day[];
@@ -15,7 +15,12 @@ export interface FrequencyConfig {
 export interface Habit {
   readonly id: string;
   readonly name: string;
-  readonly description?: string;
+  readonly identityPhrase: string;
+  readonly timeOfDay: string;
+  readonly location: string;
+  readonly isKeystone: boolean;
+  readonly minimalVersion: string;
+  readonly color: string;
   readonly frequencyType: "daily" | "weekly" | "monthly" | "custom";
   readonly frequencyConfig: FrequencyConfig;
   readonly targetCount: number;
@@ -30,7 +35,12 @@ export const Habit = {
     frequencyType: Habit["frequencyType"],
     frequencyConfig: FrequencyConfig = {},
     options?: {
-      description?: string;
+      identityPhrase?: string;
+      timeOfDay?: string;
+      location?: string;
+      isKeystone?: boolean;
+      minimalVersion?: string;
+      color?: string;
       targetCount?: number;
       startDate?: Date;
       endDate?: Date;
@@ -38,7 +48,12 @@ export const Habit = {
   ): Omit<Habit, "id"> {
     return {
       name,
-      description: options?.description,
+      identityPhrase: options?.identityPhrase ?? "",
+      timeOfDay: options?.timeOfDay ?? "",
+      location: options?.location ?? "",
+      isKeystone: options?.isKeystone ?? false,
+      minimalVersion: options?.minimalVersion ?? "",
+      color: options?.color ?? "#e15a46",
       frequencyType,
       frequencyConfig,
       targetCount: options?.targetCount ?? 1,
@@ -48,6 +63,11 @@ export const Habit = {
     };
   },
 };
+
+export function getScheduledDays(habit: Habit): Day[] {
+  if (habit.frequencyType === "daily") return [...allDays] as Day[];
+  return (habit.frequencyConfig.days_of_week as Day[]) ?? [];
+}
 
 export interface HabitCompletion {
   readonly habitId: string;

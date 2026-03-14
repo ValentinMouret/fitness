@@ -25,7 +25,12 @@ function recordToHabit(
   return ok({
     id: record.id,
     name: record.name,
-    description: record.description ?? undefined,
+    identityPhrase: record.identity_phrase,
+    timeOfDay: record.time_of_day,
+    location: record.location,
+    isKeystone: record.is_keystone,
+    minimalVersion: record.minimal_version,
+    color: record.color,
     frequencyType: record.frequency_type as Habit["frequencyType"],
     frequencyConfig: record.frequency_config as Habit["frequencyConfig"],
     targetCount: record.target_count,
@@ -39,7 +44,12 @@ export const HabitRepository = {
   save(habit: Omit<Habit, "id"> | Habit) {
     const values = {
       name: habit.name,
-      description: habit.description,
+      identity_phrase: habit.identityPhrase,
+      time_of_day: habit.timeOfDay,
+      location: habit.location,
+      is_keystone: habit.isKeystone,
+      minimal_version: habit.minimalVersion,
+      color: habit.color,
       frequency_type: habit.frequencyType,
       frequency_config: habit.frequencyConfig,
       target_count: habit.targetCount,
@@ -104,6 +114,22 @@ export const HabitRepository = {
 
     return executeQuery(query, "fetchAll").andThen((records) =>
       Result.combine(records.map(recordToHabit)),
+    );
+  },
+
+  delete(id: string): ResultAsync<void, ErrRepository> {
+    return executeQuery(
+      db
+        .update(habits)
+        .set({
+          is_active: false,
+          updated_at: new Date(),
+        })
+        .where(eq(habits.id, id))
+        .returning({ id: habits.id }),
+      "deleteHabit",
+    ).andThen((records) =>
+      records.length > 0 ? ok(undefined) : err("not_found" as const),
     );
   },
 };
