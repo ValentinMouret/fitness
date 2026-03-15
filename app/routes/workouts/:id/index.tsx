@@ -22,6 +22,7 @@ import {
   Text,
   TextField,
 } from "@radix-ui/themes";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useFetcher } from "react-router";
 import { z } from "zod";
@@ -261,6 +262,8 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   const reorderFetcher = useFetcher();
   const inputRef = useRef<HTMLInputElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -285,6 +288,22 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
       inputRef.current.select();
     }
   }, [isEditingName]);
+
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+
+    const updateHeaderHeight = () => {
+      setHeaderHeight(header.getBoundingClientRect().height);
+    };
+
+    updateHeaderHeight();
+
+    const observer = new ResizeObserver(updateHeaderHeight);
+    observer.observe(header);
+
+    return () => observer.disconnect();
+  }, []);
 
   const exerciseGroupsRef = useRef(workoutSession.exerciseGroups);
   exerciseGroupsRef.current = workoutSession.exerciseGroups;
@@ -350,9 +369,12 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <div className="active-workout-page">
+    <div
+      className="active-workout-page"
+      style={{ "--header-height": `${headerHeight}px` } as React.CSSProperties}
+    >
       {/* Header — editorial style */}
-      <header className="active-workout-header">
+      <header ref={headerRef} className="active-workout-header">
         <Flex justify="between" align="start" gap="2">
           <Flex align="start" gap="2" className="active-workout-header__left">
             <IconButton

@@ -28,9 +28,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   customRight,
 }) => {
   return (
-    <Box mb="6">
-      <Flex justify="between" align="center">
-        <Flex align="center" gap="3">
+    <Box mb="6" className="page-header">
+      <Flex
+        justify="between"
+        align="start"
+        gap="3"
+        className="page-header__row"
+      >
+        <Flex align="center" gap="3" className="page-header__title-row">
           {backTo && (
             <IconButton asChild variant="ghost" size="2">
               <Link to={backTo}>
@@ -39,13 +44,15 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             </IconButton>
           )}
           {typeof title === "string" ? (
-            <Heading size="7">{title}</Heading>
+            <Heading size="7" className="page-header__title">
+              {title}
+            </Heading>
           ) : (
             title
           )}
         </Flex>
 
-        <Flex align="center" gap="3">
+        <Flex align="center" gap="3" className="page-header__actions">
           {customRight}
           {primaryAction && (
             <Button

@@ -283,8 +283,15 @@ function TabBar({ active }: { active: "today" | "week" }) {
   return (
     <div
       style={{
-        background: "#1c1917",
-        padding: "12px 20px 28px",
+        position: "sticky",
+        bottom: 0,
+        zIndex: 20,
+        marginTop: "auto",
+        background: "rgba(28, 25, 23, 0.96)",
+        backdropFilter: "blur(18px)",
+        borderTop: "1px solid #292524",
+        boxShadow: "0 -10px 28px rgba(0, 0, 0, 0.18)",
+        padding: "12px 20px calc(12px + env(safe-area-inset-bottom))",
         display: "flex",
         gap: 8,
       }}
@@ -379,7 +386,12 @@ export default function HabitsWeekPage({ loaderData }: Route.ComponentProps) {
     >
       <style>{STYLES}</style>
 
-      <div style={{ padding: "44px 20px 16px", color: "#faf9f7" }}>
+      <div
+        style={{
+          padding: "calc(env(safe-area-inset-top) + 16px) 20px 16px",
+          color: "#faf9f7",
+        }}
+      >
         <div
           style={{
             fontSize: 11,
@@ -477,7 +489,7 @@ export default function HabitsWeekPage({ loaderData }: Route.ComponentProps) {
           flex: 1,
           background: "#faf9f7",
           borderRadius: "24px 24px 0 0",
-          padding: "18px 12px 8px",
+          padding: "18px 12px 112px",
           overflowY: "auto",
         }}
       >

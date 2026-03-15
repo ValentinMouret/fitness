@@ -1,4 +1,49 @@
+.page-header__row {
+  flex-wrap: wrap;
+}
+
+.page-header__title-row {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.page-header__title {
+  overflow-wrap: anywhere;
+}
+
+.page-header__actions {
+  margin-left: auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.page-header__actions:empty {
+  display: none;
+}
+
 .page-header__subtitle {
   color: var(--brand-text-secondary);
   font-size: 0.95rem;
+}
+
+@media (max-width: 767px) {
+  .page-header {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+
+  .page-header__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-header__title-row,
+  .page-header__actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .page-header__actions {
+    justify-content: flex-start;
+    gap: 0.75rem;
+  }
 }
