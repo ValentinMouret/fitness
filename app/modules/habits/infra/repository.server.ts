@@ -102,7 +102,7 @@ export const HabitRepository = {
           lte(habits.start_date, today().toISOString().split("T")[0]),
         ),
       )
-      .orderBy(habits.name);
+      .orderBy(desc(habits.is_keystone), habits.name);
 
     return executeQuery(query, "fetchActive").andThen((records) =>
       Result.combine(records.map(recordToHabit)),
