@@ -64,11 +64,25 @@ export async function getHabitsPageData() {
   ).length;
 
   const completionCounts: Record<string, number> = {};
+  const missedTwiceMap: Record<string, boolean> = {};
+  const recentHistoryMap: Record<string, boolean[]> = {};
   for (const habit of habits) {
     const habitCompletions = completionsByHabit.get(habit.id) ?? [];
     completionCounts[habit.id] = habitCompletions.filter(
       (c) => c.completed,
     ).length;
+    missedTwiceMap[habit.id] = HabitService.hasMissedLastN(
+      habit,
+      habitCompletions,
+      2,
+      todayDate,
+    );
+    recentHistoryMap[habit.id] = HabitService.calculateRecentHistory(
+      habit,
+      habitCompletions,
+      todayDate,
+      5,
+    );
   }
 
   return {
@@ -79,6 +93,8 @@ export async function getHabitsPageData() {
     todayHabitsCount: todayHabits.length,
     completedTodayCount,
     completionCounts,
+    missedTwiceMap,
+    recentHistoryMap,
   };
 }
 

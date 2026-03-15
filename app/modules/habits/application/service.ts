@@ -97,6 +97,84 @@ export const HabitService = {
   },
 
   /**
+   * Returns the last `count` scheduled sessions before `beforeDate` as booleans (true = completed),
+   * ordered oldest → newest. Padded with false at the front if fewer sessions exist.
+   */
+  calculateRecentHistory(
+    habit: Habit,
+    completions: HabitCompletion[],
+    beforeDate: Date,
+    count: number,
+  ): boolean[] {
+    const completionMap = new Map<string, boolean>();
+    for (const c of completions) {
+      completionMap.set(
+        c.completionDate.toISOString().split("T")[0],
+        c.completed,
+      );
+    }
+
+    const sessions: boolean[] = [];
+    let current = new Date(beforeDate.getTime() - 24 * 60 * 60 * 1000);
+    const habitStart = new Date(
+      `${habit.startDate.toISOString().split("T")[0]}T00:00:00.000Z`,
+    );
+
+    while (current >= habitStart && sessions.length < count) {
+      if (this.isDueOn(habit, current)) {
+        const dateStr = current.toISOString().split("T")[0];
+        sessions.unshift(completionMap.get(dateStr) ?? false);
+      }
+      current = new Date(current.getTime() - 24 * 60 * 60 * 1000);
+    }
+
+    while (sessions.length < count) {
+      sessions.unshift(false);
+    }
+
+    return sessions;
+  },
+
+  /**
+   * Returns true if the habit was missed on each of its last N scheduled sessions before `beforeDate`.
+   */
+  hasMissedLastN(
+    habit: Habit,
+    completions: HabitCompletion[],
+    n: number,
+    beforeDate: Date,
+  ): boolean {
+    const completionMap = new Map<string, boolean>();
+    for (const c of completions) {
+      completionMap.set(
+        c.completionDate.toISOString().split("T")[0],
+        c.completed,
+      );
+    }
+
+    let missed = 0;
+    let current = new Date(beforeDate.getTime() - 24 * 60 * 60 * 1000);
+    const habitStart = new Date(
+      `${habit.startDate.toISOString().split("T")[0]}T00:00:00.000Z`,
+    );
+
+    while (current >= habitStart && missed < n) {
+      if (this.isDueOn(habit, current)) {
+        const dateStr = current.toISOString().split("T")[0];
+        const completed = completionMap.get(dateStr) ?? false;
+        if (!completed) {
+          missed++;
+        } else {
+          return false;
+        }
+      }
+      current = new Date(current.getTime() - 24 * 60 * 60 * 1000);
+    }
+
+    return missed >= n;
+  },
+
+  /**
    * Calculates completion rate for a habit over a given period.
    */
   calculateCompletionRate(

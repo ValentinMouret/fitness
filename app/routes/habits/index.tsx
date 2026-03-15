@@ -84,18 +84,107 @@ function formatDate(date: Date): string {
   });
 }
 
+function CardFooter({
+  done,
+  streak,
+  completionCount,
+  color,
+  missedTwice,
+  onMinimum,
+}: {
+  done: boolean;
+  streak: number;
+  completionCount: number;
+  color: string;
+  missedTwice: boolean;
+  onMinimum: (e: React.MouseEvent) => void;
+}) {
+  return (
+    <div
+      style={{
+        borderTop: "1px solid #f5f4f2",
+        padding: "9px 16px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        background: "#faf9f7",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+        <span
+          style={{
+            fontFamily: "Crimson Pro, Georgia, serif",
+            fontSize: 16,
+            fontWeight: 700,
+            color: streak > 0 ? color : "#c4bfba",
+            lineHeight: 1,
+            transition: "color 0.3s ease",
+          }}
+        >
+          🔥 {streak}
+        </span>
+        <span style={{ fontSize: 10, color: "#c4bfba" }}>streak</span>
+        <span style={{ fontSize: 10, color: "#e7e5e4", margin: "0 1px" }}>
+          ·
+        </span>
+        <span
+          style={{
+            fontFamily: "Crimson Pro, Georgia, serif",
+            fontSize: 16,
+            fontWeight: 700,
+            color: "#c4bfba",
+            lineHeight: 1,
+          }}
+        >
+          {completionCount}
+        </span>
+        <span style={{ fontSize: 10, color: "#c4bfba" }}>ever</span>
+      </div>
+      {done ? (
+        <span style={{ fontSize: 11, color: "#b5b0a8" }}>Done ✓</span>
+      ) : (
+        <button
+          type="button"
+          onClick={onMinimum}
+          style={{
+            background: "transparent",
+            border: "1px solid #e7e5e4",
+            borderRadius: 20,
+            padding: "4px 12px",
+            fontSize: 11,
+            color: "#79756d",
+            fontWeight: 500,
+            cursor: "pointer",
+            fontFamily: "inherit",
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+          }}
+        >
+          {missedTwice ? "Do the minimum" : "Log minimum"}{" "}
+          <span style={{ color: "#b5b0a8" }}>→</span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 type HabitCardProps = {
   habit: Habit;
   isCompleted: boolean;
   completionCount: number;
-  evening?: boolean;
+  currentStreak: number;
+  recentHistory: boolean[];
+  missedTwice?: boolean;
 };
 
 function HabitCard({
   habit,
   isCompleted,
   completionCount,
-  evening,
+  currentStreak,
+  recentHistory,
+  missedTwice = false,
 }: HabitCardProps) {
   const fetcher = useFetcher();
   const submitting = fetcher.state !== "idle";
@@ -103,6 +192,12 @@ function HabitCard({
   const isMinSub = submitting && fetcher.formData?.get("notes") === "minimum";
   const displayCount =
     completionCount + (submitting ? (isCompleted ? -1 : 1) : 0);
+  const displayStreak =
+    currentStreak + (submitting ? (isCompleted ? -1 : 1) : 0);
+  const nmt = missedTwice && !displayCompleted;
+  const displayHistory = displayCompleted
+    ? [...recentHistory.slice(1), true]
+    : recentHistory;
 
   function toggle() {
     fetcher.submit(
@@ -129,11 +224,7 @@ function HabitCard({
     );
   }
 
-  const borderColor = displayCompleted
-    ? habit.color
-    : evening
-      ? "#f0ede8"
-      : "#e7e5e4";
+  const borderColor = displayCompleted ? habit.color : "#e7e5e4";
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: outer card can't be <button> — contains a nested <button>
@@ -154,16 +245,14 @@ function HabitCard({
           : "0 1px 3px rgba(0,0,0,0.06)",
         cursor: "pointer",
         overflow: "hidden",
-        opacity: evening && !displayCompleted ? 0.55 : 1,
       }}
     >
       <div
         style={{
-          padding: "14px 16px",
+          padding: "14px 16px 12px",
           display: "flex",
           alignItems: "flex-start",
           gap: 14,
-          minHeight: 64,
         }}
       >
         <div
@@ -174,7 +263,7 @@ function HabitCard({
             flexShrink: 0,
             marginTop: 2,
             background: displayCompleted ? habit.color : "transparent",
-            border: `${evening && !displayCompleted ? "2px dashed" : "2px solid"} ${displayCompleted ? habit.color : "#d6d3d1"}`,
+            border: `2px solid ${displayCompleted ? habit.color : "#d6d3d1"}`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -201,7 +290,7 @@ function HabitCard({
           )}
         </div>
 
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{
               display: "flex",
@@ -241,23 +330,25 @@ function HabitCard({
               fontSize: 12,
               color: "#a8a29e",
               lineHeight: 1.4,
-              marginBottom: 4,
+              marginBottom: 10,
             }}
           >
             {habit.identityPhrase}
           </div>
-          <div style={{ fontSize: 11, color: "#c4bfba" }}>
-            <span
-              style={{
-                fontFamily: "Crimson Pro, Georgia, serif",
-                fontSize: 13,
-                fontWeight: 700,
-                color: displayCompleted ? habit.color : "#c4bfba",
-              }}
-            >
-              {displayCount}
-            </span>{" "}
-            votes cast
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            {displayHistory.map((hit, i) => (
+              <div
+                // biome-ignore lint/suspicious/noArrayIndexKey: stable fixed-length array
+                key={i}
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 2,
+                  background: hit ? habit.color : "#f0ede8",
+                  border: hit ? "none" : "1px solid #e7e5e4",
+                }}
+              />
+            ))}
           </div>
         </div>
 
@@ -273,42 +364,14 @@ function HabitCard({
         </div>
       </div>
 
-      {!displayCompleted && !evening && (
-        <div
-          style={{
-            borderTop: "1px solid #f5f4f2",
-            padding: "9px 16px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            background: "#faf9f7",
-          }}
-        >
-          <span style={{ fontSize: 11, color: "#b5b0a8" }}>
-            Struggling today?
-          </span>
-          <button
-            type="button"
-            onClick={logMinimum}
-            style={{
-              background: "transparent",
-              border: "1px solid #e7e5e4",
-              borderRadius: 20,
-              padding: "4px 12px",
-              fontSize: 11,
-              color: "#79756d",
-              fontWeight: 500,
-              cursor: "pointer",
-              fontFamily: "inherit",
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-            }}
-          >
-            Log minimum <span style={{ color: "#b5b0a8" }}>→</span>
-          </button>
-        </div>
-      )}
+      <CardFooter
+        done={displayCompleted}
+        streak={displayStreak}
+        completionCount={displayCount}
+        color={habit.color}
+        missedTwice={nmt}
+        onMinimum={logMinimum}
+      />
     </div>
   );
 }
@@ -389,8 +452,15 @@ function TabBar({ active }: { active: "today" | "week" }) {
 }
 
 export default function HabitsPage({ loaderData }: Route.ComponentProps) {
-  const { todayHabits, completionMap, completionCounts, completedTodayCount } =
-    loaderData;
+  const {
+    todayHabits,
+    completionMap,
+    completionCounts,
+    completedTodayCount,
+    missedTwiceMap,
+    recentHistoryMap,
+    habitStreaks,
+  } = loaderData;
 
   const morningHabits = todayHabits.filter((h) => isMorning(h.timeOfDay));
   const eveningHabits = todayHabits.filter((h) => !isMorning(h.timeOfDay));
@@ -618,6 +688,9 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
                       habit={habit}
                       isCompleted={completionMap[habit.id] ?? false}
                       completionCount={completionCounts[habit.id] ?? 0}
+                      currentStreak={habitStreaks[habit.id] ?? 0}
+                      recentHistory={recentHistoryMap[habit.id] ?? []}
+                      missedTwice={missedTwiceMap[habit.id] ?? false}
                     />
                   ))}
                 </div>
@@ -647,7 +720,9 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
                       habit={habit}
                       isCompleted={completionMap[habit.id] ?? false}
                       completionCount={completionCounts[habit.id] ?? 0}
-                      evening
+                      currentStreak={habitStreaks[habit.id] ?? 0}
+                      recentHistory={recentHistoryMap[habit.id] ?? []}
+                      missedTwice={missedTwiceMap[habit.id] ?? false}
                     />
                   ))}
                 </div>
