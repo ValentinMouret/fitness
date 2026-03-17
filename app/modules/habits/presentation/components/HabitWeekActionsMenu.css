@@ -1,0 +1,29 @@
+.habit-week-actions-menu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 38px;
+}
+
+.habit-week-actions-menu__dialog {
+  max-width: 28rem;
+}
+
+.habit-week-actions-menu__preview {
+  border-radius: 18px;
+  border: 1px solid #efe7df;
+  background: linear-gradient(180deg, #fcfbf8 0%, #f5efe8 100%);
+  box-shadow: 0 10px 30px rgb(28 25 23 / 0.06);
+}
+
+.habit-week-actions-menu__swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  box-shadow: 0 0 0 4px rgb(255 255 255 / 0.75);
+}
+
+.habit-week-actions-menu__meta {
+  color: #8a827a;
+}

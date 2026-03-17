@@ -7,7 +7,7 @@ import {
   getHabitsWeekData,
   toggleWeekHabitCompletion,
 } from "~/modules/habits/infra/habits-week.service.server";
-import { HabitWeekDeleteControl } from "~/modules/habits/presentation/components/HabitWeekDeleteControl";
+import { HabitWeekActionsMenu } from "~/modules/habits/presentation/components/HabitWeekActionsMenu";
 import { allDays } from "~/time";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/week";
@@ -631,7 +631,7 @@ export default function HabitsWeekPage({ loaderData }: Route.ComponentProps) {
                 );
               })}
 
-              <HabitWeekDeleteControl
+              <HabitWeekActionsMenu
                 habitId={habit.id}
                 name={habit.name}
                 identityPhrase={habit.identityPhrase}
