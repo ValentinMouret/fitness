@@ -6,6 +6,15 @@ import "./RestTimer.css";
 
 const DEFAULT_REST_SECONDS = 90;
 const REST_PRESETS = [60, 90, 120, 180] as const;
+const STORAGE_KEY = "rest-timer-duration";
+
+function loadSavedDuration(fallback: number): number {
+  if (typeof window === "undefined") return fallback;
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === null) return fallback;
+  const parsed = Number(saved);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
 
 interface RestTimerState {
   readonly isActive: boolean;
@@ -14,10 +23,13 @@ interface RestTimerState {
 }
 
 export function useRestTimer(defaultSeconds = DEFAULT_REST_SECONDS) {
-  const [state, setState] = useState<RestTimerState>({
-    isActive: false,
-    secondsRemaining: defaultSeconds,
-    totalSeconds: defaultSeconds,
+  const [state, setState] = useState<RestTimerState>(() => {
+    const initial = loadSavedDuration(defaultSeconds);
+    return {
+      isActive: false,
+      secondsRemaining: initial,
+      totalSeconds: initial,
+    };
   });
   const intervalRef = useRef<ReturnType<typeof setInterval>>(null);
   const endTimeRef = useRef<number>(0);
@@ -65,6 +77,7 @@ export function useRestTimer(defaultSeconds = DEFAULT_REST_SECONDS) {
 
   const setDuration = useCallback(
     (seconds: number) => {
+      localStorage.setItem(STORAGE_KEY, String(seconds));
       startTimer(seconds);
     },
     [startTimer],
