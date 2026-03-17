@@ -1,0 +1,126 @@
+[
+  {
+    "id": "review-app",
+    "execute-command": "/opt/fitness/scripts/review-app.sh",
+    "command-working-directory": "/opt/fitness",
+    "response-message": "Review app webhook received",
+    "pass-arguments-to-command": [
+      {
+        "source": "string",
+        "name": "deploy"
+      },
+      {
+        "source": "payload",
+        "name": "number"
+      }
+    ],
+    "trigger-rule": {
+      "and": [
+        {
+          "match": {
+            "type": "value",
+            "value": "pull_request",
+            "parameter": {
+              "source": "header",
+              "name": "X-GitHub-Event"
+            }
+          }
+        },
+        {
+          "match": {
+            "type": "payload-hmac-sha256",
+            "secret": "{{ getenv \"WEBHOOK_SECRET\" }}",
+            "parameter": {
+              "source": "header",
+              "name": "X-Hub-Signature-256"
+            }
+          }
+        },
+        {
+          "or": [
+            {
+              "match": {
+                "type": "value",
+                "value": "opened",
+                "parameter": {
+                  "source": "payload",
+                  "name": "action"
+                }
+              }
+            },
+            {
+              "match": {
+                "type": "value",
+                "value": "synchronize",
+                "parameter": {
+                  "source": "payload",
+                  "name": "action"
+                }
+              }
+            },
+            {
+              "match": {
+                "type": "value",
+                "value": "reopened",
+                "parameter": {
+                  "source": "payload",
+                  "name": "action"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "review-app-destroy",
+    "execute-command": "/opt/fitness/scripts/review-app.sh",
+    "command-working-directory": "/opt/fitness",
+    "response-message": "Review app destroy webhook received",
+    "pass-arguments-to-command": [
+      {
+        "source": "string",
+        "name": "destroy"
+      },
+      {
+        "source": "payload",
+        "name": "number"
+      }
+    ],
+    "trigger-rule": {
+      "and": [
+        {
+          "match": {
+            "type": "value",
+            "value": "pull_request",
+            "parameter": {
+              "source": "header",
+              "name": "X-GitHub-Event"
+            }
+          }
+        },
+        {
+          "match": {
+            "type": "payload-hmac-sha256",
+            "secret": "{{ getenv \"WEBHOOK_SECRET\" }}",
+            "parameter": {
+              "source": "header",
+              "name": "X-Hub-Signature-256"
+            }
+          }
+        },
+        {
+          "match": {
+            "type": "value",
+            "value": "closed",
+            "parameter": {
+              "source": "payload",
+              "name": "action"
+            }
+          }
+        }
+      ]
+    }
+  }
+]
