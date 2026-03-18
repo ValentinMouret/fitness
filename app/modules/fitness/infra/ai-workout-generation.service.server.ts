@@ -305,7 +305,7 @@ async function callClaude(
         },
       },
     ],
-    tool_choice: { type: "tool" as const, name: "generate_workout" },
+    tool_choice: { type: "any" as const },
   });
 
   const toolUse = response.content.find((c) => c.type === "tool_use");
@@ -339,20 +339,33 @@ function buildSystemPrompt(context: GenerationContext): string {
       ? `\n## User Preferences\n${context.preferences.map((p) => `- ${p}`).join("\n")}`
       : "";
 
-  return `You are an expert hypertrophy coach generating a workout for a single dedicated trainee. Use evidence-based training science to create an optimal session.
+  const today = new Date().toISOString().split("T")[0];
 
-## Training Principles
-- **Goal**: Hypertrophy (muscle growth)
-- **Progressive overload**: Increase volume (sets × reps) before load. Suggest ~5% weight increase only when the trainee consistently hits the top of rep ranges at RPE 7-8.
-- **Rep ranges**: 6-15 reps for compounds, 10-20 for isolation
-- **RPE targets**: Working sets at RPE 7-9 (1-3 reps in reserve). If recent RPE has been consistently 9-10, suggest lighter loads or a deload.
-- **Volume**: Respect the weekly volume targets below. Prioritize muscle groups with remaining volume debt.
-- **Recovery**: Consider days since each muscle group was last trained. Minimum 48h between training the same muscle group.
-- **Periodization**: If you see signs of accumulated fatigue (rising RPE at flat or declining performance across 3+ weeks), suggest a deload session (reduce volume by 40-50%, maintain intensity).
-- **Exercise selection**: Use exercises from the catalog below. Pick by ID. Balance compound and isolation movements. Alternate exercises occasionally for variety but keep main lifts consistent.
-- **Warm-up sets**: Include 1-2 warm-up sets for the first compound exercise (lighter weight, not counted toward volume).
-- **Rest periods**: 2-3 min for heavy compounds, 1-2 min for isolation.
+  return `You are an expert hypertrophy coach generating a workout for a single dedicated trainee. Today is ${today}.
+
+## Goal
+Hypertrophy (muscle growth). Rep ranges: 6-15 for compounds, 10-20 for isolation. Working sets at RPE 7-9.
 ${timeConstraint}
+
+## Decision Process (follow in order)
+1. **Deload check**: If e1RM trends show "declining" or "stable" with average RPE ≥ 9 across 3+ sessions → generate a deload (50% volume, same intensity). State this clearly in the rationale.
+2. **Recovery filter**: From training history, compute days since each muscle group was last trained. Only consider groups with ≥ 48h recovery.
+3. **Volume priority**: Among recovered groups, pick the 2-3 with the highest remaining weekly volume debt.
+4. **Exercise selection**: Pick 4-6 exercises from the catalog (by exact ID). Lead with 1-2 compounds, then isolation. Keep main lifts consistent across weeks; rotate accessory exercises for variety.
+5. **Load prescription**: Use most recent performance data for each exercise.
+   - If trainee hit top of rep range at RPE ≤ 8 last session → increase weight by one increment (2.5 kg barbell, 1-2 kg dumbbell/cable).
+   - If RPE was 9-10 → keep weight the same or reduce slightly.
+   - If no recent data → start conservatively.
+6. **Warm-up**: Include 1-2 warm-up sets for the first compound (lighter weight, not counted toward volume).
+7. **Rest periods**: 2-3 min for compounds, 60-90s for isolation.
+8. **Session sizing**: 12-20 working sets total. Respect time constraint if given.
+
+## Constraints
+- NEVER program the same exercise twice in one session.
+- Do NOT exceed the weekly max volume target for any muscle group.
+- Do NOT train a muscle group with < 48h recovery unless the trainee explicitly requests it.
+- ONLY use exercises from the catalog below — use exact IDs.
+- For bodyweight exercises, set targetWeight to 0.
 
 ## Weekly Volume Status (sets this week / target)
 ${context.volumeStats.map((v) => `- **${v.muscleGroup}**: ${v.currentWeekSets}/${v.targetMinSets}-${v.targetMaxSets} sets (${v.remainingSets} remaining)`).join("\n")}
@@ -367,13 +380,15 @@ ${formatProgressions(context.exerciseProgressions)}
 ${formatExerciseCatalog(context.availableExercises)}
 ${preferences}
 
-## Instructions
-1. Decide which muscle groups to train based on recovery status and volume debt.
-2. Select exercises from the catalog (use exact exercise IDs).
-3. Set appropriate weights based on recent performance, applying progressive overload.
-4. Include warm-up sets for the first compound.
-5. Provide a brief rationale explaining your choices.
-6. If refinement feedback is given, adjust the workout accordingly and explain changes.`;
+## When Refining
+When the trainee gives feedback on a generated workout:
+- Apply the feedback as closely as possible.
+- If it conflicts with recovery or volume limits, comply but note the trade-off in the rationale.
+- When swapping exercises, pick alternatives with similar movement patterns and muscle group coverage.
+- Recalculate estimated duration after changes.
+
+## Output
+Think step-by-step before generating: assess recovery status, identify volume priorities, select exercises and loads. Then call the generate_workout tool with the final plan.`;
 }
 
 function formatRecentWorkouts(workouts: ReadonlyArray<WorkoutSummary>): string {
@@ -417,14 +432,26 @@ function formatProgressions(
 function formatExerciseCatalog(
   exercises: ReadonlyArray<ExerciseCatalogEntry>,
 ): string {
-  return exercises
-    .map((e) => {
-      const muscles = e.muscleGroups
-        .map((m) => `${m.name}:${m.split}%`)
-        .join(", ");
-      return `- [${e.id}] ${e.name} (${e.type}, ${e.movementPattern}) → ${muscles}`;
+  const byPattern = new Map<string, ExerciseCatalogEntry[]>();
+  for (const e of exercises) {
+    const group = byPattern.get(e.movementPattern) ?? [];
+    group.push(e);
+    byPattern.set(e.movementPattern, group);
+  }
+
+  return Array.from(byPattern.entries())
+    .map(([pattern, entries]) => {
+      const lines = entries
+        .map((e) => {
+          const muscles = e.muscleGroups
+            .map((m) => `${m.name}:${m.split}%`)
+            .join(", ");
+          return `- [${e.id}] ${e.name} (${e.type}) → ${muscles}`;
+        })
+        .join("\n");
+      return `### ${pattern}\n${lines}`;
     })
-    .join("\n");
+    .join("\n\n");
 }
 
 // --- Context assembly helpers ---
