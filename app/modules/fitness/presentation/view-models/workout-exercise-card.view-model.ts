@@ -50,7 +50,7 @@ function createWorkoutSetViewModel(set: WorkoutSet): WorkoutSetViewModel {
 
 function calculateTotalVolumeDisplay(sets: ReadonlyArray<WorkoutSet>): string {
   const totalVolume = sets
-    .filter((set) => set.isCompleted && set.reps && set.weight)
+    .filter((set) => set.isCompleted && !set.isWarmup && set.reps && set.weight)
     .reduce((sum, set) => sum + (set.reps ?? 0) * (set.weight ?? 0), 0);
 
   return totalVolume > 0 ? `${totalVolume} kg` : "";

@@ -283,6 +283,7 @@ type SetUpdate = {
   note?: string;
   rpe?: number;
   isCompleted?: boolean;
+  isWarmup?: boolean;
 };
 
 export async function updateSetInWorkout(input: {
@@ -294,6 +295,7 @@ export async function updateSetInWorkout(input: {
   readonly note?: string;
   readonly rpeStr?: string;
   readonly isCompletedStr?: string;
+  readonly isWarmupStr?: string;
 }): Promise<WorkoutActionResult> {
   if (!input.exerciseId || !input.setNumberStr) {
     return { error: "Exercise ID and set number are required" };
@@ -345,6 +347,10 @@ export async function updateSetInWorkout(input: {
 
   if (input.isCompletedStr !== undefined) {
     updateData.isCompleted = input.isCompletedStr === "true";
+  }
+
+  if (input.isWarmupStr !== undefined) {
+    updateData.isWarmup = input.isWarmupStr === "true";
   }
 
   const result = await WorkoutSessionRepository.updateSet(

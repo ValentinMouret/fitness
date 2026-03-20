@@ -187,6 +187,7 @@ export async function action({ request, params }: Route.ActionArgs) {
           note: formOptionalText(),
           rpe: formOptionalText(),
           isCompleted: formOptionalText(),
+          isWarmup: formOptionalText(),
         });
         const parsed = schema.parse(formData);
         return updateSetInWorkout({
@@ -198,6 +199,7 @@ export async function action({ request, params }: Route.ActionArgs) {
           note: parsed.note ?? undefined,
           rpeStr: parsed.rpe ?? undefined,
           isCompletedStr: parsed.isCompleted ?? undefined,
+          isWarmupStr: parsed.isWarmup ?? undefined,
         });
       }
 

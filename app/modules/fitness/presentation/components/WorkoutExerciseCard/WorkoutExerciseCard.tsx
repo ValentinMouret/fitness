@@ -205,11 +205,48 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
     setLocalRpe(set.rpe?.toString() ?? "");
   }, [set.reps, set.weight, set.rpe]);
 
-  const rowClassName = `set-row ${set.isCompleted ? "set-row--completed" : canEdit ? "set-row--pending" : ""}`;
+  const rowClassName = [
+    "set-row",
+    set.isWarmup
+      ? "set-row--warmup"
+      : set.isCompleted
+        ? "set-row--completed"
+        : canEdit
+          ? "set-row--pending"
+          : "",
+  ].join(" ");
+
+  const handleToggleWarmup = () => {
+    updateFetcher.submit(
+      {
+        intent: "update-set",
+        exerciseId,
+        setNumber: set.set.toString(),
+        isWarmup: (!set.isWarmup).toString(),
+      },
+      { method: "post" },
+    );
+  };
 
   return (
     <div className={rowClassName}>
-      <span className="set-row__number">{set.set}</span>
+      {canEdit && !set.isCompleted ? (
+        <button
+          type="button"
+          className={`set-row__number set-row__number--toggle ${set.isWarmup ? "set-row__number--warmup" : ""}`}
+          onClick={handleToggleWarmup}
+          aria-pressed={set.isWarmup}
+          aria-label={`Toggle warmup for set ${set.set}`}
+        >
+          {set.isWarmup ? "W" : set.set}
+        </button>
+      ) : (
+        <span
+          className={`set-row__number ${set.isWarmup ? "set-row__number--warmup" : ""}`}
+        >
+          {set.isWarmup ? "W" : set.set}
+        </span>
+      )}
 
       {set.isCompleted || !canEdit ? (
         <>
