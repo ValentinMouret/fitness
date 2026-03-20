@@ -47,6 +47,7 @@ import {
   removeSetFromWorkout,
   reorderExercisesInWorkout,
   replaceExerciseInWorkout,
+  updateExerciseNotes,
   updateSetInWorkout,
   updateWorkoutName,
 } from "~/modules/fitness/infra/workout-session.service.server";
@@ -106,6 +107,19 @@ export async function action({ request, params }: Route.ActionArgs) {
         return addExercisesToWorkout({
           workoutId: id,
           exerciseIds,
+        });
+      }
+
+      case "update-exercise-notes": {
+        const schema = zfd.formData({
+          exerciseId: formText(z.string().min(1)),
+          notes: formOptionalText(),
+        });
+        const parsed = schema.parse(formData);
+        return updateExerciseNotes({
+          workoutId: id,
+          exerciseId: parsed.exerciseId,
+          notes: parsed.notes ?? null,
         });
       }
 
