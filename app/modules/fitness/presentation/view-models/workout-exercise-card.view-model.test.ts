@@ -80,8 +80,8 @@ describe("WorkoutExerciseCardViewModel", () => {
         false,
       );
 
-      // Only completed sets: (10 * 80) + (8 * 90) = 800 + 720 = 1520 kg
-      expect(viewModel.totalVolumeDisplay).toBe("1520 kg");
+      // Only completed non-warmup sets: (8 * 90) = 720 kg (set 1 is warmup)
+      expect(viewModel.totalVolumeDisplay).toBe("720 kg");
     });
 
     it("should return empty total volume when no completed sets", () => {
