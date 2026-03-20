@@ -841,6 +841,25 @@ export const WorkoutSessionRepository = {
     ).map(() => undefined);
   },
 
+  updateExerciseNotes(
+    workoutId: string,
+    exerciseId: string,
+    notes: string | null,
+  ): ResultAsync<void, ErrRepository> {
+    const query = db
+      .update(workoutExercises)
+      .set({ notes, updated_at: new Date() })
+      .where(
+        and(
+          eq(workoutExercises.workout_id, workoutId),
+          eq(workoutExercises.exercise_id, exerciseId),
+          isNull(workoutExercises.deleted_at),
+        ),
+      );
+
+    return executeQuery(query, "updateExerciseNotes").map(() => undefined);
+  },
+
   getExerciseHistory(
     exerciseId: string,
     cursor?: string,

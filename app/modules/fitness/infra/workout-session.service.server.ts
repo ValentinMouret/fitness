@@ -161,6 +161,24 @@ export async function addExercisesToWorkout(input: {
   return { success: true };
 }
 
+export async function updateExerciseNotes(input: {
+  readonly workoutId: string;
+  readonly exerciseId: string;
+  readonly notes: string | null;
+}): Promise<WorkoutActionResult> {
+  const result = await WorkoutSessionRepository.updateExerciseNotes(
+    input.workoutId,
+    input.exerciseId,
+    input.notes,
+  );
+
+  if (result.isErr()) {
+    return { error: "Failed to update exercise notes" };
+  }
+
+  return { success: true };
+}
+
 export async function removeExerciseFromWorkout(input: {
   readonly workoutId: string;
   readonly exerciseId?: string;
