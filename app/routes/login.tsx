@@ -24,12 +24,15 @@ export async function action({ request }: Route.ActionArgs) {
     redirectTo: formOptionalText(),
   });
 
-  const parsed = schema.parse(formData);
+  const result = schema.safeParse(formData);
+  if (!result.success) {
+    return { error: "Username and password are required" };
+  }
 
   return loginWithCredentials({
-    username: parsed.username,
-    password: parsed.password,
-    redirectTo: parsed.redirectTo ?? null,
+    username: result.data.username,
+    password: result.data.password,
+    redirectTo: result.data.redirectTo ?? null,
   });
 }
 
