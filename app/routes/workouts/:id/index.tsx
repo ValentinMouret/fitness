@@ -57,6 +57,7 @@ import {
   ExerciseHistoryModal,
   WorkoutExerciseCard,
 } from "~/modules/fitness/presentation";
+import { reorderExerciseGroups } from "~/modules/fitness/presentation/reorder-exercise-groups";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/index";
 import "./active-workout.css";
@@ -364,16 +365,14 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    if (!over) return;
 
-    const groups = workoutSession.exerciseGroups;
-    const oldIndex = groups.findIndex((g) => g.exercise.id === active.id);
-    const newIndex = groups.findIndex((g) => g.exercise.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    const reordered = [...groups];
-    const [moved] = reordered.splice(oldIndex, 1);
-    reordered.splice(newIndex, 0, moved);
+    const reordered = reorderExerciseGroups(
+      workoutSession.exerciseGroups,
+      String(active.id),
+      String(over.id),
+    );
+    if (!reordered) return;
 
     reorderFetcher.submit(
       {
@@ -697,8 +696,14 @@ function SortableExerciseCard({
   readonly onReplaceExercise?: (exerciseId: string) => void;
   readonly onExerciseNameClick?: (exerciseId: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: group.exercise.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: group.exercise.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -721,6 +726,7 @@ function SortableExerciseCard({
         onExerciseNameClick={onExerciseNameClick}
         dragHandleListeners={listeners}
         dragHandleAttributes={attributes}
+        dragHandleRef={setActivatorNodeRef}
       />
     </div>
   );

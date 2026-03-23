@@ -36,6 +36,7 @@ interface WorkoutExerciseCardProps {
   readonly onExerciseNameClick?: (exerciseId: string) => void;
   readonly dragHandleListeners?: SyntheticListenerMap;
   readonly dragHandleAttributes?: DraggableAttributes;
+  readonly dragHandleRef?: (element: HTMLElement | null) => void;
 }
 
 export function WorkoutExerciseCard({
@@ -47,6 +48,7 @@ export function WorkoutExerciseCard({
   onExerciseNameClick,
   dragHandleListeners,
   dragHandleAttributes,
+  dragHandleRef,
 }: WorkoutExerciseCardProps) {
   const fetcher = useFetcher();
 
@@ -89,6 +91,7 @@ export function WorkoutExerciseCard({
         {dragHandleListeners && (
           <button
             type="button"
+            ref={dragHandleRef}
             className="exercise-card__drag-handle"
             {...dragHandleListeners}
             {...dragHandleAttributes}
