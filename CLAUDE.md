@@ -32,6 +32,9 @@ bun lint # lint
 bun tc # typecheck + generate react-router types
 bun tc:watch # typecheck in watch mode (watches app/ directory)
 bun test # run tests
+bun test:e2e # run Playwright end-to-end tests
+
+bun gate # run ALL checks: typecheck, lint, test, build, e2e — use this before pushing
 
 bun db:dev # updates the database with schema changes (command to run in dev only)
 bun db:generate # once done developing DB changes, creates a migration
@@ -151,7 +154,7 @@ String manipulation utilities:
 
 ## Agent
 - An instance of the server is already running in dev mode. NEVER try to boot another instance. ALWAYS ask me to check logs and things like that.
-- Once done with changes, run linting, formatting, and build
+- Once done with changes, run `bun gate` to verify everything passes (typecheck, lint, test, build, e2e).
 - Start by the domain modelling, then move on to infrastructure topics.
 - If at any point you need more information, please ask your questions before moving forward.
 - Limit comments to the bear minimum. Like in Go, around data structures and the main functions.
