@@ -34,8 +34,8 @@ bun tc:watch # typecheck in watch mode (watches app/ directory)
 bun test # run tests
 bun test:e2e # run Playwright end-to-end tests
 
-bun gate # run ALL local checks: typecheck, lint, test, build — use this before pushing
-# e2e tests run in CI only (requires Playwright browsers)
+bun gate # run all checks: typecheck, lint, test, build — use this before pushing
+bun gate:e2e # gate + e2e tests (requires Playwright browsers, use locally or in CI)
 
 bun db:dev # updates the database with schema changes (command to run in dev only)
 bun db:generate # once done developing DB changes, creates a migration

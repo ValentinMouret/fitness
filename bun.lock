@@ -32,10 +32,10 @@
       },
       "devDependencies": {
         "@biomejs/biome": "2.2.4",
-        "@playwright/browser-chromium": "^1.58.1",
-        "@playwright/browser-firefox": "^1.58.1",
-        "@playwright/browser-webkit": "^1.58.1",
-        "@playwright/test": "^1.58.1",
+        "@playwright/browser-chromium": "1.56.0",
+        "@playwright/browser-firefox": "1.56.0",
+        "@playwright/browser-webkit": "1.56.0",
+        "@playwright/test": "1.56.0",
         "@react-router/dev": "^7.11.0",
         "@types/node": "^24.10.4",
         "@types/pg": "^8.16.0",
@@ -311,13 +311,13 @@
 
     "@pinojs/redact": ["@pinojs/redact@0.4.0", "", {}, "sha512-k2ENnmBugE/rzQfEcdWHcCY+/FM3VLzH9cYEsbdsoqrvzAKRhUZeRNhAZvB8OitQJ1TBed3yqWtdjzS6wJKBwg=="],
 
-    "@playwright/browser-chromium": ["@playwright/browser-chromium@1.58.1", "", { "dependencies": { "playwright-core": "1.58.1" } }, "sha512-L0hO/dvKTjiEyW+ReRdmw1D389qa9XkCCGH58MaSpMdGtHVJzbTsHpAN+fWcAO8Fdc+vTQTZQzjq1uZoEKOGmQ=="],
+    "@playwright/browser-chromium": ["@playwright/browser-chromium@1.56.0", "", { "dependencies": { "playwright-core": "1.56.0" } }, "sha512-+OABx0PwbzoWXO5qOmonvQlIZq0u89XpDkRYf+ZTOs+wsI3r/NV90rzGr8nsJZTj7o10tdPMmuGmZ3OKP9ag4Q=="],
 
-    "@playwright/browser-firefox": ["@playwright/browser-firefox@1.58.1", "", { "dependencies": { "playwright-core": "1.58.1" } }, "sha512-BDImatlsVIAvs19Wd4GDtZql3s+7jVIw/l9cQturv/yICLxsxhpXvSjfNYlyt75gC9DykJQMxtZaYCbBQl4xLw=="],
+    "@playwright/browser-firefox": ["@playwright/browser-firefox@1.56.0", "", { "dependencies": { "playwright-core": "1.56.0" } }, "sha512-Jygr+YpaCPTASG/DOXUruaKJQf+nzTNvOR2GVGt5jgp7brc6GPRtXGZeTMErNyE5Txy7NyPfcAL8PAPTx2R9Dg=="],
 
-    "@playwright/browser-webkit": ["@playwright/browser-webkit@1.58.1", "", { "dependencies": { "playwright-core": "1.58.1" } }, "sha512-XPgkDb0AIsESceB5eDuH5bF2NFoXmSjslRymFeDovRXMFKVCPXsiku2cr7yOKBntBmlf7TT5gTBKGQtUnM7nhA=="],
+    "@playwright/browser-webkit": ["@playwright/browser-webkit@1.56.0", "", { "dependencies": { "playwright-core": "1.56.0" } }, "sha512-ylyZZtX2x6YngGfkk/9bo0YngHvI8L3ChLoc/7e9VPN82up+POniNenYEJm3LBTO1vSg0hCagKzX/u+Bn73GGg=="],
 
-    "@playwright/test": ["@playwright/test@1.58.1", "", { "dependencies": { "playwright": "1.58.1" }, "bin": { "playwright": "cli.js" } }, "sha512-6LdVIUERWxQMmUSSQi0I53GgCBYgM2RpGngCPY7hSeju+VrKjq3lvs7HpJoPbDiY5QM5EYRtRX5fvrinnMAz3w=="],
+    "@playwright/test": ["@playwright/test@1.56.0", "", { "dependencies": { "playwright": "1.56.0" }, "bin": { "playwright": "cli.js" } }, "sha512-Tzh95Twig7hUwwNe381/K3PggZBZblKUe2wv25oIpzWLr6Z0m4KgV1ZVIjnR6GM9ANEqjZD7XsZEa6JL/7YEgg=="],
 
     "@radix-ui/colors": ["@radix-ui/colors@3.0.0", "", {}, "sha512-FUOsGBkHrYJwCSEtWRCIfQbZG7q1e6DgxCIOe1SUQzDe/7rXXeA47s8yCn6fuTNQAj1Zq4oTFi9Yjp3wzElcxg=="],
 
@@ -939,9 +939,9 @@
 
     "pkg-types": ["pkg-types@2.3.0", "", { "dependencies": { "confbox": "^0.2.2", "exsolve": "^1.0.7", "pathe": "^2.0.3" } }, "sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig=="],
 
-    "playwright": ["playwright@1.58.1", "", { "dependencies": { "playwright-core": "1.58.1" }, "optionalDependencies": { "fsevents": "2.3.2" }, "bin": { "playwright": "cli.js" } }, "sha512-+2uTZHxSCcxjvGc5C891LrS1/NlxglGxzrC4seZiVjcYVQfUa87wBL6rTDqzGjuoWNjnBzRqKmF6zRYGMvQUaQ=="],
+    "playwright": ["playwright@1.56.0", "", { "dependencies": { "playwright-core": "1.56.0" }, "optionalDependencies": { "fsevents": "2.3.2" }, "bin": { "playwright": "cli.js" } }, "sha512-X5Q1b8lOdWIE4KAoHpW3SE8HvUB+ZZsUoN64ZhjnN8dOb1UpujxBtENGiZFE+9F/yhzJwYa+ca3u43FeLbboHA=="],
 
-    "playwright-core": ["playwright-core@1.58.1", "", { "bin": { "playwright-core": "cli.js" } }, "sha512-bcWzOaTxcW+VOOGBCQgnaKToLJ65d6AqfLVKEWvexyS3AS6rbXl+xdpYRMGSRBClPvyj44njOWoxjNdL/H9UNg=="],
+    "playwright-core": ["playwright-core@1.56.0", "", { "bin": { "playwright-core": "cli.js" } }, "sha512-1SXl7pMfemAMSDn5rkPeZljxOCYAmQnYLBTExuh6E8USHXGSX3dx6lYZN/xPpTz1vimXmPA9CDnILvmJaB8aSQ=="],
 
     "postcss": ["postcss@8.5.6", "", { "dependencies": { "nanoid": "^3.3.11", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg=="],
 
