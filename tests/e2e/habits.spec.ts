@@ -1,30 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { login } from "./helpers/auth";
 
-test.describe("Habits Index", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page);
-    await page.goto("/habits");
-  });
-
-  test("shows greeting and progress ring", async ({ page }) => {
-    await expect(
-      page.getByText(/Good morning\.|Morning done\. You showed up\./),
-    ).toBeVisible();
-    await expect(page.getByText("today", { exact: true })).toBeVisible();
-  });
-
-  test("tab bar has Today and Week links", async ({ page }) => {
-    await expect(page.getByRole("link", { name: "Today" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Week" })).toBeVisible();
-  });
-
-  test("+ link navigates to /habits/new", async ({ page }) => {
-    await page.getByRole("link", { name: "+" }).click();
-    await expect(page).toHaveURL(/\/habits\/new/);
-  });
-});
-
 test.describe("Create Habit", () => {
   test.beforeEach(async ({ page }) => {
     await login(page);

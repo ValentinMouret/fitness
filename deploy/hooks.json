@@ -1,9 +1,39 @@
 [
   {
-    "id": "review-app",
-    "execute-command": "/opt/fitness/scripts/review-app.sh",
-    "command-working-directory": "/opt/fitness",
-    "response-message": "Review app webhook received",
+    "id": "fitness-deploy",
+    "execute-command": "/home/valentin/fitness/scripts/deploy.sh",
+    "command-working-directory": "/home/valentin/fitness",
+    "response-message": "Deployment triggered",
+    "trigger-rule": {
+      "and": [
+        {
+          "match": {
+            "type": "payload-hmac-sha256",
+            "secret": "{{ getenv \"MAIN_DEPLOY_SECRET\" }}",
+            "parameter": {
+              "source": "header",
+              "name": "X-Hub-Signature-256"
+            }
+          }
+        },
+        {
+          "match": {
+            "type": "value",
+            "value": "refs/heads/main",
+            "parameter": {
+              "source": "payload",
+              "name": "ref"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "review-app-deploy",
+    "execute-command": "/home/valentin/fitness/scripts/review-app.sh",
+    "command-working-directory": "/home/valentin/fitness",
+    "response-message": "Review app deploy triggered",
     "pass-arguments-to-command": [
       {
         "source": "string",
@@ -11,73 +41,29 @@
       },
       {
         "source": "payload",
-        "name": "number"
+        "name": "pr_number"
+      },
+      {
+        "source": "payload",
+        "name": "sha"
       }
     ],
     "trigger-rule": {
-      "and": [
-        {
-          "match": {
-            "type": "value",
-            "value": "pull_request",
-            "parameter": {
-              "source": "header",
-              "name": "X-GitHub-Event"
-            }
-          }
-        },
-        {
-          "match": {
-            "type": "payload-hmac-sha256",
-            "secret": "{{ getenv \"WEBHOOK_SECRET\" }}",
-            "parameter": {
-              "source": "header",
-              "name": "X-Hub-Signature-256"
-            }
-          }
-        },
-        {
-          "or": [
-            {
-              "match": {
-                "type": "value",
-                "value": "opened",
-                "parameter": {
-                  "source": "payload",
-                  "name": "action"
-                }
-              }
-            },
-            {
-              "match": {
-                "type": "value",
-                "value": "synchronize",
-                "parameter": {
-                  "source": "payload",
-                  "name": "action"
-                }
-              }
-            },
-            {
-              "match": {
-                "type": "value",
-                "value": "reopened",
-                "parameter": {
-                  "source": "payload",
-                  "name": "action"
-                }
-              }
-            }
-          ]
+      "match": {
+        "type": "payload-hmac-sha256",
+        "secret": "{{ getenv \"REVIEW_APP_SECRET\" }}",
+        "parameter": {
+          "source": "header",
+          "name": "X-Review-App-Signature"
         }
-      ]
+      }
     }
   },
   {
     "id": "review-app-destroy",
-    "execute-command": "/opt/fitness/scripts/review-app.sh",
-    "command-working-directory": "/opt/fitness",
-    "response-message": "Review app destroy webhook received",
+    "execute-command": "/home/valentin/fitness/scripts/review-app.sh",
+    "command-working-directory": "/home/valentin/fitness",
+    "response-message": "Review app destroy triggered",
     "pass-arguments-to-command": [
       {
         "source": "string",
@@ -85,42 +71,18 @@
       },
       {
         "source": "payload",
-        "name": "number"
+        "name": "pr_number"
       }
     ],
     "trigger-rule": {
-      "and": [
-        {
-          "match": {
-            "type": "value",
-            "value": "pull_request",
-            "parameter": {
-              "source": "header",
-              "name": "X-GitHub-Event"
-            }
-          }
-        },
-        {
-          "match": {
-            "type": "payload-hmac-sha256",
-            "secret": "{{ getenv \"WEBHOOK_SECRET\" }}",
-            "parameter": {
-              "source": "header",
-              "name": "X-Hub-Signature-256"
-            }
-          }
-        },
-        {
-          "match": {
-            "type": "value",
-            "value": "closed",
-            "parameter": {
-              "source": "payload",
-              "name": "action"
-            }
-          }
+      "match": {
+        "type": "payload-hmac-sha256",
+        "secret": "{{ getenv \"REVIEW_APP_SECRET\" }}",
+        "parameter": {
+          "source": "header",
+          "name": "X-Review-App-Signature"
         }
-      ]
+      }
     }
   }
 ]
