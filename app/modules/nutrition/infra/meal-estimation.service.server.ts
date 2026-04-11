@@ -1,53 +1,17 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { err, ok, type Result } from "neverthrow";
-import { z } from "zod";
 import { env } from "~/env.server";
 import { logger } from "~/logger.server";
+import type { CreateAIIngredientInput } from "../domain/ingredient";
+import { ingredientCategories, textureCategories } from "../domain/ingredient";
 import {
-  type CreateAIIngredientInput,
-  ingredientCategories,
-  textureCategories,
-} from "../domain/ingredient";
+  type ChatTurnResult,
+  type EstimatedIngredient,
+  type EstimationMessage,
+  MealEstimationResultSchema,
+  type ResolvedIngredient,
+} from "../domain/meal-estimation";
 import { IngredientRepository } from "./ingredient.repository.server";
-
-export interface EstimationMessage {
-  readonly role: "user" | "assistant";
-  readonly content: string;
-}
-
-const EstimatedIngredientSchema = z.object({
-  name: z.string().min(1),
-  estimatedGrams: z.number().positive(),
-  category: z.enum(ingredientCategories),
-  calories: z.number().min(0).max(900),
-  protein: z.number().min(0).max(100),
-  carbs: z.number().min(0).max(100),
-  fat: z.number().min(0).max(100),
-  fiber: z.number().min(0).max(50),
-  waterPercentage: z.number().min(0).max(100),
-  energyDensity: z.number().min(0).max(9),
-  texture: z.enum(textureCategories),
-  isVegetarian: z.boolean(),
-  isVegan: z.boolean(),
-});
-
-export type EstimatedIngredient = z.infer<typeof EstimatedIngredientSchema>;
-
-const MealEstimationResultSchema = z.object({
-  mealCategory: z.enum(["breakfast", "lunch", "dinner", "snack"]),
-  items: z.array(EstimatedIngredientSchema).min(1),
-});
-
-export type MealEstimationResult = z.infer<typeof MealEstimationResultSchema>;
-
-export interface ResolvedIngredient {
-  readonly ingredientId: string;
-  readonly quantity: number;
-}
-
-export type ChatTurnResult =
-  | { readonly type: "message"; readonly content: string }
-  | { readonly type: "estimate"; readonly result: MealEstimationResult };
 
 const estimateMealTool: Anthropic.Messages.Tool = {
   name: "estimate_meal",

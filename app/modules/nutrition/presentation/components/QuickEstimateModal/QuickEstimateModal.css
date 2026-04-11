@@ -1,0 +1,33 @@
+.quick-estimate-modal {
+  max-width: 520px;
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.quick-estimate-modal__scroll {
+  height: 100%;
+}
+
+.quick-estimate-modal__scroll-inner {
+  min-height: 0;
+}
+
+.message-bubble {
+  border-radius: var(--radius-3);
+  max-width: 85%;
+  white-space: pre-wrap;
+}
+
+.message-bubble--user {
+  background-color: var(--accent-9);
+  color: var(--accent-contrast);
+}
+
+.message-bubble--assistant {
+  background-color: var(--gray-a3);
+}
+
+.quick-estimate-modal__accept-button {
+  flex: 1;
+}

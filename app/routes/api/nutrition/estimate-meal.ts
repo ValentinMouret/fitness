@@ -1,9 +1,11 @@
 import type { ActionFunctionArgs } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import type {
+  EstimatedIngredient,
+  EstimationMessage,
+} from "~/modules/nutrition/domain/meal-estimation";
 import {
-  type EstimatedIngredient,
-  type EstimationMessage,
   processChatTurn,
   resolveEstimatedIngredients,
 } from "~/modules/nutrition/infra/meal-estimation.service.server";
