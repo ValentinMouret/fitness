@@ -28,7 +28,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   customRight,
 }) => {
   return (
-    <Box mb="6" className="page-header">
+    <Box mb={{ initial: "3", sm: "6" }} className="page-header">
       <Flex
         justify="between"
         align="start"
