@@ -12,14 +12,16 @@ import {
 } from "@radix-ui/themes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFetcher, useNavigate } from "react-router";
-import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import type {
   ChatTurnResult,
   EstimationMessage,
   MealEstimationResult,
   ResolvedIngredient,
-} from "~/modules/nutrition/infra/meal-estimation.service.server";
+} from "~/modules/nutrition/domain/meal-estimation";
+import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import { toDateString } from "~/time";
+import { MessageBubble } from "./MessageBubble";
+import "./QuickEstimateModal.css";
 
 interface QuickEstimateModalProps {
   readonly isOpen: boolean;
@@ -48,6 +50,7 @@ export function QuickEstimateModal({
   const [isResolving, setIsResolving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastProcessedData = useRef<FetcherData | null>(null);
 
   const isLoading = fetcher.state !== "idle";
 
@@ -64,6 +67,8 @@ export function QuickEstimateModal({
 
   useEffect(() => {
     if (!fetcher.data || fetcher.state !== "idle") return;
+    if (fetcher.data === lastProcessedData.current) return;
+    lastProcessedData.current = fetcher.data;
 
     const data = fetcher.data;
 
@@ -103,7 +108,7 @@ export function QuickEstimateModal({
       );
       onClose();
       navigate(
-        `/nutrition/meal-builder?meal=${data.mealCategory}&date=${dateStr}&fromEstimate=true&returnTo=${encodeURIComponent(returnTo)}`,
+        `/nutrition/meal-builder?meal=${data.mealCategory}&date=${dateStr}&returnTo=${encodeURIComponent(returnTo)}`,
       );
       setIsResolving(false);
     }
@@ -164,6 +169,7 @@ export function QuickEstimateModal({
         setEstimate(null);
         setError(null);
         setIsResolving(false);
+        lastProcessedData.current = null;
         onClose();
       }
     },
@@ -172,15 +178,7 @@ export function QuickEstimateModal({
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
-      <Dialog.Content
-        size="3"
-        style={{
-          maxWidth: 520,
-          height: "70vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+      <Dialog.Content size="3" className="quick-estimate-modal">
         <Flex justify="between" align="center" mb="3" flexShrink="0">
           <Dialog.Title size="5">Quick Estimate</Dialog.Title>
           <Dialog.Close>
@@ -190,8 +188,8 @@ export function QuickEstimateModal({
           </Dialog.Close>
         </Flex>
 
-        <Box flexGrow="1" style={{ minHeight: 0 }}>
-          <ScrollArea style={{ height: "100%" }} ref={scrollRef}>
+        <Box flexGrow="1" className="quick-estimate-modal__scroll-inner">
+          <ScrollArea className="quick-estimate-modal__scroll" ref={scrollRef}>
             <Flex direction="column" gap="3" p="1">
               {messages.length === 0 && (
                 <Text size="2" color="gray" align="center" mt="6">
@@ -227,7 +225,7 @@ export function QuickEstimateModal({
             <Button
               onClick={handleAcceptEstimate}
               disabled={isLoading}
-              style={{ flex: 1 }}
+              className="quick-estimate-modal__accept-button"
             >
               {isResolving ? (
                 <>
@@ -261,28 +259,6 @@ export function QuickEstimateModal({
         )}
       </Dialog.Content>
     </Dialog.Root>
-  );
-}
-
-function MessageBubble({ message }: { readonly message: EstimationMessage }) {
-  const isUser = message.role === "user";
-
-  return (
-    <Flex justify={isUser ? "end" : "start"}>
-      <Box
-        px="3"
-        py="2"
-        style={{
-          borderRadius: "var(--radius-3)",
-          maxWidth: "85%",
-          backgroundColor: isUser ? "var(--accent-9)" : "var(--gray-a3)",
-          color: isUser ? "var(--accent-contrast)" : undefined,
-          whiteSpace: "pre-wrap",
-        }}
-      >
-        <Text size="2">{message.content}</Text>
-      </Box>
-    </Flex>
   );
 }
 

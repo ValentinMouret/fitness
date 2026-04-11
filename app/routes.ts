@@ -14,9 +14,12 @@ export default [
 
   route("api/quick-actions", "routes/api/quick-actions.ts"),
   route("api/exercises/history", "routes/api/exercises/history.ts"),
-  route("api/nutrition/estimate-meal", "routes/api/nutrition/estimate-meal.ts"),
 
   layout("layouts/ProtectedLayout.tsx", [
+    route(
+      "api/nutrition/estimate-meal",
+      "routes/api/nutrition/estimate-meal.ts",
+    ),
     layout("layouts/AppLayout.tsx", [
       index("routes/home.tsx"),
       route("dashboard", "routes/dashboard/index.tsx"),

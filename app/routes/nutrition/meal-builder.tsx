@@ -20,7 +20,7 @@ import {
   Text,
   TextField,
 } from "@radix-ui/themes";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
@@ -228,10 +228,13 @@ export default function MealBuilder({
     }
   }, [mealLoggingMode.existingMeal]);
 
-  // Pre-populate from Quick Estimate
+  // Pre-populate from Quick Estimate (run once on mount)
+  const estimateHydrated = useRef(false);
   useEffect(() => {
+    if (estimateHydrated.current) return;
     const stored = sessionStorage.getItem("quickEstimate");
     if (!stored) return;
+    estimateHydrated.current = true;
     sessionStorage.removeItem("quickEstimate");
 
     try {
