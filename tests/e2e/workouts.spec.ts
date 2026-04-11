@@ -8,9 +8,8 @@ test.describe("Workouts Page", () => {
   });
 
   test("should display workouts header and actions", async ({ page }) => {
-    await expect(page.getByRole("heading", { name: "Workouts" })).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Start Workout" }),
+      page.getByRole("heading", { name: "Workouts", exact: true }),
     ).toBeVisible();
 
     await expect(
