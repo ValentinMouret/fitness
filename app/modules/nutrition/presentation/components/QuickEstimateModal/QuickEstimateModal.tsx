@@ -266,22 +266,22 @@ function formatEstimateSummary(result: MealEstimationResult): string {
   const categoryLabel =
     result.mealCategory[0].toUpperCase() + result.mealCategory.slice(1);
 
-  let totalCal = 0;
-  let totalProtein = 0;
-  let totalCarbs = 0;
-  let totalFat = 0;
+  const { lines, totals } = result.items.reduce(
+    (acc, item) => {
+      const factor = item.estimatedGrams / 100;
+      const cal = Math.round(item.calories * factor);
+      acc.totals.calories += cal;
+      acc.totals.protein += Math.round(item.protein * factor);
+      acc.totals.carbs += Math.round(item.carbs * factor);
+      acc.totals.fat += Math.round(item.fat * factor);
+      acc.lines.push(`• ${item.name} (${item.estimatedGrams}g) — ${cal} kcal`);
+      return acc;
+    },
+    {
+      lines: [] as string[],
+      totals: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+    },
+  );
 
-  const lines = result.items.map((item) => {
-    const cal = Math.round((item.calories * item.estimatedGrams) / 100);
-    const pro = Math.round((item.protein * item.estimatedGrams) / 100);
-    const carb = Math.round((item.carbs * item.estimatedGrams) / 100);
-    const fat = Math.round((item.fat * item.estimatedGrams) / 100);
-    totalCal += cal;
-    totalProtein += pro;
-    totalCarbs += carb;
-    totalFat += fat;
-    return `• ${item.name} (${item.estimatedGrams}g) — ${cal} kcal`;
-  });
-
-  return `Here's my estimate (${categoryLabel}):\n\n${lines.join("\n")}\n\nTotal: ${totalCal} kcal | ${totalProtein}g protein | ${totalCarbs}g carbs | ${totalFat}g fat`;
+  return `Here's my estimate (${categoryLabel}):\n\n${lines.join("\n")}\n\nTotal: ${totals.calories} kcal | ${totals.protein}g protein | ${totals.carbs}g carbs | ${totals.fat}g fat`;
 }

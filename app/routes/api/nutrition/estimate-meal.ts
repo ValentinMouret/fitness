@@ -1,9 +1,9 @@
 import type { ActionFunctionArgs } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
-import type {
-  EstimatedIngredient,
-  EstimationMessage,
+import {
+  EstimatedIngredientSchema,
+  EstimationMessageSchema,
 } from "~/modules/nutrition/domain/meal-estimation";
 import {
   processChatTurn,
@@ -28,7 +28,9 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (intent === "chat") {
     const parsed = chatSchema.parse(formData);
-    const messages: EstimationMessage[] = JSON.parse(parsed.messages);
+    const messages = z
+      .array(EstimationMessageSchema)
+      .parse(JSON.parse(parsed.messages));
 
     const result = await processChatTurn(messages);
 
@@ -41,7 +43,9 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (intent === "resolve") {
     const parsed = resolveSchema.parse(formData);
-    const items: EstimatedIngredient[] = JSON.parse(parsed.items);
+    const items = z
+      .array(EstimatedIngredientSchema)
+      .parse(JSON.parse(parsed.items));
 
     const result = await resolveEstimatedIngredients(items);
 

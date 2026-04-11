@@ -13,18 +13,18 @@
   min-height: 0;
 }
 
-.message-bubble {
+.quick-estimate-modal__bubble {
   border-radius: var(--radius-3);
   max-width: 85%;
   white-space: pre-wrap;
 }
 
-.message-bubble--user {
+.quick-estimate-modal__bubble--user {
   background-color: var(--accent-9);
   color: var(--accent-contrast);
 }
 
-.message-bubble--assistant {
+.quick-estimate-modal__bubble--assistant {
   background-color: var(--gray-a3);
 }
 
