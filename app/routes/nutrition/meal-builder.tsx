@@ -227,6 +227,41 @@ export default function MealBuilder({
       setSelectedIngredients(convertedIngredients);
     }
   }, [mealLoggingMode.existingMeal]);
+
+  // Pre-populate from Quick Estimate
+  useEffect(() => {
+    const stored = sessionStorage.getItem("quickEstimate");
+    if (!stored) return;
+    sessionStorage.removeItem("quickEstimate");
+
+    try {
+      const { ingredients: estimated } = JSON.parse(stored) as {
+        ingredients: ReadonlyArray<{
+          ingredientId: string;
+          quantity: number;
+        }>;
+      };
+
+      const converted: SelectedIngredient[] = estimated
+        .map((item) => {
+          const ing = ingredients.find((i) => i.id === item.ingredientId);
+          if (!ing) return null;
+          return {
+            ...ing,
+            quantity: item.quantity,
+            defaultRange: [ing.sliderMin, ing.sliderMax] as const,
+            unit: "g",
+          };
+        })
+        .filter((x): x is SelectedIngredient => x !== null);
+
+      if (converted.length > 0) {
+        setSelectedIngredients(converted);
+      }
+    } catch {
+      // Ignore malformed sessionStorage data
+    }
+  }, [ingredients]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
