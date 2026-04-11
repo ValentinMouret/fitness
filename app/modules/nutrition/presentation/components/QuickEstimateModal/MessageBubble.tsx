@@ -13,7 +13,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       <Box
         px="3"
         py="2"
-        className={`message-bubble ${isUser ? "message-bubble--user" : "message-bubble--assistant"}`}
+        className={`quick-estimate-modal__bubble ${isUser ? "quick-estimate-modal__bubble--user" : "quick-estimate-modal__bubble--assistant"}`}
       >
         <Text size="2">{message.content}</Text>
       </Box>

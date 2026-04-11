@@ -1,10 +1,12 @@
 import { z } from "zod";
 import { ingredientCategories, textureCategories } from "./ingredient";
 
-export interface EstimationMessage {
-  readonly role: "user" | "assistant";
-  readonly content: string;
-}
+export const EstimationMessageSchema = z.object({
+  role: z.enum(["user", "assistant"]),
+  content: z.string().min(1),
+});
+
+export type EstimationMessage = z.infer<typeof EstimationMessageSchema>;
 
 export const EstimatedIngredientSchema = z.object({
   name: z.string().min(1),
