@@ -2,6 +2,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   DotsHorizontalIcon,
+  MagicWandIcon,
   PlusIcon,
 } from "@radix-ui/react-icons";
 import {
@@ -44,6 +45,7 @@ import {
   createTemplateSelectionViewModel,
   EmptyMealCard,
   MealCard,
+  QuickEstimateModal,
   TemplateSelectionModal,
 } from "~/modules/nutrition/presentation";
 import { addOneDay, removeOneDay, toDateString, today } from "~/time";
@@ -176,6 +178,7 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
     id: string;
     category: MealCategory;
   } | null>(null);
+  const [showQuickEstimate, setShowQuickEstimate] = useState(false);
   const fetcher = useFetcher();
 
   const templateSelectionViewModel = currentMealType
@@ -302,6 +305,16 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
       <PageHeader
         title={title}
         backTo="/nutrition"
+        customRight={
+          <Button
+            variant="soft"
+            size="3"
+            onClick={() => setShowQuickEstimate(true)}
+          >
+            <MagicWandIcon />
+            Estimate
+          </Button>
+        }
         primaryAction={{
           label: "Today",
           onClick: goToToday,
@@ -455,6 +468,12 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
         meal={saveAsTemplateMeal}
         onClose={() => setSaveAsTemplateMeal(null)}
         fetcher={fetcher}
+      />
+
+      <QuickEstimateModal
+        isOpen={showQuickEstimate}
+        onClose={() => setShowQuickEstimate(false)}
+        currentDate={parsedCurrentDate}
       />
     </>
   );
