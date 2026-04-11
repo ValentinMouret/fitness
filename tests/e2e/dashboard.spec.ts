@@ -6,18 +6,22 @@ test.describe("Dashboard Page", () => {
     await login(page);
   });
 
-  test("should display dashboard components", async ({ page }) => {
+  test("should display stat banner with calories, protein, and weight", async ({
+    page,
+  }) => {
     await expect(
       page.getByRole("heading", { name: "Today", exact: true }),
     ).toBeVisible();
 
-    await expect(
-      page.getByText("Weight", { exact: true }).first(),
-    ).toBeVisible();
+    await expect(page.getByText("kcal", { exact: true })).toBeVisible();
+    await expect(page.getByText("protein g", { exact: true })).toBeVisible();
+    await expect(page.getByText("kg", { exact: true })).toBeVisible();
+    await expect(page.getByText("kcal remaining")).toBeVisible();
+    await expect(page.getByText("of daily goal")).toBeVisible();
+  });
 
-    await expect(
-      page.getByText("Calories", { exact: true }).first(),
-    ).toBeVisible();
+  test("should display weight trend section", async ({ page }) => {
+    await expect(page.getByText("Weight trend")).toBeVisible();
   });
 
   test("should allow navigating to nutrition from dashboard", async ({
