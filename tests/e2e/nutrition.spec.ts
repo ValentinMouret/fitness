@@ -7,11 +7,8 @@ test.describe("Nutrition Page", () => {
     await page.goto("/nutrition");
   });
 
-  test("should display nutrition page", async ({ page }) => {
-    await expect(
-      page.getByRole("heading", { name: "Nutrition" }),
-    ).toBeVisible();
-    await expect(page.getByText("Daily Intake")).toBeVisible();
+  test("should display calorie ring and meals", async ({ page }) => {
+    await expect(page.getByText("kcal target")).toBeVisible();
     await expect(page.getByText("Meals")).toBeVisible();
   });
 
