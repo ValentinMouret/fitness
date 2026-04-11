@@ -11,6 +11,7 @@ export default [
   route("habits/preview", "routes/habits/preview.tsx"),
   route("habits/preview-create", "routes/habits/preview-create.tsx"),
   route("habits/preview-week", "routes/habits/preview-week.tsx"),
+
   route("api/quick-actions", "routes/api/quick-actions.ts"),
   route("api/exercises/history", "routes/api/exercises/history.ts"),
 

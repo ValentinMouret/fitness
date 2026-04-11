@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Progress, Text } from "@radix-ui/themes";
+import { Box, Button, Flex, Text } from "@radix-ui/themes";
 import { Form, Link, useFetcher } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -79,59 +79,104 @@ export default function DashboardPage({
 }: Route.ComponentProps) {
   const weightFetcher = useFetcher();
 
+  const habitsTotal = todayHabits.length;
+  const habitsPct =
+    habitsTotal > 0 ? (completedHabitsCount / habitsTotal) * 100 : 0;
+  const calPct = Math.min(nutrition.calories / nutrition.calorieTarget, 1);
+  const remaining = Math.max(
+    0,
+    Math.round(nutrition.calorieTarget - nutrition.calories),
+  );
+
   return (
-    <Box>
-      {/* Active workout banner */}
+    <Box className="dashboard">
       {inProgressWorkout && (
         <Link
           to={`/workouts/${inProgressWorkout.id}`}
-          className="dashboard__active-workout-link"
+          className="dashboard__workout-strip"
         >
-          <Flex
-            justify="between"
-            align="center"
-            px="5"
-            py="4"
-            mb="6"
-            className="dashboard__active-workout"
-          >
-            <Box>
-              <Text
-                as="div"
-                size="3"
-                weight="bold"
-                className="dashboard__active-workout-title"
-              >
-                {inProgressWorkout.name}
-              </Text>
-              <Text size="2" className="dashboard__active-workout-subtitle">
-                {formatStartedAgo(
-                  Math.floor(
-                    (Date.now() - inProgressWorkout.start.getTime()) / 60000,
-                  ),
-                )}
-              </Text>
-            </Box>
-            <Button
-              variant="outline"
-              size="2"
-              className="dashboard__active-workout-button"
-            >
-              Continue
-            </Button>
-          </Flex>
+          <Box>
+            <Text as="div" className="dashboard__workout-name">
+              {inProgressWorkout.name}
+            </Text>
+            <Text as="div" className="dashboard__workout-time">
+              {formatStartedAgo(
+                Math.floor(
+                  (Date.now() - inProgressWorkout.start.getTime()) / 60000,
+                ),
+              )}
+            </Text>
+          </Box>
+          <span className="dashboard__workout-btn">Continue</span>
         </Link>
       )}
 
-      {/* Habits section */}
-      {todayHabits.length > 0 && (
-        <Box mb="8">
-          <Flex justify="between" align="baseline">
-            <p className="section-label">Habits</p>
-            <Text size="2" className="dashboard__muted">
-              {completedHabitsCount}/{todayHabits.length}
+      {/* Stat banner */}
+      <Box>
+        <Flex className="dashboard__stat-banner">
+          <Box className="dashboard__stat-cell">
+            <Text as="div" className="dashboard__stat-value">
+              {Math.round(nutrition.calories)}
             </Text>
+            <Text as="div" className="dashboard__stat-label">
+              kcal
+            </Text>
+            <Box className="dashboard__stat-progress">
+              <Box
+                className="dashboard__stat-progress-fill"
+                style={{ width: `${calPct * 100}%` }}
+              />
+            </Box>
+          </Box>
+
+          <Box className="dashboard__stat-divider" />
+
+          <Box className="dashboard__stat-cell">
+            <Text as="div" className="dashboard__stat-value">
+              {Math.round(nutrition.protein)}
+            </Text>
+            <Text as="div" className="dashboard__stat-label">
+              protein g
+            </Text>
+          </Box>
+
+          <Box className="dashboard__stat-divider" />
+
+          <Box className="dashboard__stat-cell">
+            <Text as="div" className="dashboard__stat-value">
+              {lastWeight ? lastWeight.value : "—"}
+            </Text>
+            <Text as="div" className="dashboard__stat-label">
+              {weight.unit}
+            </Text>
+          </Box>
+        </Flex>
+
+        <Flex className="dashboard__stat-subtitle">
+          <Text size="1">{remaining} kcal remaining</Text>
+          <Text size="1">{Math.round(calPct * 100)}% of daily goal</Text>
+        </Flex>
+      </Box>
+
+      {/* Habits */}
+      {habitsTotal > 0 && (
+        <Box className="dashboard__card dashboard__card--habits">
+          <Flex className="dashboard__habits-header">
+            <p className="section-label">Habits</p>
+            <span className="dashboard__habits-fraction">
+              {completedHabitsCount}
+              <span className="dashboard__habits-fraction-total">
+                /{habitsTotal}
+              </span>
+            </span>
           </Flex>
+
+          <Box className="dashboard__habits-progress">
+            <Box
+              className="dashboard__habits-progress-fill"
+              style={{ width: `${habitsPct}%` }}
+            />
+          </Box>
 
           <Box>
             {todayHabits.map((habit, i) => (
@@ -152,100 +197,49 @@ export default function DashboardPage({
         </Box>
       )}
 
-      {/* Weight section */}
-      <Box mb="8">
-        <p className="section-label">Weight</p>
-
-        {loggedToday && lastWeight ? (
-          <>
-            <span className="display-number display-number--xl">
-              {lastWeight.value}
-              <span className="display-number--unit">{weight.unit}</span>
-            </span>
+      {/* Weight trend */}
+      <Box className="dashboard__card dashboard__card--weight">
+        <Flex className="dashboard__weight-header">
+          <Box className="dashboard__weight-label-row">
+            <p className="section-label">Weight trend</p>
             {streak > 0 && (
-              <Text as="p" size="2" mt="2" className="dashboard__muted">
-                {streak} day streak
+              <Text size="1" className="dashboard__weight-streak">
+                {streak}d streak
               </Text>
             )}
-          </>
-        ) : (
-          <weightFetcher.Form method="post">
-            <Flex gap="2" align="center">
-              <Box className="dashboard__weight-input">
-                <NumberInput
-                  name="weight"
-                  min={0}
-                  placeholder={lastWeight?.value?.toString() ?? "kg"}
-                  size="2"
-                />
-              </Box>
-              <Button
-                type="submit"
+          </Box>
+        </Flex>
+
+        {!loggedToday && (
+          <weightFetcher.Form
+            method="post"
+            className="dashboard__weight-log-form"
+          >
+            <Box className="dashboard__weight-input">
+              <NumberInput
+                name="weight"
+                min={0}
+                placeholder={lastWeight?.value?.toString() ?? "kg"}
                 size="2"
-                disabled={weightFetcher.state !== "idle"}
-              >
-                Log
-              </Button>
-            </Flex>
+              />
+            </Box>
+            <Button
+              type="submit"
+              size="2"
+              disabled={weightFetcher.state !== "idle"}
+            >
+              Log
+            </Button>
           </weightFetcher.Form>
         )}
 
         {weightData.length > 0 && (
-          <Box mt="4">
-            <MeasurementChart
-              data={weightData}
-              unit={weight.unit}
-              measurementName="weight"
-            />
-          </Box>
+          <MeasurementChart
+            data={weightData}
+            unit={weight.unit}
+            measurementName="weight"
+          />
         )}
-      </Box>
-
-      {/* Calories section */}
-      <Box mb="6">
-        <p className="section-label">Calories</p>
-
-        <Flex gap="6" mb="3">
-          <Box>
-            <span className="display-number display-number--lg">
-              {Math.round(nutrition.calories)}
-            </span>
-            <Text as="p" size="1" className="dashboard__muted">
-              consumed
-            </Text>
-          </Box>
-          <Box>
-            <span className="display-number display-number--lg">
-              {Math.round(nutrition.calorieTarget - nutrition.calories)}
-            </span>
-            <Text as="p" size="1" className="dashboard__muted">
-              remaining
-            </Text>
-          </Box>
-          <Box>
-            <span className="display-number display-number--lg">
-              {Math.round(nutrition.protein)}
-            </span>
-            <Text as="p" size="1" className="dashboard__muted">
-              protein (g)
-            </Text>
-          </Box>
-        </Flex>
-
-        <Progress
-          value={Math.min(
-            (nutrition.calories / nutrition.calorieTarget) * 100,
-            100,
-          )}
-        />
-        <Flex justify="between" mt="1">
-          <Text size="1" className="dashboard__muted">
-            {Math.round((nutrition.calories / nutrition.calorieTarget) * 100)}%
-          </Text>
-          <Text size="1" className="dashboard__muted">
-            {nutrition.calorieTarget} kcal goal
-          </Text>
-        </Flex>
       </Box>
     </Box>
   );

@@ -42,6 +42,7 @@ export default defineConfig({
     exclude: [
       "**/node_modules/**",
       ".direnv/**",
+      ".worktrees/**",
       "tests/e2e/**",
       "**/*.integration.test.*",
     ],

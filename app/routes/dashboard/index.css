@@ -1,31 +1,209 @@
-.dashboard__active-workout-link {
-  text-decoration: none;
+/* =================================
+   Dashboard
+   ================================= */
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.dashboard__active-workout {
+/* ----- Active Workout Strip ----- */
+
+.dashboard__workout-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
   background: var(--brand-coral);
-  border-radius: 16px;
+  border-radius: var(--radius-3);
+  color: white;
+  text-decoration: none;
+  animation: pulse-glow 2.5s ease-in-out infinite;
+}
+
+.dashboard__workout-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: white;
 }
 
-.dashboard__active-workout-title {
-  display: block;
-  color: white;
+.dashboard__workout-time {
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.75);
 }
 
-.dashboard__active-workout-subtitle {
-  color: rgba(255, 255, 255, 0.8);
+.dashboard__workout-btn {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brand-coral);
+  background: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
-.dashboard__active-workout-button {
-  color: white;
-  border-color: rgba(255, 255, 255, 0.5);
+/* ----- Stat Banner ----- */
+
+.dashboard__stat-banner {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--gray-4);
 }
 
-.dashboard__muted {
+.dashboard__stat-cell {
+  flex: 1;
+  text-align: center;
+}
+
+.dashboard__stat-divider {
+  width: 1px;
+  background: var(--gray-4);
+  margin: 4px 0;
+}
+
+.dashboard__stat-value {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--brand-text);
+}
+
+.dashboard__stat-label {
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand-text-secondary);
+  margin-top: 4px;
+}
+
+.dashboard__stat-progress {
+  width: 48px;
+  height: 3px;
+  background: var(--gray-4);
+  border-radius: 2px;
+  margin: 8px auto 0;
+  overflow: hidden;
+}
+
+.dashboard__stat-progress-fill {
+  height: 100%;
+  background: var(--brand-coral);
+  border-radius: 2px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard__stat-subtitle {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 0.75rem;
   color: var(--brand-text-secondary);
 }
 
+/* ----- Card ----- */
+
+.dashboard__card {
+  padding: var(--space-card);
+  background: var(--brand-surface);
+  border: 1px solid var(--gray-4);
+  border-radius: var(--radius-3);
+  box-shadow: var(--shadow-warm-sm);
+  opacity: 0;
+  animation: fadeSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.dashboard__card--habits {
+  animation-delay: 0.05s;
+}
+
+.dashboard__card--weight {
+  animation-delay: 0.1s;
+}
+
+/* ----- Habits ----- */
+
+.dashboard__habits-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+.dashboard__habits-fraction {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--brand-text);
+}
+
+.dashboard__habits-fraction-total {
+  font-size: 0.9375rem;
+  color: var(--brand-text-secondary);
+}
+
+.dashboard__habits-progress {
+  height: 4px;
+  background: var(--gray-4);
+  border-radius: 2px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.dashboard__habits-progress-fill {
+  height: 100%;
+  background: var(--brand-coral);
+  border-radius: 2px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ----- Weight Trend ----- */
+
+.dashboard__weight-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.dashboard__weight-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard__weight-label-row .section-label {
+  margin-bottom: 0;
+}
+
+.dashboard__weight-streak {
+  font-size: 0.6875rem;
+  color: var(--brand-text-secondary);
+}
+
+.dashboard__weight-log-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .dashboard__weight-input {
-  width: 100px;
+  width: 90px;
+}
+
+/* ----- Mobile ----- */
+
+@media (max-width: 640px) {
+  .dashboard__stat-value {
+    font-size: 1.75rem;
+  }
 }
