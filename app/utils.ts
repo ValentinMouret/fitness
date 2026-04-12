@@ -37,3 +37,13 @@ export function isClient(): boolean {
 export function isServer(): boolean {
   return !isClient();
 }
+
+/**
+ * Validates that a path is safe for redirection to prevent open redirect attacks.
+ * A safe path must start with a single '/' and not be followed by another '/' or '\'.
+ */
+export function isSafePath(path: string): boolean {
+  return (
+    path.startsWith("/") && !path.startsWith("//") && !path.startsWith("/\\")
+  );
+}

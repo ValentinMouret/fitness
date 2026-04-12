@@ -1,6 +1,7 @@
 import { redirect } from "react-router";
 import type { User } from "~/auth";
 import { authenticate } from "~/auth.server";
+import { isSafePath } from "~/utils";
 import {
   SESSION_COOKIE_MAX_AGE_SECONDS,
   SESSION_COOKIE_NAME,
@@ -31,7 +32,9 @@ export function loginWithCredentials(input: {
 
   if (authenticate(username, password)) {
     const user: User = { username };
-    return redirect(redirectTo || "/dashboard", {
+    const safeRedirectTo =
+      redirectTo && isSafePath(redirectTo) ? redirectTo : "/dashboard";
+    return redirect(safeRedirectTo, {
       headers: {
         "Set-Cookie": buildSessionCookie(user),
       },
