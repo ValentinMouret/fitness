@@ -1,4 +1,5 @@
 import { redirect } from "react-router";
+import { isSafePath } from "~/utils";
 import type { CreateAIIngredientInput } from "~/modules/nutrition/domain/ingredient";
 import type {
   CreateMealTemplateInput,
@@ -144,7 +145,11 @@ export async function saveMealLog(input: {
       throw new Error("Failed to save meal");
     }
 
-    return redirect(input.returnTo || "/nutrition/meals");
+    const safeReturnTo =
+      input.returnTo && isSafePath(input.returnTo)
+        ? input.returnTo
+        : "/nutrition/meals";
+    return redirect(safeReturnTo);
   } catch (_error) {
     throw new Error("Invalid meal data");
   }
