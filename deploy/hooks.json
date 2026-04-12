@@ -9,7 +9,7 @@
         {
           "match": {
             "type": "payload-hmac-sha256",
-            "secret": "{{ getenv \"MAIN_DEPLOY_SECRET\" }}",
+            "secret": "{{ getenv `MAIN_DEPLOY_SECRET` }}",
             "parameter": {
               "source": "header",
               "name": "X-Hub-Signature-256"
@@ -51,7 +51,7 @@
     "trigger-rule": {
       "match": {
         "type": "payload-hmac-sha256",
-        "secret": "{{ getenv \"REVIEW_APP_SECRET\" }}",
+        "secret": "{{ getenv `REVIEW_APP_SECRET` }}",
         "parameter": {
           "source": "header",
           "name": "X-Review-App-Signature"
@@ -77,7 +77,7 @@
     "trigger-rule": {
       "match": {
         "type": "payload-hmac-sha256",
-        "secret": "{{ getenv \"REVIEW_APP_SECRET\" }}",
+        "secret": "{{ getenv `REVIEW_APP_SECRET` }}",
         "parameter": {
           "source": "header",
           "name": "X-Review-App-Signature"
