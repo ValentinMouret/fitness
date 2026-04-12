@@ -199,7 +199,6 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
 
   const previousDay = () => navigateToDate(removeOneDay(parsedCurrentDate));
   const nextDay = () => navigateToDate(addOneDay(parsedCurrentDate));
-  const goToToday = () => navigateToDate(today());
 
   const getMealForType = (mealType: MealCategory) => {
     return dailySummary.meals[mealType];
@@ -315,11 +314,6 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
             Estimate
           </Button>
         }
-        primaryAction={{
-          label: "Today",
-          onClick: goToToday,
-          type: "button",
-        }}
       />
 
       <Card size="3" mb="6">
