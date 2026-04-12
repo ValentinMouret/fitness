@@ -18,7 +18,7 @@ const STEPS = [
   { q: "What's the habit?", short: "Name" },
   { q: "Who does this make you?", short: "Identity" },
   { q: "When will you do it?", short: "Schedule" },
-  { q: "Your safety net", short: "Safety" },
+  { q: "Your safety net", short: "Minimum" },
   { q: "Make it yours", short: "Color" },
 ] as const;
 
