@@ -1,11 +1,11 @@
 import { CheckIcon } from "@radix-ui/react-icons";
-import { Button, Flex, Text } from "@radix-ui/themes";
+import { Button, Flex, Text, Tooltip } from "@radix-ui/themes";
 import "./HabitCheckbox.css";
 
 interface HabitCheckboxProps {
   readonly habitId: string;
   readonly habitName: string;
-  readonly habitDescription?: string;
+  readonly habitDescription?: string | null;
   readonly isCompleted: boolean;
   readonly isSubmitting?: boolean;
   readonly intent?: string;
@@ -15,11 +15,14 @@ interface HabitCheckboxProps {
 export default function HabitCheckbox({
   habitId,
   habitName,
+  habitDescription,
   isCompleted,
   isSubmitting = false,
   intent = "toggle-habit",
   streak = 0,
 }: HabitCheckboxProps) {
+  const label = `${isCompleted ? "Unmark" : "Mark"} ${habitName} as completed`;
+
   return (
     <Flex align="center" gap="3" py="3">
       <input type="hidden" name="intent" value={intent} />
@@ -33,17 +36,21 @@ export default function HabitCheckbox({
         size="2"
         className="habit-checkbox__button"
         disabled={isSubmitting}
+        aria-label={label}
       >
         {isCompleted && <CheckIcon />}
       </Button>
 
-      <Text
-        size="3"
-        weight="medium"
-        className={`habit-checkbox__label ${isCompleted ? "habit-checkbox__label--completed" : ""}`}
-      >
-        {habitName}
-      </Text>
+      <Tooltip content={habitDescription}>
+        <Text
+          size="3"
+          weight="medium"
+          className={`habit-checkbox__label ${isCompleted ? "habit-checkbox__label--completed" : ""}`}
+          style={{ cursor: habitDescription ? "help" : "default" }}
+        >
+          {habitName}
+        </Text>
+      </Tooltip>
 
       {streak > 0 && (
         <Text size="2" className="habit-checkbox__streak">
