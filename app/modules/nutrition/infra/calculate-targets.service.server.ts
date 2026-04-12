@@ -31,7 +31,12 @@ export function calculateTargets(input: {
   const target = Math.round((1 + input.delta / 100) * maintenance);
 
   return {
-    ...input,
+    age: input.age,
+    height: input.height,
+    weight: input.weight,
+    activity: input.activity,
+    delta: input.delta,
+    gender: input.gender,
     maintenance,
     target,
     macrosSplit: NutritionCalculationService.macrosSplit({
