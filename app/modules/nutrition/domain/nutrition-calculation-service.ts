@@ -1,10 +1,13 @@
 import { macrosEnergyPerGram } from "./macros";
 
+export type Gender = "male" | "female";
+
 interface MiflinStJeorInput {
   age: number;
   height: number;
   activity: number;
   weight: number;
+  gender?: Gender;
 }
 
 interface MacrosSplitInput {
@@ -19,8 +22,15 @@ export interface MacrosSplit {
 }
 
 export const NutritionCalculationService = {
-  mifflinStJeor({ age, height, activity, weight }: MiflinStJeorInput): number {
-    return activity * (10 * weight + 6.5 * height - 5 * age + 5);
+  mifflinStJeor({
+    age,
+    height,
+    activity,
+    weight,
+    gender = "male",
+  }: MiflinStJeorInput): number {
+    const s = gender === "male" ? 5 : -161;
+    return activity * (10 * weight + 6.5 * height - 5 * age + s);
   },
   macrosSplit({ weight, calories }: MacrosSplitInput): MacrosSplit {
     const protein = weight * 1.8;
