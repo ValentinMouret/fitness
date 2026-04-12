@@ -30,6 +30,7 @@ export default function MaintenanceForm({
   gender,
 }: Props) {
   const [deltaValue, setDeltaValue] = useState(delta ?? 0);
+  const [genderValue, setGenderValue] = useState<Gender>(gender ?? "male");
 
   return (
     <Card size="3" mb="6">
@@ -43,9 +44,10 @@ export default function MaintenanceForm({
             <Text as="label" size="2" weight="medium">
               Gender
             </Text>
+            <input type="hidden" name="gender" value={genderValue} />
             <SegmentedControl.Root
-              name="gender"
-              defaultValue={gender ?? "male"}
+              value={genderValue}
+              onValueChange={(value) => setGenderValue(value as Gender)}
             >
               <SegmentedControl.Item value="male">Male</SegmentedControl.Item>
               <SegmentedControl.Item value="female">
