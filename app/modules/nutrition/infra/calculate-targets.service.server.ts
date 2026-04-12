@@ -7,7 +7,10 @@ import {
 import { Target } from "~/modules/core/domain/target";
 import { TargetService } from "~/modules/core/infra/measurement-service";
 import { Activity } from "~/modules/nutrition/domain/activity";
-import { NutritionCalculationService } from "~/modules/nutrition/domain/nutrition-calculation-service";
+import {
+  type Gender,
+  NutritionCalculationService,
+} from "~/modules/nutrition/domain/nutrition-calculation-service";
 
 export function calculateTargets(input: {
   readonly age: number;
@@ -15,12 +18,14 @@ export function calculateTargets(input: {
   readonly weight: number;
   readonly activity: number;
   readonly delta: number;
+  readonly gender: Gender;
 }) {
   const maintenance = NutritionCalculationService.mifflinStJeor({
     age: Age.years(input.age),
     height: Height.cm(input.height),
     weight: Weight.kg(input.weight),
     activity: Activity.ratio(input.activity),
+    gender: input.gender,
   });
 
   const target = Math.round((1 + input.delta / 100) * maintenance);
@@ -42,12 +47,14 @@ export async function saveNutritionTarget(input: {
   readonly weight: number;
   readonly activity: number;
   readonly delta: number;
+  readonly gender: Gender;
 }) {
   const maintenance = NutritionCalculationService.mifflinStJeor({
     age: Age.years(input.age),
     height: Height.cm(input.height),
     weight: Weight.kg(input.weight),
     activity: Activity.ratio(input.activity),
+    gender: input.gender,
   });
 
   const targetIntake = Math.round((1 + input.delta / 100) * maintenance);

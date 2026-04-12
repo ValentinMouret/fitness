@@ -38,6 +38,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   const weight = coerceInt(expect(searchParams.get("weight")));
   const activity = coerceFloat(expect(searchParams.get("activity")));
   const delta = coerceInt(expect(searchParams.get("delta")));
+  const gender = z
+    .enum(["male", "female"])
+    .catch("male")
+    .parse(searchParams.get("gender"));
 
   return Result.combine([age, height, weight, activity, delta])
     .map(([a, h, w, act, d]) =>
@@ -47,6 +51,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         weight: w,
         activity: act,
         delta: d,
+        gender,
       }),
     )
     .unwrapOr(undefined);
@@ -75,6 +80,7 @@ export default function CalculateTargetsPage({
         weight={loaderData?.weight}
         activity={loaderData?.activity}
         delta={loaderData?.delta}
+        gender={loaderData?.gender}
       />
 
       {loaderData?.maintenance && (
@@ -168,6 +174,13 @@ export default function CalculateTargetsPage({
                 readOnly
                 hidden
               />
+              <input
+                name="gender"
+                type="text"
+                defaultValue={loaderData?.gender ?? "male"}
+                readOnly
+                hidden
+              />
               <Button type={"submit"} size={"3"} mt={"2"}>
                 Save plan
               </Button>
@@ -207,6 +220,7 @@ export async function action({ request }: Route.ActionArgs) {
     weight: formNumber(z.number().int().min(1)),
     activity: formNumber(z.number().min(0)),
     delta: formNumber(z.number().int()),
+    gender: z.enum(["male", "female"]),
   });
 
   const parsed = schema.parse(form);

@@ -1,7 +1,16 @@
-import { Button, Card, Flex, Heading, Slider, Text } from "@radix-ui/themes";
+import {
+  Button,
+  Card,
+  Flex,
+  Heading,
+  SegmentedControl,
+  Slider,
+  Text,
+} from "@radix-ui/themes";
 import { useState } from "react";
 import { Form } from "react-router";
 import { NumberInput } from "~/components/NumberInput";
+import type { Gender } from "~/modules/nutrition/domain/nutrition-calculation-service";
 
 interface Props {
   readonly age?: number;
@@ -9,6 +18,7 @@ interface Props {
   readonly weight?: number;
   readonly activity?: number;
   readonly delta?: number;
+  readonly gender?: Gender;
 }
 
 export default function MaintenanceForm({
@@ -17,6 +27,7 @@ export default function MaintenanceForm({
   weight,
   activity,
   delta,
+  gender,
 }: Props) {
   const [deltaValue, setDeltaValue] = useState(delta ?? 0);
 
@@ -28,6 +39,21 @@ export default function MaintenanceForm({
 
       <Form>
         <Flex direction="column" gap="4">
+          <Flex direction="column" gap="2">
+            <Text as="label" size="2" weight="medium">
+              Gender
+            </Text>
+            <SegmentedControl.Root
+              name="gender"
+              defaultValue={gender ?? "male"}
+            >
+              <SegmentedControl.Item value="male">Male</SegmentedControl.Item>
+              <SegmentedControl.Item value="female">
+                Female
+              </SegmentedControl.Item>
+            </SegmentedControl.Root>
+          </Flex>
+
           <Flex direction="column" gap="2">
             <Text as="label" size="2" weight="medium">
               Age
