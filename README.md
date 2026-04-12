@@ -1,4 +1,8 @@
 # Fitness
+
+## Infrastructure & DNS
+- **DNS Provider**: Cloudflare
+
 ## Data model
 This is soloware, made only for me. As such, there is no need to have a `user_id` in the data model.
 
