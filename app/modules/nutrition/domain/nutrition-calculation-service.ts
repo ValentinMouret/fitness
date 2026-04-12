@@ -7,7 +7,7 @@ interface MiflinStJeorInput {
   height: number;
   activity: number;
   weight: number;
-  gender?: Gender;
+  gender: Gender;
 }
 
 interface MacrosSplitInput {
@@ -27,7 +27,7 @@ export const NutritionCalculationService = {
     height,
     activity,
     weight,
-    gender = "male",
+    gender,
   }: MiflinStJeorInput): number {
     const s = gender === "male" ? 5 : -161;
     return activity * (10 * weight + 6.5 * height - 5 * age + s);
