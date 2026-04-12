@@ -72,6 +72,7 @@ export default function ExerciseCard({
               size="1"
               asChild
               onClick={(event) => event.stopPropagation()}
+              aria-label={`Edit ${exercise.name}`}
             >
               <Link to={`/workouts/exercises/${exercise.id}/edit`}>
                 <Pencil1Icon />
@@ -85,6 +86,7 @@ export default function ExerciseCard({
                 event.stopPropagation();
                 setShowDeleteDialog(true);
               }}
+              aria-label={`Delete ${exercise.name}`}
             >
               <TrashIcon />
             </IconButton>
@@ -92,6 +94,8 @@ export default function ExerciseCard({
               variant="ghost"
               size="1"
               className={`rotating-chevron ${isExpanded ? "rotated" : ""}`}
+              aria-label={isExpanded ? "Collapse" : "Expand"}
+              aria-expanded={isExpanded}
             >
               <ChevronDownIcon />
             </IconButton>

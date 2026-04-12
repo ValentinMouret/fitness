@@ -226,7 +226,7 @@ export default function DashboardPage({
             <Button
               type="submit"
               size="2"
-              disabled={weightFetcher.state !== "idle"}
+              loading={weightFetcher.state !== "idle"}
             >
               Log
             </Button>
