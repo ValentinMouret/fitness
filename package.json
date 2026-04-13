@@ -11,7 +11,7 @@
     "db:check-drift": "bash scripts/check-migrations.sh",
     "db:dev": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx app/db/migrate.ts",
+    "db:migrate": "bun app/db/migrate.ts",
     "db:seed": "tsx app/db/index.ts",
     "dev": "react-router dev",
     "check": "biome check --write && oxlint -A all -D no-restricted-imports -c .oxlintrc.jsonc app/modules",

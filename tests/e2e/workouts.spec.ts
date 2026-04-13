@@ -1,10 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { login } from "./helpers/auth";
-import { ensureExerciseExists } from "./helpers/exercise";
 
 test.describe("Workouts Page", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
     await page.goto("/workouts");
   });
 
@@ -48,7 +45,6 @@ test.describe("Workouts Page", () => {
 
 test.describe("Start Workout Dialog", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
     await page.goto("/workouts");
   });
 
@@ -76,7 +72,6 @@ test.describe("Start Workout Dialog", () => {
 
 test.describe("Active Workout Session", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
     await page.goto("/workouts");
     await page.getByRole("button", { name: "Start Workout" }).click();
     await page.getByText("Start Fresh").click();
@@ -111,8 +106,6 @@ test.describe("Active Workout Session", () => {
 
 test.describe("Workout Session - Exercise Management", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
-    await ensureExerciseExists(page);
     await page.goto("/workouts");
     await page.getByRole("button", { name: "Start Workout" }).click();
     await page.getByText("Start Fresh").click();
@@ -141,8 +134,6 @@ test.describe("Workout Session - Exercise Management", () => {
 
 test.describe("Workout Session - Set Management", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
-    await ensureExerciseExists(page);
     await page.goto("/workouts");
     await page.getByRole("button", { name: "Start Workout" }).click();
     await page.getByText("Start Fresh").click();
@@ -196,8 +187,6 @@ test.describe("Workout Session - Set Management", () => {
 
 test.describe("Workout Completion Flow", () => {
   test("should complete a workout with exercises", async ({ page }) => {
-    await login(page);
-    await ensureExerciseExists(page);
     await page.goto("/workouts");
 
     await page.getByRole("button", { name: "Start Workout" }).click();
@@ -227,7 +216,6 @@ test.describe("Workout Completion Flow", () => {
   });
 
   test("should complete empty workout and show in list", async ({ page }) => {
-    await login(page);
     await page.goto("/workouts");
 
     await page.getByRole("button", { name: "Start Workout" }).click();
@@ -246,7 +234,6 @@ test.describe("Workout Completion Flow", () => {
   });
 
   test("should dismiss completion modal with Continue", async ({ page }) => {
-    await login(page);
     await page.goto("/workouts");
 
     await page.getByRole("button", { name: "Start Workout" }).click();
@@ -268,7 +255,6 @@ test.describe("Workout Completion Flow", () => {
 
 test.describe("Workout Cancel Flow", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
     await page.goto("/workouts");
     await page.getByRole("button", { name: "Start Workout" }).click();
     await page.getByText("Start Fresh").click();
@@ -303,7 +289,6 @@ test.describe("Workout Cancel Flow", () => {
 
 test.describe("Exercises Page", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
     await page.goto("/workouts/exercises");
   });
 
@@ -330,7 +315,6 @@ test.describe("Exercises Page", () => {
 
 test.describe("Create Exercise Page", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
     await page.goto("/workouts/exercises/create");
   });
 

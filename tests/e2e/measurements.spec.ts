@@ -1,9 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { login } from "./helpers/auth";
 
 test.describe("Measurements Page", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
     await page.goto("/measurements");
   });
 
@@ -20,9 +18,11 @@ test.describe("Measurements Page", () => {
     const emptyState = page.getByText("No measurements configured");
     const grid = page.locator(".rt-Grid");
 
-    // One of them should be visible
-    const either = (await emptyState.isVisible()) || (await grid.isVisible());
-    expect(either).toBeTruthy();
+    await expect
+      .poll(
+        async () => (await emptyState.isVisible()) || (await grid.isVisible()),
+      )
+      .toBe(true);
   });
 
   test("should navigate to new measurement page", async ({ page }) => {

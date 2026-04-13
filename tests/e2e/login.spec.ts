@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test.describe("Login Page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/login");
