@@ -1,9 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { login } from "./helpers/auth";
 
 test.describe("Nutrition Page", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
     await page.goto("/nutrition");
   });
 

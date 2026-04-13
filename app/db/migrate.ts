@@ -1,11 +1,12 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { logger } from "~/logger.server";
+import { env } from "../env.server";
+import { logger } from "../logger.server";
 
 async function runMigrations() {
   const db = drizzle({
     connection: {
-      connectionString: process.env.DATABASE_URL,
+      connectionString: env.DATABASE_URL,
     },
   });
 

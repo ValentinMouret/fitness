@@ -146,6 +146,40 @@ reload_caddy() {
   sudo systemctl reload caddy
 }
 
+stop_review_container() {
+  docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+}
+
+prepare_review_database() {
+  drop_review_database
+  create_review_database
+  restore_production_data
+}
+
+wait_for_parallel_jobs() {
+  local first_pid="$1"
+  local first_label="$2"
+  local second_pid="$3"
+  local second_label="$4"
+  local first_status=0
+  local second_status=0
+
+  wait "$first_pid" || first_status=$?
+  wait "$second_pid" || second_status=$?
+
+  if [[ "$first_status" -ne 0 ]]; then
+    log "ERROR: ${first_label} failed"
+  fi
+
+  if [[ "$second_status" -ne 0 ]]; then
+    log "ERROR: ${second_label} failed"
+  fi
+
+  if [[ "$first_status" -ne 0 || "$second_status" -ne 0 ]]; then
+    exit 1
+  fi
+}
+
 deploy() {
   local docker_env_args=(
     -e "DATABASE_URL=${REVIEW_DB_URL}"
@@ -166,14 +200,29 @@ deploy() {
   cleanup_worktree
   git -C "$REPO_DIR" worktree add --force --detach "$WORKTREE_DIR" "$SHA" >/dev/null
 
-  log "Building Docker image"
-  docker build -t "$IMAGE_NAME" "$WORKTREE_DIR" 2>&1 | tee -a "$LOG_FILE"
+  stop_review_container
 
-  docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+  log "Building Docker image and preparing database"
+  (
+    docker build -t "$IMAGE_NAME" "$WORKTREE_DIR" 2>&1 | tee -a "$LOG_FILE"
+  ) &
+  local build_pid=$!
 
-  drop_review_database
-  create_review_database
-  restore_production_data
+  (
+    prepare_review_database
+  ) &
+  local db_pid=$!
+
+  wait_for_parallel_jobs \
+    "$build_pid" "Docker build" \
+    "$db_pid" "Database preparation"
+
+  log "Running migrations"
+  docker run --rm \
+    --network host \
+    "${docker_env_args[@]}" \
+    "$IMAGE_NAME" \
+    bun run db:migrate 2>&1 | tee -a "$LOG_FILE"
 
   log "Starting container on port ${PORT}"
   docker run -d \
@@ -199,9 +248,6 @@ deploy() {
     sleep 1
   done
 
-  log "Running migrations"
-  docker exec "$CONTAINER_NAME" npm run db:migrate 2>&1 | tee -a "$LOG_FILE"
-
   log "Writing Caddy config"
   write_caddy_snippet
   reload_caddy
@@ -210,7 +256,7 @@ deploy() {
 }
 
 destroy() {
-  docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+  stop_review_container
   drop_review_database
   rm -f "$CADDY_SNIPPET" "$PORT_FILE"
   docker rmi "$IMAGE_NAME" >/dev/null 2>&1 || true

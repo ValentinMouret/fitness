@@ -1,9 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { login } from "./helpers/auth";
 
 test.describe("Dashboard Page", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
+    await page.goto("/dashboard");
   });
 
   test("should display stat banner with calories, protein, and weight", async ({

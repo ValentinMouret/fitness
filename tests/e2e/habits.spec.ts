@@ -1,9 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { login } from "./helpers/auth";
 
 test.describe("Create Habit", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
     await page.goto("/habits/new");
   });
 
@@ -77,7 +75,6 @@ test.describe("Create Habit", () => {
 
 test.describe("Weekly Habits", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
     await page.goto("/habits/week");
   });
 

@@ -3,28 +3,29 @@ WORKDIR /app
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
-FROM oven/bun:1-alpine@sha256:819f91180e721ba09e0e5d3eb7fb985832fd23f516e18ddad7e55aaba8100be7 AS build
+FROM deps AS build
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN bun run build
 
-FROM node:22-alpine@sha256:a9cd9bac76cf2396abf14ff0d1c3671a8175fe577ce350e62ab0fc1678050176 AS runtime
+FROM oven/bun:1-alpine@sha256:819f91180e721ba09e0e5d3eb7fb985832fd23f516e18ddad7e55aaba8100be7 AS prod-deps
+WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile --production
+
+FROM oven/bun:1-alpine@sha256:819f91180e721ba09e0e5d3eb7fb985832fd23f516e18ddad7e55aaba8100be7 AS runtime
 WORKDIR /app
 
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+COPY --from=build --chown=bun:bun /app/build ./build
+COPY --from=build --chown=bun:bun /app/package.json ./
+COPY --from=prod-deps --chown=bun:bun /app/node_modules ./node_modules
+COPY --from=build --chown=bun:bun /app/drizzle ./drizzle
+COPY --from=build --chown=bun:bun /app/app/db/migrate.ts ./app/db/migrate.ts
+COPY --from=build --chown=bun:bun /app/app/env.server.ts ./app/env.server.ts
+COPY --from=build --chown=bun:bun /app/app/logger.server.ts ./app/logger.server.ts
 
-COPY --from=build --chown=nodejs:nodejs /app/build ./build
-COPY --from=build --chown=nodejs:nodejs /app/package.json ./
-COPY --from=build --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=build --chown=nodejs:nodejs /app/drizzle ./drizzle
-COPY --from=build --chown=nodejs:nodejs /app/drizzle.config.ts ./
-COPY --from=build --chown=nodejs:nodejs /app/app ./app
-COPY --from=build --chown=nodejs:nodejs /app/tsconfig.json ./
-
-USER nodejs
+USER bun
 
 EXPOSE 5174
 
-CMD ["npm", "run", "start"]
+CMD ["bun", "run", "start"]
