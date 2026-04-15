@@ -1,6 +1,7 @@
 import type { DraggableAttributes } from "@dnd-kit/core";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import {
+  CheckIcon,
   DotsVerticalIcon,
   DragHandleDots2Icon,
   LoopIcon,
@@ -52,6 +53,11 @@ export function WorkoutExerciseCard({
 }: WorkoutExerciseCardProps) {
   const fetcher = useFetcher();
 
+  const isAddingSet =
+    fetcher.state !== "idle" &&
+    fetcher.formData?.get("intent") === "add-set" &&
+    fetcher.formData?.get("exerciseId") === viewModel.exerciseId;
+
   const handleAddSet = () => {
     if (onAddSet) {
       onAddSet(viewModel.exerciseId, viewModel.lastSet);
@@ -93,6 +99,7 @@ export function WorkoutExerciseCard({
             type="button"
             ref={dragHandleRef}
             className="exercise-card__drag-handle"
+            aria-label="Drag to reorder"
             {...dragHandleListeners}
             {...dragHandleAttributes}
           >
@@ -112,7 +119,7 @@ export function WorkoutExerciseCard({
         {viewModel.canRemoveExercise && (
           <DropdownMenu.Root>
             <DropdownMenu.Trigger>
-              <IconButton variant="ghost" size="1">
+              <IconButton variant="ghost" size="1" aria-label="Exercise actions">
                 <DotsVerticalIcon />
               </IconButton>
             </DropdownMenu.Trigger>
@@ -180,6 +187,7 @@ export function WorkoutExerciseCard({
           variant="ghost"
           mt="3"
           disabled={fetcher.state !== "idle"}
+          loading={isAddingSet}
         >
           <PlusIcon /> Add Set
         </Button>
@@ -201,6 +209,17 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
   const [localRpe, setLocalRpe] = useState(set.rpe?.toString() ?? "");
   const updateFetcher = useFetcher();
   const actionFetcher = useFetcher();
+
+  const isCompleting =
+    actionFetcher.state !== "idle" &&
+    actionFetcher.formData?.get("intent") === "update-set" &&
+    actionFetcher.formData?.get("isCompleted") === "true" &&
+    actionFetcher.formData?.get("setNumber") === set.set.toString();
+
+  const isRemoving =
+    actionFetcher.state !== "idle" &&
+    actionFetcher.formData?.get("intent") === "remove-set" &&
+    actionFetcher.formData?.get("setNumber") === set.set.toString();
 
   useEffect(() => {
     setLocalReps(set.reps?.toString() ?? "");
@@ -339,9 +358,11 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
               variant="soft"
               color="green"
               disabled={actionFetcher.state !== "idle"}
+              loading={isCompleting}
+              aria-label={`Complete set ${set.set}`}
               onClick={onCompleteSet}
             >
-              ✓
+              <CheckIcon />
             </IconButton>
           </actionFetcher.Form>
         )}
@@ -357,6 +378,8 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
               variant="ghost"
               color="red"
               disabled={actionFetcher.state !== "idle"}
+              loading={isRemoving}
+              aria-label={`Remove set ${set.set}`}
             >
               <TrashIcon />
             </IconButton>
