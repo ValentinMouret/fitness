@@ -176,7 +176,7 @@ test.describe("Workout Session - Set Management", () => {
     await page.getByPlaceholder("kg").first().fill("80");
     await page.getByPlaceholder("reps").first().fill("8");
 
-    const checkButton = page.locator("button").filter({ hasText: "✓" }).first();
+    const checkButton = page.getByLabel(/Complete set/i).first();
     await checkButton.click();
 
     // Stats should appear after completing a set
@@ -204,7 +204,7 @@ test.describe("Workout Completion Flow", () => {
     await page.getByPlaceholder("reps").first().fill("12");
 
     // Complete the workout
-    await page.getByRole("button", { name: "Complete" }).click();
+    await page.getByRole("button", { name: "Complete", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Complete Workout" }),
     ).toBeVisible();
@@ -223,7 +223,7 @@ test.describe("Workout Completion Flow", () => {
     await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
     const workoutPath = new URL(page.url()).pathname;
 
-    await page.getByRole("button", { name: "Complete" }).click();
+    await page.getByRole("button", { name: "Complete", exact: true }).click();
     await page.getByRole("button", { name: "Finish" }).click();
     await expect(page).toHaveURL(/\/dashboard/);
 
@@ -240,7 +240,7 @@ test.describe("Workout Completion Flow", () => {
     await page.getByText("Start Fresh").click();
     await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
 
-    await page.getByRole("button", { name: "Complete" }).click();
+    await page.getByRole("button", { name: "Complete", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Complete Workout" }),
     ).toBeVisible();
