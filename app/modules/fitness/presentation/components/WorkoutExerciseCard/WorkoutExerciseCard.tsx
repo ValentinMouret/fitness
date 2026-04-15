@@ -34,6 +34,7 @@ interface WorkoutExerciseCardProps {
   readonly onReplaceExercise?: (exerciseId: string) => void;
   readonly onCompleteSet?: () => void;
   readonly onExerciseNameClick?: (exerciseId: string) => void;
+  readonly onMMCClick?: (exerciseId: string) => void;
   readonly dragHandleListeners?: SyntheticListenerMap;
   readonly dragHandleAttributes?: DraggableAttributes;
   readonly dragHandleRef?: (element: HTMLElement | null) => void;
@@ -46,6 +47,7 @@ export function WorkoutExerciseCard({
   onReplaceExercise,
   onCompleteSet,
   onExerciseNameClick,
+  onMMCClick,
   dragHandleListeners,
   dragHandleAttributes,
   dragHandleRef,
@@ -137,12 +139,29 @@ export function WorkoutExerciseCard({
       </Text>
 
       {viewModel.mmcInstructions && (
-        <Callout.Root size="1" color="blue" mt="2">
+        <Callout.Root
+          size="1"
+          color="blue"
+          mt="2"
+          onClick={
+            onMMCClick ? () => onMMCClick(viewModel.exerciseId) : undefined
+          }
+          style={onMMCClick ? { cursor: "pointer" } : undefined}
+        >
           <Callout.Icon>
             <Brain size={16} />
           </Callout.Icon>
           <Callout.Text>{viewModel.mmcInstructions}</Callout.Text>
         </Callout.Root>
+      )}
+      {!viewModel.mmcInstructions && onMMCClick && (
+        <button
+          type="button"
+          className="exercise-card__add-mmc"
+          onClick={() => onMMCClick(viewModel.exerciseId)}
+        >
+          + Add mind-muscle cue
+        </button>
       )}
 
       <div className="set-table">
