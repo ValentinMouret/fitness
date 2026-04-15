@@ -119,7 +119,11 @@ export function WorkoutExerciseCard({
         {viewModel.canRemoveExercise && (
           <DropdownMenu.Root>
             <DropdownMenu.Trigger>
-              <IconButton variant="ghost" size="1" aria-label="Exercise actions">
+              <IconButton
+                variant="ghost"
+                size="1"
+                aria-label="Exercise actions"
+              >
                 <DotsVerticalIcon />
               </IconButton>
             </DropdownMenu.Trigger>
