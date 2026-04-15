@@ -1,6 +1,9 @@
 import { redirect } from "react-router";
 import { type Workout, WorkoutSet } from "~/modules/fitness/domain/workout";
-import { ExerciseRepository } from "~/modules/fitness/infra/repository.server";
+import {
+  ExerciseMuscleGroupsRepository,
+  ExerciseRepository,
+} from "~/modules/fitness/infra/repository.server";
 import {
   WorkoutRepository,
   WorkoutSessionRepository,
@@ -467,4 +470,37 @@ export async function destroyWorkout(input: {
   }
 
   return redirect("/workouts");
+}
+
+export async function updateExerciseMmcInstructions(input: {
+  readonly exerciseId: string;
+  readonly mmcInstructions?: string;
+}): Promise<WorkoutActionResult> {
+  const exerciseResult = await ExerciseMuscleGroupsRepository.findById(
+    input.exerciseId,
+  );
+
+  if (exerciseResult.isErr()) {
+    return { error: "Failed to fetch exercise" };
+  }
+
+  if (!exerciseResult.value) {
+    return { error: "Exercise not found" };
+  }
+
+  const updated = {
+    ...exerciseResult.value,
+    exercise: {
+      ...exerciseResult.value.exercise,
+      mmcInstructions: input.mmcInstructions || undefined,
+    },
+  };
+
+  const result = await ExerciseMuscleGroupsRepository.save(updated);
+
+  if (result.isErr()) {
+    return { error: "Failed to update MMC instructions" };
+  }
+
+  return { success: true };
 }

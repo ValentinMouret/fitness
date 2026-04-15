@@ -47,6 +47,7 @@ import {
   removeSetFromWorkout,
   reorderExercisesInWorkout,
   replaceExerciseInWorkout,
+  updateExerciseMmcInstructions,
   updateExerciseNotes,
   updateSetInWorkout,
   updateWorkoutName,
@@ -54,6 +55,7 @@ import {
 import { createTemplateFromWorkout } from "~/modules/fitness/infra/workout-template.service.server";
 import {
   createWorkoutExerciseCardViewModel,
+  EditMMCModal,
   ExerciseHistoryModal,
   WorkoutExerciseCard,
 } from "~/modules/fitness/presentation";
@@ -108,6 +110,18 @@ export async function action({ request, params }: Route.ActionArgs) {
         return addExercisesToWorkout({
           workoutId: id,
           exerciseIds,
+        });
+      }
+
+      case "update-exercise-mmc": {
+        const schema = zfd.formData({
+          exerciseId: formText(z.string().min(1)),
+          mmcInstructions: formOptionalText(),
+        });
+        const parsed = schema.parse(formData);
+        return updateExerciseMmcInstructions({
+          exerciseId: parsed.exerciseId,
+          mmcInstructions: parsed.mmcInstructions,
         });
       }
 
@@ -274,6 +288,11 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const [historyExercise, setHistoryExercise] = useState<{
     id: string;
     name: string;
+  } | null>(null);
+  const [mmcExercise, setMmcExercise] = useState<{
+    id: string;
+    name: string;
+    mmcInstructions?: string;
   } | null>(null);
 
   const fetcher = useFetcher();
@@ -589,6 +608,17 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                         name: g.exercise.name,
                       });
                   }}
+                  onMMCClick={(exerciseId) => {
+                    const g = workoutSession.exerciseGroups.find(
+                      (eg) => eg.exercise.id === exerciseId,
+                    );
+                    if (g)
+                      setMmcExercise({
+                        id: g.exercise.id,
+                        name: g.exercise.name,
+                        mmcInstructions: g.exercise.mmcInstructions,
+                      });
+                  }}
                 />
               ))}
             </SortableContext>
@@ -681,6 +711,18 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
           }}
         />
       )}
+
+      {mmcExercise && (
+        <EditMMCModal
+          exerciseId={mmcExercise.id}
+          exerciseName={mmcExercise.name}
+          mmcInstructions={mmcExercise.mmcInstructions}
+          open={!!mmcExercise}
+          onOpenChange={(open) => {
+            if (!open) setMmcExercise(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -690,11 +732,13 @@ function SortableExerciseCard({
   onCompleteSet,
   onReplaceExercise,
   onExerciseNameClick,
+  onMMCClick,
 }: {
   readonly group: WorkoutExerciseGroup;
   readonly onCompleteSet?: () => void;
   readonly onReplaceExercise?: (exerciseId: string) => void;
   readonly onExerciseNameClick?: (exerciseId: string) => void;
+  readonly onMMCClick?: (exerciseId: string) => void;
 }) {
   const {
     attributes,
@@ -724,6 +768,7 @@ function SortableExerciseCard({
         onCompleteSet={onCompleteSet}
         onReplaceExercise={onReplaceExercise}
         onExerciseNameClick={onExerciseNameClick}
+        onMMCClick={onMMCClick}
         dragHandleListeners={listeners}
         dragHandleAttributes={attributes}
         dragHandleRef={setActivatorNodeRef}
