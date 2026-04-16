@@ -136,7 +136,13 @@ function NotificationBell() {
   if (permission === "denied") {
     return (
       <Tooltip content="Notifications blocked in browser settings">
-        <IconButton size="1" variant="ghost" color="gray" disabled>
+        <IconButton
+          size="1"
+          variant="ghost"
+          color="gray"
+          disabled
+          aria-label="Notifications blocked in browser settings"
+        >
           <BellOff size={BELL_SIZE} />
         </IconButton>
       </Tooltip>
@@ -146,7 +152,13 @@ function NotificationBell() {
   if (permission === "granted") {
     return (
       <Tooltip content="Notifications enabled">
-        <IconButton size="1" variant="ghost" color="gray" tabIndex={-1}>
+        <IconButton
+          size="1"
+          variant="ghost"
+          color="gray"
+          tabIndex={-1}
+          aria-label="Notifications enabled"
+        >
           <BellRing size={BELL_SIZE} />
         </IconButton>
       </Tooltip>
@@ -156,7 +168,12 @@ function NotificationBell() {
   // permission === "default" — not yet asked
   return (
     <Tooltip content="Enable notifications">
-      <IconButton size="1" variant="soft" onClick={request}>
+      <IconButton
+        size="1"
+        variant="soft"
+        onClick={request}
+        aria-label="Enable notifications"
+      >
         <Bell size={BELL_SIZE} />
       </IconButton>
     </Tooltip>

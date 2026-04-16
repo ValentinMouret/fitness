@@ -151,7 +151,11 @@ export default function ExerciseForm({
                   <Flex align="center" gap="1">
                     <Text>Split</Text>
                     <Tooltip content="These will be normalized to percents">
-                      <IconButton variant="ghost" color="gray">
+                      <IconButton
+                        variant="ghost"
+                        color="gray"
+                        aria-label="Muscle group split information"
+                      >
                         <InfoCircledIcon />
                       </IconButton>
                     </Tooltip>
@@ -207,6 +211,7 @@ export default function ExerciseForm({
                       variant="outline"
                       color="red"
                       onClick={() => deleteSplit(index)}
+                      aria-label="Delete muscle group split"
                     >
                       <TrashIcon />
                     </IconButton>

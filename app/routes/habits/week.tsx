@@ -136,6 +136,7 @@ function TodayCell({ habit, isCompleted }: TodayCellProps) {
   return (
     <button
       type="button"
+      aria-label={`${isCompleted ? "Unmark" : "Mark"} ${habit.name} as completed`}
       onClick={toggle}
       style={{
         display: "flex",
@@ -222,6 +223,7 @@ function PastCell({
   return (
     <button
       type="button"
+      aria-label={`${isCompleted ? "Unmark" : "Mark"} ${habit.name} as completed on ${date.toISOString().split("T")[0]}`}
       onClick={toggle}
       style={{
         display: "flex",
