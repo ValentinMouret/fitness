@@ -37,7 +37,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       >
         <Flex align="center" gap="3" className="page-header__title-row">
           {backTo && (
-            <IconButton asChild variant="ghost" size="2">
+            <IconButton asChild variant="ghost" size="2" aria-label="Back">
               <Link to={backTo}>
                 <ArrowLeftIcon />
               </Link>
