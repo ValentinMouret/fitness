@@ -41,7 +41,7 @@ export default function HabitCheckbox({
         {isCompleted && <CheckIcon />}
       </Button>
 
-      <Flex direction="column" grow="1">
+      <Flex direction="column" flexGrow="1">
         <Text
           size="3"
           weight="medium"
