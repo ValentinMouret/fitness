@@ -1,5 +1,5 @@
 import { CheckIcon } from "@radix-ui/react-icons";
-import { Button, Flex, Text, Tooltip } from "@radix-ui/themes";
+import { Button, Flex, Text } from "@radix-ui/themes";
 import "./HabitCheckbox.css";
 
 interface HabitCheckboxProps {
@@ -41,16 +41,23 @@ export default function HabitCheckbox({
         {isCompleted && <CheckIcon />}
       </Button>
 
-      <Tooltip content={habitDescription}>
+      <Flex direction="column" grow="1">
         <Text
           size="3"
           weight="medium"
           className={`habit-checkbox__label ${isCompleted ? "habit-checkbox__label--completed" : ""}`}
-          style={{ cursor: habitDescription ? "help" : "default" }}
         >
           {habitName}
         </Text>
-      </Tooltip>
+        {habitDescription && (
+          <Text
+            size="1"
+            className={`habit-checkbox__description ${isCompleted ? "habit-checkbox__description--completed" : ""}`}
+          >
+            {habitDescription}
+          </Text>
+        )}
+      </Flex>
 
       {streak > 0 && (
         <Text size="2" className="habit-checkbox__streak">

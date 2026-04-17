@@ -6,12 +6,21 @@
 }
 
 .habit-checkbox__label {
-  flex: 1;
   color: var(--gray-12);
 }
 
 .habit-checkbox__label--completed {
   color: var(--gray-9);
+  text-decoration: line-through;
+}
+
+.habit-checkbox__description {
+  color: var(--gray-10);
+}
+
+.habit-checkbox__description--completed {
+  color: var(--gray-8);
+  text-decoration: line-through;
 }
 
 .habit-checkbox__streak {
