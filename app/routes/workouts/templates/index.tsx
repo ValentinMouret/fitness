@@ -148,7 +148,7 @@ function TemplateActions({ templateId }: { readonly templateId: string }) {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger>
-        <IconButton variant="ghost" size="1">
+        <IconButton variant="ghost" size="1" aria-label="Template actions">
           <DotsVerticalIcon />
         </IconButton>
       </DropdownMenu.Trigger>

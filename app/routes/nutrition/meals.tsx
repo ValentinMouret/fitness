@@ -398,7 +398,11 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
                     {meal ? (
                       <DropdownMenu.Root>
                         <DropdownMenu.Trigger>
-                          <IconButton variant="ghost" size="2">
+                          <IconButton
+                            variant="ghost"
+                            size="2"
+                            aria-label="Meal actions"
+                          >
                             <DotsHorizontalIcon width="16" height="16" />
                           </IconButton>
                         </DropdownMenu.Trigger>
@@ -427,6 +431,7 @@ export default function MealLogger({ loaderData }: Route.ComponentProps) {
                         variant="ghost"
                         size="2"
                         className="nutrition-meals__actions-placeholder"
+                        aria-label="Meal actions"
                       >
                         <DotsHorizontalIcon width="16" height="16" />
                       </IconButton>

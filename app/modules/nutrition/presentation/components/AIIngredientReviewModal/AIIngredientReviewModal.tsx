@@ -73,7 +73,7 @@ export function AIIngredientReviewModal({
             </Flex>
           </Dialog.Title>
           <Dialog.Close>
-            <IconButton variant="ghost">
+            <IconButton variant="ghost" aria-label="Close">
               <Cross2Icon />
             </IconButton>
           </Dialog.Close>

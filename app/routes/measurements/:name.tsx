@@ -196,7 +196,12 @@ export default function MeasurementPage(_: Route.ComponentProps) {
                   <Table.Cell>
                     <AlertDialog.Root>
                       <AlertDialog.Trigger>
-                        <IconButton variant="ghost" color="red" size="1">
+                        <IconButton
+                          variant="ghost"
+                          color="red"
+                          size="1"
+                          aria-label="Delete measurement"
+                        >
                           <TrashIcon />
                         </IconButton>
                       </AlertDialog.Trigger>

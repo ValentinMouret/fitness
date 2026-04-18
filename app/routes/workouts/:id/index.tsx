@@ -473,7 +473,11 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
 
             <DropdownMenu.Root>
               <DropdownMenu.Trigger>
-                <IconButton variant="ghost" size="1">
+                <IconButton
+                  variant="ghost"
+                  size="1"
+                  aria-label="Workout actions"
+                >
                   <DotsVerticalIcon />
                 </IconButton>
               </DropdownMenu.Trigger>
