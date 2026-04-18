@@ -84,7 +84,11 @@ export function IngredientCard({
             {TEXTURE_LABELS[textureKey]}
           </Badge>
         </Flex>
-        <IconButton variant="ghost" onClick={() => onRemove(ingredient.id)}>
+        <IconButton
+          variant="ghost"
+          onClick={() => onRemove(ingredient.id)}
+          aria-label="Remove ingredient"
+        >
           <Cross2Icon />
         </IconButton>
       </Flex>

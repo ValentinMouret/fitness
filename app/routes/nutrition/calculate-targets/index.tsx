@@ -66,7 +66,7 @@ export default function CalculateTargetsPage({
   return (
     <>
       <Flex align="center" gap="4" mb="6">
-        <IconButton asChild size="3" variant="ghost">
+        <IconButton asChild size="3" variant="ghost" aria-label="Back">
           <Link to="/nutrition">
             <ArrowLeftIcon />
           </Link>

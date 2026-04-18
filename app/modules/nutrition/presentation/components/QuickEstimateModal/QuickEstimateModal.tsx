@@ -182,7 +182,7 @@ export function QuickEstimateModal({
         <Flex justify="between" align="center" mb="3" flexShrink="0">
           <Dialog.Title size="5">Quick Estimate</Dialog.Title>
           <Dialog.Close>
-            <IconButton variant="ghost">
+            <IconButton variant="ghost" aria-label="Close">
               <Cross2Icon />
             </IconButton>
           </Dialog.Close>

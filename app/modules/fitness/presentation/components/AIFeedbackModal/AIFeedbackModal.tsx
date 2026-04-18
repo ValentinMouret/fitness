@@ -43,7 +43,7 @@ export function AIFeedbackModal({
       <Dialog.Content maxWidth="800px" className="ai-feedback-modal">
         <Flex justify="between" align="center" mb="4">
           <Heading size="6">🤖 AI Fitness Coach Feedback</Heading>
-          <IconButton variant="ghost" onClick={onClose}>
+          <IconButton variant="ghost" onClick={onClose} aria-label="Close">
             <Cross2Icon />
           </IconButton>
         </Flex>
