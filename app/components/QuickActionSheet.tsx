@@ -17,6 +17,7 @@ import "./QuickActionSheet.css";
 interface Habit {
   readonly id: string;
   readonly name: string;
+  readonly identityPhrase: string;
   readonly isCompleted: boolean;
   readonly streak: number;
 }
@@ -119,6 +120,10 @@ export function QuickActionSheet({
                         ? habitFetcher.formData?.get("completed") !== "true"
                         : habit.isCompleted;
 
+                    const isToggling =
+                      habitFetcher.state !== "idle" &&
+                      habitFetcher.formData?.get("habitId") === habit.id;
+
                     return (
                       <Button
                         key={habit.id}
@@ -127,8 +132,10 @@ export function QuickActionSheet({
                         onClick={() =>
                           handleToggleHabit(habit.id, isOptimisticCompleted)
                         }
+                        loading={isToggling}
                         disabled={habitFetcher.state !== "idle"}
                         className="quick-action-sheet__habit-button"
+                        aria-label={`${isOptimisticCompleted ? "Completed" : "Mark completed"}: ${habit.name}${habit.identityPhrase ? `. ${habit.identityPhrase}` : ""}${habit.streak > 0 ? `. Streak: ${habit.streak}` : ""}`}
                       >
                         <Flex
                           align="center"
@@ -136,15 +143,30 @@ export function QuickActionSheet({
                           className="quick-action-sheet__habit-content"
                         >
                           {isOptimisticCompleted && <CheckIcon />}
-                          <Text
-                            className={
-                              isOptimisticCompleted
-                                ? "quick-action-sheet__habit-name quick-action-sheet__habit-name--completed"
-                                : "quick-action-sheet__habit-name"
-                            }
-                          >
-                            {habit.name}
-                          </Text>
+                          <Flex direction="column" align="start" gap="0">
+                            <Text
+                              className={
+                                isOptimisticCompleted
+                                  ? "quick-action-sheet__habit-name quick-action-sheet__habit-name--completed"
+                                  : "quick-action-sheet__habit-name"
+                              }
+                            >
+                              {habit.name}
+                            </Text>
+                            {habit.identityPhrase && (
+                              <Text
+                                size="1"
+                                color="gray"
+                                className={
+                                  isOptimisticCompleted
+                                    ? "quick-action-sheet__habit-name--completed"
+                                    : ""
+                                }
+                              >
+                                {habit.identityPhrase}
+                              </Text>
+                            )}
+                          </Flex>
                           {habit.streak > 0 && (
                             <Text
                               size="1"
@@ -179,6 +201,7 @@ export function QuickActionSheet({
                   </Box>
                   <Button
                     onClick={handleLogWeight}
+                    loading={weightFetcher.state !== "idle"}
                     disabled={!weightValue || weightFetcher.state !== "idle"}
                   >
                     Log

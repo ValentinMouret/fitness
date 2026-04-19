@@ -13,6 +13,7 @@ export type QuickActionsData = {
   readonly habits: Array<{
     readonly id: string;
     readonly name: string;
+    readonly identityPhrase: string;
     readonly isCompleted: boolean;
     readonly streak: number;
   }>;
@@ -68,6 +69,7 @@ export async function getQuickActionsData(): Promise<QuickActionsData> {
     habits: todayHabits.map((h) => ({
       id: h.id,
       name: h.name,
+      identityPhrase: h.identityPhrase,
       isCompleted: completionMap.get(h.id) ?? false,
       streak: habitStreaks.get(h.id) ?? 0,
     })),
