@@ -1,5 +1,5 @@
 import { Box, Button, Flex, Text } from "@radix-ui/themes";
-import { Form, Link, useFetcher } from "react-router";
+import { Link, useFetcher } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import HabitCheckbox from "~/components/HabitCheckbox";
@@ -182,15 +182,13 @@ export default function DashboardPage({
             {todayHabits.map((habit, i) => (
               <Box key={habit.id}>
                 {i > 0 && <hr className="rule-divider" />}
-                <Form method="post">
-                  <HabitCheckbox
-                    habitId={habit.id}
-                    habitName={habit.name}
-                    habitDescription={habit.identityPhrase}
-                    isCompleted={completionMap.get(habit.id) ?? false}
-                    streak={habitStreaks.get(habit.id) ?? 0}
-                  />
-                </Form>
+                <HabitCheckbox
+                  habitId={habit.id}
+                  habitName={habit.name}
+                  habitDescription={habit.identityPhrase}
+                  isCompleted={completionMap.get(habit.id) ?? false}
+                  streak={habitStreaks.get(habit.id) ?? 0}
+                />
               </Box>
             ))}
           </Box>
