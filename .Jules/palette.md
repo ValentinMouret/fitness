@@ -11,3 +11,11 @@
 ## 2025-05-15 - [Icon Button Accessibility]
 **Learning:** Icon-only buttons are common in Radix UI-based apps but are often missing 'aria-label', making them opaque to screen readers.
 **Action:** Proactively check all 'IconButton' and drag handle elements for descriptive 'aria-label' attributes.
+
+## 2026-04-22 - [Radix UI Loading vs Disabled States]
+**Learning:** When using the Radix UI `loading` prop on `Button` or `IconButton`, setting `disabled={true}` alongside it can make the loading spinner less visible due to the reduced opacity of the disabled state.
+**Action:** Prefer relying on the `loading` prop for visual feedback during async operations, only using `disabled` if the action must be strictly blocked and the visual dimming is desired.
+
+## 2026-04-22 - [Reinforcing Identity in Accessibility Labels]
+**Learning:** For apps following "Atomic Habits" principles, identity phrases (e.g., "I am the type of person who...") are as important as the habit name. Including them in `aria-label` ensures screen reader users also receive this psychological reinforcement.
+**Action:** Ensure `aria-label` for habit-related actions includes the identity phrase when available.

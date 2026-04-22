@@ -133,9 +133,8 @@ export function QuickActionSheet({
                           handleToggleHabit(habit.id, isOptimisticCompleted)
                         }
                         loading={isToggling}
-                        disabled={habitFetcher.state !== "idle"}
                         className="quick-action-sheet__habit-button"
-                        aria-label={`${isOptimisticCompleted ? "Completed" : "Mark completed"}: ${habit.name}${habit.identityPhrase ? `. ${habit.identityPhrase}` : ""}${habit.streak > 0 ? `. Streak: ${habit.streak}` : ""}`}
+                        aria-label={`${isOptimisticCompleted ? "Unmark" : "Mark"} '${habit.name}' ${habit.identityPhrase ? `('${habit.identityPhrase}') ` : ""}as completed`}
                       >
                         <Flex
                           align="center"
