@@ -31,12 +31,7 @@ export default function HabitCheckbox({
 
   return (
     <fetcher.Form method="post">
-      <Flex
-        align="center"
-        gap="3"
-        py="3"
-        className="habit-checkbox__row"
-      >
+      <Flex align="center" gap="3" py="3" className="habit-checkbox__row">
         <input type="hidden" name="intent" value={intent} />
         <input type="hidden" name="habitId" value={habitId} />
         <input type="hidden" name="completed" value={String(isCompleted)} />
