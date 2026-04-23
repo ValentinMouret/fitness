@@ -6,7 +6,7 @@ import "./HabitCheckbox.css";
 interface HabitCheckboxProps {
   readonly habitId: string;
   readonly habitName: string;
-  readonly habitDescription?: string | null;
+  readonly identityPhrase?: string | null;
   readonly isCompleted: boolean;
   readonly intent?: string;
   readonly streak?: number;
@@ -15,7 +15,7 @@ interface HabitCheckboxProps {
 export default function HabitCheckbox({
   habitId,
   habitName,
-  habitDescription,
+  identityPhrase,
   isCompleted,
   intent = "toggle-habit",
   streak = 0,
@@ -27,11 +27,16 @@ export default function HabitCheckbox({
     ? fetcher.formData.get("completed") === "false"
     : isCompleted;
 
-  const label = `${displayCompleted ? "Unmark" : "Mark"} ${habitName} as completed`;
+  const label = `${displayCompleted ? "Unmark" : "Mark"} '${habitName}' ${identityPhrase ? `('${identityPhrase}') ` : ""}as completed`;
 
   return (
     <fetcher.Form method="post">
-      <Flex align="center" gap="3" py="3">
+      <Flex
+        align="center"
+        gap="3"
+        py="3"
+        className="habit-checkbox__row"
+      >
         <input type="hidden" name="intent" value={intent} />
         <input type="hidden" name="habitId" value={habitId} />
         <input type="hidden" name="completed" value={String(isCompleted)} />
@@ -45,7 +50,9 @@ export default function HabitCheckbox({
           loading={isSubmitting}
           aria-label={label}
         >
-          {displayCompleted && !isSubmitting && <CheckIcon />}
+          {displayCompleted && !isSubmitting && (
+            <CheckIcon className="habit-checkbox__icon--pop" />
+          )}
         </Button>
 
         <Flex direction="column" flexGrow="1">
@@ -56,12 +63,12 @@ export default function HabitCheckbox({
           >
             {habitName}
           </Text>
-          {habitDescription && (
+          {identityPhrase && (
             <Text
               size="1"
               className={`habit-checkbox__description ${displayCompleted ? "habit-checkbox__description--completed" : ""}`}
             >
-              {habitDescription}
+              {identityPhrase}
             </Text>
           )}
         </Flex>

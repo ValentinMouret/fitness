@@ -185,7 +185,7 @@ export default function DashboardPage({
                 <HabitCheckbox
                   habitId={habit.id}
                   habitName={habit.name}
-                  habitDescription={habit.identityPhrase}
+                  identityPhrase={habit.identityPhrase}
                   isCompleted={completionMap.get(habit.id) ?? false}
                   streak={habitStreaks.get(habit.id) ?? 0}
                 />
