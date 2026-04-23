@@ -19,3 +19,7 @@
 ## 2026-04-22 - [Reinforcing Identity in Accessibility Labels]
 **Learning:** For apps following "Atomic Habits" principles, identity phrases (e.g., "I am the type of person who...") are as important as the habit name. Including them in `aria-label` ensures screen reader users also receive this psychological reinforcement.
 **Action:** Ensure `aria-label` for habit-related actions includes the identity phrase when available.
+
+## 2026-04-22 - [Standardizing Identity Phrase Naming]
+**Learning:** Generic names like `habitDescription` dilute the identity-focused intent of the application. Using `identityPhrase` consistently across components and routes clarifies developer intent and aligns the UI with the underlying domain model.
+**Action:** Favor specific domain terminology (like `identityPhrase`) over generic descriptors in component props.
