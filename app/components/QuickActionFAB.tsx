@@ -1,5 +1,5 @@
 import { PlusIcon } from "@radix-ui/react-icons";
-import { Kbd, Box, IconButton } from "@radix-ui/themes";
+import { Box, IconButton, Kbd } from "@radix-ui/themes";
 import "./QuickActionFAB.css";
 
 interface QuickActionFABProps {
