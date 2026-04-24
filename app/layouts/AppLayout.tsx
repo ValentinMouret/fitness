@@ -20,7 +20,7 @@ import {
 } from "@radix-ui/themes";
 import type React from "react";
 import "./AppLayout.css";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Form, NavLink, Outlet, useLocation, useMatches } from "react-router";
 import { z } from "zod";
 import { PageHeader, type PageHeaderProps } from "~/components/PageHeader";
@@ -82,6 +82,30 @@ const AppLayout: React.FC = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [quickSheetOpen, setQuickSheetOpen] = useState(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key.toLowerCase() === "q" &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey
+      ) {
+        const target = e.target as HTMLElement;
+        const isInput =
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable;
+
+        if (!isInput) {
+          setQuickSheetOpen((prev) => !prev);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
 
   const isActiveWorkout =
     location.pathname.startsWith("/workouts/") &&
