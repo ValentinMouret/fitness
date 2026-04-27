@@ -9,7 +9,7 @@ import {
   Spinner,
   Text,
 } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useFetcher, useNavigate } from "react-router";
 import { NumberInput } from "./NumberInput";
 import "./QuickActionSheet.css";
@@ -38,6 +38,7 @@ export function QuickActionSheet({
   onOpenChange,
 }: QuickActionSheetProps) {
   const navigate = useNavigate();
+  const weightInputId = useId();
   const dataFetcher = useFetcher<QuickActionsData>();
   const habitFetcher = useFetcher();
   const weightFetcher = useFetcher();
@@ -141,7 +142,9 @@ export function QuickActionSheet({
                           gap="2"
                           className="quick-action-sheet__habit-content"
                         >
-                          {isOptimisticCompleted && <CheckIcon />}
+                          {isOptimisticCompleted && (
+                            <CheckIcon className="quick-action-sheet__habit-icon--pop" />
+                          )}
                           <Flex direction="column" align="start" gap="0">
                             <Text
                               className={
@@ -158,8 +161,8 @@ export function QuickActionSheet({
                                 color="gray"
                                 className={
                                   isOptimisticCompleted
-                                    ? "quick-action-sheet__habit-name--completed"
-                                    : ""
+                                    ? "quick-action-sheet__habit-identity quick-action-sheet__habit-identity--completed"
+                                    : "quick-action-sheet__habit-identity"
                                 }
                               >
                                 {habit.identityPhrase}
@@ -185,12 +188,21 @@ export function QuickActionSheet({
 
             {!data?.weightLogged && (
               <Box mb="4">
-                <Text size="2" color="gray" mb="2" weight="medium">
+                <Text
+                  as="label"
+                  htmlFor={weightInputId}
+                  size="2"
+                  color="gray"
+                  mb="2"
+                  weight="medium"
+                  style={{ display: "block" }}
+                >
                   Log Weight
                 </Text>
                 <Flex gap="2" align="end">
                   <Box flexGrow="1">
                     <NumberInput
+                      id={weightInputId}
                       name="weight"
                       min={0}
                       placeholder="Enter weight"
@@ -201,7 +213,7 @@ export function QuickActionSheet({
                   <Button
                     onClick={handleLogWeight}
                     loading={weightFetcher.state !== "idle"}
-                    disabled={!weightValue || weightFetcher.state !== "idle"}
+                    disabled={!weightValue}
                   >
                     Log
                   </Button>
