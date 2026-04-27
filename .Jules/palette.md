@@ -27,3 +27,7 @@
 ## 2026-04-24 - [Keyboard Shortcut Hygiene]
 **Learning:** Global keyboard listeners (e.g., 'q' for Quick Actions) must be carefully scoped to avoid interfering with system shortcuts (verify no modifier keys like Ctrl/Cmd are pressed) and user input (verify focus is not in an input, textarea, or contentEditable element).
 **Action:** Always include checks for `!e.ctrlKey && !e.metaKey && !e.altKey` and `isInput` target detection when implementing global shortcuts.
+
+## 2026-04-26 - [Keyboard Shortcut Discovery & Accessibility]
+**Learning:** Adding global shortcuts (like 'q' for Quick Actions) requires clear visual cues (e.g., `<Kbd>` component) for discovery and proper accessibility attributes (`aria-keyshortcuts`, `aria-label`). Visual hints should be hidden on mobile where physical keyboards are less common.
+**Action:** When adding shortcuts, always include a visual `<Kbd>` badge on the associated element and ensure accessibility attributes are updated.
