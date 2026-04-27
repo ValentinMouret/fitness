@@ -63,7 +63,7 @@ export function EditMMCModal({
               Cancel
             </Button>
           </Dialog.Close>
-          <Button onClick={handleSave} disabled={isBusy} loading={isBusy}>
+          <Button onClick={handleSave} loading={isBusy}>
             Save
           </Button>
         </Flex>
