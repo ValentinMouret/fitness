@@ -69,7 +69,9 @@ export async function getQuickActionsData(): Promise<QuickActionsData> {
 
   return {
     weightLogged: Boolean(weights?.[0] && isSameDay(weights[0].t, now)),
-    weightUnit: weightMeasurement.isOk() ? weightMeasurement.value.unit : undefined,
+    weightUnit: weightMeasurement.isOk()
+      ? weightMeasurement.value.unit
+      : undefined,
     lastWeight: weights?.[0]?.value,
     habits: todayHabits.map((h) => ({
       id: h.id,

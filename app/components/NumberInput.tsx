@@ -15,8 +15,9 @@ export function NumberInput({
   allowDecimals = true,
   onChange,
   onFocus,
+  children,
   ...props
-}: NumberInputProps) {
+}: NumberInputProps & { children?: React.ReactNode }) {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     e.target.value = normalizeDecimalSeparator(e.target.value);
     onChange?.(e);
@@ -34,6 +35,8 @@ export function NumberInput({
       onChange={handleChange}
       onFocus={handleFocus}
       {...props}
-    />
+    >
+      {children}
+    </TextField.Root>
   );
 }

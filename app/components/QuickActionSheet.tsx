@@ -1,9 +1,4 @@
-import {
-  CheckIcon,
-  CounterClockwiseClockIcon,
-  Cross2Icon,
-  ReaderIcon,
-} from "@radix-ui/react-icons";
+import { CheckIcon, Cross2Icon } from "@radix-ui/react-icons";
 import {
   Box,
   Button,
@@ -217,7 +212,7 @@ export function QuickActionSheet({
                       onChange={(e) => setWeightValue(e.target.value)}
                     >
                       {data?.weightUnit && (
-                        <TextField.Slot side="right" pr="3">
+                        <TextField.Slot pr="3">
                           <Text size="1" color="gray">
                             {data.weightUnit}
                           </Text>
@@ -238,12 +233,10 @@ export function QuickActionSheet({
 
             <Flex direction="column" gap="2">
               <Button size="3" onClick={handleStartWorkout}>
-                <CounterClockwiseClockIcon />
-                Start Workout
+                🏋️ Start Workout
               </Button>
               <Button size="3" variant="outline" onClick={handleLogMeal}>
-                <ReaderIcon />
-                Log Meal
+                🍽️ Log Meal
               </Button>
             </Flex>
           </>
