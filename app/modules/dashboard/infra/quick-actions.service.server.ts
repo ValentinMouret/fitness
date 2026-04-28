@@ -1,5 +1,6 @@
 import { ResultAsync } from "neverthrow";
 import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
+import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
 import { HabitService } from "~/modules/habits/application/service";
 import {
   HabitCompletionRepository,
@@ -9,6 +10,7 @@ import { isSameDay, today } from "~/time";
 
 export type QuickActionsData = {
   readonly weightLogged: boolean;
+  readonly weightUnit?: string;
   readonly lastWeight?: number;
   readonly habits: Array<{
     readonly id: string;
@@ -34,6 +36,8 @@ export async function getQuickActionsData(): Promise<QuickActionsData> {
   }
 
   const [weights, habits, completions] = result.value;
+
+  const weightMeasurement = await MeasurementRepository.fetchByName("weight");
 
   const todayHabits = habits.filter((h) => HabitService.isDueOn(h, todayDate));
 
@@ -65,6 +69,7 @@ export async function getQuickActionsData(): Promise<QuickActionsData> {
 
   return {
     weightLogged: Boolean(weights?.[0] && isSameDay(weights[0].t, now)),
+    weightUnit: weightMeasurement.isOk() ? weightMeasurement.value.unit : undefined,
     lastWeight: weights?.[0]?.value,
     habits: todayHabits.map((h) => ({
       id: h.id,
