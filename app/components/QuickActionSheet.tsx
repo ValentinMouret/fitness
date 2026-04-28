@@ -1,4 +1,9 @@
-import { CheckIcon, Cross2Icon } from "@radix-ui/react-icons";
+import {
+  CheckIcon,
+  CounterClockwiseClockIcon,
+  Cross2Icon,
+  ReaderIcon,
+} from "@radix-ui/react-icons";
 import {
   Box,
   Button,
@@ -8,6 +13,7 @@ import {
   IconButton,
   Spinner,
   Text,
+  TextField,
 } from "@radix-ui/themes";
 import { useEffect, useId, useState } from "react";
 import { useFetcher, useNavigate } from "react-router";
@@ -24,6 +30,7 @@ interface Habit {
 
 interface QuickActionsData {
   readonly weightLogged: boolean;
+  readonly weightUnit?: string;
   readonly lastWeight?: number;
   readonly habits: readonly Habit[];
 }
@@ -208,7 +215,15 @@ export function QuickActionSheet({
                       placeholder="Enter weight"
                       value={weightValue}
                       onChange={(e) => setWeightValue(e.target.value)}
-                    />
+                    >
+                      {data?.weightUnit && (
+                        <TextField.Slot side="right" pr="3">
+                          <Text size="1" color="gray">
+                            {data.weightUnit}
+                          </Text>
+                        </TextField.Slot>
+                      )}
+                    </NumberInput>
                   </Box>
                   <Button
                     onClick={handleLogWeight}
@@ -223,10 +238,12 @@ export function QuickActionSheet({
 
             <Flex direction="column" gap="2">
               <Button size="3" onClick={handleStartWorkout}>
-                🏋️ Start Workout
+                <CounterClockwiseClockIcon />
+                Start Workout
               </Button>
               <Button size="3" variant="outline" onClick={handleLogMeal}>
-                🍽️ Log Meal
+                <ReaderIcon />
+                Log Meal
               </Button>
             </Flex>
           </>
