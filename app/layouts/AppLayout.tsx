@@ -17,6 +17,7 @@ import {
   Heading,
   IconButton,
   Text,
+  Tooltip,
 } from "@radix-ui/themes";
 import type React from "react";
 import "./AppLayout.css";
@@ -189,69 +190,82 @@ const AppLayout: React.FC = () => {
           >
             {navItems.map(({ path, label, icon }) => (
               <Box key={path} px="1">
-                <NavLink
-                  to={path}
-                  onClick={closeMobileSidebar}
-                  className="app-layout__nav-link"
+                <Tooltip
+                  content={label}
+                  side="right"
+                  open={isCollapsed ? undefined : false}
                 >
-                  {({ isActive }) => (
-                    <Button
-                      variant="soft"
-                      color={isActive ? "tomato" : undefined}
-                      size="3"
-                      className={
-                        isActive
-                          ? "app-layout__nav-button"
-                          : "app-layout__nav-button app-layout__nav-button--inactive"
-                      }
-                    >
-                      <Flex
-                        align="center"
-                        gap={isCollapsed ? "0" : "3"}
-                        justify={isCollapsed ? "center" : "start"}
-                        className="app-layout__nav-button-inner"
+                  <NavLink
+                    to={path}
+                    onClick={closeMobileSidebar}
+                    className="app-layout__nav-link"
+                  >
+                    {({ isActive }) => (
+                      <Button
+                        variant="soft"
+                        color={isActive ? "tomato" : undefined}
+                        size="3"
+                        className={
+                          isActive
+                            ? "app-layout__nav-button"
+                            : "app-layout__nav-button app-layout__nav-button--inactive"
+                        }
                       >
-                        {icon}
-                        {!isCollapsed && (
-                          <Text
-                            size="2"
-                            weight={isActive ? "medium" : "regular"}
-                          >
-                            {label}
-                          </Text>
-                        )}
-                      </Flex>
-                    </Button>
-                  )}
-                </NavLink>
+                        <Flex
+                          align="center"
+                          gap={isCollapsed ? "0" : "3"}
+                          justify={isCollapsed ? "center" : "start"}
+                          className="app-layout__nav-button-inner"
+                        >
+                          {icon}
+                          {!isCollapsed && (
+                            <Text
+                              size="2"
+                              weight={isActive ? "medium" : "regular"}
+                            >
+                              {label}
+                            </Text>
+                          )}
+                        </Flex>
+                      </Button>
+                    )}
+                  </NavLink>
+                </Tooltip>
               </Box>
             ))}
           </Flex>
 
           <Box mt="4" px="1" className="app-layout__logout">
-            <Form method="post" action="/logout">
-              <Button
-                type="submit"
-                variant="soft"
-                size="3"
-                color="red"
-                className="app-layout__logout-button"
-              >
-                <Flex
-                  align="center"
-                  gap={isCollapsed ? "0" : "2"}
-                  justify="center"
-                  className="app-layout__nav-button-inner"
+            <Tooltip
+              content="Logout"
+              side="right"
+              open={isCollapsed ? undefined : false}
+            >
+              <Form method="post" action="/logout">
+                <Button
+                  type="submit"
+                  variant="soft"
+                  size="3"
+                  color="red"
+                  className="app-layout__logout-button"
+                  aria-label="Logout"
                 >
-                  <ExitIcon />
-                  {!isCollapsed && (
-                    <Text size="2" weight="medium">
-                      Logout
-                    </Text>
-                  )}
-                </Flex>
-              </Button>
-            </Form>
+                  <Flex
+                    align="center"
+                    gap={isCollapsed ? "0" : "2"}
+                    justify="center"
+                    className="app-layout__nav-button-inner"
+                  >
+                    <ExitIcon />
+                    {!isCollapsed && (
+                      <Text size="2" weight="medium">
+                        Logout
+                      </Text>
+                    )}
+                  </Flex>
+                </Button>
+              </Form>
+            </Tooltip>
           </Box>
         </Flex>
       </Box>
