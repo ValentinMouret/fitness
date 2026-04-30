@@ -31,3 +31,7 @@
 ## 2026-04-26 - [Keyboard Shortcut Discovery & Accessibility]
 **Learning:** Adding global shortcuts (like 'q' for Quick Actions) requires clear visual cues (e.g., `<Kbd>` component) for discovery and proper accessibility attributes (`aria-keyshortcuts`, `aria-label`). Visual hints should be hidden on mobile where physical keyboards are less common.
 **Action:** When adding shortcuts, always include a visual `<Kbd>` badge on the associated element and ensure accessibility attributes are updated.
+
+## 2026-05-18 - [Granular Loading States in Action Sheets]
+**Learning:** Using a shared `useFetcher` for a list of interactive items (like habits in a modal) causes shared loading states and prevents concurrent actions. Refactoring to a sub-component pattern where each item has its own `useFetcher` enables precise, per-item feedback and improves responsiveness.
+**Action:** Favor per-item fetchers in actionable lists to provide granular optimistic UI and loading indicators.

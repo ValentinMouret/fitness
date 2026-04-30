@@ -1,4 +1,9 @@
-import { CheckIcon, Cross2Icon } from "@radix-ui/react-icons";
+import {
+  CheckIcon,
+  CounterClockwiseClockIcon,
+  Cross2Icon,
+  ReaderIcon,
+} from "@radix-ui/react-icons";
 import {
   Box,
   Button,
@@ -35,6 +40,82 @@ interface QuickActionSheetProps {
   readonly onOpenChange: (open: boolean) => void;
 }
 
+function QuickActionHabitItem({ habit }: { habit: Habit }) {
+  const fetcher = useFetcher();
+
+  const isOptimisticCompleted =
+    fetcher.formData?.get("habitId") === habit.id
+      ? fetcher.formData?.get("completed") !== "true"
+      : habit.isCompleted;
+
+  const isToggling = fetcher.state !== "idle";
+
+  const handleToggle = () => {
+    fetcher.submit(
+      {
+        intent: "toggle-habit",
+        habitId: habit.id,
+        completed: String(isOptimisticCompleted),
+      },
+      { method: "post", action: "/dashboard" },
+    );
+  };
+
+  return (
+    <Button
+      variant={isOptimisticCompleted ? "solid" : "outline"}
+      color={isOptimisticCompleted ? "tomato" : "gray"}
+      onClick={handleToggle}
+      loading={isToggling}
+      className="quick-action-sheet__habit-button"
+      aria-label={`${isOptimisticCompleted ? "Unmark" : "Mark"} '${habit.name}' ${habit.identityPhrase ? `('${habit.identityPhrase}') ` : ""}as completed`}
+    >
+      <Flex
+        align="center"
+        gap="2"
+        className="quick-action-sheet__habit-content"
+      >
+        {isOptimisticCompleted && (
+          <CheckIcon className="quick-action-sheet__habit-icon--pop" />
+        )}
+        <Flex direction="column" align="start" gap="0">
+          <Text
+            className={
+              isOptimisticCompleted
+                ? "quick-action-sheet__habit-name quick-action-sheet__habit-name--completed"
+                : "quick-action-sheet__habit-name"
+            }
+          >
+            {habit.name}
+          </Text>
+          {habit.identityPhrase && (
+            <Text
+              size="1"
+              color="gray"
+              className={
+                isOptimisticCompleted
+                  ? "quick-action-sheet__habit-identity quick-action-sheet__habit-identity--completed"
+                  : "quick-action-sheet__habit-identity"
+              }
+            >
+              {habit.identityPhrase}
+            </Text>
+          )}
+        </Flex>
+        {habit.streak > 0 && (
+          <Text
+            size="1"
+            color="gray"
+            className="quick-action-sheet__habit-streak"
+          >
+            🔥 {habit.streak}
+          </Text>
+        )}
+      </Flex>
+    </Button>
+  );
+}
+
 export function QuickActionSheet({
   open,
   onOpenChange,
@@ -42,7 +123,6 @@ export function QuickActionSheet({
   const navigate = useNavigate();
   const weightInputId = useId();
   const dataFetcher = useFetcher<QuickActionsData>();
-  const habitFetcher = useFetcher();
   const weightFetcher = useFetcher();
   const [weightValue, setWeightValue] = useState("");
 
@@ -57,17 +137,6 @@ export function QuickActionSheet({
       setWeightValue(dataFetcher.data.lastWeight.toString());
     }
   }, [dataFetcher.data?.lastWeight, weightValue]);
-
-  const handleToggleHabit = (habitId: string, currentlyCompleted: boolean) => {
-    habitFetcher.submit(
-      {
-        intent: "toggle-habit",
-        habitId,
-        completed: String(currentlyCompleted),
-      },
-      { method: "post", action: "/dashboard" },
-    );
-  };
 
   const handleLogWeight = () => {
     if (!weightValue) return;
@@ -117,73 +186,9 @@ export function QuickActionSheet({
                   Today's Habits
                 </Text>
                 <Flex direction="column" gap="2">
-                  {data.habits.map((habit) => {
-                    const isOptimisticCompleted =
-                      habitFetcher.formData?.get("habitId") === habit.id
-                        ? habitFetcher.formData?.get("completed") !== "true"
-                        : habit.isCompleted;
-
-                    const isToggling =
-                      habitFetcher.state !== "idle" &&
-                      habitFetcher.formData?.get("habitId") === habit.id;
-
-                    return (
-                      <Button
-                        key={habit.id}
-                        variant={isOptimisticCompleted ? "solid" : "outline"}
-                        color={isOptimisticCompleted ? "tomato" : "gray"}
-                        onClick={() =>
-                          handleToggleHabit(habit.id, isOptimisticCompleted)
-                        }
-                        loading={isToggling}
-                        className="quick-action-sheet__habit-button"
-                        aria-label={`${isOptimisticCompleted ? "Unmark" : "Mark"} '${habit.name}' ${habit.identityPhrase ? `('${habit.identityPhrase}') ` : ""}as completed`}
-                      >
-                        <Flex
-                          align="center"
-                          gap="2"
-                          className="quick-action-sheet__habit-content"
-                        >
-                          {isOptimisticCompleted && (
-                            <CheckIcon className="quick-action-sheet__habit-icon--pop" />
-                          )}
-                          <Flex direction="column" align="start" gap="0">
-                            <Text
-                              className={
-                                isOptimisticCompleted
-                                  ? "quick-action-sheet__habit-name quick-action-sheet__habit-name--completed"
-                                  : "quick-action-sheet__habit-name"
-                              }
-                            >
-                              {habit.name}
-                            </Text>
-                            {habit.identityPhrase && (
-                              <Text
-                                size="1"
-                                color="gray"
-                                className={
-                                  isOptimisticCompleted
-                                    ? "quick-action-sheet__habit-identity quick-action-sheet__habit-identity--completed"
-                                    : "quick-action-sheet__habit-identity"
-                                }
-                              >
-                                {habit.identityPhrase}
-                              </Text>
-                            )}
-                          </Flex>
-                          {habit.streak > 0 && (
-                            <Text
-                              size="1"
-                              color="gray"
-                              className="quick-action-sheet__habit-streak"
-                            >
-                              🔥 {habit.streak}
-                            </Text>
-                          )}
-                        </Flex>
-                      </Button>
-                    );
-                  })}
+                  {data.habits.map((habit) => (
+                    <QuickActionHabitItem key={habit.id} habit={habit} />
+                  ))}
                 </Flex>
               </Box>
             )}
@@ -233,10 +238,10 @@ export function QuickActionSheet({
 
             <Flex direction="column" gap="2">
               <Button size="3" onClick={handleStartWorkout}>
-                🏋️ Start Workout
+                <CounterClockwiseClockIcon /> Start Workout
               </Button>
               <Button size="3" variant="outline" onClick={handleLogMeal}>
-                🍽️ Log Meal
+                <ReaderIcon /> Log Meal
               </Button>
             </Flex>
           </>
