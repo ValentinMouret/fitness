@@ -27,7 +27,7 @@ export default function HabitCheckbox({
     ? fetcher.formData.get("completed") === "false"
     : isCompleted;
 
-  const label = `${displayCompleted ? "Unmark" : "Mark"} '${habitName}' ${identityPhrase ? `('${identityPhrase}') ` : ""}as completed`;
+  const label = `${displayCompleted ? "Unmark" : "Mark"} '${habitName}' ${identityPhrase ? `('${identityPhrase}') ` : ""}as completed${streak > 0 ? ` (${streak} day streak)` : ""}`;
 
   return (
     <fetcher.Form method="post">

@@ -216,6 +216,7 @@ export default function DashboardPage({
             <Box className="dashboard__weight-input">
               <NumberInput
                 name="weight"
+                aria-label="Weight"
                 min={0}
                 placeholder={lastWeight?.value?.toString() ?? "kg"}
                 size="2"

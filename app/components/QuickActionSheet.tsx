@@ -1,4 +1,9 @@
-import { CheckIcon, Cross2Icon } from "@radix-ui/react-icons";
+import {
+  CheckIcon,
+  CounterClockwiseClockIcon,
+  Cross2Icon,
+  ReaderIcon,
+} from "@radix-ui/react-icons";
 import {
   Box,
   Button,
@@ -137,7 +142,7 @@ export function QuickActionSheet({
                         }
                         loading={isToggling}
                         className="quick-action-sheet__habit-button"
-                        aria-label={`${isOptimisticCompleted ? "Unmark" : "Mark"} '${habit.name}' ${habit.identityPhrase ? `('${habit.identityPhrase}') ` : ""}as completed`}
+                        aria-label={`${isOptimisticCompleted ? "Unmark" : "Mark"} '${habit.name}' ${habit.identityPhrase ? `('${habit.identityPhrase}') ` : ""}as completed${habit.streak > 0 ? ` (${habit.streak} day streak)` : ""}`}
                       >
                         <Flex
                           align="center"
@@ -223,7 +228,7 @@ export function QuickActionSheet({
                   <Button
                     onClick={handleLogWeight}
                     loading={weightFetcher.state !== "idle"}
-                    disabled={!weightValue}
+                    disabled={!weightValue && weightFetcher.state === "idle"}
                   >
                     Log
                   </Button>
@@ -233,10 +238,10 @@ export function QuickActionSheet({
 
             <Flex direction="column" gap="2">
               <Button size="3" onClick={handleStartWorkout}>
-                🏋️ Start Workout
+                <CounterClockwiseClockIcon /> Start Workout
               </Button>
               <Button size="3" variant="outline" onClick={handleLogMeal}>
-                🍽️ Log Meal
+                <ReaderIcon /> Log Meal
               </Button>
             </Flex>
           </>
