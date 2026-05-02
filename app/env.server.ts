@@ -9,6 +9,7 @@ const schema = z.object({
   AUTH_USERNAME: z.string(),
   AUTH_PASSWORD: z.string(),
   DATABASE_URL: z.string(),
+  GIT_SHA: z.string().optional(),
   PORT: z.coerce.number().default(5173),
 });
 

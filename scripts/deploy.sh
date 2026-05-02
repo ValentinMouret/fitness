@@ -35,6 +35,8 @@ cd "$REPO_DIR"
 
 git fetch origin main
 git reset --hard origin/main
+GIT_SHA="$(git rev-parse HEAD)"
+export GIT_SHA
 
 log "Building and starting containers"
 docker compose up -d --build 2>&1 | tee -a "$LOG_FILE"

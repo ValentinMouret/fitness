@@ -16,6 +16,9 @@ RUN bun install --frozen-lockfile --production
 FROM oven/bun:1-alpine@sha256:819f91180e721ba09e0e5d3eb7fb985832fd23f516e18ddad7e55aaba8100be7 AS runtime
 WORKDIR /app
 
+ARG GIT_SHA=unknown
+ENV GIT_SHA=$GIT_SHA
+
 COPY --from=build --chown=bun:bun /app/build ./build
 COPY --from=build --chown=bun:bun /app/package.json ./
 COPY --from=prod-deps --chown=bun:bun /app/node_modules ./node_modules

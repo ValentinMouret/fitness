@@ -187,6 +187,7 @@ deploy() {
     -e "AUTH_USERNAME=${AUTH_USERNAME}"
     -e "AUTH_PASSWORD=${AUTH_PASSWORD}"
     -e "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}"
+    -e "GIT_SHA=${SHA}"
     -e "PORT=${PORT}"
   )
 
@@ -204,7 +205,7 @@ deploy() {
 
   log "Building Docker image and preparing database"
   (
-    docker build -t "$IMAGE_NAME" "$WORKTREE_DIR" 2>&1 | tee -a "$LOG_FILE"
+    docker build --build-arg "GIT_SHA=${SHA}" -t "$IMAGE_NAME" "$WORKTREE_DIR" 2>&1 | tee -a "$LOG_FILE"
   ) &
   local build_pid=$!
 
