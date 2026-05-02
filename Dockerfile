@@ -16,6 +16,10 @@ RUN bun install --frozen-lockfile --production --ignore-scripts
 FROM oven/bun:1-alpine@sha256:819f91180e721ba09e0e5d3eb7fb985832fd23f516e18ddad7e55aaba8100be7 AS runtime
 WORKDIR /app
 
+# Node is required to serve the app: Bun's react-dom/server.bun.js shim
+# does not export renderToPipeableStream. Bun is kept for `bun db:migrate`.
+RUN apk add --no-cache nodejs
+
 ARG GIT_SHA=unknown
 ENV GIT_SHA=$GIT_SHA
 
@@ -31,4 +35,4 @@ USER bun
 
 EXPOSE 5174
 
-CMD ["bun", "run", "start"]
+CMD ["node", "./node_modules/.bin/react-router-serve", "./build/server/index.js"]
