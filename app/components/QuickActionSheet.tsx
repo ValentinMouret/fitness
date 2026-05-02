@@ -1,4 +1,9 @@
-import { CheckIcon, Cross2Icon } from "@radix-ui/react-icons";
+import {
+  CheckIcon,
+  CounterClockwiseClockIcon,
+  Cross2Icon,
+  ReaderIcon,
+} from "@radix-ui/react-icons";
 import {
   Box,
   Button,
@@ -67,15 +72,6 @@ export function QuickActionSheet({
       },
       { method: "post", action: "/dashboard" },
     );
-  };
-
-  const handleLogWeight = () => {
-    if (!weightValue) return;
-    weightFetcher.submit(
-      { weight: weightValue },
-      { method: "post", action: "/dashboard" },
-    );
-    onOpenChange(false);
   };
 
   const handleStartWorkout = () => {
@@ -201,42 +197,52 @@ export function QuickActionSheet({
                 >
                   Log Weight
                 </Text>
-                <Flex gap="2" align="end">
-                  <Box flexGrow="1">
-                    <NumberInput
-                      id={weightInputId}
-                      name="weight"
-                      min={0}
-                      placeholder="Enter weight"
-                      value={weightValue}
-                      onChange={(e) => setWeightValue(e.target.value)}
+                <weightFetcher.Form
+                  method="post"
+                  action="/dashboard"
+                  onSubmit={() => onOpenChange(false)}
+                >
+                  <Flex gap="2" align="end">
+                    <Box flexGrow="1">
+                      <NumberInput
+                        id={weightInputId}
+                        name="weight"
+                        min={0}
+                        placeholder={
+                          data?.lastWeight
+                            ? `Last: ${data.lastWeight}`
+                            : "Enter weight"
+                        }
+                        value={weightValue}
+                        onChange={(e) => setWeightValue(e.target.value)}
+                      >
+                        {data?.weightUnit && (
+                          <TextField.Slot pr="3">
+                            <Text size="1" color="gray">
+                              {data.weightUnit}
+                            </Text>
+                          </TextField.Slot>
+                        )}
+                      </NumberInput>
+                    </Box>
+                    <Button
+                      type="submit"
+                      loading={weightFetcher.state !== "idle"}
+                      disabled={!weightValue && weightFetcher.state === "idle"}
                     >
-                      {data?.weightUnit && (
-                        <TextField.Slot pr="3">
-                          <Text size="1" color="gray">
-                            {data.weightUnit}
-                          </Text>
-                        </TextField.Slot>
-                      )}
-                    </NumberInput>
-                  </Box>
-                  <Button
-                    onClick={handleLogWeight}
-                    loading={weightFetcher.state !== "idle"}
-                    disabled={!weightValue}
-                  >
-                    Log
-                  </Button>
-                </Flex>
+                      Log
+                    </Button>
+                  </Flex>
+                </weightFetcher.Form>
               </Box>
             )}
 
             <Flex direction="column" gap="2">
               <Button size="3" onClick={handleStartWorkout}>
-                🏋️ Start Workout
+                <CounterClockwiseClockIcon /> Start Workout
               </Button>
               <Button size="3" variant="outline" onClick={handleLogMeal}>
-                🍽️ Log Meal
+                <ReaderIcon /> Log Meal
               </Button>
             </Flex>
           </>
