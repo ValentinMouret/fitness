@@ -124,37 +124,28 @@ Those behaviors should live in small scripts called from Dokploy pre-deploy comm
 
 ## Next Work
 
-Before removing the old VPS deployment path, verify these Dokploy behaviors on the box:
+Before removing the old VPS deployment path, verify the current Dokploy production flow is the only deploy path still being used.
 
-- Dokploy can deploy only after the GitHub CI workflow passes.
-- Dokploy preview deployments can be gated so draft pull requests, fork pull requests, and failing CI do not deploy.
-- Dokploy preview deployments can use the `pr-<number>.review.valentinmouret.io` URL shape.
-- Dokploy can inject per-preview `DATABASE_URL`.
-- Dokploy can run or be paired with scripts that create, copy, migrate, and destroy review databases.
-- Dokploy zero-downtime deployment works with the app health check.
-- Dokploy-generated Traefik config can preserve the required security headers.
+Deferred work:
 
-If CI-gated preview deployments cannot be made clean with Dokploy alone, keep review apps custom while using Dokploy for production, or keep the full custom deployment until the preview flow is acceptable.
+- CI-gated Dokploy production deploys.
+- Dokploy-managed health checks.
+- `GIT_SHA` injection into Dokploy builds.
+- Dokploy preview deployments and review app automation.
 
 Concrete next steps:
 
-1. Push the current deployment documentation update.
-2. Configure Dokploy to pass `GIT_SHA` into production and review app containers.
-3. Configure Dokploy health checks to call `/healthz`.
-4. Validate one production deploy through Dokploy from a new commit.
-5. Decide whether production migrations are run by Dokploy pre-deploy commands or by GitHub Actions before calling Dokploy.
-6. Build the review database prepare/destroy scripts.
-7. Validate Dokploy preview deployments and CI gating.
-8. Add Tailscale-based admin access for Dokploy and other private server surfaces.
-9. Replace the old GitHub webhook deployment jobs with Dokploy deploy triggers after CI passes.
-10. Remove old webhook deployment plumbing once Dokploy production and review deploys are validated:
+1. Disable or delete the old GitHub webhook that calls `/hooks/*`.
+2. Remove old webhook deployment plumbing:
     - `/hooks/*` Caddy routing;
     - `deploy/hooks.json`;
     - `scripts/deploy.sh`;
     - old review app container orchestration in `scripts/review-app.sh`;
     - obsolete GitHub webhook secrets and workflow steps.
-11. Stop and remove the old `fitness-app-1` container after the rollback window.
-12. Decide whether Caddy remains the front proxy for all services or whether Jellyfin, Plex, and torrent move to Dokploy-managed Traefik.
+3. Stop and remove the old `fitness-app-1` container after the rollback window.
+4. Persist the PostgreSQL Docker bridge firewall rules if they are not already persisted outside the current session.
+5. Add Tailscale-based admin access for Dokploy and other private server surfaces.
+6. Decide whether Caddy remains the front proxy for all services or whether Jellyfin, Plex, and torrent move to Dokploy-managed Traefik.
 
 ## Installation Notes
 
@@ -367,19 +358,16 @@ The endpoint must not expose secrets.
 
 ## TODO
 
-- Push the current deployment documentation update.
-- Configure Dokploy `GIT_SHA` injection.
-- Configure Dokploy `/healthz` health checks.
-- Verify Dokploy waits for health checks before routing production traffic.
-- Verify Dokploy waits for health checks before publishing preview deployments.
-- Validate one new production deploy through Dokploy.
-- Validate CI-gated Dokploy preview deployments.
-- Implement review database prepare and destroy scripts.
+- Disable or delete the old GitHub webhook that calls `/hooks/*`.
+- Remove old `/hooks/*`, webhook, and hand-rolled deploy scripts now that Dokploy production deploys are validated.
+- Stop and remove the old `fitness-app-1` container after the rollback window.
 - Persist the PostgreSQL Docker bridge firewall rules if they are not already persisted outside the current session.
 - Set up Tailscale-based admin access for Dokploy and other private server surfaces.
-- Replace the old GitHub webhook deploy calls with Dokploy deploy triggers after CI passes.
-- Remove old `/hooks/*`, webhook, and hand-rolled deploy scripts after Dokploy deploys are validated.
-- Stop and remove the old `fitness-app-1` container after the rollback window.
+- Later: configure Dokploy `GIT_SHA` injection.
+- Later: configure Dokploy-managed `/healthz` health checks if the feature is available.
+- Later: validate CI-gated Dokploy production deployments.
+- Later: validate CI-gated Dokploy preview deployments.
+- Later: implement review database prepare and destroy scripts.
 
 ## GitHub Workflows
 
