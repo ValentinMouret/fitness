@@ -18,7 +18,8 @@ node_modules
 tests
 *.test.ts
 *.spec.ts
-deploy
+deploy/*
+!deploy/preview-entrypoint.sh
 docs
 playwright-report
 test-results

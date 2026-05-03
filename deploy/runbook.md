@@ -196,22 +196,45 @@ If production migration fails after the shadow check passed, keep the last healt
 Run a review app health check:
 
 ```shell
-curl --fail --silent https://pr-123.review.valentinmouret.io/healthz
+curl --fail --silent https://<dokploy-preview-host>/healthz
 ```
 
-Prepare a review app database manually:
+Dokploy preview environment variables:
+
+```dotenv
+PREVIEW_APP=true
+NODE_ENV=production
+PORT=5174
+AUTH_USERNAME=...
+AUTH_PASSWORD=...
+ANTHROPIC_API_KEY=...
+REVIEW_DATABASE_ADMIN_URL=postgresql://valentin:...@172.20.0.1:5432/postgres
+REVIEW_DATABASE_SOURCE_URL=postgresql://valentin:...@172.20.0.1:5432/fitness
+REVIEW_DATABASE_URL_PREFIX=postgresql://valentin:...@172.20.0.1:5432/
+REVIEW_DATABASE_RUN_SEED=true
+```
+
+The preview container entrypoint derives its database name from `DOKPLOY_DEPLOY_URL`, copies production data into that database, runs migrations, ensures baseline measurements exist, and then starts the app.
+
+List review databases:
 
 ```shell
-sudo -iu postgres /srv/fitness/db/prepare-review-app.sh 123 <sha>
+sudo -iu postgres psql -c "
+  select d.datname, sd.description
+  from pg_database d
+  left join pg_shdescription sd
+    on sd.objoid = d.oid
+   and sd.classoid = 'pg_database'::regclass
+  where d.datname like 'fitness_review_%'
+  order by d.datname;
+"
 ```
 
-Destroy a review app database manually:
+Drop a review database after its Dokploy preview deployment is gone:
 
 ```shell
-sudo -iu postgres /srv/fitness/db/destroy-review-app.sh 123
+sudo -iu postgres dropdb --force <fitness_review_database_name>
 ```
-
-Review app container deployment and deletion should be handled through Dokploy preview deployments.
 
 ## PostgreSQL
 

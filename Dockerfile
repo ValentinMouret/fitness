@@ -23,7 +23,7 @@ FROM prod-deps AS runtime
 
 # Node is required to serve the app: Bun's react-dom/server.bun.js shim
 # does not export renderToPipeableStream. Bun is kept for `bun db:migrate`.
-RUN apk add --no-cache nodejs
+RUN apk add --no-cache nodejs postgresql-client
 
 ARG GIT_SHA=unknown
 ENV GIT_SHA=$GIT_SHA
@@ -34,9 +34,11 @@ COPY --from=build --chown=bun:bun /app/drizzle            ./drizzle
 COPY --from=build --chown=bun:bun /app/app/db/migrate.ts  ./app/db/migrate.ts
 COPY --from=build --chown=bun:bun /app/app/env.server.ts  ./app/env.server.ts
 COPY --from=build --chown=bun:bun /app/app/logger.server.ts ./app/logger.server.ts
+COPY --chown=bun:bun deploy/preview-entrypoint.sh ./deploy/preview-entrypoint.sh
 
 USER bun
 
 EXPOSE 5174
 
+ENTRYPOINT ["./deploy/preview-entrypoint.sh"]
 CMD ["node", "./node_modules/.bin/react-router-serve", "./build/server/index.js"]

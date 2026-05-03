@@ -134,13 +134,15 @@ Deferred work:
 - CI-gated Dokploy production deploys.
 - Dokploy-managed health checks.
 - `GIT_SHA` injection into Dokploy builds.
-- Dokploy preview deployments and review app automation.
+- Full review app cleanup automation when preview deployments are removed.
 
 Concrete next steps:
 
 1. Persist the PostgreSQL Docker bridge firewall rules if they are not already persisted outside the current session.
 2. Add Tailscale-based admin access for Dokploy and other private server surfaces.
-3. Decide whether Caddy remains the front proxy for all services or whether Jellyfin, Plex, and torrent move to Dokploy-managed Traefik.
+3. Configure Dokploy preview deployment environment variables.
+4. Validate one preview deployment.
+5. Decide whether Caddy remains the front proxy for all services or whether Jellyfin, Plex, and torrent move to Dokploy-managed Traefik.
 
 ## Installation Notes
 
@@ -283,45 +285,51 @@ Database migrations are the one point that cannot be made fully reversible witho
 
 Input:
 
-- pull request number;
-- Git SHA;
-- successful CI result.
+- Dokploy preview deployment URL;
+- pull request branch;
+- Git SHA.
 
 Lifecycle:
 
-1. GitHub Actions runs CI on the self-hosted runner.
-2. The review deploy job runs only when:
-   - the pull request targets `main`;
-   - the pull request is not draft;
-   - the source repository is this repository;
-   - required CI jobs passed.
-3. A review database is prepared:
-   - drop `fitness_review_pr_<number>` if present;
-   - create a fresh database copied from production with `pg_dump` and `pg_restore`;
-   - run migrations against the review database with the pull request code.
-4. Dokploy deploys or updates the preview deployment for the pull request.
-5. The preview deployment receives shared app env plus review-specific `DATABASE_URL`.
-6. Dokploy health checks verify the preview app.
-7. Dokploy exposes `https://pr-<number>.review.valentinmouret.io`.
-8. GitHub receives or updates the pull request comment with the review URL.
+1. Dokploy creates or updates the preview deployment for the pull request.
+2. Dokploy injects preview-specific environment variables, including `DOKPLOY_DEPLOY_URL`.
+3. The container entrypoint sees `PREVIEW_APP=true`.
+4. The entrypoint derives a PostgreSQL database name from `DOKPLOY_DEPLOY_URL`.
+5. The entrypoint drops and recreates that review database.
+6. The entrypoint copies production data into the review database with `pg_dump` and `pg_restore`.
+7. The entrypoint runs migrations against the review database with the pull request code.
+8. The entrypoint runs the baseline measurement seed, unless `REVIEW_DATABASE_RUN_SEED=false`.
+9. The entrypoint exports the review `DATABASE_URL` and starts the app.
 
 Review app data is disposable. A new commit refreshes the review app from current production data.
 
+Required Dokploy preview environment variables:
+
+```dotenv
+PREVIEW_APP=true
+NODE_ENV=production
+PORT=5174
+AUTH_USERNAME=...
+AUTH_PASSWORD=...
+ANTHROPIC_API_KEY=...
+REVIEW_DATABASE_ADMIN_URL=postgresql://valentin:...@172.20.0.1:5432/postgres
+REVIEW_DATABASE_SOURCE_URL=postgresql://valentin:...@172.20.0.1:5432/fitness
+REVIEW_DATABASE_URL_PREFIX=postgresql://valentin:...@172.20.0.1:5432/
+REVIEW_DATABASE_RUN_SEED=true
+```
+
+`DATABASE_URL` does not need to be set for previews. If Dokploy inherits it from production, the preview entrypoint overrides it before running migrations, seeds, or the app server.
+
+The preview seed only ensures the baseline measurements exist. The other seed files are not run for previews because the database is copied from production.
+
 ## Review App Destroy Lifecycle
-
-Input:
-
-- pull request number.
 
 Lifecycle:
 
-1. GitHub Actions or Dokploy receives the pull request close event.
-2. Dokploy destroys the preview deployment.
-3. `fitness_review_pr_<number>` is dropped.
-4. Generated review app environment files are removed.
-5. GitHub receives or updates the pull request comment.
+1. Dokploy destroys the preview deployment when the pull request closes or merges.
+2. The review database remains until manual cleanup or a future cleanup automation drops it.
 
-Destroy is idempotent. Running it twice should succeed.
+Review databases are named `fitness_review_<preview-url-slug>_<hash>`. The entrypoint also writes a database comment containing the preview URL and creation time.
 
 ## Health Checks
 
@@ -358,8 +366,7 @@ The endpoint must not expose secrets.
 - Later: configure Dokploy `GIT_SHA` injection.
 - Later: configure Dokploy-managed `/healthz` health checks if the feature is available.
 - Later: validate CI-gated Dokploy production deployments.
-- Later: validate CI-gated Dokploy preview deployments.
-- Later: implement review database prepare and destroy scripts.
+- Later: automate review database cleanup when preview deployments are removed.
 
 ## GitHub Workflows
 
