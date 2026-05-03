@@ -1,7 +1,9 @@
 import { Box, Button, Flex, Text } from "@radix-ui/themes";
-import { Link, useFetcher } from "react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useFetcher, useFetchers } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import { Celebration, SuccessPulse } from "~/components/Celebration";
 import HabitCheckbox from "~/components/HabitCheckbox";
 import MeasurementChart from "~/components/MeasurementChart";
 import { NumberInput } from "~/components/NumberInput";
@@ -72,16 +74,57 @@ export default function DashboardPage({
     todayHabits,
     completionMap,
     habitStreaks,
-    completedHabitsCount,
     inProgressWorkout,
     nutrition,
   },
 }: Route.ComponentProps) {
   const weightFetcher = useFetcher();
+  const fetchers = useFetchers();
+
+  // Optimistic habits
+  const optimisticCompletions = useMemo(() => {
+    const map = new Map(completionMap);
+    for (const f of fetchers) {
+      if (f.formData?.get("intent") === "toggle-habit") {
+        const id = f.formData.get("habitId") as string;
+        const currentCompleted = f.formData.get("completed") === "true";
+        map.set(id, !currentCompleted);
+      }
+    }
+    return map;
+  }, [completionMap, fetchers]);
 
   const habitsTotal = todayHabits.length;
+  const optimisticCompletedCount = todayHabits.filter((h) =>
+    optimisticCompletions.get(h.id),
+  ).length;
   const habitsPct =
-    habitsTotal > 0 ? (completedHabitsCount / habitsTotal) * 100 : 0;
+    habitsTotal > 0 ? (optimisticCompletedCount / habitsTotal) * 100 : 0;
+
+  // Celebrations & Feedback
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [showWeightPulse, setShowWeightPulse] = useState(false);
+  const prevHabitCount = useRef(optimisticCompletedCount);
+  const prevLoggedToday = useRef(loggedToday);
+
+  useEffect(() => {
+    if (
+      habitsTotal > 0 &&
+      optimisticCompletedCount === habitsTotal &&
+      prevHabitCount.current < habitsTotal
+    ) {
+      setShowCelebration(true);
+    }
+    prevHabitCount.current = optimisticCompletedCount;
+  }, [optimisticCompletedCount, habitsTotal]);
+
+  useEffect(() => {
+    if (loggedToday && !prevLoggedToday.current) {
+      setShowWeightPulse(true);
+    }
+    prevLoggedToday.current = loggedToday;
+  }, [loggedToday]);
+
   const calPct = Math.min(nutrition.calories / nutrition.calorieTarget, 1);
   const remaining = Math.max(
     0,
@@ -90,6 +133,11 @@ export default function DashboardPage({
 
   return (
     <Box className="dashboard">
+      <Celebration
+        trigger={showCelebration}
+        onComplete={() => setShowCelebration(false)}
+      />
+
       {inProgressWorkout && (
         <Link
           to={`/workouts/${inProgressWorkout.id}`}
@@ -121,7 +169,14 @@ export default function DashboardPage({
             <Text as="div" className="dashboard__stat-label">
               kcal
             </Text>
-            <Box className="dashboard__stat-progress">
+            <Box
+              className="dashboard__stat-progress"
+              role="progressbar"
+              aria-valuenow={Math.round(calPct * 100)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Daily calorie progress"
+            >
               <Box
                 className="dashboard__stat-progress-fill"
                 style={{ width: `${calPct * 100}%` }}
@@ -162,16 +217,37 @@ export default function DashboardPage({
       {habitsTotal > 0 && (
         <Box className="dashboard__card dashboard__card--habits">
           <Flex className="dashboard__habits-header">
-            <p className="section-label">Habits</p>
+            <Flex align="center" gap="2">
+              <p className="section-label" style={{ marginBottom: 0 }}>
+                Habits
+              </p>
+              {optimisticCompletedCount === habitsTotal && (
+                <Text
+                  size="1"
+                  color="green"
+                  weight="bold"
+                  className="animate-fade-in"
+                >
+                  All Done! ✨
+                </Text>
+              )}
+            </Flex>
             <span className="dashboard__habits-fraction">
-              {completedHabitsCount}
+              {optimisticCompletedCount}
               <span className="dashboard__habits-fraction-total">
                 /{habitsTotal}
               </span>
             </span>
           </Flex>
 
-          <Box className="dashboard__habits-progress">
+          <Box
+            className="dashboard__habits-progress"
+            role="progressbar"
+            aria-valuenow={Math.round(habitsPct)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Habits completion progress"
+          >
             <Box
               className="dashboard__habits-progress-fill"
               style={{ width: `${habitsPct}%` }}
@@ -196,49 +272,52 @@ export default function DashboardPage({
       )}
 
       {/* Weight trend */}
-      <Box className="dashboard__card dashboard__card--weight">
-        <Flex className="dashboard__weight-header">
-          <Box className="dashboard__weight-label-row">
-            <p className="section-label">Weight trend</p>
-            {streak > 0 && (
-              <Text size="1" className="dashboard__weight-streak">
-                {streak}d streak
-              </Text>
-            )}
-          </Box>
-        </Flex>
-
-        {!loggedToday && (
-          <weightFetcher.Form
-            method="post"
-            className="dashboard__weight-log-form"
-          >
-            <Box className="dashboard__weight-input">
-              <NumberInput
-                name="weight"
-                min={0}
-                placeholder={lastWeight?.value?.toString() ?? "kg"}
-                size="2"
-              />
+      <SuccessPulse trigger={showWeightPulse}>
+        <Box className="dashboard__card dashboard__card--weight">
+          <Flex className="dashboard__weight-header">
+            <Box className="dashboard__weight-label-row">
+              <p className="section-label">Weight trend</p>
+              {streak > 0 && (
+                <Text size="1" className="dashboard__weight-streak">
+                  {streak}d streak
+                </Text>
+              )}
             </Box>
-            <Button
-              type="submit"
-              size="2"
-              loading={weightFetcher.state !== "idle"}
-            >
-              Log
-            </Button>
-          </weightFetcher.Form>
-        )}
+          </Flex>
 
-        {weightData.length > 0 && (
-          <MeasurementChart
-            data={weightData}
-            unit={weight.unit}
-            measurementName="weight"
-          />
-        )}
-      </Box>
+          {!loggedToday && (
+            <weightFetcher.Form
+              method="post"
+              className="dashboard__weight-log-form"
+            >
+              <Box className="dashboard__weight-input">
+                <NumberInput
+                  name="weight"
+                  min={0}
+                  placeholder={lastWeight?.value?.toString() ?? "kg"}
+                  size="2"
+                  aria-label="Weight"
+                />
+              </Box>
+              <Button
+                type="submit"
+                size="2"
+                loading={weightFetcher.state !== "idle"}
+              >
+                Log
+              </Button>
+            </weightFetcher.Form>
+          )}
+
+          {weightData.length > 0 && (
+            <MeasurementChart
+              data={weightData}
+              unit={weight.unit}
+              measurementName="weight"
+            />
+          )}
+        </Box>
+      </SuccessPulse>
     </Box>
   );
 }
