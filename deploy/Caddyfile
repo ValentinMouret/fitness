@@ -3,10 +3,6 @@
 import /home/valentin/fitness/deploy/review-apps/*.caddy
 
 fitness.valentinmouret.io {
-    handle /hooks/* {
-        reverse_proxy 127.0.0.1:9000
-    }
-
     handle {
         reverse_proxy 127.0.0.1:18080 {
             header_up Host {host}
