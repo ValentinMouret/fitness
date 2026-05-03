@@ -54,7 +54,7 @@ docker ps --format 'table {{.Names}}\t{{.Status}}'
 docker logs --tail=200 <fitness-container-name>
 ```
 
-The previous `fitness-app-1` container may still be running during the rollback window. Treat it as a fallback target, not as the active production path.
+The old `fitness-app-1` container has been removed. Dokploy is the active production deployment path.
 
 Database lifecycle logs:
 
@@ -69,29 +69,29 @@ GitHub runner logs:
 journalctl -u github-actions-runner-fitness -n 200 --no-pager
 ```
 
-Existing deployment logs:
+Legacy deployment logs, if the old state directory still exists:
 
 ```shell
 tail -n 200 /home/valentin/fitness/.deploy/deploy.log
 ls -lah /home/valentin/fitness/.deploy/review-apps
 ```
 
-These existing deployment logs are legacy-only. They should disappear after `webhook.service`, `fitness-app-1`, and old review app containers are removed.
+These logs are historical only.
 
 ## Legacy Webhook Cleanup
 
-The repository no longer contains the old webhook config or hand-written deploy scripts. After the updated Caddyfile is deployed on the VPS, stop the legacy service:
+The repository no longer contains the old webhook config or hand-written deploy scripts. The live Caddyfile has been reloaded, `webhook.service` has been stopped and disabled, and the old generated review app snippets have been removed.
+
+Verify the legacy service remains disabled:
 
 ```shell
-sudo systemctl disable --now webhook
 sudo systemctl status webhook
 ```
 
-Remove old generated review app Caddy snippets if no legacy review app is still needed:
+Verify old generated review app snippets are gone:
 
 ```shell
-rm -rf /home/valentin/fitness/deploy/review-apps
-sudo systemctl reload caddy
+test ! -e /home/valentin/fitness/deploy/review-apps
 ```
 
 ## Dokploy Admin Port
@@ -174,12 +174,6 @@ Verify the local Caddy-to-Dokploy route:
 curl --fail --silent --header 'Host: fitness.valentinmouret.io' http://127.0.0.1:18080/healthz
 ```
 
-Verify the old rollback app if `fitness-app-1` is still running:
-
-```shell
-curl --fail --silent http://127.0.0.1:5174/healthz
-```
-
 Trigger a production deployment:
 
 ```shell
@@ -196,14 +190,6 @@ sudo -iu postgres /srv/fitness/db/prepare-production.sh <sha>
 If a production deploy fails before Dokploy moves traffic, leave the current app alone and inspect Dokploy deployment logs.
 
 If production migration fails after the shadow check passed, keep the last healthy app running and apply a corrective migration.
-
-Rollback to the old app during the temporary rollback window:
-
-1. Edit the Fitness site in `deploy/Caddyfile` or the live Caddyfile so the default `handle` proxies to `127.0.0.1:5174`.
-2. Reload Caddy.
-3. Verify `https://fitness.valentinmouret.io/healthz`.
-
-After rollback is no longer needed, remove `fitness-app-1` and delete this fallback path.
 
 ## Review Apps
 

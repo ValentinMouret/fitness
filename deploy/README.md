@@ -79,7 +79,7 @@ caddy.service
 postgresql@17-main.service
 ```
 
-The previous `fitness-app-1` container is still running only as a short-term rollback target while the Dokploy deployment is validated.
+The old `fitness-app-1` rollback container has been stopped and removed.
 
 ## Why Dokploy
 
@@ -120,10 +120,14 @@ Those behaviors should live in small scripts called from Dokploy pre-deploy comm
 - Confirmed public production `/healthz` returns `status: ok` and `checks.database: ok`.
 - Removed the old repository-managed webhook deployment config and scripts.
 - Removed the old GitHub workflow jobs that called the webhook review-app endpoints.
+- Applied the updated Caddyfile on the VPS and reloaded Caddy.
+- Stopped and disabled `webhook.service`.
+- Stopped and removed the old `fitness-app-1` rollback container.
+- Removed old generated review app Caddy snippets from the VPS.
 
 ## Next Work
 
-Before removing the old VPS deployment path, verify the current Dokploy production flow is the only deploy path still being used.
+The old VPS deployment path has been removed. Dokploy is the active production deployment path.
 
 Deferred work:
 
@@ -134,12 +138,9 @@ Deferred work:
 
 Concrete next steps:
 
-1. Apply the updated Caddyfile on the VPS and reload Caddy.
-2. Stop and disable `webhook.service` on the VPS if no other hook uses it.
-3. Stop and remove the old `fitness-app-1` container after the rollback window.
-4. Persist the PostgreSQL Docker bridge firewall rules if they are not already persisted outside the current session.
-5. Add Tailscale-based admin access for Dokploy and other private server surfaces.
-6. Decide whether Caddy remains the front proxy for all services or whether Jellyfin, Plex, and torrent move to Dokploy-managed Traefik.
+1. Persist the PostgreSQL Docker bridge firewall rules if they are not already persisted outside the current session.
+2. Add Tailscale-based admin access for Dokploy and other private server surfaces.
+3. Decide whether Caddy remains the front proxy for all services or whether Jellyfin, Plex, and torrent move to Dokploy-managed Traefik.
 
 ## Installation Notes
 
@@ -248,7 +249,7 @@ Internet
   -> production app container
 ```
 
-The old `/hooks/*` deployment route has been removed from the repository Caddyfile. Apply the Caddyfile on the VPS and reload Caddy to remove it from the live server.
+The old `/hooks/*` deployment route has been removed from the repository Caddyfile and from the live VPS Caddy config.
 
 ## Production Deploy Lifecycle
 
@@ -352,9 +353,6 @@ The endpoint must not expose secrets.
 
 ## TODO
 
-- Apply the updated Caddyfile on the VPS and reload Caddy.
-- Stop and disable `webhook.service` on the VPS if no other hook uses it.
-- Stop and remove the old `fitness-app-1` container after the rollback window.
 - Persist the PostgreSQL Docker bridge firewall rules if they are not already persisted outside the current session.
 - Set up Tailscale-based admin access for Dokploy and other private server surfaces.
 - Later: configure Dokploy `GIT_SHA` injection.
