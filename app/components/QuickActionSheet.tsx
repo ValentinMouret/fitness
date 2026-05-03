@@ -81,7 +81,7 @@ export function QuickActionSheet({
 
   const handleLogMeal = () => {
     onOpenChange(false);
-    navigate("/nutrition/meals");
+    navigate("/nutrition");
   };
 
   const isLoading = dataFetcher.state === "loading";

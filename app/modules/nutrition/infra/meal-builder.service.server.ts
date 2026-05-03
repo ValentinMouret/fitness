@@ -148,7 +148,7 @@ export async function saveMealLog(input: {
     const safeReturnTo =
       input.returnTo && isSafePath(input.returnTo)
         ? input.returnTo
-        : "/nutrition/meals";
+        : "/nutrition";
     return redirect(safeReturnTo);
   } catch (_error) {
     throw new Error("Invalid meal data");

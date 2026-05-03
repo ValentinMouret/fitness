@@ -429,7 +429,7 @@ export default function MealBuilder({
         title={title}
         backTo={
           mealLoggingMode.isEnabled
-            ? mealLoggingMode.returnTo || "/nutrition/meals"
+            ? mealLoggingMode.returnTo || "/nutrition"
             : "/nutrition"
         }
       />
