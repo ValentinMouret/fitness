@@ -18,7 +18,8 @@ ENV NODE_ENV=production
 COPY . .
 RUN bun run build
 
-FROM base AS runtime
+# Reuse prod-deps so node_modules stays in place — no costly cross-stage copy.
+FROM prod-deps AS runtime
 
 # Node is required to serve the app: Bun's react-dom/server.bun.js shim
 # does not export renderToPipeableStream. Bun is kept for `bun db:migrate`.
@@ -28,13 +29,11 @@ ARG GIT_SHA=unknown
 ENV GIT_SHA=$GIT_SHA
 ENV NODE_ENV=production
 
-COPY --from=build     --chown=bun:bun /app/build                ./build
-COPY --from=build     --chown=bun:bun /app/package.json         ./
-COPY --from=prod-deps --chown=bun:bun /app/node_modules         ./node_modules
-COPY --from=build     --chown=bun:bun /app/drizzle              ./drizzle
-COPY --from=build     --chown=bun:bun /app/app/db/migrate.ts    ./app/db/migrate.ts
-COPY --from=build     --chown=bun:bun /app/app/env.server.ts    ./app/env.server.ts
-COPY --from=build     --chown=bun:bun /app/app/logger.server.ts ./app/logger.server.ts
+COPY --from=build --chown=bun:bun /app/build              ./build
+COPY --from=build --chown=bun:bun /app/drizzle            ./drizzle
+COPY --from=build --chown=bun:bun /app/app/db/migrate.ts  ./app/db/migrate.ts
+COPY --from=build --chown=bun:bun /app/app/env.server.ts  ./app/env.server.ts
+COPY --from=build --chown=bun:bun /app/app/logger.server.ts ./app/logger.server.ts
 
 USER bun
 
