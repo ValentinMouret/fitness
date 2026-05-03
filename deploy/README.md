@@ -54,7 +54,6 @@ What exists now:
 - Caddy still owns public `80/443`.
 - Caddy still serves Fitness, Jellyfin, Plex, and torrent routes.
 - Caddy routes `fitness.valentinmouret.io` to Dokploy Traefik on `127.0.0.1:18080`.
-- Caddy still preserves `/hooks/*` for the old webhook deploy path until Dokploy deploy triggers are validated.
 - Dokploy runs in Docker Swarm.
 - Dokploy UI is available at `https://dokploy.valentinmouret.io` through Caddy.
 - The raw Dokploy port `:3000` is intentionally blocked from the public internet.
@@ -77,7 +76,6 @@ dokploy-redis
 dokploy-traefik
 dokploy-admin-port-lockdown.service
 caddy.service
-webhook.service
 postgresql@17-main.service
 ```
 
@@ -112,7 +110,6 @@ Those behaviors should live in small scripts called from Dokploy pre-deploy comm
 - Added PostgreSQL connectivity to the health response.
 - Added `GIT_SHA` to the app environment schema.
 - Added Docker build/runtime support for `GIT_SHA`.
-- Updated the existing production and review-app scripts to pass `GIT_SHA`.
 - Installed Dokploy side-by-side without taking Caddy off `80/443`.
 - Exposed Dokploy at `https://dokploy.valentinmouret.io` through Caddy.
 - Removed direct public access to Dokploy's raw `:3000` port.
@@ -121,6 +118,8 @@ Those behaviors should live in small scripts called from Dokploy pre-deploy comm
 - Routed `fitness.valentinmouret.io` through Caddy to Dokploy Traefik.
 - Connected the Dokploy app to native PostgreSQL through the Docker bridge.
 - Confirmed public production `/healthz` returns `status: ok` and `checks.database: ok`.
+- Removed the old repository-managed webhook deployment config and scripts.
+- Removed the old GitHub workflow jobs that called the webhook review-app endpoints.
 
 ## Next Work
 
@@ -135,13 +134,8 @@ Deferred work:
 
 Concrete next steps:
 
-1. Disable or delete the old GitHub webhook that calls `/hooks/*`.
-2. Remove old webhook deployment plumbing:
-    - `/hooks/*` Caddy routing;
-    - `deploy/hooks.json`;
-    - `scripts/deploy.sh`;
-    - old review app container orchestration in `scripts/review-app.sh`;
-    - obsolete GitHub webhook secrets and workflow steps.
+1. Apply the updated Caddyfile on the VPS and reload Caddy.
+2. Stop and disable `webhook.service` on the VPS if no other hook uses it.
 3. Stop and remove the old `fitness-app-1` container after the rollback window.
 4. Persist the PostgreSQL Docker bridge firewall rules if they are not already persisted outside the current session.
 5. Add Tailscale-based admin access for Dokploy and other private server surfaces.
@@ -254,7 +248,7 @@ Internet
   -> production app container
 ```
 
-`/hooks/*` still points to the old webhook service until the GitHub deployment flow is replaced by Dokploy triggers.
+The old `/hooks/*` deployment route has been removed from the repository Caddyfile. Apply the Caddyfile on the VPS and reload Caddy to remove it from the live server.
 
 ## Production Deploy Lifecycle
 
@@ -358,8 +352,8 @@ The endpoint must not expose secrets.
 
 ## TODO
 
-- Disable or delete the old GitHub webhook that calls `/hooks/*`.
-- Remove old `/hooks/*`, webhook, and hand-rolled deploy scripts now that Dokploy production deploys are validated.
+- Apply the updated Caddyfile on the VPS and reload Caddy.
+- Stop and disable `webhook.service` on the VPS if no other hook uses it.
 - Stop and remove the old `fitness-app-1` container after the rollback window.
 - Persist the PostgreSQL Docker bridge firewall rules if they are not already persisted outside the current session.
 - Set up Tailscale-based admin access for Dokploy and other private server surfaces.
@@ -382,14 +376,14 @@ Required jobs:
 - build;
 - e2e tests.
 
-Production deploy job:
+Future production deploy job:
 
 - runs only on `push` to `main`;
 - depends on all required CI jobs;
 - triggers Dokploy through its API or webhook;
 - does not build the production image in GitHub.
 
-Review app deploy job:
+Future review app deploy job:
 
 - runs only for non-draft pull requests targeting `main`;
 - runs only when the pull request source repository is this repository;
@@ -397,7 +391,7 @@ Review app deploy job:
 - prepares the review database;
 - triggers or permits the Dokploy preview deployment.
 
-Review app destroy job:
+Future review app destroy job:
 
 - runs when a pull request closes;
 - runs only when the pull request source repository is this repository;

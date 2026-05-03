@@ -9,7 +9,6 @@ Check service status:
 ```shell
 sudo systemctl status postgresql
 sudo systemctl status caddy
-sudo systemctl status webhook
 sudo systemctl status dokploy-admin-port-lockdown
 sudo systemctl status github-actions-runner-fitness
 docker service ls
@@ -75,6 +74,24 @@ Existing deployment logs:
 ```shell
 tail -n 200 /home/valentin/fitness/.deploy/deploy.log
 ls -lah /home/valentin/fitness/.deploy/review-apps
+```
+
+These existing deployment logs are legacy-only. They should disappear after `webhook.service`, `fitness-app-1`, and old review app containers are removed.
+
+## Legacy Webhook Cleanup
+
+The repository no longer contains the old webhook config or hand-written deploy scripts. After the updated Caddyfile is deployed on the VPS, stop the legacy service:
+
+```shell
+sudo systemctl disable --now webhook
+sudo systemctl status webhook
+```
+
+Remove old generated review app Caddy snippets if no legacy review app is still needed:
+
+```shell
+rm -rf /home/valentin/fitness/deploy/review-apps
+sudo systemctl reload caddy
 ```
 
 ## Dokploy Admin Port
@@ -183,9 +200,8 @@ If production migration fails after the shadow check passed, keep the last healt
 Rollback to the old app during the temporary rollback window:
 
 1. Edit the Fitness site in `deploy/Caddyfile` or the live Caddyfile so the default `handle` proxies to `127.0.0.1:5174`.
-2. Keep the `/hooks/*` handler unchanged if old webhook deploys are still needed.
-3. Reload Caddy.
-4. Verify `https://fitness.valentinmouret.io/healthz`.
+2. Reload Caddy.
+3. Verify `https://fitness.valentinmouret.io/healthz`.
 
 After rollback is no longer needed, remove `fitness-app-1` and delete this fallback path.
 
