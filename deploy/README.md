@@ -43,16 +43,18 @@ The target setup uses these components:
 - GitHub integration in Dokploy for repository access and preview deployments.
 - GitHub Actions calling Dokploy after CI passes where Dokploy's automatic trigger would deploy too early.
 
-Choosing Dokploy means the public app routing should move from Caddy to Dokploy-managed Traefik. Running both as competing public reverse proxies would make the setup harder to reason about. Caddy can be removed from the Fitness traffic path unless another service on the VPS still needs it.
+Choosing Dokploy means the public app routing should move to Dokploy-managed Traefik. Because Caddy still serves other services on this VPS, the current transition state keeps Caddy on public `80/443` and proxies Fitness traffic to Dokploy Traefik on localhost.
 
 ## Current VPS State
 
-As of 2026-05-02, Dokploy is installed side-by-side with the existing Caddy deployment.
+As of 2026-05-03, Dokploy is installed side-by-side with the existing Caddy deployment, and Fitness production traffic is routed through Dokploy.
 
 What exists now:
 
 - Caddy still owns public `80/443`.
 - Caddy still serves Fitness, Jellyfin, Plex, and torrent routes.
+- Caddy routes `fitness.valentinmouret.io` to Dokploy Traefik on `127.0.0.1:18080`.
+- Caddy still preserves `/hooks/*` for the old webhook deploy path until Dokploy deploy triggers are validated.
 - Dokploy runs in Docker Swarm.
 - Dokploy UI is available at `https://dokploy.valentinmouret.io` through Caddy.
 - The raw Dokploy port `:3000` is intentionally blocked from the public internet.
@@ -62,8 +64,9 @@ What exists now:
   - `127.0.0.1:18443 -> :443`.
 - Dokploy's global host is configured as `dokploy.valentinmouret.io`.
 - Dokploy's per-user temporary trusted-origin workaround for `http://valentinmouret.io:3000` has been removed.
-- The app has a `/healthz` route in the repository, but production has not deployed it yet.
-- Docker image/runtime support for `GIT_SHA` exists in the repository, but production has not deployed it yet.
+- The public production app serves `/healthz` and reports PostgreSQL connectivity.
+- Docker image/runtime support for `GIT_SHA` exists in the repository.
+- The Dokploy app currently reports `sha: "unknown"` because Dokploy build/env SHA injection is not wired yet.
 
 Important services:
 
@@ -78,7 +81,7 @@ webhook.service
 postgresql@17-main.service
 ```
 
-The existing Fitness production container is still the source of truth until the Dokploy deployment is validated and cut over.
+The previous `fitness-app-1` container is still running only as a short-term rollback target while the Dokploy deployment is validated.
 
 ## Why Dokploy
 
@@ -114,12 +117,15 @@ Those behaviors should live in small scripts called from Dokploy pre-deploy comm
 - Exposed Dokploy at `https://dokploy.valentinmouret.io` through Caddy.
 - Removed direct public access to Dokploy's raw `:3000` port.
 - Persisted the raw `:3000` block with a systemd oneshot service.
+- Configured the Dokploy Fitness production app.
+- Routed `fitness.valentinmouret.io` through Caddy to Dokploy Traefik.
+- Connected the Dokploy app to native PostgreSQL through the Docker bridge.
+- Confirmed public production `/healthz` returns `status: ok` and `checks.database: ok`.
 
 ## Next Work
 
-Before replacing the existing VPS deployment, verify these Dokploy behaviors on the box:
+Before removing the old VPS deployment path, verify these Dokploy behaviors on the box:
 
-- Dokploy can run this app from the repository Dockerfile.
 - Dokploy can deploy only after the GitHub CI workflow passes.
 - Dokploy preview deployments can be gated so draft pull requests, fork pull requests, and failing CI do not deploy.
 - Dokploy preview deployments can use the `pr-<number>.review.valentinmouret.io` URL shape.
@@ -132,19 +138,23 @@ If CI-gated preview deployments cannot be made clean with Dokploy alone, keep re
 
 Concrete next steps:
 
-1. Commit and push the health check, `GIT_SHA`, and deployment doc changes.
-2. Configure the Fitness production app in Dokploy against the repository Dockerfile.
-3. Configure production environment variables in Dokploy.
-4. Configure Dokploy to pass `GIT_SHA` into production and review app containers.
-5. Configure Dokploy health checks to call `/healthz`.
-6. Validate a Dokploy deployment without moving `fitness.valentinmouret.io` traffic yet.
-7. Decide whether production migrations are run by Dokploy pre-deploy commands or by GitHub Actions before calling Dokploy.
-8. Build the review database prepare/destroy scripts.
-9. Validate Dokploy preview deployments and CI gating.
-10. Add Tailscale-based admin access for Dokploy and other private server surfaces.
-11. Plan the public reverse-proxy cutover:
-    - either migrate Fitness only and keep Caddy in front temporarily;
-    - or migrate Fitness, Jellyfin, Plex, and torrent from Caddy to Dokploy-managed Traefik.
+1. Push the current deployment documentation update.
+2. Configure Dokploy to pass `GIT_SHA` into production and review app containers.
+3. Configure Dokploy health checks to call `/healthz`.
+4. Validate one production deploy through Dokploy from a new commit.
+5. Decide whether production migrations are run by Dokploy pre-deploy commands or by GitHub Actions before calling Dokploy.
+6. Build the review database prepare/destroy scripts.
+7. Validate Dokploy preview deployments and CI gating.
+8. Add Tailscale-based admin access for Dokploy and other private server surfaces.
+9. Replace the old GitHub webhook deployment jobs with Dokploy deploy triggers after CI passes.
+10. Remove old webhook deployment plumbing once Dokploy production and review deploys are validated:
+    - `/hooks/*` Caddy routing;
+    - `deploy/hooks.json`;
+    - `scripts/deploy.sh`;
+    - old review app container orchestration in `scripts/review-app.sh`;
+    - obsolete GitHub webhook secrets and workflow steps.
+11. Stop and remove the old `fitness-app-1` container after the rollback window.
+12. Decide whether Caddy remains the front proxy for all services or whether Jellyfin, Plex, and torrent move to Dokploy-managed Traefik.
 
 ## Installation Notes
 
@@ -224,7 +234,7 @@ Secrets are not stored in the repository.
 
 ## Networking
 
-Dokploy-managed Traefik is the only public HTTP entrypoint.
+Target state: Dokploy-managed Traefik is the only public HTTP entrypoint for Fitness.
 
 ```text
 Internet
@@ -242,6 +252,18 @@ Domains:
 - production: `fitness.valentinmouret.io`;
 - review apps: `pr-<number>.review.valentinmouret.io`;
 - Dokploy UI: a separate admin hostname, protected by Dokploy authentication and not reused for the app.
+
+Current transition state:
+
+```text
+Internet
+  -> Cloudflare DNS
+  -> Caddy :443
+  -> Dokploy Traefik 127.0.0.1:18080
+  -> production app container
+```
+
+`/hooks/*` still points to the old webhook service until the GitHub deployment flow is replaced by Dokploy triggers.
 
 ## Production Deploy Lifecycle
 
@@ -345,15 +367,19 @@ The endpoint must not expose secrets.
 
 ## TODO
 
-- Commit and push the local deployment changes.
-- Configure Fitness production in Dokploy.
+- Push the current deployment documentation update.
 - Configure Dokploy `GIT_SHA` injection.
 - Configure Dokploy `/healthz` health checks.
 - Verify Dokploy waits for health checks before routing production traffic.
 - Verify Dokploy waits for health checks before publishing preview deployments.
+- Validate one new production deploy through Dokploy.
 - Validate CI-gated Dokploy preview deployments.
 - Implement review database prepare and destroy scripts.
+- Persist the PostgreSQL Docker bridge firewall rules if they are not already persisted outside the current session.
 - Set up Tailscale-based admin access for Dokploy and other private server surfaces.
+- Replace the old GitHub webhook deploy calls with Dokploy deploy triggers after CI passes.
+- Remove old `/hooks/*`, webhook, and hand-rolled deploy scripts after Dokploy deploys are validated.
+- Stop and remove the old `fitness-app-1` container after the rollback window.
 
 ## GitHub Workflows
 

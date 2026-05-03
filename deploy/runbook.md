@@ -16,7 +16,7 @@ docker service ls
 docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 ```
 
-Dokploy runs in Docker Swarm. Caddy is still the public reverse proxy on `80/443`.
+Dokploy runs in Docker Swarm. Caddy is still the public reverse proxy on `80/443` because it also serves non-Fitness services. Fitness production traffic currently flows through Caddy to Dokploy Traefik on `127.0.0.1:18080`.
 
 Dokploy UI:
 
@@ -54,6 +54,8 @@ Application logs:
 docker ps --format 'table {{.Names}}\t{{.Status}}'
 docker logs --tail=200 <fitness-container-name>
 ```
+
+The previous `fitness-app-1` container may still be running during the rollback window. Treat it as a fallback target, not as the active production path.
 
 Database lifecycle logs:
 
@@ -149,6 +151,18 @@ Run a production health check:
 curl --fail --silent https://fitness.valentinmouret.io/healthz
 ```
 
+Verify the local Caddy-to-Dokploy route:
+
+```shell
+curl --fail --silent --header 'Host: fitness.valentinmouret.io' http://127.0.0.1:18080/healthz
+```
+
+Verify the old rollback app if `fitness-app-1` is still running:
+
+```shell
+curl --fail --silent http://127.0.0.1:5174/healthz
+```
+
 Trigger a production deployment:
 
 ```shell
@@ -165,6 +179,15 @@ sudo -iu postgres /srv/fitness/db/prepare-production.sh <sha>
 If a production deploy fails before Dokploy moves traffic, leave the current app alone and inspect Dokploy deployment logs.
 
 If production migration fails after the shadow check passed, keep the last healthy app running and apply a corrective migration.
+
+Rollback to the old app during the temporary rollback window:
+
+1. Edit the Fitness site in `deploy/Caddyfile` or the live Caddyfile so the default `handle` proxies to `127.0.0.1:5174`.
+2. Keep the `/hooks/*` handler unchanged if old webhook deploys are still needed.
+3. Reload Caddy.
+4. Verify `https://fitness.valentinmouret.io/healthz`.
+
+After rollback is no longer needed, remove `fitness-app-1` and delete this fallback path.
 
 ## Review Apps
 
@@ -206,6 +229,28 @@ Drop a broken review app database:
 
 ```shell
 sudo -iu postgres dropdb --if-exists fitness_review_pr_123
+```
+
+Dokploy app containers must not use `localhost` for native PostgreSQL. From inside those containers, PostgreSQL is reached through the Docker bridge host address.
+
+Current production value:
+
+```text
+DATABASE_URL=postgres://...@172.20.0.1:5432/fitness
+```
+
+Check bridge access from the app container:
+
+```shell
+APP="$(docker ps --format '{{.Names}}' | grep '^fitness-app-' | head -1)"
+
+docker exec "$APP" sh -lc 'node -e "
+  const net = require(\"node:net\");
+  const u = new URL(process.env.DATABASE_URL);
+  const s = net.createConnection({ host: u.hostname, port: Number(u.port || 5432) });
+  s.on(\"connect\", () => { console.log(\"tcp-ok\"); s.end(); });
+  s.on(\"error\", e => { console.error(e.code, e.message); process.exit(1); });
+"'
 ```
 
 ## GitHub Runner
