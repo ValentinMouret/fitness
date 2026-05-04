@@ -219,6 +219,7 @@ export default function DashboardPage({
                 min={0}
                 placeholder={lastWeight?.value?.toString() ?? "kg"}
                 size="2"
+                aria-label="Weight"
               />
             </Box>
             <Button
