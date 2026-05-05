@@ -120,6 +120,7 @@ export default function DashboardPage({
   const isHabitToggling = fetchers.some(
     (f) => f.formData?.get("intent") === "toggle-habit",
   );
+
   const calPct = Math.min(nutrition.calories / nutrition.calorieTarget, 1);
   const remaining = Math.max(
     0,
@@ -215,27 +216,27 @@ export default function DashboardPage({
               </span>
             </Flex>
 
-          <Box className="dashboard__habits-progress">
-            <Box
-              className="dashboard__habits-progress-fill"
-              style={{ width: `${habitsPct}%` }}
-            />
-          </Box>
+            <Box className="dashboard__habits-progress">
+              <Box
+                className="dashboard__habits-progress-fill"
+                style={{ width: `${habitsPct}%` }}
+              />
+            </Box>
 
-          <Box>
-            {todayHabits.map((habit, i) => (
-              <Box key={habit.id}>
-                {i > 0 && <hr className="rule-divider" />}
-                <HabitCheckbox
-                  habitId={habit.id}
-                  habitName={habit.name}
-                  identityPhrase={habit.identityPhrase}
-                  isCompleted={completionMap.get(habit.id) ?? false}
-                  streak={habitStreaks.get(habit.id) ?? 0}
-                />
-              </Box>
-            ))}
-          </Box>
+            <Box>
+              {todayHabits.map((habit, i) => (
+                <Box key={habit.id}>
+                  {i > 0 && <hr className="rule-divider" />}
+                  <HabitCheckbox
+                    habitId={habit.id}
+                    habitName={habit.name}
+                    identityPhrase={habit.identityPhrase}
+                    isCompleted={completionMap.get(habit.id) ?? false}
+                    streak={habitStreaks.get(habit.id) ?? 0}
+                  />
+                </Box>
+              ))}
+            </Box>
           </Box>
         </SuccessPulse>
       )}
@@ -245,49 +246,49 @@ export default function DashboardPage({
         trigger={weightFetcher.state === "loading" || (loggedToday && !!weight)}
       >
         <Box className="dashboard__card dashboard__card--weight">
-        <Flex className="dashboard__weight-header">
-          <Box className="dashboard__weight-label-row">
-            <p className="section-label">Weight trend</p>
-            {streak > 0 && (
-              <Text size="1" className="dashboard__weight-streak">
-                {streak}d streak
-              </Text>
-            )}
-          </Box>
-        </Flex>
-
-        {!loggedToday && (
-          <weightFetcher.Form
-            method="post"
-            className="dashboard__weight-log-form"
-          >
-            <Box className="dashboard__weight-input">
-              <NumberInput
-                name="weight"
-                min={0}
-                placeholder={lastWeight?.value?.toString() ?? "kg"}
-                size="2"
-                aria-label="Weight"
-              />
+          <Flex className="dashboard__weight-header">
+            <Box className="dashboard__weight-label-row">
+              <p className="section-label">Weight trend</p>
+              {streak > 0 && (
+                <Text size="1" className="dashboard__weight-streak">
+                  {streak}d streak
+                </Text>
+              )}
             </Box>
-            <Button
-              type="submit"
-              size="2"
-              loading={weightFetcher.state !== "idle"}
-            >
-              Log
-            </Button>
-          </weightFetcher.Form>
-        )}
+          </Flex>
 
-        {weightData.length > 0 && (
-          <MeasurementChart
-            data={weightData}
-            unit={weight.unit}
-            measurementName="weight"
-          />
-        )}
-      </Box>
+          {!loggedToday && (
+            <weightFetcher.Form
+              method="post"
+              className="dashboard__weight-log-form"
+            >
+              <Box className="dashboard__weight-input">
+                <NumberInput
+                  name="weight"
+                  min={0}
+                  placeholder={lastWeight?.value?.toString() ?? "kg"}
+                  size="2"
+                  aria-label="Weight"
+                />
+              </Box>
+              <Button
+                type="submit"
+                size="2"
+                loading={weightFetcher.state !== "idle"}
+              >
+                Log
+              </Button>
+            </weightFetcher.Form>
+          )}
+
+          {weightData.length > 0 && (
+            <MeasurementChart
+              data={weightData}
+              unit={weight.unit}
+              measurementName="weight"
+            />
+          )}
+        </Box>
       </SuccessPulse>
     </Box>
   );
