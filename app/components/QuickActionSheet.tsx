@@ -229,6 +229,7 @@ export function QuickActionSheet({
                       type="submit"
                       loading={weightFetcher.state !== "idle"}
                       disabled={!weightValue && weightFetcher.state === "idle"}
+                      aria-label="Log weight"
                     >
                       Log
                     </Button>

@@ -1,7 +1,9 @@
 import { Box, Button, Flex, Text } from "@radix-ui/themes";
-import { Link, useFetcher } from "react-router";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useFetcher, useFetchers } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import { Celebration, SuccessPulse } from "~/components/Celebration";
 import HabitCheckbox from "~/components/HabitCheckbox";
 import MeasurementChart from "~/components/MeasurementChart";
 import { NumberInput } from "~/components/NumberInput";
@@ -78,10 +80,47 @@ export default function DashboardPage({
   },
 }: Route.ComponentProps) {
   const weightFetcher = useFetcher();
+  const fetchers = useFetchers();
+
+  const optimisticCompletions = useMemo(() => {
+    const map = new Map(completionMap);
+    for (const f of fetchers) {
+      if (f.formData?.get("intent") === "toggle-habit") {
+        const habitId = f.formData.get("habitId") as string;
+        const completed = f.formData.get("completed") === "true";
+        map.set(habitId, !completed);
+      }
+    }
+    return map;
+  }, [completionMap, fetchers]);
+
+  const currentCompletedCount = useMemo(
+    () => Array.from(optimisticCompletions.values()).filter(Boolean).length,
+    [optimisticCompletions],
+  );
 
   const habitsTotal = todayHabits.length;
+
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [previouslyCompleted, setPreviouslyCompleted] = useState(
+    habitsTotal > 0 && completedHabitsCount === habitsTotal,
+  );
+
+  useEffect(() => {
+    const allDone = habitsTotal > 0 && currentCompletedCount === habitsTotal;
+    if (allDone && !previouslyCompleted) {
+      setShowCelebration(true);
+    }
+    setPreviouslyCompleted(allDone);
+  }, [currentCompletedCount, habitsTotal, previouslyCompleted]);
+
   const habitsPct =
-    habitsTotal > 0 ? (completedHabitsCount / habitsTotal) * 100 : 0;
+    habitsTotal > 0 ? (currentCompletedCount / habitsTotal) * 100 : 0;
+
+  const isHabitToggling = fetchers.some(
+    (f) => f.formData?.get("intent") === "toggle-habit",
+  );
+
   const calPct = Math.min(nutrition.calories / nutrition.calorieTarget, 1);
   const remaining = Math.max(
     0,
@@ -90,6 +129,11 @@ export default function DashboardPage({
 
   return (
     <Box className="dashboard">
+      <Celebration
+        trigger={showCelebration}
+        onComplete={() => setShowCelebration(false)}
+      />
+
       {inProgressWorkout && (
         <Link
           to={`/workouts/${inProgressWorkout.id}`}
@@ -160,11 +204,12 @@ export default function DashboardPage({
 
       {/* Habits */}
       {habitsTotal > 0 && (
-        <Box className="dashboard__card dashboard__card--habits">
+        <SuccessPulse trigger={isHabitToggling}>
+          <Box className="dashboard__card dashboard__card--habits">
           <Flex className="dashboard__habits-header">
             <p className="section-label">Habits</p>
             <span className="dashboard__habits-fraction">
-              {completedHabitsCount}
+              {currentCompletedCount}
               <span className="dashboard__habits-fraction-total">
                 /{habitsTotal}
               </span>
@@ -192,11 +237,15 @@ export default function DashboardPage({
               </Box>
             ))}
           </Box>
-        </Box>
+          </Box>
+        </SuccessPulse>
       )}
 
       {/* Weight trend */}
-      <Box className="dashboard__card dashboard__card--weight">
+      <SuccessPulse
+        trigger={weightFetcher.state === "loading" || (loggedToday && !!weight)}
+      >
+        <Box className="dashboard__card dashboard__card--weight">
         <Flex className="dashboard__weight-header">
           <Box className="dashboard__weight-label-row">
             <p className="section-label">Weight trend</p>
@@ -239,6 +288,7 @@ export default function DashboardPage({
           />
         )}
       </Box>
+      </SuccessPulse>
     </Box>
   );
 }
