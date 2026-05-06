@@ -206,28 +206,28 @@ export default function DashboardPage({
               onComplete={() => setCelebrate(false)}
             />
             <Flex className="dashboard__habits-header">
-            <p className="section-label">Habits</p>
-            <span className="dashboard__habits-fraction">
-              {optimisticCompletedCount}
-              <span className="dashboard__habits-fraction-total">
-                /{habitsTotal}
+              <p className="section-label">Habits</p>
+              <span className="dashboard__habits-fraction">
+                {optimisticCompletedCount}
+                <span className="dashboard__habits-fraction-total">
+                  /{habitsTotal}
+                </span>
               </span>
-            </span>
-          </Flex>
+            </Flex>
 
-          <Box
-            className="dashboard__habits-progress"
-            role="progressbar"
-            aria-valuenow={habitsPct}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label="Habits completion progress"
-          >
             <Box
-              className="dashboard__habits-progress-fill"
-              style={{ width: `${habitsPct}%` }}
-            />
-          </Box>
+              className="dashboard__habits-progress"
+              role="progressbar"
+              aria-valuenow={habitsPct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Habits completion progress"
+            >
+              <Box
+                className="dashboard__habits-progress-fill"
+                style={{ width: `${habitsPct}%` }}
+              />
+            </Box>
 
             <Box>
               {todayHabits.map((habit, i) => (
@@ -251,39 +251,39 @@ export default function DashboardPage({
       <SuccessPulse trigger={weightFetcher.state !== "idle"}>
         <Box className="dashboard__card dashboard__card--weight">
           <Flex className="dashboard__weight-header">
-          <Box className="dashboard__weight-label-row">
-            <p className="section-label">Weight trend</p>
-            {streak > 0 && (
-              <Text size="1" className="dashboard__weight-streak">
-                {streak}d streak
-              </Text>
-            )}
-          </Box>
-        </Flex>
-
-        {!loggedToday && (
-          <weightFetcher.Form
-            method="post"
-            className="dashboard__weight-log-form"
-          >
-            <Box className="dashboard__weight-input">
-              <NumberInput
-                name="weight"
-                min={0}
-                placeholder={lastWeight?.value?.toString() ?? "kg"}
-                size="2"
-                aria-label="Weight"
-              />
+            <Box className="dashboard__weight-label-row">
+              <p className="section-label">Weight trend</p>
+              {streak > 0 && (
+                <Text size="1" className="dashboard__weight-streak">
+                  {streak}d streak
+                </Text>
+              )}
             </Box>
-            <Button
-              type="submit"
-              size="2"
-              loading={weightFetcher.state !== "idle"}
+          </Flex>
+
+          {!loggedToday && (
+            <weightFetcher.Form
+              method="post"
+              className="dashboard__weight-log-form"
             >
-              Log
-            </Button>
-          </weightFetcher.Form>
-        )}
+              <Box className="dashboard__weight-input">
+                <NumberInput
+                  name="weight"
+                  min={0}
+                  placeholder={lastWeight?.value?.toString() ?? "kg"}
+                  size="2"
+                  aria-label="Weight"
+                />
+              </Box>
+              <Button
+                type="submit"
+                size="2"
+                loading={weightFetcher.state !== "idle"}
+              >
+                Log
+              </Button>
+            </weightFetcher.Form>
+          )}
 
           {weightData.length > 0 && (
             <MeasurementChart
