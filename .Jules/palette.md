@@ -31,3 +31,11 @@
 ## 2026-04-26 - [Keyboard Shortcut Discovery & Accessibility]
 **Learning:** Adding global shortcuts (like 'q' for Quick Actions) requires clear visual cues (e.g., `<Kbd>` component) for discovery and proper accessibility attributes (`aria-keyshortcuts`, `aria-label`). Visual hints should be hidden on mobile where physical keyboards are less common.
 **Action:** When adding shortcuts, always include a visual `<Kbd>` badge on the associated element and ensure accessibility attributes are updated.
+
+## 2026-05-06 - [Global Optimistic Progress & Celebrations]
+**Learning:** To trigger celebration effects (like confetti) only upon completion of the final item in a list, implement a `useEffect` that monitors an optimistic count (derived via `useFetchers()`) and compares it against a persistent 'previously completed' state or ref initialized from server data. This prevents the celebration from re-triggering on every page load if the user is already finished.
+**Action:** Use a combination of `useFetchers()` for the current count and a `previouslyCompleted` ref or state to guard celebration triggers.
+
+## 2026-05-06 - [Action Success Feedback]
+**Learning:** Providing immediate, container-level visual feedback (like a pulse) for actions that might take a moment to reflect in the data (due to network latency) greatly improves perceived performance. Binding the `trigger` prop of such feedback components to the existence of relevant fetchers ensures the feedback is "live".
+**Action:** Wrap action-heavy sections in a feedback component (e.g., `SuccessPulse`) triggered by relevant fetcher states.
