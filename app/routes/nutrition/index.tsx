@@ -3,7 +3,6 @@ import {
   ChevronRightIcon,
   DotsHorizontalIcon,
   MagicWandIcon,
-  Pencil1Icon,
   PlusIcon,
 } from "@radix-ui/react-icons";
 import {
@@ -423,7 +422,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                       </span>
                       <Button size="1" variant="outline" asChild>
                         <Link to={getMealBuilderUrl(mealType, meal)}>
-                          <Pencil1Icon width="14" height="14" />
+                          <PlusIcon width="14" height="14" />
                           Edit
                         </Link>
                       </Button>

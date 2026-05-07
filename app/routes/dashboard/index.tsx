@@ -274,7 +274,7 @@ export default function DashboardPage({
                   size="2"
                   aria-label="Weight"
                 >
-                  {weight.unit && (
+                  {weight?.unit && (
                     <TextField.Slot pr="3">
                       <Text size="1" color="gray">
                         {weight.unit}

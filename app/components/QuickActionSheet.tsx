@@ -148,14 +148,19 @@ export function QuickActionSheet({
     }
   }, [dataFetcher.data?.lastWeight, hasPrefilled]);
 
+  const [isSuccessfullySubmitted, setIsSuccessfullySubmitted] = useState(false);
+
   useEffect(() => {
     if (weightFetcher.state === "submitting") {
+      setIsSuccessfullySubmitted(true);
+    } else if (weightFetcher.state === "idle" && isSuccessfullySubmitted) {
       const timer = setTimeout(() => {
         onOpenChange(false);
+        setIsSuccessfullySubmitted(false);
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [weightFetcher.state, onOpenChange]);
+  }, [weightFetcher.state, isSuccessfullySubmitted, onOpenChange]);
 
   const handleStartWorkout = () => {
     onOpenChange(false);

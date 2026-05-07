@@ -14,7 +14,8 @@ test.describe("Dashboard Page", () => {
 
     await expect(page.getByText("kcal", { exact: true })).toBeVisible();
     await expect(page.getByText("protein g", { exact: true })).toBeVisible();
-    await expect(page.getByText("kg", { exact: true })).toBeVisible();
+    // Use .first() because "kg" now also appears in the weight input slot
+    await expect(page.getByText("kg", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("kcal remaining")).toBeVisible();
     await expect(page.getByText("of daily goal")).toBeVisible();
   });
