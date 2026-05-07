@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Text } from "@radix-ui/themes";
+import { Box, Button, Flex, Text, TextField } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { Link, useFetcher, useFetchers } from "react-router";
 import { z } from "zod";
@@ -270,10 +270,18 @@ export default function DashboardPage({
                 <NumberInput
                   name="weight"
                   min={0}
-                  placeholder={lastWeight?.value?.toString() ?? "kg"}
+                  placeholder={lastWeight?.value?.toString() ?? "..."}
                   size="2"
                   aria-label="Weight"
-                />
+                >
+                  {weight.unit && (
+                    <TextField.Slot pr="3">
+                      <Text size="1" color="gray">
+                        {weight.unit}
+                      </Text>
+                    </TextField.Slot>
+                  )}
+                </NumberInput>
               </Box>
               <Button
                 type="submit"

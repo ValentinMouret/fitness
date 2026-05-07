@@ -17,6 +17,7 @@ import {
 } from "@radix-ui/themes";
 import { useEffect, useId, useState } from "react";
 import { useFetcher, useNavigate } from "react-router";
+import { SuccessPulse } from "./Celebration";
 import { NumberInput } from "./NumberInput";
 import "./QuickActionSheet.css";
 
@@ -125,6 +126,14 @@ export function QuickActionSheet({
   const dataFetcher = useFetcher<QuickActionsData>();
   const weightFetcher = useFetcher();
   const [weightValue, setWeightValue] = useState("");
+  const [hasPrefilled, setHasPrefilled] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setHasPrefilled(false);
+      setWeightValue("");
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open && dataFetcher.state === "idle" && !dataFetcher.data) {
@@ -133,10 +142,20 @@ export function QuickActionSheet({
   }, [open, dataFetcher]);
 
   useEffect(() => {
-    if (dataFetcher.data?.lastWeight && !weightValue) {
+    if (dataFetcher.data?.lastWeight && !hasPrefilled) {
       setWeightValue(dataFetcher.data.lastWeight.toString());
+      setHasPrefilled(true);
     }
-  }, [dataFetcher.data?.lastWeight, weightValue]);
+  }, [dataFetcher.data?.lastWeight, hasPrefilled]);
+
+  useEffect(() => {
+    if (weightFetcher.state === "submitting") {
+      const timer = setTimeout(() => {
+        onOpenChange(false);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [weightFetcher.state, onOpenChange]);
 
   const handleStartWorkout = () => {
     onOpenChange(false);
@@ -185,56 +204,56 @@ export function QuickActionSheet({
             )}
 
             {!data?.weightLogged && (
-              <Box mb="4">
-                <Text
-                  as="label"
-                  htmlFor={weightInputId}
-                  size="2"
-                  color="gray"
-                  mb="2"
-                  weight="medium"
-                  style={{ display: "block" }}
-                >
-                  Log Weight
-                </Text>
-                <weightFetcher.Form
-                  method="post"
-                  action="/dashboard"
-                  onSubmit={() => onOpenChange(false)}
-                >
-                  <Flex gap="2" align="end">
-                    <Box flexGrow="1">
-                      <NumberInput
-                        id={weightInputId}
-                        name="weight"
-                        min={0}
-                        placeholder={
-                          data?.lastWeight
-                            ? `Last: ${data.lastWeight}`
-                            : "Enter weight"
+              <SuccessPulse trigger={weightFetcher.state !== "idle"}>
+                <Box mb="4">
+                  <Text
+                    as="label"
+                    htmlFor={weightInputId}
+                    size="2"
+                    color="gray"
+                    mb="2"
+                    weight="medium"
+                    style={{ display: "block" }}
+                  >
+                    Log Weight
+                  </Text>
+                  <weightFetcher.Form method="post" action="/dashboard">
+                    <Flex gap="2" align="end">
+                      <Box flexGrow="1">
+                        <NumberInput
+                          id={weightInputId}
+                          name="weight"
+                          min={0}
+                          placeholder={
+                            data?.lastWeight
+                              ? `Last: ${data.lastWeight}`
+                              : "Enter weight"
+                          }
+                          value={weightValue}
+                          onChange={(e) => setWeightValue(e.target.value)}
+                        >
+                          {data?.weightUnit && (
+                            <TextField.Slot pr="3">
+                              <Text size="1" color="gray">
+                                {data.weightUnit}
+                              </Text>
+                            </TextField.Slot>
+                          )}
+                        </NumberInput>
+                      </Box>
+                      <Button
+                        type="submit"
+                        loading={weightFetcher.state !== "idle"}
+                        disabled={
+                          !weightValue && weightFetcher.state === "idle"
                         }
-                        value={weightValue}
-                        onChange={(e) => setWeightValue(e.target.value)}
                       >
-                        {data?.weightUnit && (
-                          <TextField.Slot pr="3">
-                            <Text size="1" color="gray">
-                              {data.weightUnit}
-                            </Text>
-                          </TextField.Slot>
-                        )}
-                      </NumberInput>
-                    </Box>
-                    <Button
-                      type="submit"
-                      loading={weightFetcher.state !== "idle"}
-                      disabled={!weightValue && weightFetcher.state === "idle"}
-                    >
-                      Log
-                    </Button>
-                  </Flex>
-                </weightFetcher.Form>
-              </Box>
+                        Log
+                      </Button>
+                    </Flex>
+                  </weightFetcher.Form>
+                </Box>
+              </SuccessPulse>
             )}
 
             <Flex direction="column" gap="2">
