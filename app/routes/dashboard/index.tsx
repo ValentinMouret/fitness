@@ -270,7 +270,9 @@ export default function DashboardPage({
                 <NumberInput
                   name="weight"
                   min={0}
-                  placeholder={lastWeight?.value?.toString() ?? "kg"}
+                  placeholder={
+                    lastWeight?.value ? `Last: ${lastWeight.value}` : "kg"
+                  }
                   size="2"
                   aria-label="Weight"
                 />
@@ -279,6 +281,7 @@ export default function DashboardPage({
                 type="submit"
                 size="2"
                 loading={weightFetcher.state !== "idle"}
+                aria-label="Log weight"
               >
                 Log
               </Button>

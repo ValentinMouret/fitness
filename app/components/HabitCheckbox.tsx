@@ -70,7 +70,7 @@ export default function HabitCheckbox({
 
         {streak > 0 && (
           <Text size="2" className="habit-checkbox__streak">
-            {streak}d
+            🔥 {streak}
           </Text>
         )}
       </Flex>

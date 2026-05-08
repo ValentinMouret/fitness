@@ -420,7 +420,12 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                       <span className="nutrition-meal__kcal">
                         {Math.round(meal.totals.calories)}
                       </span>
-                      <Button size="1" variant="outline" asChild>
+                      <Button
+                        size="1"
+                        variant="outline"
+                        aria-label={`Edit ${label}`}
+                        asChild
+                      >
                         <Link to={getMealBuilderUrl(mealType, meal)}>
                           <PlusIcon width="14" height="14" />
                           Edit
@@ -431,7 +436,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                           <IconButton
                             variant="ghost"
                             size="1"
-                            aria-label="Meal actions"
+                            aria-label={`More actions for ${label}`}
                           >
                             <DotsHorizontalIcon width="14" height="14" />
                           </IconButton>
@@ -462,7 +467,12 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                       <span className="nutrition-meal__kcal nutrition-meal__kcal--empty">
                         —
                       </span>
-                      <Button size="1" variant="outline" asChild>
+                      <Button
+                        size="1"
+                        variant="outline"
+                        aria-label={`Add ${label}`}
+                        asChild
+                      >
                         <Link to={getMealBuilderUrl(mealType)}>
                           <PlusIcon width="14" height="14" />
                           Add
@@ -472,7 +482,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                         variant="ghost"
                         size="1"
                         onClick={() => handleUseTemplate(mealType)}
-                        aria-label="Use template"
+                        aria-label={`Use template for ${label}`}
                       >
                         <DotsHorizontalIcon width="14" height="14" />
                       </IconButton>

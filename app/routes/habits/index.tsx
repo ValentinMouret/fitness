@@ -91,6 +91,7 @@ function CardFooter({
   color,
   missedTwice,
   onMinimum,
+  habitName,
 }: {
   done: boolean;
   streak: number;
@@ -98,6 +99,7 @@ function CardFooter({
   color: string;
   missedTwice: boolean;
   onMinimum: (e: React.MouseEvent) => void;
+  habitName: string;
 }) {
   return (
     <div
@@ -146,6 +148,11 @@ function CardFooter({
         <button
           type="button"
           onClick={onMinimum}
+          aria-label={
+            missedTwice
+              ? `Do the minimum for ${habitName}`
+              : `Log minimum for ${habitName}`
+          }
           style={{
             background: "transparent",
             border: "1px solid #e7e5e4",
@@ -371,6 +378,7 @@ function HabitCard({
         color={habit.color}
         missedTwice={nmt}
         onMinimum={logMinimum}
+        habitName={habit.name}
       />
     </div>
   );
