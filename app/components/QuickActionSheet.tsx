@@ -68,7 +68,7 @@ function HabitActionButton({ habit }: { readonly habit: Habit }) {
       onClick={handleToggleHabit}
       loading={isToggling}
       className="quick-action-sheet__habit-button"
-      aria-label={`${isOptimisticCompleted ? "Unmark" : "Mark"} '${habit.name}' ${habit.identityPhrase ? `('${habit.identityPhrase}') ` : ""}as completed`}
+      aria-label={`${isOptimisticCompleted ? "Unmark" : "Mark"} '${habit.name}' ${habit.identityPhrase ? `('${habit.identityPhrase}') ` : ""}as completed${habit.streak > 0 ? ` (${habit.streak} day streak)` : ""}`}
     >
       <Flex
         align="center"
