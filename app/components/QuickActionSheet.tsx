@@ -284,7 +284,10 @@ export function QuickActionSheet({
                 aria-label="Start Workout (S)"
               >
                 <CounterClockwiseClockIcon /> Start Workout
-                <Box ml="auto" display={{ initial: "none", md: "inline-block" }}>
+                <Box
+                  ml="auto"
+                  display={{ initial: "none", md: "inline-block" }}
+                >
                   <Kbd size="1">S</Kbd>
                 </Box>
               </Button>
@@ -296,7 +299,10 @@ export function QuickActionSheet({
                 aria-label="Log Meal (M)"
               >
                 <ReaderIcon /> Log Meal
-                <Box ml="auto" display={{ initial: "none", md: "inline-block" }}>
+                <Box
+                  ml="auto"
+                  display={{ initial: "none", md: "inline-block" }}
+                >
                   <Kbd size="1">M</Kbd>
                 </Box>
               </Button>
