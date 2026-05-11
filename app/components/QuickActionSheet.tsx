@@ -11,11 +11,12 @@ import {
   Flex,
   Heading,
   IconButton,
+  Kbd,
   Spinner,
   Text,
   TextField,
 } from "@radix-ui/themes";
-import { useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useFetcher, useNavigate } from "react-router";
 import { NumberInput } from "./NumberInput";
 import "./QuickActionSheet.css";
@@ -61,6 +62,9 @@ function HabitActionButton({ habit }: { readonly habit: Habit }) {
     );
   };
 
+  const streakText = habit.streak > 0 ? ` (${habit.streak} day streak)` : "";
+  const label = `${isOptimisticCompleted ? "Unmark" : "Mark"} '${habit.name}' ${habit.identityPhrase ? `('${habit.identityPhrase}') ` : ""}as completed${streakText}`;
+
   return (
     <Button
       variant={isOptimisticCompleted ? "solid" : "outline"}
@@ -68,7 +72,7 @@ function HabitActionButton({ habit }: { readonly habit: Habit }) {
       onClick={handleToggleHabit}
       loading={isToggling}
       className="quick-action-sheet__habit-button"
-      aria-label={`${isOptimisticCompleted ? "Unmark" : "Mark"} '${habit.name}' ${habit.identityPhrase ? `('${habit.identityPhrase}') ` : ""}as completed`}
+      aria-label={label}
     >
       <Flex
         align="center"
@@ -124,6 +128,7 @@ export function QuickActionSheet({
   const weightInputId = useId();
   const dataFetcher = useFetcher<QuickActionsData>();
   const weightFetcher = useFetcher();
+  const weightInputRef = useRef<HTMLInputElement>(null);
   const [weightValue, setWeightValue] = useState("");
 
   useEffect(() => {
@@ -138,18 +143,48 @@ export function QuickActionSheet({
     }
   }, [dataFetcher.data?.lastWeight, weightValue]);
 
-  const handleStartWorkout = () => {
+  const handleStartWorkout = useCallback(() => {
     onOpenChange(false);
     navigate("/workouts/create");
-  };
+  }, [onOpenChange, navigate]);
 
-  const handleLogMeal = () => {
+  const handleLogMeal = useCallback(() => {
     onOpenChange(false);
     navigate("/nutrition");
-  };
+  }, [onOpenChange, navigate]);
 
   const isLoading = dataFetcher.state === "loading";
   const data = dataFetcher.data;
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (isInput) return;
+
+      if (e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        handleStartWorkout();
+      } else if (e.key.toLowerCase() === "m") {
+        e.preventDefault();
+        handleLogMeal();
+      } else if (e.key.toLowerCase() === "w" && weightInputRef.current) {
+        e.preventDefault();
+        weightInputRef.current.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, handleStartWorkout, handleLogMeal]);
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -186,17 +221,20 @@ export function QuickActionSheet({
 
             {!data?.weightLogged && (
               <Box mb="4">
-                <Text
-                  as="label"
-                  htmlFor={weightInputId}
-                  size="2"
-                  color="gray"
-                  mb="2"
-                  weight="medium"
-                  style={{ display: "block" }}
-                >
-                  Log Weight
-                </Text>
+                <Flex align="center" justify="between" mb="2">
+                  <Text
+                    as="label"
+                    htmlFor={weightInputId}
+                    size="2"
+                    color="gray"
+                    weight="medium"
+                  >
+                    Log Weight
+                  </Text>
+                  <Box display={{ initial: "none", md: "inline-block" }}>
+                    <Kbd size="1">W</Kbd>
+                  </Box>
+                </Flex>
                 <weightFetcher.Form
                   method="post"
                   action="/dashboard"
@@ -205,6 +243,7 @@ export function QuickActionSheet({
                   <Flex gap="2" align="end">
                     <Box flexGrow="1">
                       <NumberInput
+                        ref={weightInputRef}
                         id={weightInputId}
                         name="weight"
                         min={0}
@@ -238,11 +277,28 @@ export function QuickActionSheet({
             )}
 
             <Flex direction="column" gap="2">
-              <Button size="3" onClick={handleStartWorkout}>
+              <Button
+                size="3"
+                onClick={handleStartWorkout}
+                aria-keyshortcuts="s"
+                aria-label="Start Workout (S)"
+              >
                 <CounterClockwiseClockIcon /> Start Workout
+                <Box ml="auto" display={{ initial: "none", md: "inline-block" }}>
+                  <Kbd size="1">S</Kbd>
+                </Box>
               </Button>
-              <Button size="3" variant="outline" onClick={handleLogMeal}>
+              <Button
+                size="3"
+                variant="outline"
+                onClick={handleLogMeal}
+                aria-keyshortcuts="m"
+                aria-label="Log Meal (M)"
+              >
                 <ReaderIcon /> Log Meal
+                <Box ml="auto" display={{ initial: "none", md: "inline-block" }}>
+                  <Kbd size="1">M</Kbd>
+                </Box>
               </Button>
             </Flex>
           </>
