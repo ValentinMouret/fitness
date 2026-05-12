@@ -3,6 +3,7 @@ import {
   ChevronRightIcon,
   DotsHorizontalIcon,
   MagicWandIcon,
+  Pencil1Icon,
   PlusIcon,
 } from "@radix-ui/react-icons";
 import {
@@ -396,6 +397,16 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
               ?.map((ing) => ing.ingredient.name)
               .join(" · ");
 
+            const isDeleting =
+              fetcher.state !== "idle" &&
+              fetcher.formData?.get("intent") === "delete-meal" &&
+              fetcher.formData?.get("mealId") === meal?.id;
+
+            const isApplyingTemplate =
+              fetcher.state !== "idle" &&
+              fetcher.formData?.get("intent") === "apply-template" &&
+              fetcher.formData?.get("mealCategory") === mealType;
+
             return (
               <div
                 key={mealType}
@@ -427,19 +438,20 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                         asChild
                       >
                         <Link to={getMealBuilderUrl(mealType, meal)}>
-                          <PlusIcon width="14" height="14" />
+                          <Pencil1Icon width="14" height="14" />
                           Edit
                         </Link>
                       </Button>
                       <DropdownMenu.Root>
                         <DropdownMenu.Trigger>
-                          <IconButton
+                          <Button
                             variant="ghost"
                             size="1"
                             aria-label={`More actions for ${label}`}
+                            loading={isDeleting}
                           >
                             <DotsHorizontalIcon width="14" height="14" />
-                          </IconButton>
+                          </Button>
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content>
                           <DropdownMenu.Item
@@ -478,14 +490,15 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                           Add
                         </Link>
                       </Button>
-                      <IconButton
+                      <Button
                         variant="ghost"
                         size="1"
                         onClick={() => handleUseTemplate(mealType)}
                         aria-label={`Use template for ${label}`}
+                        loading={isApplyingTemplate}
                       >
                         <DotsHorizontalIcon width="14" height="14" />
-                      </IconButton>
+                      </Button>
                     </>
                   )}
                 </div>
