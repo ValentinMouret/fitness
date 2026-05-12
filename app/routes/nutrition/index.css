@@ -100,6 +100,20 @@
   margin-top: 0.5rem;
 }
 
+/* --- Date Navigation --- */
+.nutrition-date-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: var(--space-section) 0 0.5rem;
+}
+
+/* --- Progress Card --- */
+.nutrition-progress-card {
+  margin-bottom: var(--space-section);
+}
+
 /* --- Meals --- */
 .nutrition-meals {
   margin-bottom: var(--space-section);
@@ -173,12 +187,21 @@
   font-style: italic;
 }
 
+.nutrition-meal__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
 .nutrition-meal__kcal {
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 600;
   color: var(--brand-text);
   flex-shrink: 0;
+  min-width: 3ch;
+  text-align: right;
 }
 
 .nutrition-meal__kcal--empty {

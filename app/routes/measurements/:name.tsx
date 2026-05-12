@@ -11,6 +11,7 @@ import {
   Text,
   TextField,
 } from "@radix-ui/themes";
+import { useId } from "react";
 import { data, useFetcher, useLoaderData } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -99,6 +100,8 @@ export default function MeasurementPage(_: Route.ComponentProps) {
   const { measurement, measures } = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
   const addFetcher = useFetcher();
+  const valueInputId = useId();
+  const dateInputId = useId();
 
   const isSubmitting = addFetcher.state === "submitting";
   const actionData = z
@@ -132,10 +135,11 @@ export default function MeasurementPage(_: Route.ComponentProps) {
           <input type="hidden" name="intent" value="add-measure" />
           <Flex gap="3" align="end" wrap="wrap">
             <Box>
-              <Text as="div" size="2" mb="1">
+              <Text as="label" htmlFor={valueInputId} size="2" mb="1" style={{ display: "block" }}>
                 Value ({measurement.unit})
               </Text>
               <NumberInput
+                id={valueInputId}
                 name="value"
                 placeholder="Enter value"
                 required
@@ -143,10 +147,11 @@ export default function MeasurementPage(_: Route.ComponentProps) {
               />
             </Box>
             <Box>
-              <Text as="div" size="2" mb="1">
+              <Text as="label" htmlFor={dateInputId} size="2" mb="1" style={{ display: "block" }}>
                 Date
               </Text>
               <TextField.Root
+                id={dateInputId}
                 name="date"
                 type="date"
                 defaultValue={today().toISOString().split("T")[0]}

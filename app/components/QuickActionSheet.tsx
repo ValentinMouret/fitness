@@ -40,6 +40,95 @@ interface QuickActionSheetProps {
   readonly onOpenChange: (open: boolean) => void;
 }
 
+function HabitActionButton({ habit }: { readonly habit: Habit }) {
+  const habitFetcher = useFetcher();
+
+  const isOptimisticCompleted =
+    habitFetcher.formData?.get("intent") === "toggle-habit"
+      ? habitFetcher.formData?.get("completed") === "false"
+      : habit.isCompleted;
+
+  const isToggling = habitFetcher.state !== "idle";
+
+  const handleToggleHabit = () => {
+    habitFetcher.submit(
+      {
+        intent: "toggle-habit",
+        habitId: habit.id,
+        completed: String(habit.isCompleted),
+      },
+      { method: "post", action: "/dashboard" },
+    );
+  };
+
+  const ariaLabel = [
+    isOptimisticCompleted ? "Unmark" : "Mark",
+    `'${habit.name}'`,
+    habit.identityPhrase ? `('${habit.identityPhrase}')` : "",
+    "as completed",
+    habit.streak > 0 ? `(${habit.streak} day streak)` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <Button
+      variant={isOptimisticCompleted ? "solid" : "outline"}
+      color={isOptimisticCompleted ? "tomato" : "gray"}
+      onClick={handleToggleHabit}
+      loading={isToggling}
+      className="quick-action-sheet__habit-button"
+      aria-label={ariaLabel}
+    >
+      <Flex
+        align="center"
+        gap="2"
+        className="quick-action-sheet__habit-content"
+      >
+        {isOptimisticCompleted && (
+          <CheckIcon className="quick-action-sheet__habit-icon--pop" />
+        )}
+        <Flex direction="column" align="start" gap="0">
+          <Text
+            className={
+              isOptimisticCompleted
+                ? "quick-action-sheet__habit-name quick-action-sheet__habit-name--completed"
+                : "quick-action-sheet__habit-name"
+            }
+          >
+            {habit.name}
+          </Text>
+          {habit.identityPhrase && (
+            <Text
+              size="1"
+              color="gray"
+              className={
+                isOptimisticCompleted
+                  ? "quick-action-sheet__habit-identity quick-action-sheet__habit-identity--completed"
+                  : "quick-action-sheet__habit-identity"
+              }
+            >
+              {habit.identityPhrase}
+            </Text>
+          )}
+        </Flex>
+        {habit.streak > 0 && (
+          <Text
+            size="1"
+            color="gray"
+            className="quick-action-sheet__habit-streak"
+          >
+            <span role="img" aria-label="streak">
+              🔥
+            </span>{" "}
+            {habit.streak}
+          </Text>
+        )}
+      </Flex>
+    </Button>
+  );
+}
+
 export function QuickActionSheet({
   open,
   onOpenChange,
@@ -47,7 +136,6 @@ export function QuickActionSheet({
   const navigate = useNavigate();
   const weightInputId = useId();
   const dataFetcher = useFetcher<QuickActionsData>();
-  const habitFetcher = useFetcher();
   const weightFetcher = useFetcher();
   const [weightValue, setWeightValue] = useState("");
 
@@ -63,26 +151,6 @@ export function QuickActionSheet({
     }
   }, [dataFetcher.data?.lastWeight, weightValue]);
 
-  const handleToggleHabit = (habitId: string, currentlyCompleted: boolean) => {
-    habitFetcher.submit(
-      {
-        intent: "toggle-habit",
-        habitId,
-        completed: String(currentlyCompleted),
-      },
-      { method: "post", action: "/dashboard" },
-    );
-  };
-
-  const handleLogWeight = () => {
-    if (!weightValue) return;
-    weightFetcher.submit(
-      { weight: weightValue },
-      { method: "post", action: "/dashboard" },
-    );
-    onOpenChange(false);
-  };
-
   const handleStartWorkout = () => {
     onOpenChange(false);
     navigate("/workouts/create");
@@ -90,7 +158,7 @@ export function QuickActionSheet({
 
   const handleLogMeal = () => {
     onOpenChange(false);
-    navigate("/nutrition/meals");
+    navigate("/nutrition");
   };
 
   const isLoading = dataFetcher.state === "loading";
@@ -122,73 +190,9 @@ export function QuickActionSheet({
                   Today's Habits
                 </Text>
                 <Flex direction="column" gap="2">
-                  {data.habits.map((habit) => {
-                    const isOptimisticCompleted =
-                      habitFetcher.formData?.get("habitId") === habit.id
-                        ? habitFetcher.formData?.get("completed") !== "true"
-                        : habit.isCompleted;
-
-                    const isToggling =
-                      habitFetcher.state !== "idle" &&
-                      habitFetcher.formData?.get("habitId") === habit.id;
-
-                    return (
-                      <Button
-                        key={habit.id}
-                        variant={isOptimisticCompleted ? "solid" : "outline"}
-                        color={isOptimisticCompleted ? "tomato" : "gray"}
-                        onClick={() =>
-                          handleToggleHabit(habit.id, isOptimisticCompleted)
-                        }
-                        loading={isToggling}
-                        className="quick-action-sheet__habit-button"
-                        aria-label={`${isOptimisticCompleted ? "Unmark" : "Mark"} '${habit.name}' ${habit.identityPhrase ? `('${habit.identityPhrase}') ` : ""}as completed${habit.streak > 0 ? ` (${habit.streak} day streak)` : ""}`}
-                      >
-                        <Flex
-                          align="center"
-                          gap="2"
-                          className="quick-action-sheet__habit-content"
-                        >
-                          {isOptimisticCompleted && (
-                            <CheckIcon className="quick-action-sheet__habit-icon--pop" />
-                          )}
-                          <Flex direction="column" align="start" gap="0">
-                            <Text
-                              className={
-                                isOptimisticCompleted
-                                  ? "quick-action-sheet__habit-name quick-action-sheet__habit-name--completed"
-                                  : "quick-action-sheet__habit-name"
-                              }
-                            >
-                              {habit.name}
-                            </Text>
-                            {habit.identityPhrase && (
-                              <Text
-                                size="1"
-                                color="gray"
-                                className={
-                                  isOptimisticCompleted
-                                    ? "quick-action-sheet__habit-identity quick-action-sheet__habit-identity--completed"
-                                    : "quick-action-sheet__habit-identity"
-                                }
-                              >
-                                {habit.identityPhrase}
-                              </Text>
-                            )}
-                          </Flex>
-                          {habit.streak > 0 && (
-                            <Text
-                              size="1"
-                              color="gray"
-                              className="quick-action-sheet__habit-streak"
-                            >
-                              🔥 {habit.streak}
-                            </Text>
-                          )}
-                        </Flex>
-                      </Button>
-                    );
-                  })}
+                  {data.habits.map((habit) => (
+                    <HabitActionButton key={habit.id} habit={habit} />
+                  ))}
                 </Flex>
               </Box>
             )}
@@ -206,33 +210,43 @@ export function QuickActionSheet({
                 >
                   Log Weight
                 </Text>
-                <Flex gap="2" align="end">
-                  <Box flexGrow="1">
-                    <NumberInput
-                      id={weightInputId}
-                      name="weight"
-                      min={0}
-                      placeholder="Enter weight"
-                      value={weightValue}
-                      onChange={(e) => setWeightValue(e.target.value)}
+                <weightFetcher.Form
+                  method="post"
+                  action="/dashboard"
+                  onSubmit={() => onOpenChange(false)}
+                >
+                  <Flex gap="2" align="end">
+                    <Box flexGrow="1">
+                      <NumberInput
+                        id={weightInputId}
+                        name="weight"
+                        min={0}
+                        placeholder={
+                          data?.lastWeight
+                            ? `Last: ${data.lastWeight}`
+                            : "Enter weight"
+                        }
+                        value={weightValue}
+                        onChange={(e) => setWeightValue(e.target.value)}
+                      >
+                        {data?.weightUnit && (
+                          <TextField.Slot pr="3">
+                            <Text size="1" color="gray">
+                              {data.weightUnit}
+                            </Text>
+                          </TextField.Slot>
+                        )}
+                      </NumberInput>
+                    </Box>
+                    <Button
+                      type="submit"
+                      loading={weightFetcher.state !== "idle"}
+                      disabled={!weightValue && weightFetcher.state === "idle"}
                     >
-                      {data?.weightUnit && (
-                        <TextField.Slot pr="3">
-                          <Text size="1" color="gray">
-                            {data.weightUnit}
-                          </Text>
-                        </TextField.Slot>
-                      )}
-                    </NumberInput>
-                  </Box>
-                  <Button
-                    onClick={handleLogWeight}
-                    loading={weightFetcher.state !== "idle"}
-                    disabled={!weightValue && weightFetcher.state === "idle"}
-                  >
-                    Log
-                  </Button>
-                </Flex>
+                      Log
+                    </Button>
+                  </Flex>
+                </weightFetcher.Form>
               </Box>
             )}
 

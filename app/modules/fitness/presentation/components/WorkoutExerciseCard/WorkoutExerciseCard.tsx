@@ -60,6 +60,8 @@ export function WorkoutExerciseCard({
     fetcher.formData?.get("intent") === "add-set" &&
     fetcher.formData?.get("exerciseId") === viewModel.exerciseId;
 
+  const isBusy = fetcher.state !== "idle";
+
   const handleAddSet = () => {
     if (onAddSet) {
       onAddSet(viewModel.exerciseId, viewModel.lastSet);
@@ -209,8 +211,8 @@ export function WorkoutExerciseCard({
           size="1"
           variant="ghost"
           mt="3"
-          disabled={fetcher.state !== "idle"}
           loading={isAddingSet}
+          disabled={isBusy && !isAddingSet}
         >
           <PlusIcon /> Add Set
         </Button>
@@ -243,6 +245,8 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
     actionFetcher.state !== "idle" &&
     actionFetcher.formData?.get("intent") === "remove-set" &&
     actionFetcher.formData?.get("setNumber") === set.set.toString();
+
+  const isBusy = actionFetcher.state !== "idle";
 
   useEffect(() => {
     setLocalReps(set.reps?.toString() ?? "");
@@ -380,8 +384,8 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
               size="2"
               variant="soft"
               color="green"
-              disabled={actionFetcher.state !== "idle"}
               loading={isCompleting}
+              disabled={isBusy && !isCompleting}
               aria-label={`Complete set ${set.set}`}
               onClick={onCompleteSet}
             >
@@ -400,8 +404,8 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
               size="1"
               variant="ghost"
               color="red"
-              disabled={actionFetcher.state !== "idle"}
               loading={isRemoving}
+              disabled={isBusy && !isRemoving}
               aria-label={`Remove set ${set.set}`}
             >
               <TrashIcon />
