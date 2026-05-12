@@ -62,8 +62,15 @@ function HabitActionButton({ habit }: { readonly habit: Habit }) {
     );
   };
 
-  const streakText = habit.streak > 0 ? ` (${habit.streak} day streak)` : "";
-  const label = `${isOptimisticCompleted ? "Unmark" : "Mark"} '${habit.name}' ${habit.identityPhrase ? `('${habit.identityPhrase}') ` : ""}as completed${streakText}`;
+  const ariaLabel = [
+    isOptimisticCompleted ? "Unmark" : "Mark",
+    `'${habit.name}'`,
+    habit.identityPhrase ? `('${habit.identityPhrase}')` : "",
+    "as completed",
+    habit.streak > 0 ? `(${habit.streak} day streak)` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <Button
@@ -72,7 +79,7 @@ function HabitActionButton({ habit }: { readonly habit: Habit }) {
       onClick={handleToggleHabit}
       loading={isToggling}
       className="quick-action-sheet__habit-button"
-      aria-label={label}
+      aria-label={ariaLabel}
     >
       <Flex
         align="center"
@@ -112,7 +119,10 @@ function HabitActionButton({ habit }: { readonly habit: Habit }) {
             color="gray"
             className="quick-action-sheet__habit-streak"
           >
-            🔥 {habit.streak}
+            <span role="img" aria-label="streak">
+              🔥
+            </span>{" "}
+            {habit.streak}
           </Text>
         )}
       </Flex>
@@ -170,13 +180,14 @@ export function QuickActionSheet({
 
       if (isInput) return;
 
-      if (e.key.toLowerCase() === "s") {
+      const key = e.key.toLowerCase();
+      if (key === "s") {
         e.preventDefault();
         handleStartWorkout();
-      } else if (e.key.toLowerCase() === "m") {
+      } else if (key === "m") {
         e.preventDefault();
         handleLogMeal();
-      } else if (e.key.toLowerCase() === "w" && weightInputRef.current) {
+      } else if (key === "w" && weightInputRef.current) {
         e.preventDefault();
         weightInputRef.current.focus();
       }

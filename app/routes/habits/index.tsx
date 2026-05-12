@@ -148,7 +148,7 @@ function CardFooter({
         <button
           type="button"
           onClick={onMinimum}
-          aria-label={`Log minimum for ${habitName}${streak > 0 ? ` (${streak} day streak)` : ""}`}
+          aria-label={`Log minimum for '${habitName}'${streak > 0 ? ` (${streak} day streak)` : ""}`}
           style={{
             background: "transparent",
             border: "1px solid #e7e5e4",
