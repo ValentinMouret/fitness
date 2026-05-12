@@ -15,11 +15,12 @@ import {
 } from "~/repository.server";
 import type { IngredientWithQuantity } from "../domain/ingredient";
 import { Ingredient } from "../domain/ingredient";
-import type {
-  CreateMealTemplateInput,
-  MealTemplate,
-  MealTemplateWithIngredients,
-  UpdateMealTemplateInput,
+import {
+  type CreateMealTemplateInput,
+  calculateSatietyScore,
+  type MealTemplate,
+  type MealTemplateWithIngredients,
+  type UpdateMealTemplateInput,
 } from "../domain/meal-template";
 import { recordToIngredient, recordToMealTemplate } from "./record-mappers";
 
@@ -101,13 +102,7 @@ export const MealTemplateRepository = {
 
     return ResultAsync.fromPromise(
       transaction.transaction(async (trx) => {
-        // Calculate totals and satiety from ingredients
         const totals = Ingredient.calculateTotalNutrition(input.ingredients);
-
-        // Calculate satiety score
-        const { calculateSatietyScore } = await import(
-          "../domain/meal-template"
-        );
         const satiety = calculateSatietyScore(input.ingredients, totals);
 
         // Insert meal template
@@ -191,7 +186,6 @@ export const MealTemplateRepository = {
         { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, volume: 0 },
       );
 
-      const { calculateSatietyScore } = require("../domain/meal-template");
       const satiety = calculateSatietyScore(updates.ingredients, totals);
 
       updateValues.total_calories = totals.calories;

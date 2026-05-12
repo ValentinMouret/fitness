@@ -9,14 +9,13 @@ Check service status:
 ```shell
 sudo systemctl status postgresql
 sudo systemctl status caddy
-sudo systemctl status webhook
 sudo systemctl status dokploy-admin-port-lockdown
 sudo systemctl status github-actions-runner-fitness
 docker service ls
 docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 ```
 
-Dokploy runs in Docker Swarm. Caddy is still the public reverse proxy on `80/443`.
+Dokploy runs in Docker Swarm. Caddy is still the public reverse proxy on `80/443` because it also serves non-Fitness services. Fitness production traffic currently flows through Caddy to Dokploy Traefik on `127.0.0.1:18080`.
 
 Dokploy UI:
 
@@ -55,6 +54,8 @@ docker ps --format 'table {{.Names}}\t{{.Status}}'
 docker logs --tail=200 <fitness-container-name>
 ```
 
+The old `fitness-app-1` container has been removed. Dokploy is the active production deployment path.
+
 Database lifecycle logs:
 
 ```shell
@@ -68,11 +69,29 @@ GitHub runner logs:
 journalctl -u github-actions-runner-fitness -n 200 --no-pager
 ```
 
-Existing deployment logs:
+Legacy deployment logs, if the old state directory still exists:
 
 ```shell
 tail -n 200 /home/valentin/fitness/.deploy/deploy.log
 ls -lah /home/valentin/fitness/.deploy/review-apps
+```
+
+These logs are historical only.
+
+## Legacy Webhook Cleanup
+
+The repository no longer contains the old webhook config or hand-written deploy scripts. The live Caddyfile has been reloaded, `webhook.service` has been stopped and disabled, and the old generated review app snippets have been removed.
+
+Verify the legacy service remains disabled:
+
+```shell
+sudo systemctl status webhook
+```
+
+Verify old generated review app snippets are gone:
+
+```shell
+test ! -e /home/valentin/fitness/deploy/review-apps
 ```
 
 ## Dokploy Admin Port
@@ -149,6 +168,12 @@ Run a production health check:
 curl --fail --silent https://fitness.valentinmouret.io/healthz
 ```
 
+Verify the local Caddy-to-Dokploy route:
+
+```shell
+curl --fail --silent --header 'Host: fitness.valentinmouret.io' http://127.0.0.1:18080/healthz
+```
+
 Trigger a production deployment:
 
 ```shell
@@ -171,22 +196,45 @@ If production migration fails after the shadow check passed, keep the last healt
 Run a review app health check:
 
 ```shell
-curl --fail --silent https://pr-123.review.valentinmouret.io/healthz
+curl --fail --silent https://<dokploy-preview-host>/healthz
 ```
 
-Prepare a review app database manually:
+Dokploy preview environment variables:
+
+```dotenv
+PREVIEW_APP=true
+NODE_ENV=production
+PORT=5174
+AUTH_USERNAME=...
+AUTH_PASSWORD=...
+ANTHROPIC_API_KEY=...
+REVIEW_DATABASE_ADMIN_URL=postgresql://valentin:...@172.20.0.1:5432/postgres
+REVIEW_DATABASE_SOURCE_URL=postgresql://valentin:...@172.20.0.1:5432/fitness
+REVIEW_DATABASE_URL_PREFIX=postgresql://valentin:...@172.20.0.1:5432/
+REVIEW_DATABASE_RUN_SEED=true
+```
+
+The preview container entrypoint derives its database name from `DOKPLOY_DEPLOY_URL`, copies production data into that database, runs migrations, ensures baseline measurements exist, and then starts the app.
+
+List review databases:
 
 ```shell
-sudo -iu postgres /srv/fitness/db/prepare-review-app.sh 123 <sha>
+sudo -iu postgres psql -c "
+  select d.datname, sd.description
+  from pg_database d
+  left join pg_shdescription sd
+    on sd.objoid = d.oid
+   and sd.classoid = 'pg_database'::regclass
+  where d.datname like 'fitness_review_%'
+  order by d.datname;
+"
 ```
 
-Destroy a review app database manually:
+Drop a review database after its Dokploy preview deployment is gone:
 
 ```shell
-sudo -iu postgres /srv/fitness/db/destroy-review-app.sh 123
+sudo -iu postgres dropdb --force <fitness_review_database_name>
 ```
-
-Review app container deployment and deletion should be handled through Dokploy preview deployments.
 
 ## PostgreSQL
 
@@ -206,6 +254,28 @@ Drop a broken review app database:
 
 ```shell
 sudo -iu postgres dropdb --if-exists fitness_review_pr_123
+```
+
+Dokploy app containers must not use `localhost` for native PostgreSQL. From inside those containers, PostgreSQL is reached through the Docker bridge host address.
+
+Current production value:
+
+```text
+DATABASE_URL=postgres://...@172.20.0.1:5432/fitness
+```
+
+Check bridge access from the app container:
+
+```shell
+APP="$(docker ps --format '{{.Names}}' | grep '^fitness-app-' | head -1)"
+
+docker exec "$APP" sh -lc 'node -e "
+  const net = require(\"node:net\");
+  const u = new URL(process.env.DATABASE_URL);
+  const s = net.createConnection({ host: u.hostname, port: Number(u.port || 5432) });
+  s.on(\"connect\", () => { console.log(\"tcp-ok\"); s.end(); });
+  s.on(\"error\", e => { console.error(e.code, e.message); process.exit(1); });
+"'
 ```
 
 ## GitHub Runner
