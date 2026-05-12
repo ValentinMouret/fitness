@@ -135,7 +135,13 @@ export default function MeasurementPage(_: Route.ComponentProps) {
           <input type="hidden" name="intent" value="add-measure" />
           <Flex gap="3" align="end" wrap="wrap">
             <Box>
-              <Text as="label" htmlFor={valueInputId} size="2" mb="1" style={{ display: "block" }}>
+              <Text
+                as="label"
+                htmlFor={valueInputId}
+                size="2"
+                mb="1"
+                style={{ display: "block" }}
+              >
                 Value ({measurement.unit})
               </Text>
               <NumberInput
@@ -147,7 +153,13 @@ export default function MeasurementPage(_: Route.ComponentProps) {
               />
             </Box>
             <Box>
-              <Text as="label" htmlFor={dateInputId} size="2" mb="1" style={{ display: "block" }}>
+              <Text
+                as="label"
+                htmlFor={dateInputId}
+                size="2"
+                mb="1"
+                style={{ display: "block" }}
+              >
                 Date
               </Text>
               <TextField.Root
