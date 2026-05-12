@@ -61,6 +61,16 @@ function QuickActionHabitItem({ habit }: { habit: Habit }) {
     );
   };
 
+  const ariaLabel = [
+    isOptimisticCompleted ? "Unmark" : "Mark",
+    `'${habit.name}'`,
+    habit.identityPhrase ? `('${habit.identityPhrase}')` : "",
+    "as completed",
+    habit.streak > 0 ? `(${habit.streak} day streak)` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <Button
       variant={isOptimisticCompleted ? "solid" : "outline"}
@@ -68,7 +78,7 @@ function QuickActionHabitItem({ habit }: { habit: Habit }) {
       onClick={handleToggle}
       loading={isToggling}
       className="quick-action-sheet__habit-button"
-      aria-label={`${isOptimisticCompleted ? "Unmark" : "Mark"} '${habit.name}' ${habit.identityPhrase ? `('${habit.identityPhrase}') ` : ""}as completed`}
+      aria-label={ariaLabel}
     >
       <Flex
         align="center"
@@ -108,7 +118,10 @@ function QuickActionHabitItem({ habit }: { habit: Habit }) {
             color="gray"
             className="quick-action-sheet__habit-streak"
           >
-            🔥 {habit.streak}
+            <span role="img" aria-label="streak">
+              🔥
+            </span>{" "}
+            {habit.streak}
           </Text>
         )}
       </Flex>
@@ -138,15 +151,6 @@ export function QuickActionSheet({
     }
   }, [dataFetcher.data?.lastWeight, weightValue]);
 
-  const handleLogWeight = () => {
-    if (!weightValue) return;
-    weightFetcher.submit(
-      { weight: weightValue },
-      { method: "post", action: "/dashboard" },
-    );
-    onOpenChange(false);
-  };
-
   const handleStartWorkout = () => {
     onOpenChange(false);
     navigate("/workouts/create");
@@ -154,7 +158,7 @@ export function QuickActionSheet({
 
   const handleLogMeal = () => {
     onOpenChange(false);
-    navigate("/nutrition/meals");
+    navigate("/nutrition");
   };
 
   const isLoading = dataFetcher.state === "loading";
@@ -206,33 +210,43 @@ export function QuickActionSheet({
                 >
                   Log Weight
                 </Text>
-                <Flex gap="2" align="end">
-                  <Box flexGrow="1">
-                    <NumberInput
-                      id={weightInputId}
-                      name="weight"
-                      min={0}
-                      placeholder="Enter weight"
-                      value={weightValue}
-                      onChange={(e) => setWeightValue(e.target.value)}
+                <weightFetcher.Form
+                  method="post"
+                  action="/dashboard"
+                  onSubmit={() => onOpenChange(false)}
+                >
+                  <Flex gap="2" align="end">
+                    <Box flexGrow="1">
+                      <NumberInput
+                        id={weightInputId}
+                        name="weight"
+                        min={0}
+                        placeholder={
+                          data?.lastWeight
+                            ? `Last: ${data.lastWeight}`
+                            : "Enter weight"
+                        }
+                        value={weightValue}
+                        onChange={(e) => setWeightValue(e.target.value)}
+                      >
+                        {data?.weightUnit && (
+                          <TextField.Slot pr="3">
+                            <Text size="1" color="gray">
+                              {data.weightUnit}
+                            </Text>
+                          </TextField.Slot>
+                        )}
+                      </NumberInput>
+                    </Box>
+                    <Button
+                      type="submit"
+                      loading={weightFetcher.state !== "idle"}
+                      disabled={!weightValue && weightFetcher.state === "idle"}
                     >
-                      {data?.weightUnit && (
-                        <TextField.Slot pr="3">
-                          <Text size="1" color="gray">
-                            {data.weightUnit}
-                          </Text>
-                        </TextField.Slot>
-                      )}
-                    </NumberInput>
-                  </Box>
-                  <Button
-                    onClick={handleLogWeight}
-                    loading={weightFetcher.state !== "idle"}
-                    disabled={!weightValue}
-                  >
-                    Log
-                  </Button>
-                </Flex>
+                      Log
+                    </Button>
+                  </Flex>
+                </weightFetcher.Form>
               </Box>
             )}
 

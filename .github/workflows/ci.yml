@@ -13,7 +13,6 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write
 
 env:
   DATABASE_URL: postgresql://postgres:password@localhost:5432/fitness
@@ -140,92 +139,3 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
-
-  deploy-review:
-    name: Deploy Review App
-    if: >-
-      github.event_name == 'pull_request' &&
-      !github.event.pull_request.draft &&
-      github.event.pull_request.head.repo.full_name == github.repository
-    needs: [quality, build, test, e2e]
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Build deploy payload
-        id: payload
-        env:
-          REVIEW_APP_SECRET: ${{ secrets.REVIEW_APP_SECRET }}
-        run: |
-          pr_number="${{ github.event.pull_request.number }}"
-          sha="${{ github.event.pull_request.head.sha }}"
-          payload="$(jq -nc --arg pr_number "$pr_number" --arg sha "$sha" '{pr_number: $pr_number, sha: $sha}')"
-          signature="sha256=$(printf '%s' "$payload" | openssl dgst -sha256 -hmac "$REVIEW_APP_SECRET" -binary | xxd -p -c 256)"
-          review_url="https://pr-${pr_number}.review.valentinmouret.io"
-
-          {
-            echo "pr_number=$pr_number"
-            echo "review_url=$review_url"
-            echo "short_sha=${sha:0:7}"
-            echo "signature=$signature"
-            echo "payload<<EOF"
-            echo "$payload"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Trigger review app deploy
-        env:
-          PAYLOAD: ${{ steps.payload.outputs.payload }}
-          REVIEW_APP_DEPLOY_URL: ${{ secrets.REVIEW_APP_DEPLOY_URL }}
-          SIGNATURE: ${{ steps.payload.outputs.signature }}
-        run: |
-          curl \
-            --fail \
-            --show-error \
-            --silent \
-            -X POST \
-            -H "Content-Type: application/json" \
-            -H "X-Review-App-Signature: $SIGNATURE" \
-            --data "$PAYLOAD" \
-            "$REVIEW_APP_DEPLOY_URL"
-
-      - name: Upsert PR comment
-        uses: actions/github-script@v8
-        env:
-          PR_NUMBER: ${{ steps.payload.outputs.pr_number }}
-          REVIEW_URL: ${{ steps.payload.outputs.review_url }}
-          SHORT_SHA: ${{ steps.payload.outputs.short_sha }}
-        with:
-          script: |
-            const issue_number = Number(process.env.PR_NUMBER);
-            const marker = "<!-- review-app -->";
-            const body = [
-              marker,
-              "🚀 **Review app deployed**",
-              "",
-              process.env.REVIEW_URL,
-              "",
-              `Commit \`${process.env.SHORT_SHA}\``,
-            ].join("\n");
-
-            const comments = await github.paginate(github.rest.issues.listComments, {
-              ...context.repo,
-              issue_number,
-              per_page: 100,
-            });
-
-            const existing = comments.find((comment) => comment.body?.includes(marker));
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                ...context.repo,
-                comment_id: existing.id,
-                body,
-              });
-              return;
-            }
-
-            await github.rest.issues.createComment({
-              ...context.repo,
-              issue_number,
-              body,
-            });

@@ -99,7 +99,7 @@ export function QuickEstimateModal({
 
     if ("ingredients" in data) {
       const dateStr = toDateString(currentDate);
-      const returnTo = `/nutrition/meals?date=${dateStr}`;
+      const returnTo = `/nutrition?date=${dateStr}`;
       sessionStorage.setItem(
         "quickEstimate",
         JSON.stringify({

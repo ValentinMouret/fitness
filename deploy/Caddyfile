@@ -1,9 +1,10 @@
-# Review apps: each PR gets a pr-<number>.review.valentinmouret.io subdomain.
-# Individual configs are written by scripts/review-app.sh.
-import /home/valentin/fitness/deploy/review-apps/*.caddy
-
 fitness.valentinmouret.io {
-    reverse_proxy localhost:5174
+    handle {
+        reverse_proxy 127.0.0.1:18080 {
+            header_up Host {host}
+            header_up X-Forwarded-Proto https
+        }
+    }
 
     header {
         X-Content-Type-Options nosniff
@@ -14,6 +15,4 @@ fitness.valentinmouret.io {
     log {
         output file /var/log/caddy/fitness.log
     }
-
-    reverse_proxy /hooks/* localhost:9000
 }
