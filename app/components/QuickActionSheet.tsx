@@ -40,7 +40,7 @@ interface QuickActionSheetProps {
   readonly onOpenChange: (open: boolean) => void;
 }
 
-function QuickActionHabitItem({ habit }: { habit: Habit }) {
+function QuickActionHabitItem({ habit }: { readonly habit: Habit }) {
   const fetcher = useFetcher();
 
   const isOptimisticCompleted =
