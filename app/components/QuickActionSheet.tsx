@@ -11,11 +11,12 @@ import {
   Flex,
   Heading,
   IconButton,
+  Kbd,
   Spinner,
   Text,
   TextField,
 } from "@radix-ui/themes";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useFetcher, useNavigate } from "react-router";
 import { NumberInput } from "./NumberInput";
 import "./QuickActionSheet.css";
@@ -138,6 +139,7 @@ export function QuickActionSheet({
   const dataFetcher = useFetcher<QuickActionsData>();
   const weightFetcher = useFetcher();
   const [weightValue, setWeightValue] = useState("");
+  const weightInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open && dataFetcher.state === "idle" && !dataFetcher.data) {
@@ -150,6 +152,33 @@ export function QuickActionSheet({
       setWeightValue(dataFetcher.data.lastWeight.toString());
     }
   }, [dataFetcher.data?.lastWeight, weightValue]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key.toLowerCase() === "w" &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey
+      ) {
+        const target = e.target as HTMLElement;
+        const isInput =
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable;
+
+        if (!isInput) {
+          e.preventDefault();
+          weightInputRef.current?.focus();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
 
   const handleStartWorkout = () => {
     onOpenChange(false);
@@ -199,17 +228,21 @@ export function QuickActionSheet({
 
             {!data?.weightLogged && (
               <Box mb="4">
-                <Text
-                  as="label"
-                  htmlFor={weightInputId}
-                  size="2"
-                  color="gray"
-                  mb="2"
-                  weight="medium"
-                  style={{ display: "block" }}
-                >
-                  Log Weight
-                </Text>
+                <Flex align="center" gap="2" mb="2">
+                  <Text
+                    as="label"
+                    htmlFor={weightInputId}
+                    size="2"
+                    color="gray"
+                    weight="medium"
+                    style={{ display: "block" }}
+                  >
+                    Log Weight
+                  </Text>
+                  <Box display={{ initial: "none", md: "inline-block" }}>
+                    <Kbd size="1">W</Kbd>
+                  </Box>
+                </Flex>
                 <weightFetcher.Form
                   method="post"
                   action="/dashboard"
@@ -218,6 +251,7 @@ export function QuickActionSheet({
                   <Flex gap="2" align="end">
                     <Box flexGrow="1">
                       <NumberInput
+                        ref={weightInputRef}
                         id={weightInputId}
                         name="weight"
                         min={0}
@@ -228,6 +262,8 @@ export function QuickActionSheet({
                         }
                         value={weightValue}
                         onChange={(e) => setWeightValue(e.target.value)}
+                        aria-label="Weight"
+                        aria-keyshortcuts="w"
                       >
                         {data?.weightUnit && (
                           <TextField.Slot pr="3">

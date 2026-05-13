@@ -1,5 +1,5 @@
 import { TextField } from "@radix-ui/themes";
-import type { ChangeEvent, ComponentProps, FocusEvent } from "react";
+import { type ChangeEvent, type ComponentProps, type FocusEvent, forwardRef } from "react";
 
 type TextFieldRootProps = ComponentProps<typeof TextField.Root>;
 
@@ -11,32 +11,34 @@ function normalizeDecimalSeparator(value: string): string {
   return value.replace(",", ".");
 }
 
-export function NumberInput({
-  allowDecimals = true,
-  onChange,
-  onFocus,
-  children,
-  ...props
-}: NumberInputProps & { children?: React.ReactNode }) {
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    e.target.value = normalizeDecimalSeparator(e.target.value);
-    onChange?.(e);
-  };
+export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
+  (
+    { allowDecimals = true, onChange, onFocus, children, ...props },
+    ref,
+  ) => {
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+      e.target.value = normalizeDecimalSeparator(e.target.value);
+      onChange?.(e);
+    };
 
-  const handleFocus = (e: FocusEvent<HTMLInputElement>) => {
-    e.target.select();
-    onFocus?.(e);
-  };
+    const handleFocus = (e: FocusEvent<HTMLInputElement>) => {
+      e.target.select();
+      onFocus?.(e);
+    };
 
-  return (
-    <TextField.Root
-      type="text"
-      inputMode={allowDecimals ? "decimal" : "numeric"}
-      onChange={handleChange}
-      onFocus={handleFocus}
-      {...props}
-    >
-      {children}
-    </TextField.Root>
-  );
-}
+    return (
+      <TextField.Root
+        ref={ref}
+        type="text"
+        inputMode={allowDecimals ? "decimal" : "numeric"}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        {...props}
+      >
+        {children}
+      </TextField.Root>
+    );
+  },
+);
+
+NumberInput.displayName = "NumberInput";
