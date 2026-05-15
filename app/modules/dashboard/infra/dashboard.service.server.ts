@@ -9,6 +9,8 @@ import {
   TargetService,
 } from "~/modules/core/infra/measurement-service";
 import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
+import type { DailyNote } from "~/modules/daily-note/domain/entity";
+import { DailyNoteRepository } from "~/modules/daily-note/infra/repository.server";
 import type { Workout } from "~/modules/fitness/domain/workout";
 import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { HabitService } from "~/modules/habits/application/service";
@@ -37,6 +39,7 @@ export type DashboardData = {
     readonly calorieTarget: number;
     readonly protein: number;
   };
+  readonly dailyNote: DailyNote | undefined;
 };
 
 export async function getDashboardData(): Promise<DashboardData> {
@@ -53,6 +56,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     WorkoutRepository.findInProgress(),
     NutritionService.getDailySummary(todayDate),
     TargetService.currentTargets(),
+    DailyNoteRepository.fetch(),
   ]);
 
   if (result.isErr()) {
@@ -73,6 +77,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     inProgressWorkout,
     dailySummaryResult,
     targetsResult,
+    dailyNote,
   ] = result.value;
 
   const todayHabits = habits.filter((h) => HabitService.isDueOn(h, todayDate));
@@ -133,6 +138,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       calorieTarget,
       protein: dailySummary.protein,
     },
+    dailyNote,
   };
 }
 

@@ -1,0 +1,31 @@
+/* ----- Daily Note Card ----- */
+
+.daily-note-card {
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+}
+
+.daily-note-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.daily-note-card__content {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--brand-text);
+  white-space: pre-wrap;
+}
+
+.daily-note-card__placeholder {
+  font-size: 0.8125rem;
+  color: var(--brand-text-secondary);
+  font-style: italic;
+}

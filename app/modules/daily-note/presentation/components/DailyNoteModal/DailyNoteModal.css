@@ -1,0 +1,82 @@
+/* ----- Daily Note Modal ----- */
+
+@keyframes slideUpFull {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.daily-note-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--brand-background);
+  display: flex;
+  flex-direction: column;
+  animation: slideUpFull 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.daily-note-modal__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 12px var(--space-4);
+  border-bottom: 1px solid var(--gray-4);
+  background: var(--brand-surface);
+  flex-shrink: 0;
+}
+
+.daily-note-modal__title {
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--brand-text);
+  text-align: center;
+}
+
+.daily-note-modal__action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.daily-note-modal__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  -webkit-overflow-scrolling: touch;
+}
+
+.daily-note-modal__content {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--brand-text);
+  white-space: pre-wrap;
+}
+
+.daily-note-modal__empty {
+  font-size: 0.9375rem;
+  color: var(--brand-text-secondary);
+  font-style: italic;
+}
+
+.daily-note-modal__textarea {
+  width: 100%;
+  min-height: calc(100vh - 120px);
+  resize: none;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--brand-text);
+  outline: none;
+  padding: 0;
+}
+
+.daily-note-modal__textarea::placeholder {
+  color: var(--brand-text-secondary);
+  font-style: italic;
+}
