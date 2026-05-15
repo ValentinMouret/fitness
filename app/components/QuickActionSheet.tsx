@@ -155,12 +155,7 @@ export function QuickActionSheet({
   }, [open]);
 
   const handleWeightShortcut = useCallback((e: KeyboardEvent) => {
-    if (
-      e.key.toLowerCase() === "w" &&
-      !e.ctrlKey &&
-      !e.metaKey &&
-      !e.altKey
-    ) {
+    if (e.key.toLowerCase() === "w" && !e.ctrlKey && !e.metaKey && !e.altKey) {
       const target = e.target as HTMLElement;
       const isInput =
         target.tagName === "INPUT" ||
