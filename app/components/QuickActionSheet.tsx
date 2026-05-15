@@ -40,22 +40,22 @@ interface QuickActionSheetProps {
   readonly onOpenChange: (open: boolean) => void;
 }
 
-function HabitActionButton({ habit }: { readonly habit: Habit }) {
-  const habitFetcher = useFetcher();
+function QuickActionHabitItem({ habit }: { readonly habit: Habit }) {
+  const fetcher = useFetcher();
 
   const isOptimisticCompleted =
-    habitFetcher.formData?.get("intent") === "toggle-habit"
-      ? habitFetcher.formData?.get("completed") === "false"
+    fetcher.formData?.get("habitId") === habit.id
+      ? fetcher.formData?.get("completed") !== "true"
       : habit.isCompleted;
 
-  const isToggling = habitFetcher.state !== "idle";
+  const isToggling = fetcher.state !== "idle";
 
-  const handleToggleHabit = () => {
-    habitFetcher.submit(
+  const handleToggle = () => {
+    fetcher.submit(
       {
         intent: "toggle-habit",
         habitId: habit.id,
-        completed: String(habit.isCompleted),
+        completed: String(isOptimisticCompleted),
       },
       { method: "post", action: "/dashboard" },
     );
@@ -75,7 +75,7 @@ function HabitActionButton({ habit }: { readonly habit: Habit }) {
     <Button
       variant={isOptimisticCompleted ? "solid" : "outline"}
       color={isOptimisticCompleted ? "tomato" : "gray"}
-      onClick={handleToggleHabit}
+      onClick={handleToggle}
       loading={isToggling}
       className="quick-action-sheet__habit-button"
       aria-label={ariaLabel}
@@ -128,7 +128,6 @@ function HabitActionButton({ habit }: { readonly habit: Habit }) {
     </Button>
   );
 }
-
 export function QuickActionSheet({
   open,
   onOpenChange,
@@ -191,7 +190,7 @@ export function QuickActionSheet({
                 </Text>
                 <Flex direction="column" gap="2">
                   {data.habits.map((habit) => (
-                    <HabitActionButton key={habit.id} habit={habit} />
+                    <QuickActionHabitItem key={habit.id} habit={habit} />
                   ))}
                 </Flex>
               </Box>
