@@ -508,3 +508,9 @@ export const mealLogIngredients = pgTable(
     check("quantity_positive", sql`${table.quantity_grams} > 0`),
   ],
 );
+
+export const daily_note = pgTable("daily_note", {
+  id: integer().primaryKey().default(1),
+  content: text().notNull().default(""),
+  updated_at: timestamp(),
+});

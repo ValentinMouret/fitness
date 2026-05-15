@@ -1,12 +1,15 @@
 import { Box, Button, Flex, Text } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
-import { Link, useFetcher, useFetchers } from "react-router";
+import { Link, useFetcher, useFetchers, useSearchParams } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { Celebration, SuccessPulse } from "~/components/Celebration";
 import HabitCheckbox from "~/components/HabitCheckbox";
 import MeasurementChart from "~/components/MeasurementChart";
 import { NumberInput } from "~/components/NumberInput";
+import { saveDailyNote } from "~/modules/daily-note/infra/daily-note.service.server";
+import { DailyNoteCard } from "~/modules/daily-note/presentation/components/DailyNoteCard/DailyNoteCard";
+import { DailyNoteModal } from "~/modules/daily-note/presentation/components/DailyNoteModal/DailyNoteModal";
 import {
   getDashboardData,
   logWeight,
@@ -39,6 +42,15 @@ export async function action({ request }: Route.ActionArgs) {
     });
 
     return null;
+  }
+
+  if (intent === "save-note") {
+    const schema = zfd.formData({
+      content: formText(z.string()),
+    });
+    const parsed = schema.parse(form);
+    await saveDailyNote(parsed.content);
+    return { saved: true };
   }
 
   const schema = zfd.formData({
@@ -77,10 +89,13 @@ export default function DashboardPage({
     completedHabitsCount,
     inProgressWorkout,
     nutrition,
+    dailyNote,
   },
 }: Route.ComponentProps) {
   const weightFetcher = useFetcher();
   const fetchers = useFetchers();
+  const [searchParams] = useSearchParams();
+  const noteParam = searchParams.get("note");
 
   const optimisticHabitToggles = fetchers.filter(
     (f) => f.formData?.get("intent") === "toggle-habit",
@@ -122,6 +137,8 @@ export default function DashboardPage({
 
   return (
     <Box className="dashboard">
+      {noteParam && <DailyNoteModal note={dailyNote} mode={noteParam} />}
+
       {inProgressWorkout && (
         <Link
           to={`/workouts/${inProgressWorkout.id}`}
@@ -196,6 +213,9 @@ export default function DashboardPage({
           <Text size="1">{Math.round(calPct * 100)}% of daily goal</Text>
         </Flex>
       </Box>
+
+      {/* Daily note */}
+      <DailyNoteCard note={dailyNote} />
 
       {/* Habits */}
       {habitsTotal > 0 && (
