@@ -11,11 +11,12 @@ import {
   Flex,
   Heading,
   IconButton,
+  Kbd,
   Spinner,
   Text,
   TextField,
 } from "@radix-ui/themes";
-import { useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useFetcher, useNavigate } from "react-router";
 import { NumberInput } from "./NumberInput";
 import "./QuickActionSheet.css";
@@ -135,9 +136,11 @@ export function QuickActionSheet({
 }: QuickActionSheetProps) {
   const navigate = useNavigate();
   const weightInputId = useId();
+  const weightInputRef = useRef<HTMLInputElement>(null);
   const dataFetcher = useFetcher<QuickActionsData>();
   const weightFetcher = useFetcher();
   const [weightValue, setWeightValue] = useState("");
+  const [hasPrefilled, setHasPrefilled] = useState(false);
 
   useEffect(() => {
     if (open && dataFetcher.state === "idle" && !dataFetcher.data) {
@@ -146,10 +149,44 @@ export function QuickActionSheet({
   }, [open, dataFetcher]);
 
   useEffect(() => {
-    if (dataFetcher.data?.lastWeight && !weightValue) {
-      setWeightValue(dataFetcher.data.lastWeight.toString());
+    if (!open) {
+      setHasPrefilled(false);
     }
-  }, [dataFetcher.data?.lastWeight, weightValue]);
+  }, [open]);
+
+  const handleWeightShortcut = useCallback((e: KeyboardEvent) => {
+    if (
+      e.key.toLowerCase() === "w" &&
+      !e.ctrlKey &&
+      !e.metaKey &&
+      !e.altKey
+    ) {
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (!isInput) {
+        e.preventDefault();
+        weightInputRef.current?.focus();
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      window.addEventListener("keydown", handleWeightShortcut);
+      return () => window.removeEventListener("keydown", handleWeightShortcut);
+    }
+  }, [open, handleWeightShortcut]);
+
+  useEffect(() => {
+    if (dataFetcher.data?.lastWeight !== undefined && !hasPrefilled) {
+      setWeightValue(dataFetcher.data.lastWeight.toString());
+      setHasPrefilled(true);
+    }
+  }, [dataFetcher.data?.lastWeight, hasPrefilled]);
 
   const handleStartWorkout = () => {
     onOpenChange(false);
@@ -199,17 +236,20 @@ export function QuickActionSheet({
 
             {!data?.weightLogged && (
               <Box mb="4">
-                <Text
-                  as="label"
-                  htmlFor={weightInputId}
-                  size="2"
-                  color="gray"
-                  mb="2"
-                  weight="medium"
-                  style={{ display: "block" }}
-                >
-                  Log Weight
-                </Text>
+                <Flex justify="between" align="center" mb="2">
+                  <Text
+                    as="label"
+                    htmlFor={weightInputId}
+                    size="2"
+                    color="gray"
+                    weight="medium"
+                  >
+                    Log Weight
+                  </Text>
+                  <Box display={{ initial: "none", md: "inline-block" }}>
+                    <Kbd size="1">W</Kbd>
+                  </Box>
+                </Flex>
                 <weightFetcher.Form
                   method="post"
                   action="/dashboard"
@@ -218,9 +258,12 @@ export function QuickActionSheet({
                   <Flex gap="2" align="end">
                     <Box flexGrow="1">
                       <NumberInput
+                        ref={weightInputRef}
                         id={weightInputId}
                         name="weight"
                         min={0}
+                        aria-label="Weight"
+                        aria-keyshortcuts="w"
                         placeholder={
                           data?.lastWeight
                             ? `Last: ${data.lastWeight}`
