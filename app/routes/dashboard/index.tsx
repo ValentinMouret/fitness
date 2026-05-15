@@ -129,6 +129,16 @@ export default function DashboardPage({
   const habitsTotal = todayHabits.length;
   const habitsPct =
     habitsTotal > 0 ? (optimisticCompletedCount / habitsTotal) * 100 : 0;
+
+  const [showWeightPulse, setShowWeightPulse] = useState(false);
+  const prevLoggedToday = useRef(loggedToday);
+
+  useEffect(() => {
+    if (loggedToday && !prevLoggedToday.current) {
+      setShowWeightPulse(true);
+    }
+    prevLoggedToday.current = loggedToday;
+  }, [loggedToday]);
   const calPct = Math.min(nutrition.calories / nutrition.calorieTarget, 1);
   const remaining = Math.max(
     0,
@@ -138,7 +148,6 @@ export default function DashboardPage({
   return (
     <Box className="dashboard">
       {noteParam && <DailyNoteModal note={dailyNote} mode={noteParam} />}
-
       {inProgressWorkout && (
         <Link
           to={`/workouts/${inProgressWorkout.id}`}
@@ -176,7 +185,7 @@ export default function DashboardPage({
               aria-valuenow={Math.round(calPct * 100)}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label="Calorie goal progress"
+              aria-label="Daily calorie progress"
             >
               <Box
                 className="dashboard__stat-progress-fill"
@@ -226,7 +235,21 @@ export default function DashboardPage({
               onComplete={() => setCelebrate(false)}
             />
             <Flex className="dashboard__habits-header">
-              <p className="section-label">Habits</p>
+              <Flex align="center" gap="2">
+                <p className="section-label" style={{ marginBottom: 0 }}>
+                  Habits
+                </p>
+                {optimisticCompletedCount === habitsTotal && (
+                  <Text
+                    size="1"
+                    color="green"
+                    weight="bold"
+                    className="animate-fade-in"
+                  >
+                    All Done! ✨
+                  </Text>
+                )}
+              </Flex>
               <span className="dashboard__habits-fraction">
                 {optimisticCompletedCount}
                 <span className="dashboard__habits-fraction-total">
@@ -238,7 +261,7 @@ export default function DashboardPage({
             <Box
               className="dashboard__habits-progress"
               role="progressbar"
-              aria-valuenow={habitsPct}
+              aria-valuenow={Math.round(habitsPct)}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-label="Habits completion progress"
@@ -268,7 +291,7 @@ export default function DashboardPage({
       )}
 
       {/* Weight trend */}
-      <SuccessPulse trigger={weightFetcher.state !== "idle"}>
+      <SuccessPulse trigger={showWeightPulse}>
         <Box className="dashboard__card dashboard__card--weight">
           <Flex className="dashboard__weight-header">
             <Box className="dashboard__weight-label-row">
