@@ -151,7 +151,9 @@ function CardFooter({
           aria-label={
             missedTwice
               ? `Do the minimum for ${habitName}`
-              : `Log minimum for ${habitName}`
+              : `Log minimum for ${habitName}${
+                  streak > 0 ? ` (${streak} day streak)` : ""
+                }`
           }
           style={{
             background: "transparent",
@@ -313,6 +315,7 @@ function HabitCard({
                 fontWeight: 600,
                 color: displayCompleted ? "#a8a29e" : "#1c1917",
                 textDecoration: displayCompleted ? "line-through" : "none",
+                transition: "color 0.3s ease",
               }}
             >
               {habit.name}
