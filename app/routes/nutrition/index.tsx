@@ -20,6 +20,7 @@ import {
   RadioGroup,
   Text,
   TextField,
+  Tooltip,
 } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import {
@@ -288,17 +289,21 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
     <div className="nutrition-page">
       {/* Date Navigation */}
       <div className="nutrition-date-nav">
-        <IconButton
-          variant="ghost"
-          onClick={previousDay}
-          aria-label="Previous day"
-        >
-          <ChevronLeftIcon width="16" height="16" />
-        </IconButton>
+        <Tooltip content="Previous day">
+          <IconButton
+            variant="ghost"
+            onClick={previousDay}
+            aria-label="Previous day"
+          >
+            <ChevronLeftIcon width="16" height="16" />
+          </IconButton>
+        </Tooltip>
         <Heading size="5">{formatDateLabel(parsedCurrentDate)}</Heading>
-        <IconButton variant="ghost" onClick={nextDay} aria-label="Next day">
-          <ChevronRightIcon width="16" height="16" />
-        </IconButton>
+        <Tooltip content="Next day">
+          <IconButton variant="ghost" onClick={nextDay} aria-label="Next day">
+            <ChevronRightIcon width="16" height="16" />
+          </IconButton>
+        </Tooltip>
       </div>
 
       {/* Hero */}
