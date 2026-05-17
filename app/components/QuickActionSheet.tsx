@@ -272,10 +272,7 @@ export function QuickActionSheet({
                       <Kbd size="1">W</Kbd>
                     </Box>
                   </Flex>
-                  <weightFetcher.Form
-                    method="post"
-                    action="/dashboard"
-                  >
+                  <weightFetcher.Form method="post" action="/dashboard">
                     <Flex gap="2" align="end">
                       <Box flexGrow="1">
                         <NumberInput
