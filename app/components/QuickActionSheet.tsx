@@ -74,60 +74,62 @@ function QuickActionHabitItem({ habit }: { readonly habit: Habit }) {
     .join(" ");
 
   return (
-    <Button
-      variant={isOptimisticCompleted ? "solid" : "outline"}
-      color={isOptimisticCompleted ? "tomato" : "gray"}
-      onClick={handleToggle}
-      loading={isToggling}
-      className="quick-action-sheet__habit-button"
-      aria-label={ariaLabel}
-    >
-      <Flex
-        align="center"
-        gap="2"
-        className="quick-action-sheet__habit-content"
+    <SuccessPulse trigger={isToggling}>
+      <Button
+        variant={isOptimisticCompleted ? "solid" : "outline"}
+        color={isOptimisticCompleted ? "tomato" : "gray"}
+        onClick={handleToggle}
+        loading={isToggling}
+        className="quick-action-sheet__habit-button"
+        aria-label={ariaLabel}
       >
-        {isOptimisticCompleted && (
-          <CheckIcon className="quick-action-sheet__habit-icon--pop" />
-        )}
-        <Flex direction="column" align="start" gap="0">
-          <Text
-            className={
-              isOptimisticCompleted
-                ? "quick-action-sheet__habit-name quick-action-sheet__habit-name--completed"
-                : "quick-action-sheet__habit-name"
-            }
-          >
-            {habit.name}
-          </Text>
-          {habit.identityPhrase && (
+        <Flex
+          align="center"
+          gap="2"
+          className="quick-action-sheet__habit-content"
+        >
+          {isOptimisticCompleted && (
+            <CheckIcon className="quick-action-sheet__habit-icon--pop" />
+          )}
+          <Flex direction="column" align="start" gap="0">
+            <Text
+              className={
+                isOptimisticCompleted
+                  ? "quick-action-sheet__habit-name quick-action-sheet__habit-name--completed"
+                  : "quick-action-sheet__habit-name"
+              }
+            >
+              {habit.name}
+            </Text>
+            {habit.identityPhrase && (
+              <Text
+                size="1"
+                color="gray"
+                className={
+                  isOptimisticCompleted
+                    ? "quick-action-sheet__habit-identity quick-action-sheet__habit-identity--completed"
+                    : "quick-action-sheet__habit-identity"
+                }
+              >
+                {habit.identityPhrase}
+              </Text>
+            )}
+          </Flex>
+          {habit.streak > 0 && (
             <Text
               size="1"
               color="gray"
-              className={
-                isOptimisticCompleted
-                  ? "quick-action-sheet__habit-identity quick-action-sheet__habit-identity--completed"
-                  : "quick-action-sheet__habit-identity"
-              }
+              className="quick-action-sheet__habit-streak"
             >
-              {habit.identityPhrase}
+              <span role="img" aria-label="streak">
+                🔥
+              </span>{" "}
+              {habit.streak}
             </Text>
           )}
         </Flex>
-        {habit.streak > 0 && (
-          <Text
-            size="1"
-            color="gray"
-            className="quick-action-sheet__habit-streak"
-          >
-            <span role="img" aria-label="streak">
-              🔥
-            </span>{" "}
-            {habit.streak}
-          </Text>
-        )}
-      </Flex>
-    </Button>
+      </Button>
+    </SuccessPulse>
   );
 }
 export function QuickActionSheet({
@@ -273,7 +275,6 @@ export function QuickActionSheet({
                   <weightFetcher.Form
                     method="post"
                     action="/dashboard"
-                    onSubmit={() => onOpenChange(false)}
                   >
                     <Flex gap="2" align="end">
                       <Box flexGrow="1">
