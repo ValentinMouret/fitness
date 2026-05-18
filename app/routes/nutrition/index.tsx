@@ -18,6 +18,7 @@ import {
   IconButton,
   Progress,
   RadioGroup,
+  Tooltip,
   Text,
   TextField,
 } from "@radix-ui/themes";
@@ -288,17 +289,21 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
     <div className="nutrition-page">
       {/* Date Navigation */}
       <div className="nutrition-date-nav">
-        <IconButton
-          variant="ghost"
-          onClick={previousDay}
-          aria-label="Previous day"
-        >
-          <ChevronLeftIcon width="16" height="16" />
-        </IconButton>
+        <Tooltip content="Previous day">
+          <IconButton
+            variant="ghost"
+            onClick={previousDay}
+            aria-label="Previous day"
+          >
+            <ChevronLeftIcon width="16" height="16" />
+          </IconButton>
+        </Tooltip>
         <Heading size="5">{formatDateLabel(parsedCurrentDate)}</Heading>
-        <IconButton variant="ghost" onClick={nextDay} aria-label="Next day">
-          <ChevronRightIcon width="16" height="16" />
-        </IconButton>
+        <Tooltip content="Next day">
+          <IconButton variant="ghost" onClick={nextDay} aria-label="Next day">
+            <ChevronRightIcon width="16" height="16" />
+          </IconButton>
+        </Tooltip>
       </div>
 
       {/* Hero */}
@@ -443,16 +448,18 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                         </Link>
                       </Button>
                       <DropdownMenu.Root>
-                        <DropdownMenu.Trigger>
-                          <Button
-                            variant="ghost"
-                            size="1"
-                            aria-label={`Meal actions for ${label}`}
-                            loading={isDeleting}
-                          >
-                            <DotsHorizontalIcon width="14" height="14" />
-                          </Button>
-                        </DropdownMenu.Trigger>
+                        <Tooltip content={`Meal actions for ${label}`}>
+                          <DropdownMenu.Trigger>
+                            <Button
+                              variant="ghost"
+                              size="1"
+                              aria-label={`Meal actions for ${label}`}
+                              loading={isDeleting}
+                            >
+                              <DotsHorizontalIcon width="14" height="14" />
+                            </Button>
+                          </DropdownMenu.Trigger>
+                        </Tooltip>
                         <DropdownMenu.Content>
                           <DropdownMenu.Item
                             onClick={() =>
@@ -490,15 +497,17 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                           Add
                         </Link>
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="1"
-                        onClick={() => handleUseTemplate(mealType)}
-                        aria-label={`Use template for ${label}`}
-                        loading={isApplyingTemplate}
-                      >
-                        <DotsHorizontalIcon width="14" height="14" />
-                      </Button>
+                      <Tooltip content={`Use template for ${label}`}>
+                        <Button
+                          variant="ghost"
+                          size="1"
+                          onClick={() => handleUseTemplate(mealType)}
+                          aria-label={`Use template for ${label}`}
+                          loading={isApplyingTemplate}
+                        >
+                          <DotsHorizontalIcon width="14" height="14" />
+                        </Button>
+                      </Tooltip>
                     </>
                   )}
                 </div>
