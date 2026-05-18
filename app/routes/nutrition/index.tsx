@@ -18,6 +18,7 @@ import {
   IconButton,
   Progress,
   RadioGroup,
+  Tooltip,
   Text,
   TextField,
   Tooltip,
@@ -448,16 +449,18 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                         </Link>
                       </Button>
                       <DropdownMenu.Root>
-                        <DropdownMenu.Trigger>
-                          <Button
-                            variant="ghost"
-                            size="1"
-                            aria-label={`Meal actions for ${label}`}
-                            loading={isDeleting}
-                          >
-                            <DotsHorizontalIcon width="14" height="14" />
-                          </Button>
-                        </DropdownMenu.Trigger>
+                        <Tooltip content={`Meal actions for ${label}`}>
+                          <DropdownMenu.Trigger>
+                            <Button
+                              variant="ghost"
+                              size="1"
+                              aria-label={`Meal actions for ${label}`}
+                              loading={isDeleting}
+                            >
+                              <DotsHorizontalIcon width="14" height="14" />
+                            </Button>
+                          </DropdownMenu.Trigger>
+                        </Tooltip>
                         <DropdownMenu.Content>
                           <DropdownMenu.Item
                             onClick={() =>
@@ -495,15 +498,17 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                           Add
                         </Link>
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="1"
-                        onClick={() => handleUseTemplate(mealType)}
-                        aria-label={`Use template for ${label}`}
-                        loading={isApplyingTemplate}
-                      >
-                        <DotsHorizontalIcon width="14" height="14" />
-                      </Button>
+                      <Tooltip content={`Use template for ${label}`}>
+                        <Button
+                          variant="ghost"
+                          size="1"
+                          onClick={() => handleUseTemplate(mealType)}
+                          aria-label={`Use template for ${label}`}
+                          loading={isApplyingTemplate}
+                        >
+                          <DotsHorizontalIcon width="14" height="14" />
+                        </Button>
+                      </Tooltip>
                     </>
                   )}
                 </div>
