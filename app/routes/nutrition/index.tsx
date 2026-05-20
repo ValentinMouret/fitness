@@ -20,6 +20,7 @@ import {
   RadioGroup,
   Text,
   TextField,
+  Tooltip,
 } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import {
@@ -288,17 +289,21 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
     <div className="nutrition-page">
       {/* Date Navigation */}
       <div className="nutrition-date-nav">
-        <IconButton
-          variant="ghost"
-          onClick={previousDay}
-          aria-label="Previous day"
-        >
-          <ChevronLeftIcon width="16" height="16" />
-        </IconButton>
+        <Tooltip content="Previous day">
+          <IconButton
+            variant="ghost"
+            onClick={previousDay}
+            aria-label="Previous day"
+          >
+            <ChevronLeftIcon width="16" height="16" />
+          </IconButton>
+        </Tooltip>
         <Heading size="5">{formatDateLabel(parsedCurrentDate)}</Heading>
-        <IconButton variant="ghost" onClick={nextDay} aria-label="Next day">
-          <ChevronRightIcon width="16" height="16" />
-        </IconButton>
+        <Tooltip content="Next day">
+          <IconButton variant="ghost" onClick={nextDay} aria-label="Next day">
+            <ChevronRightIcon width="16" height="16" />
+          </IconButton>
+        </Tooltip>
       </div>
 
       {/* Hero */}
@@ -340,6 +345,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
               </Text>
             </Flex>
             <Progress
+              aria-label="Calories progress"
               value={(dailyTotals.calories / dailyTargets.calories) * 100}
             />
           </Box>
@@ -351,6 +357,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
               </Text>
             </Flex>
             <Progress
+              aria-label="Protein progress"
               value={(dailyTotals.protein / dailyTargets.protein) * 100}
             />
           </Box>
@@ -361,7 +368,10 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                 {Math.round(dailyTotals.carbs)}g / {dailyTargets.carbs}g
               </Text>
             </Flex>
-            <Progress value={(dailyTotals.carbs / dailyTargets.carbs) * 100} />
+            <Progress
+              aria-label="Carbs progress"
+              value={(dailyTotals.carbs / dailyTargets.carbs) * 100}
+            />
           </Box>
           <Box>
             <Flex justify="between" mb="1">
@@ -370,7 +380,10 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                 {Math.round(dailyTotals.fat)}g / {dailyTargets.fat}g
               </Text>
             </Flex>
-            <Progress value={(dailyTotals.fat / dailyTargets.fat) * 100} />
+            <Progress
+              aria-label="Fat progress"
+              value={(dailyTotals.fat / dailyTargets.fat) * 100}
+            />
           </Box>
         </Grid>
       </Card>
