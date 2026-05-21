@@ -402,6 +402,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             </Flex>
             <Progress
               value={(dailyTotals.calories / dailyTargets.calories) * 100}
+              aria-label="Calories progress"
             />
           </Box>
           <Box>
@@ -413,6 +414,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             </Flex>
             <Progress
               value={(dailyTotals.protein / dailyTargets.protein) * 100}
+              aria-label="Protein progress"
             />
           </Box>
           <Box>
@@ -422,7 +424,10 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                 {Math.round(dailyTotals.carbs)}g / {dailyTargets.carbs}g
               </Text>
             </Flex>
-            <Progress value={(dailyTotals.carbs / dailyTargets.carbs) * 100} />
+            <Progress
+              value={(dailyTotals.carbs / dailyTargets.carbs) * 100}
+              aria-label="Carbs progress"
+            />
           </Box>
           <Box>
             <Flex justify="between" mb="1">
@@ -431,7 +436,10 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                 {Math.round(dailyTotals.fat)}g / {dailyTargets.fat}g
               </Text>
             </Flex>
-            <Progress value={(dailyTotals.fat / dailyTargets.fat) * 100} />
+            <Progress
+              value={(dailyTotals.fat / dailyTargets.fat) * 100}
+              aria-label="Fat progress"
+            />
           </Box>
         </Grid>
       </Card>
@@ -504,7 +512,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                         </Link>
                       </Button>
                       <DropdownMenu.Root>
-                        <Tooltip content="Meal actions">
+                        <Tooltip content={`Meal actions for ${label}`}>
                           <DropdownMenu.Trigger>
                             <Button
                               variant="ghost"
@@ -553,7 +561,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                           Add
                         </Link>
                       </Button>
-                      <Tooltip content="Use template">
+                      <Tooltip content={`Use template for ${label}`}>
                         <Button
                           variant="ghost"
                           size="1"
