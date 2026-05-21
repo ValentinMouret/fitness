@@ -345,8 +345,8 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
               </Text>
             </Flex>
             <Progress
-              aria-label="Calories progress"
               value={(dailyTotals.calories / dailyTargets.calories) * 100}
+              aria-label="Calories progress"
             />
           </Box>
           <Box>
@@ -357,8 +357,8 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
               </Text>
             </Flex>
             <Progress
-              aria-label="Protein progress"
               value={(dailyTotals.protein / dailyTargets.protein) * 100}
+              aria-label="Protein progress"
             />
           </Box>
           <Box>
@@ -369,8 +369,8 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
               </Text>
             </Flex>
             <Progress
-              aria-label="Carbs progress"
               value={(dailyTotals.carbs / dailyTargets.carbs) * 100}
+              aria-label="Carbs progress"
             />
           </Box>
           <Box>
@@ -381,8 +381,8 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
               </Text>
             </Flex>
             <Progress
-              aria-label="Fat progress"
               value={(dailyTotals.fat / dailyTargets.fat) * 100}
+              aria-label="Fat progress"
             />
           </Box>
         </Grid>
@@ -456,16 +456,18 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                         </Link>
                       </Button>
                       <DropdownMenu.Root>
-                        <DropdownMenu.Trigger>
-                          <Button
-                            variant="ghost"
-                            size="1"
-                            aria-label={`Meal actions for ${label}`}
-                            loading={isDeleting}
-                          >
-                            <DotsHorizontalIcon width="14" height="14" />
-                          </Button>
-                        </DropdownMenu.Trigger>
+                        <Tooltip content={`Meal actions for ${label}`}>
+                          <DropdownMenu.Trigger>
+                            <Button
+                              variant="ghost"
+                              size="1"
+                              aria-label={`Meal actions for ${label}`}
+                              loading={isDeleting}
+                            >
+                              <DotsHorizontalIcon width="14" height="14" />
+                            </Button>
+                          </DropdownMenu.Trigger>
+                        </Tooltip>
                         <DropdownMenu.Content>
                           <DropdownMenu.Item
                             onClick={() =>
@@ -503,15 +505,17 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                           Add
                         </Link>
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="1"
-                        onClick={() => handleUseTemplate(mealType)}
-                        aria-label={`Use template for ${label}`}
-                        loading={isApplyingTemplate}
-                      >
-                        <DotsHorizontalIcon width="14" height="14" />
-                      </Button>
+                      <Tooltip content={`Use template for ${label}`}>
+                        <Button
+                          variant="ghost"
+                          size="1"
+                          onClick={() => handleUseTemplate(mealType)}
+                          aria-label={`Use template for ${label}`}
+                          loading={isApplyingTemplate}
+                        >
+                          <DotsHorizontalIcon width="14" height="14" />
+                        </Button>
+                      </Tooltip>
                     </>
                   )}
                 </div>

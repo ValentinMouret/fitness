@@ -1,5 +1,13 @@
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
-import { Box, Button, Flex, Heading, IconButton, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  IconButton,
+  Text,
+  Tooltip,
+} from "@radix-ui/themes";
 import type React from "react";
 import { Link } from "react-router";
 import "./PageHeader.css";
@@ -37,11 +45,13 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       >
         <Flex align="center" gap="3" className="page-header__title-row">
           {backTo && (
-            <IconButton asChild variant="ghost" size="2" aria-label="Back">
-              <Link to={backTo}>
-                <ArrowLeftIcon />
-              </Link>
-            </IconButton>
+            <Tooltip content="Back">
+              <IconButton asChild variant="ghost" size="2" aria-label="Back">
+                <Link to={backTo}>
+                  <ArrowLeftIcon />
+                </Link>
+              </IconButton>
+            </Tooltip>
           )}
           {typeof title === "string" ? (
             <Heading size="7" className="page-header__title">
