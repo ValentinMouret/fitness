@@ -20,8 +20,9 @@ import {
   RadioGroup,
   Text,
   TextField,
+  Tooltip,
 } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   type ActionFunctionArgs,
   Link,
@@ -223,14 +224,57 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
   const dailyTotals = dailySummary.dailyTotals;
   const dailyTargets = targets ?? defaultTargets;
 
-  const navigateToDate = (newDate: Date) => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set("date", toDateString(newDate));
-    setSearchParams(newParams);
-  };
+  const navigateToDate = useCallback(
+    (newDate: Date) => {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("date", toDateString(newDate));
+      setSearchParams(newParams);
+    },
+    [searchParams, setSearchParams],
+  );
 
-  const previousDay = () => navigateToDate(removeOneDay(parsedCurrentDate));
-  const nextDay = () => navigateToDate(addOneDay(parsedCurrentDate));
+  const previousDay = useCallback(
+    () => navigateToDate(removeOneDay(parsedCurrentDate)),
+    [navigateToDate, parsedCurrentDate],
+  );
+  const nextDay = useCallback(
+    () => navigateToDate(addOneDay(parsedCurrentDate)),
+    [navigateToDate, parsedCurrentDate],
+  );
+  const goToToday = useCallback(() => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("date");
+    setSearchParams(newParams);
+  }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (isInput) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        previousDay();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        nextDay();
+      } else if (e.key.toLowerCase() === "t") {
+        e.preventDefault();
+        goToToday();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [previousDay, nextDay, goToToday]);
+
+  const isToday = parsedCurrentDate.toDateString() === today().toDateString();
 
   const getMealForType = (mealType: MealCategory) => {
     return dailySummary.meals[mealType];
@@ -288,17 +332,34 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
     <div className="nutrition-page">
       {/* Date Navigation */}
       <div className="nutrition-date-nav">
-        <IconButton
-          variant="ghost"
-          onClick={previousDay}
-          aria-label="Previous day"
-        >
-          <ChevronLeftIcon width="16" height="16" />
-        </IconButton>
+        <Tooltip content="Previous day (Left Arrow)">
+          <IconButton
+            variant="ghost"
+            onClick={previousDay}
+            aria-label="Previous day"
+          >
+            <ChevronLeftIcon width="16" height="16" />
+          </IconButton>
+        </Tooltip>
         <Heading size="5">{formatDateLabel(parsedCurrentDate)}</Heading>
-        <IconButton variant="ghost" onClick={nextDay} aria-label="Next day">
-          <ChevronRightIcon width="16" height="16" />
-        </IconButton>
+        <Tooltip content="Next day (Right Arrow)">
+          <IconButton variant="ghost" onClick={nextDay} aria-label="Next day">
+            <ChevronRightIcon width="16" height="16" />
+          </IconButton>
+        </Tooltip>
+        {!isToday && (
+          <Tooltip content="Back to today (T)">
+            <Button
+              variant="soft"
+              size="1"
+              onClick={goToToday}
+              className="nutrition-date-nav__today"
+              aria-label="Back to today"
+            >
+              Today
+            </Button>
+          </Tooltip>
+        )}
       </div>
 
       {/* Hero */}
@@ -443,16 +504,18 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                         </Link>
                       </Button>
                       <DropdownMenu.Root>
-                        <DropdownMenu.Trigger>
-                          <Button
-                            variant="ghost"
-                            size="1"
-                            aria-label={`Meal actions for ${label}`}
-                            loading={isDeleting}
-                          >
-                            <DotsHorizontalIcon width="14" height="14" />
-                          </Button>
-                        </DropdownMenu.Trigger>
+                        <Tooltip content="Meal actions">
+                          <DropdownMenu.Trigger>
+                            <Button
+                              variant="ghost"
+                              size="1"
+                              aria-label={`Meal actions for ${label}`}
+                              loading={isDeleting}
+                            >
+                              <DotsHorizontalIcon width="14" height="14" />
+                            </Button>
+                          </DropdownMenu.Trigger>
+                        </Tooltip>
                         <DropdownMenu.Content>
                           <DropdownMenu.Item
                             onClick={() =>
@@ -490,15 +553,17 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                           Add
                         </Link>
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="1"
-                        onClick={() => handleUseTemplate(mealType)}
-                        aria-label={`Use template for ${label}`}
-                        loading={isApplyingTemplate}
-                      >
-                        <DotsHorizontalIcon width="14" height="14" />
-                      </Button>
+                      <Tooltip content="Use template">
+                        <Button
+                          variant="ghost"
+                          size="1"
+                          onClick={() => handleUseTemplate(mealType)}
+                          aria-label={`Use template for ${label}`}
+                          loading={isApplyingTemplate}
+                        >
+                          <DotsHorizontalIcon width="14" height="14" />
+                        </Button>
+                      </Tooltip>
                     </>
                   )}
                 </div>
