@@ -22,7 +22,7 @@ import {
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   type ActionFunctionArgs,
   Link,
@@ -45,7 +45,13 @@ import {
   QuickEstimateModal,
   TemplateSelectionModal,
 } from "~/modules/nutrition/presentation";
-import { addOneDay, removeOneDay, toDateString, today } from "~/time";
+import {
+  addOneDay,
+  isSameDay,
+  removeOneDay,
+  toDateString,
+  today,
+} from "~/time";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types";
 import "./index.css";
@@ -224,14 +230,52 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
   const dailyTotals = dailySummary.dailyTotals;
   const dailyTargets = targets ?? defaultTargets;
 
-  const navigateToDate = (newDate: Date) => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set("date", toDateString(newDate));
-    setSearchParams(newParams);
-  };
+  const navigateToDate = useCallback(
+    (newDate: Date) => {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("date", toDateString(newDate));
+      setSearchParams(newParams);
+    },
+    [searchParams, setSearchParams],
+  );
 
-  const previousDay = () => navigateToDate(removeOneDay(parsedCurrentDate));
-  const nextDay = () => navigateToDate(addOneDay(parsedCurrentDate));
+  const previousDay = useCallback(
+    () => navigateToDate(removeOneDay(parsedCurrentDate)),
+    [navigateToDate, parsedCurrentDate],
+  );
+  const nextDay = useCallback(
+    () => navigateToDate(addOneDay(parsedCurrentDate)),
+    [navigateToDate, parsedCurrentDate],
+  );
+  const goToToday = useCallback(() => navigateToDate(today()), [navigateToDate]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (isInput) return;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        previousDay();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        nextDay();
+      } else if (e.key.toLowerCase() === "t") {
+        e.preventDefault();
+        goToToday();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [previousDay, nextDay, goToToday]);
 
   const getMealForType = (mealType: MealCategory) => {
     return dailySummary.meals[mealType];
@@ -289,21 +333,43 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
     <div className="nutrition-page">
       {/* Date Navigation */}
       <div className="nutrition-date-nav">
-        <Tooltip content="Previous day">
+        <Tooltip content="Previous day (Left Arrow)">
           <IconButton
             variant="ghost"
             onClick={previousDay}
-            aria-label="Previous day"
+            aria-label="Previous day (Left Arrow)"
+            aria-keyshortcuts="ArrowLeft"
           >
             <ChevronLeftIcon width="16" height="16" />
           </IconButton>
         </Tooltip>
         <Heading size="5">{formatDateLabel(parsedCurrentDate)}</Heading>
-        <Tooltip content="Next day">
-          <IconButton variant="ghost" onClick={nextDay} aria-label="Next day">
+        <Tooltip content="Next day (Right Arrow)">
+          <IconButton
+            variant="ghost"
+            onClick={nextDay}
+            aria-label="Next day (Right Arrow)"
+            aria-keyshortcuts="ArrowRight"
+          >
             <ChevronRightIcon width="16" height="16" />
           </IconButton>
         </Tooltip>
+
+        {!isSameDay(parsedCurrentDate, today()) && (
+          <div className="nutrition-date-nav__today">
+            <Tooltip content="Go to Today (T)">
+              <Button
+                variant="ghost"
+                size="1"
+                onClick={goToToday}
+                aria-label="Go to Today (T)"
+                aria-keyshortcuts="t"
+              >
+                Today
+              </Button>
+            </Tooltip>
+          </div>
+        )}
       </div>
 
       {/* Hero */}
