@@ -22,7 +22,7 @@ import {
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   type ActionFunctionArgs,
   Link,
@@ -224,14 +224,40 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
   const dailyTotals = dailySummary.dailyTotals;
   const dailyTargets = targets ?? defaultTargets;
 
-  const navigateToDate = (newDate: Date) => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set("date", toDateString(newDate));
-    setSearchParams(newParams);
-  };
+  const navigateToDate = useCallback(
+    (newDate: Date) => {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("date", toDateString(newDate));
+      setSearchParams(newParams);
+    },
+    [searchParams, setSearchParams],
+  );
 
-  const previousDay = () => navigateToDate(removeOneDay(parsedCurrentDate));
-  const nextDay = () => navigateToDate(addOneDay(parsedCurrentDate));
+  const previousDay = useCallback(
+    () => navigateToDate(removeOneDay(parsedCurrentDate)),
+    [navigateToDate, parsedCurrentDate],
+  );
+  const nextDay = useCallback(
+    () => navigateToDate(addOneDay(parsedCurrentDate)),
+    [navigateToDate, parsedCurrentDate],
+  );
+  const goToToday = useCallback(() => navigateToDate(today()), [navigateToDate]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target as HTMLElement).isContentEditable
+      )
+        return;
+      if (e.key === "ArrowLeft") previousDay();
+      else if (e.key === "ArrowRight") nextDay();
+      else if (e.key.toLowerCase() === "t") goToToday();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [previousDay, nextDay, goToToday]);
 
   const getMealForType = (mealType: MealCategory) => {
     return dailySummary.meals[mealType];
@@ -285,25 +311,44 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
     Math.min((dailyTotals.calories / dailyTargets.calories) * 100, 100),
   );
 
+  const isToday = toDateString(parsedCurrentDate) === toDateString(today());
+
   return (
     <div className="nutrition-page">
       {/* Date Navigation */}
       <div className="nutrition-date-nav">
-        <Tooltip content="Previous day">
+        <Tooltip content="Previous day (←)">
           <IconButton
             variant="ghost"
             onClick={previousDay}
             aria-label="Previous day"
+            aria-keyshortcuts="ArrowLeft"
           >
             <ChevronLeftIcon width="16" height="16" />
           </IconButton>
         </Tooltip>
         <Heading size="5">{formatDateLabel(parsedCurrentDate)}</Heading>
-        <Tooltip content="Next day">
-          <IconButton variant="ghost" onClick={nextDay} aria-label="Next day">
+        <Tooltip content="Next day (→)">
+          <IconButton
+            variant="ghost"
+            onClick={nextDay}
+            aria-label="Next day"
+            aria-keyshortcuts="ArrowRight"
+          >
             <ChevronRightIcon width="16" height="16" />
           </IconButton>
         </Tooltip>
+        {!isToday && (
+          <Button
+            variant="ghost"
+            size="1"
+            className="nutrition-date-nav__today"
+            onClick={goToToday}
+            aria-label="Today (T)"
+          >
+            Today
+          </Button>
+        )}
       </div>
 
       {/* Hero */}

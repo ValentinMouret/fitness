@@ -102,11 +102,21 @@
 
 /* --- Date Navigation --- */
 .nutrition-date-nav {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
   padding: var(--space-section) 0 0.5rem;
+}
+
+.nutrition-date-nav__today {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--tomato-9) !important;
+  font-weight: 600 !important;
 }
 
 /* --- Progress Card --- */
