@@ -107,6 +107,12 @@
   justify-content: center;
   gap: 0.75rem;
   padding: var(--space-section) 0 0.5rem;
+  position: relative;
+}
+
+.nutrition-date-nav__today {
+  position: absolute;
+  right: 0;
 }
 
 /* --- Progress Card --- */

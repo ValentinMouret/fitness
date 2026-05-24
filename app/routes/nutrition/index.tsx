@@ -16,13 +16,14 @@ import {
   Grid,
   Heading,
   IconButton,
+  Kbd,
   Progress,
   RadioGroup,
   Text,
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   type ActionFunctionArgs,
   Link,
@@ -224,14 +225,53 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
   const dailyTotals = dailySummary.dailyTotals;
   const dailyTargets = targets ?? defaultTargets;
 
-  const navigateToDate = (newDate: Date) => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set("date", toDateString(newDate));
-    setSearchParams(newParams);
-  };
+  const navigateToDate = useCallback(
+    (newDate: Date) => {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("date", toDateString(newDate));
+      setSearchParams(newParams);
+    },
+    [searchParams, setSearchParams],
+  );
 
-  const previousDay = () => navigateToDate(removeOneDay(parsedCurrentDate));
-  const nextDay = () => navigateToDate(addOneDay(parsedCurrentDate));
+  const previousDay = useCallback(
+    () => navigateToDate(removeOneDay(parsedCurrentDate)),
+    [navigateToDate, parsedCurrentDate],
+  );
+  const nextDay = useCallback(
+    () => navigateToDate(addOneDay(parsedCurrentDate)),
+    [navigateToDate, parsedCurrentDate],
+  );
+  const goToToday = useCallback(() => navigateToDate(today()), [navigateToDate]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (isInput) return;
+
+      const key = e.key.toLowerCase();
+      if (key === "arrowleft") {
+        e.preventDefault();
+        previousDay();
+      } else if (key === "arrowright") {
+        e.preventDefault();
+        nextDay();
+      } else if (key === "t") {
+        e.preventDefault();
+        goToToday();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [previousDay, nextDay, goToToday]);
 
   const getMealForType = (mealType: MealCategory) => {
     return dailySummary.meals[mealType];
@@ -285,25 +325,51 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
     Math.min((dailyTotals.calories / dailyTargets.calories) * 100, 100),
   );
 
+  const isToday = parsedCurrentDate.toDateString() === today().toDateString();
+
   return (
     <div className="nutrition-page">
       {/* Date Navigation */}
       <div className="nutrition-date-nav">
-        <Tooltip content="Previous day">
+        <Tooltip content="Previous day (Left Arrow)">
           <IconButton
             variant="ghost"
             onClick={previousDay}
-            aria-label="Previous day"
+            aria-label="Previous day (Left Arrow)"
+            aria-keyshortcuts="ArrowLeft"
           >
             <ChevronLeftIcon width="16" height="16" />
           </IconButton>
         </Tooltip>
         <Heading size="5">{formatDateLabel(parsedCurrentDate)}</Heading>
-        <Tooltip content="Next day">
-          <IconButton variant="ghost" onClick={nextDay} aria-label="Next day">
+        <Tooltip content="Next day (Right Arrow)">
+          <IconButton
+            variant="ghost"
+            onClick={nextDay}
+            aria-label="Next day (Right Arrow)"
+            aria-keyshortcuts="ArrowRight"
+          >
             <ChevronRightIcon width="16" height="16" />
           </IconButton>
         </Tooltip>
+
+        {!isToday && (
+          <Tooltip content="Back to Today (T)">
+            <Button
+              variant="ghost"
+              size="1"
+              onClick={goToToday}
+              className="nutrition-date-nav__today"
+              aria-label="Back to Today (T)"
+              aria-keyshortcuts="t"
+            >
+              Today
+              <Box display={{ initial: "none", md: "inline-block" }}>
+                <Kbd size="1">T</Kbd>
+              </Box>
+            </Button>
+          </Tooltip>
+        )}
       </div>
 
       {/* Hero */}
