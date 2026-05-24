@@ -112,6 +112,10 @@
 
 .nutrition-date-nav__today {
   position: absolute;
+}
+
+.nutrition-date-nav__today {
+  position: absolute;
   right: 0;
 }
 
