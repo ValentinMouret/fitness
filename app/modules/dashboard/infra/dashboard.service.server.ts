@@ -45,12 +45,26 @@ export type DashboardData = {
 export async function getDashboardData(): Promise<DashboardData> {
   const now = new Date();
   const todayDate = today();
+  const weightResult = await MeasurementRepository.fetchByName(
+    baseMeasurements.weight.name,
+  );
+
+  if (weightResult.isErr() && weightResult.error !== "not_found") {
+    throw createServerError(
+      "Failed to fetch dashboard data",
+      500,
+      weightResult.error,
+    );
+  }
+
+  const weight = weightResult.isOk()
+    ? weightResult.value
+    : baseMeasurements.weight;
 
   const result = await ResultAsync.combine([
-    MeasureRepository.fetchByMeasurementName("weight", 1),
-    MeasureRepository.fetchByMeasurementName("weight", 200),
-    MeasurementRepository.fetchByName("weight"),
-    MeasurementService.fetchStreak("weight"),
+    MeasureRepository.fetchByMeasurementName(baseMeasurements.weight.name, 1),
+    MeasureRepository.fetchByMeasurementName(baseMeasurements.weight.name, 200),
+    MeasurementService.fetchStreak(baseMeasurements.weight.name),
     HabitRepository.fetchActive(),
     HabitCompletionRepository.fetchByDateRange(todayDate, todayDate),
     WorkoutRepository.findInProgress(),
@@ -70,7 +84,6 @@ export async function getDashboardData(): Promise<DashboardData> {
   const [
     weights,
     weightData,
-    weight,
     streak,
     habits,
     completions,

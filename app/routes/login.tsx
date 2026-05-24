@@ -19,19 +19,20 @@ import "./login.css";
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const schema = zfd.formData({
-    username: formText(z.string().min(1)),
+    email: formText(z.email()),
     password: formText(z.string().min(1)),
     redirectTo: formOptionalText(),
   });
 
   const result = schema.safeParse(formData);
   if (!result.success) {
-    return { error: "Username and password are required" };
+    return { error: "Email and password are required" };
   }
 
   return loginWithCredentials({
-    username: result.data.username,
+    email: result.data.email,
     password: result.data.password,
+    request,
     redirectTo: result.data.redirectTo ?? null,
   });
 }
@@ -42,7 +43,7 @@ export async function clientLoader() {
 
 export default function Login({ actionData }: Route.ComponentProps) {
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+  const redirectTo = searchParams.get("redirectTo") || "/habits";
 
   return (
     <Flex align="center" justify="center" className="login-page">
@@ -54,13 +55,13 @@ export default function Login({ actionData }: Route.ComponentProps) {
           <input type="hidden" name="redirectTo" value={redirectTo} />
 
           <Text as="div" size="2" weight="medium" mb="2">
-            Username
+            Email
           </Text>
           <TextField.Root
-            name="username"
+            name="email"
             required
             mb="4"
-            placeholder="Enter your username"
+            placeholder="Enter your email"
           />
 
           <Text as="div" size="2" weight="medium" mb="2">

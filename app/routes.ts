@@ -7,6 +7,8 @@ import {
 
 export default [
   route("login", "routes/login.tsx"),
+  route("sign-up", "routes/sign-up.tsx"),
+  route("api/auth/*", "routes/api/auth.$.ts"),
   route("logout", "routes/logout.tsx"),
   route("healthz", "routes/healthz.ts"),
 

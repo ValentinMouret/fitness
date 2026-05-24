@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import { requireAuth } from "~/auth";
+import { requireAuth } from "~/auth.server";
 import type { Route } from "./+types/ProtectedLayout";
 
 export async function loader({ request }: Route.LoaderArgs) {

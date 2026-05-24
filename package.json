@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "auth:generate": "bun x auth@latest generate --config ./auth.ts --output ./app/db/auth-schema.ts --yes",
     "build": "react-router build",
     "ci": "bun run typecheck && bun run lint && bun run test && bun run test:e2e",
     "gate": "bun run typecheck && bun run lint && bun run test && bun run build",

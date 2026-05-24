@@ -1,65 +1,11 @@
-import { redirect } from "react-router";
-import { Cookies } from "./cookies";
-import { isServer } from "./utils";
+import type { User as BetterAuthUser } from "better-auth";
+import { createAuthClient } from "better-auth/react";
 
-export interface User {
-  readonly username: string;
-}
+export type User = BetterAuthUser;
 
-const SESSION_KEY = "fitness-rr-auth";
-const COOKIE_NAME = "fitness-rr-session";
+export const authClient = createAuthClient();
 
-export async function getUser(request?: Request): Promise<User | null> {
-  const cookieHeader = request?.headers.get("Cookie");
-  const sessionCookie = await Cookies.get(
-    COOKIE_NAME,
-    cookieHeader ?? undefined,
-  );
-
-  if (sessionCookie) {
-    try {
-      return JSON.parse(sessionCookie);
-    } catch {
-      // Invalid session cookie, fall through to return null
-    }
-  }
-
-  if (isServer()) return null;
-
-  const stored = sessionStorage.getItem(SESSION_KEY);
-  return stored ? JSON.parse(stored) : null;
-}
-
-export async function setUser(user: User): Promise<void> {
-  await Cookies.set(COOKIE_NAME, JSON.stringify(user));
-
-  if (isServer()) return;
-
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
-}
-
-export async function clearUser(): Promise<void> {
-  await Cookies.delete(COOKIE_NAME);
-
-  if (isServer()) return;
-
-  sessionStorage.removeItem(SESSION_KEY);
-}
-
-export async function requireAuth(request?: Request): Promise<User> {
-  const user = await getUser(request);
-
-  if (!user) {
-    const url = request ? new URL(request.url) : null;
-    const redirectTo = url ? url.pathname + url.search : "/";
-
-    throw redirect(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
-  }
-
-  return user;
-}
-
-export async function logout(): Promise<Response> {
-  await clearUser();
-  return redirect("/login");
+export async function getUser(): Promise<User | null> {
+  const session = await authClient.getSession();
+  return session.data?.user ?? null;
 }
