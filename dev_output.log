@@ -754,3 +754,7 @@ $ react-router dev
 [01:15:43.588] [31mERROR[39m (78147): [36mFailed to load daily summary[39m
     [35mstatus[39m: 500
     err: "database_error"
+1:23:43 AM [vite] (client) hmr update /app/routes/nutrition/index.tsx
+1:23:43 AM [vite] (client) hmr update /app/routes/nutrition/index.tsx
+1:23:43 AM [vite] (client) hmr update /app/routes/nutrition/index.tsx
+1:23:43 AM [vite] (ssr) page reload app/routes/nutrition/index.tsx

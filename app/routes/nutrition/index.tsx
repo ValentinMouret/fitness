@@ -242,7 +242,10 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
     () => navigateToDate(addOneDay(parsedCurrentDate)),
     [navigateToDate, parsedCurrentDate],
   );
-  const goToToday = useCallback(() => navigateToDate(today()), [navigateToDate]);
+  const goToToday = useCallback(
+    () => navigateToDate(today()),
+    [navigateToDate],
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
