@@ -32,6 +32,10 @@
 **Learning:** Adding global shortcuts (like 'q' for Quick Actions) requires clear visual cues (e.g., `<Kbd>` component) for discovery and proper accessibility attributes (`aria-keyshortcuts`, `aria-label`). Visual hints should be hidden on mobile where physical keyboards are less common.
 **Action:** When adding shortcuts, always include a visual `<Kbd>` badge on the associated element and ensure accessibility attributes are updated.
 
+## 2026-05-18 - [Accessible Date Navigation & Discovery]
+**Learning:** Date-based navigation is a core interaction pattern. Adding a "Today" jump-link and keyboard shortcuts (`ArrowLeft`, `ArrowRight`, `t`) significantly improves "power user" efficiency. To ensure discovery without cluttering the UI, include the shortcut hints in tooltips (e.g., "Next day (Right Arrow)") and use `aria-keyshortcuts`.
+**Action:** Implement a standard "Today" button and keyboard listeners for date-navigated pages. Use absolute positioning for the "Today" button within a relative container to keep the main date heading centered.
+
 ## 2026-05-06 - [Global Optimistic Progress & Celebrations]
 **Learning:** To trigger celebration effects (like confetti) only upon completion of the final item in a list, implement a `useEffect` that monitors an optimistic count (derived via `useFetchers()`) and compares it against a persistent 'previously completed' state or ref initialized from server data. This prevents the celebration from re-triggering on every page load if the user is already finished.
 **Action:** Use a combination of `useFetchers()` for the current count and a `previouslyCompleted` ref or state to guard celebration triggers.

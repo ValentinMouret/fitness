@@ -14,6 +14,7 @@ import {
   DropdownMenu,
   IconButton,
   Text,
+  Tooltip,
 } from "@radix-ui/themes";
 import { Brain } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -122,15 +123,17 @@ export function WorkoutExerciseCard({
 
         {viewModel.canRemoveExercise && (
           <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-              <IconButton
-                variant="ghost"
-                size="1"
-                aria-label="Exercise actions"
-              >
-                <DotsVerticalIcon />
-              </IconButton>
-            </DropdownMenu.Trigger>
+            <Tooltip content="Exercise actions">
+              <DropdownMenu.Trigger>
+                <IconButton
+                  variant="ghost"
+                  size="1"
+                  aria-label="Exercise actions"
+                >
+                  <DotsVerticalIcon />
+                </IconButton>
+              </DropdownMenu.Trigger>
+            </Tooltip>
             <DropdownMenu.Content>
               {onReplaceExercise && (
                 <DropdownMenu.Item
@@ -379,18 +382,20 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
             <input type="hidden" name="exerciseId" value={exerciseId} />
             <input type="hidden" name="setNumber" value={set.set} />
             <input type="hidden" name="isCompleted" value="true" />
-            <IconButton
-              type="submit"
-              size="2"
-              variant="soft"
-              color="green"
-              loading={isCompleting}
-              disabled={isBusy && !isCompleting}
-              aria-label={`Complete set ${set.set}`}
-              onClick={onCompleteSet}
-            >
-              <CheckIcon />
-            </IconButton>
+            <Tooltip content="Complete set">
+              <IconButton
+                type="submit"
+                size="2"
+                variant="soft"
+                color="green"
+                loading={isCompleting}
+                disabled={isBusy && !isCompleting}
+                aria-label={`Complete set ${set.set}`}
+                onClick={onCompleteSet}
+              >
+                <CheckIcon />
+              </IconButton>
+            </Tooltip>
           </actionFetcher.Form>
         )}
 
@@ -399,17 +404,19 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
             <input type="hidden" name="intent" value="remove-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />
             <input type="hidden" name="setNumber" value={set.set} />
-            <IconButton
-              type="submit"
-              size="1"
-              variant="ghost"
-              color="red"
-              loading={isRemoving}
-              disabled={isBusy && !isRemoving}
-              aria-label={`Remove set ${set.set}`}
-            >
-              <TrashIcon />
-            </IconButton>
+            <Tooltip content="Remove set">
+              <IconButton
+                type="submit"
+                size="1"
+                variant="ghost"
+                color="red"
+                loading={isRemoving}
+                disabled={isBusy && !isRemoving}
+                aria-label={`Remove set ${set.set}`}
+              >
+                <TrashIcon />
+              </IconButton>
+            </Tooltip>
           </actionFetcher.Form>
         )}
       </div>

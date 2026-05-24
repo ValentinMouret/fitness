@@ -21,6 +21,7 @@ import {
   IconButton,
   Text,
   TextField,
+  Tooltip,
 } from "@radix-ui/themes";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
@@ -411,16 +412,18 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
       <header ref={headerRef} className="active-workout-header">
         <Flex justify="between" align="start" gap="2">
           <Flex align="start" gap="2" className="active-workout-header__left">
-            <IconButton
-              asChild
-              variant="ghost"
-              size="1"
-              className="active-workout-header__back"
-            >
-              <Link to="/workouts">
-                <ArrowLeftIcon />
-              </Link>
-            </IconButton>
+            <Tooltip content="Back to workouts">
+              <IconButton
+                asChild
+                variant="ghost"
+                size="1"
+                className="active-workout-header__back"
+              >
+                <Link to="/workouts">
+                  <ArrowLeftIcon />
+                </Link>
+              </IconButton>
+            </Tooltip>
 
             <div className="active-workout-header__title-group">
               {isEditingName ? (
@@ -472,15 +475,17 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
             )}
 
             <DropdownMenu.Root>
-              <DropdownMenu.Trigger>
-                <IconButton
-                  variant="ghost"
-                  size="1"
-                  aria-label="Workout actions"
-                >
-                  <DotsVerticalIcon />
-                </IconButton>
-              </DropdownMenu.Trigger>
+              <Tooltip content="Workout actions">
+                <DropdownMenu.Trigger>
+                  <IconButton
+                    variant="ghost"
+                    size="1"
+                    aria-label="Workout actions"
+                  >
+                    <DotsVerticalIcon />
+                  </IconButton>
+                </DropdownMenu.Trigger>
+              </Tooltip>
               <DropdownMenu.Content>
                 {isComplete ? (
                   <>
