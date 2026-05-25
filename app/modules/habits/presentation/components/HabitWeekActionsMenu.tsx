@@ -7,6 +7,7 @@ import {
   Flex,
   IconButton,
   Text,
+  Tooltip,
 } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { useFetcher, useNavigate } from "react-router";
@@ -52,26 +53,28 @@ export function HabitWeekActionsMenu({
     <>
       <div className="habit-week-actions-menu">
         <DropdownMenu.Root>
-          <DropdownMenu.Trigger>
-            <IconButton
-              variant="ghost"
-              size="1"
-              aria-label={`Actions for ${name}`}
-            >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 15 15"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
+          <Tooltip content={`Actions for ${name}`}>
+            <DropdownMenu.Trigger>
+              <IconButton
+                variant="ghost"
+                size="1"
+                aria-label={`Actions for ${name}`}
               >
-                <circle cx="7.5" cy="2.5" r="1.25" fill="currentColor" />
-                <circle cx="7.5" cy="7.5" r="1.25" fill="currentColor" />
-                <circle cx="7.5" cy="12.5" r="1.25" fill="currentColor" />
-              </svg>
-            </IconButton>
-          </DropdownMenu.Trigger>
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 15 15"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <circle cx="7.5" cy="2.5" r="1.25" fill="currentColor" />
+                  <circle cx="7.5" cy="7.5" r="1.25" fill="currentColor" />
+                  <circle cx="7.5" cy="12.5" r="1.25" fill="currentColor" />
+                </svg>
+              </IconButton>
+            </DropdownMenu.Trigger>
+          </Tooltip>
           <DropdownMenu.Content>
             <DropdownMenu.Item
               onSelect={() => navigate(`/habits/${habitId}/edit`)}
