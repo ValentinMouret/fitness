@@ -1,4 +1,4 @@
-import { data, useFetcher } from "react-router";
+import { data, Link, useFetcher } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import type { Habit } from "~/modules/habits/domain/entity";
@@ -92,6 +92,7 @@ function CardFooter({
   missedTwice,
   onMinimum,
   habitName,
+  submitting,
 }: {
   done: boolean;
   streak: number;
@@ -100,6 +101,7 @@ function CardFooter({
   missedTwice: boolean;
   onMinimum: (e: React.MouseEvent) => void;
   habitName: string;
+  submitting: boolean;
 }) {
   return (
     <div
@@ -148,6 +150,7 @@ function CardFooter({
         <button
           type="button"
           onClick={onMinimum}
+          disabled={submitting}
           aria-label={
             missedTwice
               ? `Do the minimum for ${habitName}`
@@ -168,10 +171,15 @@ function CardFooter({
             display: "flex",
             alignItems: "center",
             gap: 4,
+            opacity: submitting ? 0.6 : 1,
           }}
         >
-          {missedTwice ? "Do the minimum" : "Log minimum"}{" "}
-          <span style={{ color: "#b5b0a8" }}>→</span>
+          {submitting
+            ? "Logging..."
+            : missedTwice
+              ? "Do the minimum"
+              : "Log minimum"}{" "}
+          {!submitting && <span style={{ color: "#b5b0a8" }}>→</span>}
         </button>
       )}
     </div>
@@ -235,12 +243,23 @@ function HabitCard({
 
   const borderColor = displayCompleted ? habit.color : "#e7e5e4";
 
+  const ariaLabel = [
+    displayCompleted ? "Unmark" : "Mark",
+    `'${habit.name}'`,
+    habit.identityPhrase ? `('${habit.identityPhrase}')` : "",
+    "as completed",
+    displayStreak > 0 ? `(${displayStreak} day streak)` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     // biome-ignore lint/a11y/useSemanticElements: outer card can't be <button> — contains a nested <button>
     <div
       className="habit-card-a"
       role="button"
       tabIndex={0}
+      aria-label={ariaLabel}
       onClick={toggle}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") toggle();
@@ -254,6 +273,7 @@ function HabitCard({
           : "0 1px 3px rgba(0,0,0,0.06)",
         cursor: "pointer",
         overflow: "hidden",
+        opacity: submitting ? 0.8 : 1,
       }}
     >
       <div
@@ -382,6 +402,7 @@ function HabitCard({
         missedTwice={nmt}
         onMinimum={logMinimum}
         habitName={habit.name}
+        submitting={submitting}
       />
     </div>
   );
@@ -404,8 +425,8 @@ function TabBar({ active }: { active: "today" | "week" }) {
         gap: 8,
       }}
     >
-      <a
-        href="/"
+      <Link
+        to="/"
         style={{
           flex: 1,
           padding: "10px 0",
@@ -421,9 +442,9 @@ function TabBar({ active }: { active: "today" | "week" }) {
         }}
       >
         ← App
-      </a>
-      <a
-        href="/habits"
+      </Link>
+      <Link
+        to="/habits"
         style={{
           flex: 1.5,
           padding: "10px 0",
@@ -439,9 +460,9 @@ function TabBar({ active }: { active: "today" | "week" }) {
         }}
       >
         Today
-      </a>
-      <a
-        href="/habits/week"
+      </Link>
+      <Link
+        to="/habits/week"
         style={{
           flex: 1.5,
           padding: "10px 0",
@@ -457,7 +478,7 @@ function TabBar({ active }: { active: "today" | "week" }) {
         }}
       >
         Week
-      </a>
+      </Link>
     </div>
   );
 }
@@ -549,8 +570,9 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
               </div>
             )}
           </div>
-          <a
-            href="/habits/new"
+          <Link
+            to="/habits/new"
+            aria-label="Add new habit"
             style={{
               display: "flex",
               alignItems: "center",
@@ -568,7 +590,7 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
             }}
           >
             +
-          </a>
+          </Link>
         </div>
       </div>
 

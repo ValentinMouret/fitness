@@ -1,4 +1,4 @@
-import { data, useFetcher } from "react-router";
+import { data, Link, useFetcher } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { getScheduledDays, type Habit } from "~/modules/habits/domain/entity";
@@ -298,8 +298,8 @@ function TabBar({ active }: { active: "today" | "week" }) {
         gap: 8,
       }}
     >
-      <a
-        href="/"
+      <Link
+        to="/"
         style={{
           flex: 1,
           padding: "10px 0",
@@ -315,9 +315,9 @@ function TabBar({ active }: { active: "today" | "week" }) {
         }}
       >
         ← App
-      </a>
-      <a
-        href="/habits"
+      </Link>
+      <Link
+        to="/habits"
         style={{
           flex: 1.5,
           padding: "10px 0",
@@ -333,9 +333,9 @@ function TabBar({ active }: { active: "today" | "week" }) {
         }}
       >
         Today
-      </a>
-      <a
-        href="/habits/week"
+      </Link>
+      <Link
+        to="/habits/week"
         style={{
           flex: 1.5,
           padding: "10px 0",
@@ -351,7 +351,7 @@ function TabBar({ active }: { active: "today" | "week" }) {
         }}
       >
         Week
-      </a>
+      </Link>
     </div>
   );
 }
