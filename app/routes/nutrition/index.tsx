@@ -227,7 +227,9 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
 
   const activeFetchers = fetchers.filter((f) => f.state !== "idle");
   const optimisticMealActions = activeFetchers.filter((f) =>
-    ["apply-template", "delete-meal"].includes(f.formData?.get("intent") as string),
+    ["apply-template", "delete-meal"].includes(
+      f.formData?.get("intent") as string,
+    ),
   );
 
   const mealCompletionMap = Object.fromEntries(
@@ -235,7 +237,9 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
   );
   for (const f of optimisticMealActions) {
     const category = f.formData?.get("mealCategory") as string;
-    if (category) mealCompletionMap[category] = f.formData?.get("intent") === "apply-template";
+    if (category)
+      mealCompletionMap[category] =
+        f.formData?.get("intent") === "apply-template";
     else if (f.formData?.get("intent") === "delete-meal") {
       const id = f.formData?.get("mealId");
       const type = mealTypes.find((t) => dailySummary.meals[t]?.id === id);
@@ -243,12 +247,16 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
     }
   }
 
-  const completedCount = Object.values(mealCompletionMap).filter(Boolean).length;
+  const completedCount =
+    Object.values(mealCompletionMap).filter(Boolean).length;
   const [celebrate, setCelebrate] = useState(false);
   const prevCount = useRef(completedCount);
 
   useEffect(() => {
-    if (completedCount === mealTypes.length && prevCount.current < mealTypes.length) {
+    if (
+      completedCount === mealTypes.length &&
+      prevCount.current < mealTypes.length
+    ) {
       setCelebrate(true);
     }
     prevCount.current = completedCount;
@@ -501,7 +509,12 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
               Meals
             </p>
             {completedCount === mealTypes.length && (
-              <Text size="1" color="green" weight="bold" className="animate-fade-in">
+              <Text
+                size="1"
+                color="green"
+                weight="bold"
+                className="animate-fade-in"
+              >
                 All Done! ✨
               </Text>
             )}
@@ -518,124 +531,124 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
         <SuccessPulse trigger={optimisticMealActions.length > 0}>
           <div className="nutrition-meals__list">
             {mealTypes.map((mealType) => {
-            const meal = getMealForType(mealType);
-            const hasLogged = meal !== null;
-            const { label, icon } = mealConfig[mealType];
-            const ingredientNames = meal?.ingredients
-              ?.map((ing) => ing.ingredient.name)
-              .join(" · ");
+              const meal = getMealForType(mealType);
+              const hasLogged = meal !== null;
+              const { label, icon } = mealConfig[mealType];
+              const ingredientNames = meal?.ingredients
+                ?.map((ing) => ing.ingredient.name)
+                .join(" · ");
 
-            const isDeleting =
-              fetcher.state !== "idle" &&
-              fetcher.formData?.get("intent") === "delete-meal" &&
-              fetcher.formData?.get("mealId") === meal?.id;
+              const isDeleting =
+                fetcher.state !== "idle" &&
+                fetcher.formData?.get("intent") === "delete-meal" &&
+                fetcher.formData?.get("mealId") === meal?.id;
 
-            const isApplyingTemplate =
-              fetcher.state !== "idle" &&
-              fetcher.formData?.get("intent") === "apply-template" &&
-              fetcher.formData?.get("mealCategory") === mealType;
+              const isApplyingTemplate =
+                fetcher.state !== "idle" &&
+                fetcher.formData?.get("intent") === "apply-template" &&
+                fetcher.formData?.get("mealCategory") === mealType;
 
-            return (
-              <div
-                key={mealType}
-                className={`nutrition-meal ${mealCompletionMap[mealType] ? "nutrition-meal--logged" : ""}`}
-              >
-                <span className="nutrition-meal__icon">{icon}</span>
-                <div className="nutrition-meal__body">
-                  <div className="nutrition-meal__name">{label}</div>
-                  {hasLogged && ingredientNames ? (
-                    <div className="nutrition-meal__detail">
-                      {ingredientNames}
-                    </div>
-                  ) : !hasLogged ? (
-                    <div className="nutrition-meal__detail nutrition-meal__detail--empty">
-                      Tap to log
-                    </div>
-                  ) : null}
-                </div>
-                <div className="nutrition-meal__actions">
-                  {hasLogged ? (
-                    <>
-                      <span className="nutrition-meal__kcal">
-                        {Math.round(meal.totals.calories)}
-                      </span>
-                      <Button
-                        size="1"
-                        variant="outline"
-                        asChild
-                        aria-label={`Edit ${label}`}
-                      >
-                        <Link to={getMealBuilderUrl(mealType, meal)}>
-                          <Pencil1Icon width="14" height="14" />
-                          Edit
-                        </Link>
-                      </Button>
-                      <DropdownMenu.Root>
-                        <Tooltip content={`Meal actions for ${label}`}>
-                          <DropdownMenu.Trigger>
-                            <Button
-                              variant="ghost"
-                              size="1"
-                              aria-label={`Meal actions for ${label}`}
-                              loading={isDeleting}
-                            >
-                              <DotsHorizontalIcon width="14" height="14" />
-                            </Button>
-                          </DropdownMenu.Trigger>
-                        </Tooltip>
-                        <DropdownMenu.Content>
-                          <DropdownMenu.Item
-                            onClick={() =>
-                              setSaveAsTemplateMeal({
-                                id: meal.id,
-                                category: mealType,
-                              })
-                            }
-                          >
-                            Save as Template
-                          </DropdownMenu.Item>
-                          <DropdownMenu.Separator />
-                          <DropdownMenu.Item
-                            color="red"
-                            onClick={() => handleClearMeal(mealType)}
-                          >
-                            Clear Meal
-                          </DropdownMenu.Item>
-                        </DropdownMenu.Content>
-                      </DropdownMenu.Root>
-                    </>
-                  ) : (
-                    <>
-                      <span className="nutrition-meal__kcal nutrition-meal__kcal--empty">
-                        —
-                      </span>
-                      <Button
-                        size="1"
-                        variant="outline"
-                        asChild
-                        aria-label={`Add ${label}`}
-                      >
-                        <Link to={getMealBuilderUrl(mealType)}>
-                          <PlusIcon width="14" height="14" />
-                          Add
-                        </Link>
-                      </Button>
-                      <Tooltip content={`Use template for ${label}`}>
+              return (
+                <div
+                  key={mealType}
+                  className={`nutrition-meal ${mealCompletionMap[mealType] ? "nutrition-meal--logged" : ""}`}
+                >
+                  <span className="nutrition-meal__icon">{icon}</span>
+                  <div className="nutrition-meal__body">
+                    <div className="nutrition-meal__name">{label}</div>
+                    {hasLogged && ingredientNames ? (
+                      <div className="nutrition-meal__detail">
+                        {ingredientNames}
+                      </div>
+                    ) : !hasLogged ? (
+                      <div className="nutrition-meal__detail nutrition-meal__detail--empty">
+                        Tap to log
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="nutrition-meal__actions">
+                    {hasLogged ? (
+                      <>
+                        <span className="nutrition-meal__kcal">
+                          {Math.round(meal.totals.calories)}
+                        </span>
                         <Button
-                          variant="ghost"
                           size="1"
-                          onClick={() => handleUseTemplate(mealType)}
-                          aria-label={`Use template for ${label}`}
-                          loading={isApplyingTemplate}
+                          variant="outline"
+                          asChild
+                          aria-label={`Edit ${label}`}
                         >
-                          <DotsHorizontalIcon width="14" height="14" />
+                          <Link to={getMealBuilderUrl(mealType, meal)}>
+                            <Pencil1Icon width="14" height="14" />
+                            Edit
+                          </Link>
                         </Button>
-                      </Tooltip>
-                    </>
-                  )}
+                        <DropdownMenu.Root>
+                          <Tooltip content={`Meal actions for ${label}`}>
+                            <DropdownMenu.Trigger>
+                              <Button
+                                variant="ghost"
+                                size="1"
+                                aria-label={`Meal actions for ${label}`}
+                                loading={isDeleting}
+                              >
+                                <DotsHorizontalIcon width="14" height="14" />
+                              </Button>
+                            </DropdownMenu.Trigger>
+                          </Tooltip>
+                          <DropdownMenu.Content>
+                            <DropdownMenu.Item
+                              onClick={() =>
+                                setSaveAsTemplateMeal({
+                                  id: meal.id,
+                                  category: mealType,
+                                })
+                              }
+                            >
+                              Save as Template
+                            </DropdownMenu.Item>
+                            <DropdownMenu.Separator />
+                            <DropdownMenu.Item
+                              color="red"
+                              onClick={() => handleClearMeal(mealType)}
+                            >
+                              Clear Meal
+                            </DropdownMenu.Item>
+                          </DropdownMenu.Content>
+                        </DropdownMenu.Root>
+                      </>
+                    ) : (
+                      <>
+                        <span className="nutrition-meal__kcal nutrition-meal__kcal--empty">
+                          —
+                        </span>
+                        <Button
+                          size="1"
+                          variant="outline"
+                          asChild
+                          aria-label={`Add ${label}`}
+                        >
+                          <Link to={getMealBuilderUrl(mealType)}>
+                            <PlusIcon width="14" height="14" />
+                            Add
+                          </Link>
+                        </Button>
+                        <Tooltip content={`Use template for ${label}`}>
+                          <Button
+                            variant="ghost"
+                            size="1"
+                            onClick={() => handleUseTemplate(mealType)}
+                            aria-label={`Use template for ${label}`}
+                            loading={isApplyingTemplate}
+                          >
+                            <DotsHorizontalIcon width="14" height="14" />
+                          </Button>
+                        </Tooltip>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
+              );
             })}
           </div>
         </SuccessPulse>
