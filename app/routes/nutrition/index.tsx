@@ -22,16 +22,18 @@ import {
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   type ActionFunctionArgs,
   Link,
   type LoaderFunctionArgs,
   useFetcher,
+  useFetchers,
   useSearchParams,
 } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import { Celebration, SuccessPulse } from "~/components/Celebration";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import {
@@ -221,6 +223,36 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
   } | null>(null);
   const [showQuickEstimate, setShowQuickEstimate] = useState(false);
   const fetcher = useFetcher();
+  const fetchers = useFetchers();
+
+  const activeFetchers = fetchers.filter((f) => f.state !== "idle");
+  const optimisticMealActions = activeFetchers.filter((f) =>
+    ["apply-template", "delete-meal"].includes(f.formData?.get("intent") as string),
+  );
+
+  const mealCompletionMap = Object.fromEntries(
+    mealTypes.map((t) => [t, !!dailySummary.meals[t]]),
+  );
+  for (const f of optimisticMealActions) {
+    const category = f.formData?.get("mealCategory") as string;
+    if (category) mealCompletionMap[category] = f.formData?.get("intent") === "apply-template";
+    else if (f.formData?.get("intent") === "delete-meal") {
+      const id = f.formData?.get("mealId");
+      const type = mealTypes.find((t) => dailySummary.meals[t]?.id === id);
+      if (type) mealCompletionMap[type] = false;
+    }
+  }
+
+  const completedCount = Object.values(mealCompletionMap).filter(Boolean).length;
+  const [celebrate, setCelebrate] = useState(false);
+  const prevCount = useRef(completedCount);
+
+  useEffect(() => {
+    if (completedCount === mealTypes.length && prevCount.current < mealTypes.length) {
+      setCelebrate(true);
+    }
+    prevCount.current = completedCount;
+  }, [completedCount]);
 
   const templateSelectionViewModel = currentMealType
     ? createTemplateSelectionViewModel(currentMealType, mealTemplates)
@@ -459,8 +491,21 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
 
       {/* Meals */}
       <div className="nutrition-meals">
+        <Celebration
+          trigger={celebrate}
+          onComplete={() => setCelebrate(false)}
+        />
         <div className="nutrition-meals__header">
-          <p className="section-label">Meals</p>
+          <Flex align="center" gap="2">
+            <p className="section-label" style={{ marginBottom: 0 }}>
+              Meals
+            </p>
+            {completedCount === mealTypes.length && (
+              <Text size="1" color="green" weight="bold" className="animate-fade-in">
+                All Done! ✨
+              </Text>
+            )}
+          </Flex>
           <Button
             variant="soft"
             size="1"
@@ -470,8 +515,9 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             Estimate
           </Button>
         </div>
-        <div className="nutrition-meals__list">
-          {mealTypes.map((mealType) => {
+        <SuccessPulse trigger={optimisticMealActions.length > 0}>
+          <div className="nutrition-meals__list">
+            {mealTypes.map((mealType) => {
             const meal = getMealForType(mealType);
             const hasLogged = meal !== null;
             const { label, icon } = mealConfig[mealType];
@@ -492,7 +538,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             return (
               <div
                 key={mealType}
-                className={`nutrition-meal ${hasLogged ? "nutrition-meal--logged" : ""}`}
+                className={`nutrition-meal ${mealCompletionMap[mealType] ? "nutrition-meal--logged" : ""}`}
               >
                 <span className="nutrition-meal__icon">{icon}</span>
                 <div className="nutrition-meal__body">
@@ -590,8 +636,9 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                 </div>
               </div>
             );
-          })}
-        </div>
+            })}
+          </div>
+        </SuccessPulse>
       </div>
 
       {/* Tools */}
