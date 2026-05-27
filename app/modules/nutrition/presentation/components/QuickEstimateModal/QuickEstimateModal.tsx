@@ -9,6 +9,7 @@ import {
   Spinner,
   Text,
   TextField,
+  Tooltip,
 } from "@radix-ui/themes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFetcher, useNavigate } from "react-router";
@@ -249,12 +250,15 @@ export function QuickEstimateModal({
                 disabled={isLoading}
               />
             </Box>
-            <IconButton
-              onClick={handleSend}
-              disabled={!input.trim() || isLoading}
-            >
-              <PaperPlaneIcon />
-            </IconButton>
+            <Tooltip content="Send estimate request (Enter)">
+              <IconButton
+                onClick={handleSend}
+                disabled={!input.trim() || isLoading}
+                aria-label="Send estimate request"
+              >
+                <PaperPlaneIcon />
+              </IconButton>
+            </Tooltip>
           </Flex>
         )}
       </Dialog.Content>
