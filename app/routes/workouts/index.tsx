@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Text } from "@radix-ui/themes";
+import { Box, Button, Flex, Text, Tooltip } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { Link, useFetcher, useSearchParams } from "react-router";
 import { zfd } from "zod-form-data";
@@ -189,14 +189,22 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
       />
 
       <Flex gap="3" wrap="wrap" mt="6">
-        <Button
-          variant="outline"
-          size="2"
-          onClick={handleAIFeedback}
-          disabled={aiFetcher.state === "submitting" || workouts.length < 5}
+        <Tooltip
+          content={
+            workouts.length < 5
+              ? "Requires at least 5 workouts for meaningful feedback"
+              : "Get AI feedback on your training"
+          }
         >
-          AI Feedback
-        </Button>
+          <Button
+            variant="outline"
+            size="2"
+            onClick={handleAIFeedback}
+            disabled={aiFetcher.state === "submitting" || workouts.length < 5}
+          >
+            AI Feedback
+          </Button>
+        </Tooltip>
         <Button variant="outline" size="2" asChild>
           <Link to="/workouts/recovery">Recovery Map</Link>
         </Button>

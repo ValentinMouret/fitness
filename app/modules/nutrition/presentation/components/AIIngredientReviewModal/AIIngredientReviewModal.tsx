@@ -11,6 +11,7 @@ import {
   Select,
   Text,
   TextField,
+  Tooltip,
 } from "@radix-ui/themes";
 import { useState } from "react";
 import { NumberInput } from "~/components/NumberInput";
@@ -73,9 +74,11 @@ export function AIIngredientReviewModal({
             </Flex>
           </Dialog.Title>
           <Dialog.Close>
-            <IconButton variant="ghost" aria-label="Close">
-              <Cross2Icon />
-            </IconButton>
+            <Tooltip content="Close">
+              <IconButton variant="ghost" aria-label="Close">
+                <Cross2Icon />
+              </IconButton>
+            </Tooltip>
           </Dialog.Close>
         </Flex>
 

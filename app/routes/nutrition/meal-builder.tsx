@@ -19,6 +19,7 @@ import {
   Tabs,
   Text,
   TextField,
+  Tooltip,
 } from "@radix-ui/themes";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -591,9 +592,11 @@ function AddIngredientModal({
       <Flex justify="between" align="center" mb="3">
         <Dialog.Title>Add Ingredient</Dialog.Title>
         <Dialog.Close>
-          <IconButton variant="ghost">
-            <Cross2Icon />
-          </IconButton>
+          <Tooltip content="Close">
+            <IconButton variant="ghost" aria-label="Close">
+              <Cross2Icon />
+            </IconButton>
+          </Tooltip>
         </Dialog.Close>
       </Flex>
 
@@ -694,9 +697,11 @@ function AISuggestionsPanel({
     <Card size="3" mb="4">
       <Flex justify="between" align="center" mb="3">
         <Heading size="4">AI Suggestions</Heading>
-        <IconButton variant="ghost" onClick={onClose}>
-          <Cross2Icon />
-        </IconButton>
+        <Tooltip content="Close">
+          <IconButton variant="ghost" onClick={onClose} aria-label="Close">
+            <Cross2Icon />
+          </IconButton>
+        </Tooltip>
       </Flex>
 
       <Flex direction="column" gap="3">
