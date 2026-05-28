@@ -43,3 +43,7 @@
 ## 2026-05-06 - [Action Success Feedback]
 **Learning:** Providing immediate, container-level visual feedback (like a pulse) for actions that might take a moment to reflect in the data (due to network latency) greatly improves perceived performance. Binding the `trigger` prop of such feedback components to the existence of relevant fetchers ensures the feedback is "live".
 **Action:** Wrap action-heavy sections in a feedback component (e.g., `SuccessPulse`) triggered by relevant fetcher states.
+
+## 2026-05-28 - [Accessible Discovery for Icon Buttons]
+**Learning:** Icon-only buttons with `aria-label` satisfy screen reader requirements but can be opaque to sighted users. Wrapping these in a Radix UI `Tooltip` that matches the `aria-label` provides necessary visual context on hover/focus. When used with `DropdownMenu.Trigger` or `AlertDialog.Trigger`, the `Tooltip` should be the outermost wrapper to ensure correct ref and event propagation.
+**Action:** Consistently wrap icon-only interactive elements in a `Tooltip`. For composite Radix components, always follow the `<Tooltip><Trigger><IconButton /></Trigger></Tooltip>` nesting order.

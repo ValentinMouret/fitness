@@ -10,6 +10,7 @@ import {
   Table,
   Text,
   TextField,
+  Tooltip,
 } from "@radix-ui/themes";
 import { useId } from "react";
 import { data, useFetcher, useLoaderData } from "react-router";
@@ -170,7 +171,7 @@ export default function MeasurementPage(_: Route.ComponentProps) {
                 disabled={isSubmitting}
               />
             </Box>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" loading={isSubmitting}>
               <PlusIcon />
               Add Measurement
             </Button>
@@ -212,16 +213,18 @@ export default function MeasurementPage(_: Route.ComponentProps) {
                   </Table.Cell>
                   <Table.Cell>
                     <AlertDialog.Root>
-                      <AlertDialog.Trigger>
-                        <IconButton
-                          variant="ghost"
-                          color="red"
-                          size="1"
-                          aria-label="Delete measurement"
-                        >
-                          <TrashIcon />
-                        </IconButton>
-                      </AlertDialog.Trigger>
+                      <Tooltip content="Delete measurement">
+                        <AlertDialog.Trigger>
+                          <IconButton
+                            variant="ghost"
+                            color="red"
+                            size="1"
+                            aria-label="Delete measurement"
+                          >
+                            <TrashIcon />
+                          </IconButton>
+                        </AlertDialog.Trigger>
+                      </Tooltip>
                       <AlertDialog.Content maxWidth="450px">
                         <AlertDialog.Title>
                           Delete Measurement

@@ -6,6 +6,7 @@ import {
   Flex,
   IconButton,
   Text,
+  Tooltip,
 } from "@radix-ui/themes";
 import { Form, Link, useFetcher } from "react-router";
 import { z } from "zod";
@@ -147,11 +148,13 @@ function TemplateActions({ templateId }: { readonly templateId: string }) {
 
   return (
     <DropdownMenu.Root>
-      <DropdownMenu.Trigger>
-        <IconButton variant="ghost" size="1" aria-label="Template actions">
-          <DotsVerticalIcon />
-        </IconButton>
-      </DropdownMenu.Trigger>
+      <Tooltip content="Template actions">
+        <DropdownMenu.Trigger>
+          <IconButton variant="ghost" size="1" aria-label="Template actions">
+            <DotsVerticalIcon />
+          </IconButton>
+        </DropdownMenu.Trigger>
+      </Tooltip>
       <DropdownMenu.Content>
         <DropdownMenu.Item
           color="red"

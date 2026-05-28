@@ -15,6 +15,7 @@ import {
   Spinner,
   Text,
   TextField,
+  Tooltip,
 } from "@radix-ui/themes";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useFetcher, useNavigate } from "react-router";
@@ -230,9 +231,11 @@ export function QuickActionSheet({
             <Heading size="5">Quick Actions</Heading>
           </Dialog.Title>
           <Dialog.Close>
-            <IconButton variant="ghost" size="2" aria-label="Close">
-              <Cross2Icon />
-            </IconButton>
+            <Tooltip content="Close">
+              <IconButton variant="ghost" size="2" aria-label="Close">
+                <Cross2Icon />
+              </IconButton>
+            </Tooltip>
           </Dialog.Close>
         </Flex>
 
