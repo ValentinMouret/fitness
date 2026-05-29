@@ -7,6 +7,7 @@ import {
   IconButton,
   Slider,
   Text,
+  Tooltip,
 } from "@radix-ui/themes";
 import type { Ingredient } from "~/modules/nutrition/domain/ingredient";
 
@@ -84,13 +85,15 @@ export function IngredientCard({
             {TEXTURE_LABELS[textureKey]}
           </Badge>
         </Flex>
-        <IconButton
-          variant="ghost"
-          onClick={() => onRemove(ingredient.id)}
-          aria-label="Remove ingredient"
-        >
-          <Cross2Icon />
-        </IconButton>
+        <Tooltip content="Remove ingredient">
+          <IconButton
+            variant="ghost"
+            onClick={() => onRemove(ingredient.id)}
+            aria-label="Remove ingredient"
+          >
+            <Cross2Icon />
+          </IconButton>
+        </Tooltip>
       </Flex>
 
       <Box mb="3">
