@@ -7,6 +7,7 @@ import {
   Flex,
   IconButton,
   Text,
+  Tooltip,
 } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { Link, useFetcher } from "react-router";
@@ -67,38 +68,44 @@ export default function ExerciseCard({
             <Text weight="bold">{exercise.name}</Text>
           </Flex>
           <Flex gap="1" align="center">
-            <IconButton
-              variant="ghost"
-              size="1"
-              asChild
-              onClick={(event) => event.stopPropagation()}
-              aria-label={`Edit ${exercise.name}`}
-            >
-              <Link to={`/workouts/exercises/${exercise.id}/edit`}>
-                <Pencil1Icon />
-              </Link>
-            </IconButton>
-            <IconButton
-              variant="ghost"
-              size="1"
-              color="red"
-              onClick={(event) => {
-                event.stopPropagation();
-                setShowDeleteDialog(true);
-              }}
-              aria-label={`Delete ${exercise.name}`}
-            >
-              <TrashIcon />
-            </IconButton>
-            <IconButton
-              variant="ghost"
-              size="1"
-              className={`rotating-chevron ${isExpanded ? "rotated" : ""}`}
-              aria-label={isExpanded ? "Collapse" : "Expand"}
-              aria-expanded={isExpanded}
-            >
-              <ChevronDownIcon />
-            </IconButton>
+            <Tooltip content={`Edit ${exercise.name}`}>
+              <IconButton
+                variant="ghost"
+                size="1"
+                asChild
+                onClick={(event) => event.stopPropagation()}
+                aria-label={`Edit ${exercise.name}`}
+              >
+                <Link to={`/workouts/exercises/${exercise.id}/edit`}>
+                  <Pencil1Icon />
+                </Link>
+              </IconButton>
+            </Tooltip>
+            <Tooltip content={`Delete ${exercise.name}`}>
+              <IconButton
+                variant="ghost"
+                size="1"
+                color="red"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setShowDeleteDialog(true);
+                }}
+                aria-label={`Delete ${exercise.name}`}
+              >
+                <TrashIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip content={isExpanded ? "Collapse" : "Expand"}>
+              <IconButton
+                variant="ghost"
+                size="1"
+                className={`rotating-chevron ${isExpanded ? "rotated" : ""}`}
+                aria-label={isExpanded ? "Collapse" : "Expand"}
+                aria-expanded={isExpanded}
+              >
+                <ChevronDownIcon />
+              </IconButton>
+            </Tooltip>
           </Flex>
         </Flex>
 

@@ -319,35 +319,39 @@ export function QuickActionSheet({
             )}
 
             <Flex direction="column" gap="2">
-              <Button
-                size="3"
-                onClick={handleStartWorkout}
-                aria-keyshortcuts="s"
-                aria-label="Start Workout (S)"
-              >
-                <CounterClockwiseClockIcon /> Start Workout
-                <Box
-                  ml="auto"
-                  display={{ initial: "none", md: "inline-block" }}
+              <Tooltip content="Start Workout (S)">
+                <Button
+                  size="3"
+                  onClick={handleStartWorkout}
+                  aria-keyshortcuts="s"
+                  aria-label="Start Workout (S)"
                 >
-                  <Kbd size="1">S</Kbd>
-                </Box>
-              </Button>
-              <Button
-                size="3"
-                variant="outline"
-                onClick={handleLogMeal}
-                aria-keyshortcuts="m"
-                aria-label="Log Meal (M)"
-              >
-                <ReaderIcon /> Log Meal
-                <Box
-                  ml="auto"
-                  display={{ initial: "none", md: "inline-block" }}
+                  <CounterClockwiseClockIcon /> Start Workout
+                  <Box
+                    ml="auto"
+                    display={{ initial: "none", md: "inline-block" }}
+                  >
+                    <Kbd size="1">S</Kbd>
+                  </Box>
+                </Button>
+              </Tooltip>
+              <Tooltip content="Log Meal (M)">
+                <Button
+                  size="3"
+                  variant="outline"
+                  onClick={handleLogMeal}
+                  aria-keyshortcuts="m"
+                  aria-label="Log Meal (M)"
                 >
-                  <Kbd size="1">M</Kbd>
-                </Box>
-              </Button>
+                  <ReaderIcon /> Log Meal
+                  <Box
+                    ml="auto"
+                    display={{ initial: "none", md: "inline-block" }}
+                  >
+                    <Kbd size="1">M</Kbd>
+                  </Box>
+                </Button>
+              </Tooltip>
             </Flex>
           </>
         )}

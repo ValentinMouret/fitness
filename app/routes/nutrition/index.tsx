@@ -16,6 +16,7 @@ import {
   Grid,
   Heading,
   IconButton,
+  Kbd,
   Progress,
   RadioGroup,
   Text,
@@ -313,6 +314,9 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
       } else if (e.key.toLowerCase() === "t") {
         e.preventDefault();
         goToToday();
+      } else if (e.key.toLowerCase() === "e") {
+        e.preventDefault();
+        setShowQuickEstimate(true);
       }
     };
 
@@ -519,14 +523,21 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
               </Text>
             )}
           </Flex>
-          <Button
-            variant="soft"
-            size="1"
-            onClick={() => setShowQuickEstimate(true)}
-          >
-            <MagicWandIcon />
-            Estimate
-          </Button>
+          <Tooltip content="Estimate (E)">
+            <Button
+              variant="soft"
+              size="1"
+              onClick={() => setShowQuickEstimate(true)}
+              aria-label="Estimate (E)"
+              aria-keyshortcuts="e"
+            >
+              <MagicWandIcon />
+              Estimate
+              <Box ml="1" display={{ initial: "none", md: "inline-block" }}>
+                <Kbd size="1">E</Kbd>
+              </Box>
+            </Button>
+          </Tooltip>
         </div>
         <SuccessPulse trigger={optimisticMealActions.length > 0}>
           <div className="nutrition-meals__list">
@@ -572,17 +583,19 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                         <span className="nutrition-meal__kcal">
                           {Math.round(meal.totals.calories)}
                         </span>
-                        <Button
-                          size="1"
-                          variant="outline"
-                          asChild
-                          aria-label={`Edit ${label}`}
-                        >
-                          <Link to={getMealBuilderUrl(mealType, meal)}>
-                            <Pencil1Icon width="14" height="14" />
-                            Edit
-                          </Link>
-                        </Button>
+                        <Tooltip content={`Edit ${label}`}>
+                          <Button
+                            size="1"
+                            variant="outline"
+                            asChild
+                            aria-label={`Edit ${label}`}
+                          >
+                            <Link to={getMealBuilderUrl(mealType, meal)}>
+                              <Pencil1Icon width="14" height="14" />
+                              Edit
+                            </Link>
+                          </Button>
+                        </Tooltip>
                         <DropdownMenu.Root>
                           <Tooltip content={`Meal actions for ${label}`}>
                             <DropdownMenu.Trigger>
@@ -622,17 +635,19 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                         <span className="nutrition-meal__kcal nutrition-meal__kcal--empty">
                           —
                         </span>
-                        <Button
-                          size="1"
-                          variant="outline"
-                          asChild
-                          aria-label={`Add ${label}`}
-                        >
-                          <Link to={getMealBuilderUrl(mealType)}>
-                            <PlusIcon width="14" height="14" />
-                            Add
-                          </Link>
-                        </Button>
+                        <Tooltip content={`Add ${label}`}>
+                          <Button
+                            size="1"
+                            variant="outline"
+                            asChild
+                            aria-label={`Add ${label}`}
+                          >
+                            <Link to={getMealBuilderUrl(mealType)}>
+                              <PlusIcon width="14" height="14" />
+                              Add
+                            </Link>
+                          </Button>
+                        </Tooltip>
                         <Tooltip content={`Use template for ${label}`}>
                           <Button
                             variant="ghost"
