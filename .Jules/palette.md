@@ -47,3 +47,7 @@
 ## 2026-05-28 - [Accessible Discovery for Icon Buttons]
 **Learning:** Icon-only buttons with `aria-label` satisfy screen reader requirements but can be opaque to sighted users. Wrapping these in a Radix UI `Tooltip` that matches the `aria-label` provides necessary visual context on hover/focus. When used with `DropdownMenu.Trigger` or `AlertDialog.Trigger`, the `Tooltip` should be the outermost wrapper to ensure correct ref and event propagation.
 **Action:** Consistently wrap icon-only interactive elements in a `Tooltip`. For composite Radix components, always follow the `<Tooltip><Trigger><IconButton /></Trigger></Tooltip>` nesting order.
+
+## 2025-05-20 - [Contextual Keyboard Shortcuts]
+**Learning:** Adding keyboard shortcuts for primary data entry fields (like 'w' for weight) significantly improves the efficiency of daily interactions. Discoverability is key: using responsive `<Kbd>` hints and matching tooltips ensures users learn the shortcuts naturally.
+**Action:** Identify high-frequency input fields and implement single-key shortcuts with clear visual affordances (Kbd, Tooltips).
