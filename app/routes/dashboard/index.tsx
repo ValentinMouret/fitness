@@ -1,4 +1,12 @@
-import { Box, Button, Flex, Kbd, Text, TextField, Tooltip } from "@radix-ui/themes";
+import {
+  Box,
+  Button,
+  Flex,
+  Kbd,
+  Text,
+  TextField,
+  Tooltip,
+} from "@radix-ui/themes";
 import { useEffect, useId, useRef, useState } from "react";
 import { Link, useFetcher, useFetchers, useSearchParams } from "react-router";
 import { z } from "zod";
@@ -320,7 +328,11 @@ export default function DashboardPage({
         <Box className="dashboard__card dashboard__card--weight">
           <Flex className="dashboard__weight-header">
             <Box className="dashboard__weight-label-row" flexGrow="1">
-              <Text as="label" htmlFor={weightInputId} className="section-label">
+              <Text
+                as="label"
+                htmlFor={weightInputId}
+                className="section-label"
+              >
                 Weight trend
               </Text>
               {streak > 0 && (
