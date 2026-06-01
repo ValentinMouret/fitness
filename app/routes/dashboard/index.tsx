@@ -328,11 +328,7 @@ export default function DashboardPage({
         <Box className="dashboard__card dashboard__card--weight">
           <Flex className="dashboard__weight-header">
             <Box className="dashboard__weight-label-row" flexGrow="1">
-              <Text
-                as="label"
-                htmlFor={weightInputId}
-                className="section-label"
-              >
+              <Text as="label" htmlFor={weightInputId} className="section-label">
                 Weight trend
               </Text>
               {streak > 0 && (
