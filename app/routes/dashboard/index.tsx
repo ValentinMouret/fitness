@@ -1,5 +1,13 @@
-import { Box, Button, Flex, Text, TextField } from "@radix-ui/themes";
-import { useEffect, useRef, useState } from "react";
+import {
+  Box,
+  Button,
+  Flex,
+  Kbd,
+  Text,
+  TextField,
+  Tooltip,
+} from "@radix-ui/themes";
+import { useEffect, useId, useRef, useState } from "react";
 import { Link, useFetcher, useFetchers, useSearchParams } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -94,6 +102,8 @@ export default function DashboardPage({
 }: Route.ComponentProps) {
   const weightFetcher = useFetcher();
   const fetchers = useFetchers();
+  const weightInputId = useId();
+  const weightInputRef = useRef<HTMLInputElement>(null);
   const [searchParams] = useSearchParams();
   const noteParam = searchParams.get("note");
 
@@ -139,6 +149,29 @@ export default function DashboardPage({
     }
     prevLoggedToday.current = loggedToday;
   }, [loggedToday]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || loggedToday) return;
+
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (isInput) return;
+
+      if (e.key.toLowerCase() === "w") {
+        e.preventDefault();
+        weightInputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [loggedToday]);
+
   const calPct = Math.min(nutrition.calories / nutrition.calorieTarget, 1);
   const remaining = Math.max(
     0,
@@ -294,14 +327,25 @@ export default function DashboardPage({
       <SuccessPulse trigger={showWeightPulse}>
         <Box className="dashboard__card dashboard__card--weight">
           <Flex className="dashboard__weight-header">
-            <Box className="dashboard__weight-label-row">
-              <p className="section-label">Weight trend</p>
+            <Box className="dashboard__weight-label-row" flexGrow="1">
+              <Text
+                as="label"
+                htmlFor={weightInputId}
+                className="section-label"
+              >
+                Weight trend
+              </Text>
               {streak > 0 && (
                 <Text size="1" className="dashboard__weight-streak">
                   {streak}d streak
                 </Text>
               )}
             </Box>
+            {!loggedToday && (
+              <Box display={{ initial: "none", md: "inline-block" }}>
+                <Kbd size="1">W</Kbd>
+              </Box>
+            )}
           </Flex>
 
           {!loggedToday && (
@@ -311,11 +355,14 @@ export default function DashboardPage({
             >
               <Box className="dashboard__weight-input">
                 <NumberInput
+                  ref={weightInputRef}
+                  id={weightInputId}
                   name="weight"
                   min={0}
                   placeholder={lastWeight?.value?.toString() ?? "..."}
                   size="2"
                   aria-label="Weight"
+                  aria-keyshortcuts="w"
                 >
                   {weight?.unit && (
                     <TextField.Slot pr="3">
@@ -326,13 +373,16 @@ export default function DashboardPage({
                   )}
                 </NumberInput>
               </Box>
-              <Button
-                type="submit"
-                size="2"
-                loading={weightFetcher.state !== "idle"}
-              >
-                Log
-              </Button>
+              <Tooltip content="Log weight (Enter)">
+                <Button
+                  type="submit"
+                  size="2"
+                  loading={weightFetcher.state !== "idle"}
+                  aria-label="Log weight"
+                >
+                  Log
+                </Button>
+              </Tooltip>
             </weightFetcher.Form>
           )}
 
