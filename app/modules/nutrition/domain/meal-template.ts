@@ -27,6 +27,7 @@ export const MealTemplateSchema = z.object({
   totalFiber: z.number().nonnegative(),
   satietyScore: z.number().nonnegative(),
   usageCount: z.number().int().nonnegative(),
+  isPublic: z.boolean(),
   createdAt: z.date(),
   updatedAt: z.date().nullable(),
   deletedAt: z.date().nullable(),
@@ -140,5 +141,6 @@ export function createMealTemplateFromIngredients(
     totalFiber: totals.fiber,
     satietyScore: satiety.score,
     usageCount: 0,
+    isPublic: false,
   };
 }

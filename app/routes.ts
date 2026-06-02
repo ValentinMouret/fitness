@@ -10,6 +10,8 @@ export default [
   route("logout", "routes/logout.tsx"),
   route("healthz", "routes/healthz.ts"),
 
+  route("share/meal/:id", "routes/share/meal.tsx"),
+
   route("api/quick-actions", "routes/api/quick-actions.ts"),
   route("api/exercises/history", "routes/api/exercises/history.ts"),
 

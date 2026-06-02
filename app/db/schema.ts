@@ -452,6 +452,7 @@ export const mealTemplates = pgTable("meal_templates", {
   total_fiber: doublePrecision().notNull(),
   satiety_score: doublePrecision().notNull(),
   usage_count: integer().notNull().default(0),
+  is_public: boolean().notNull().default(false),
   ...timestampColumns(),
 });
 

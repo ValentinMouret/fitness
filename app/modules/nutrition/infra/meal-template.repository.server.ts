@@ -60,6 +60,52 @@ export const MealTemplateRepository = {
     );
   },
 
+  fetchPublicById(id: string): ResultAsync<MealTemplate, ErrRepository> {
+    const query = db
+      .select()
+      .from(mealTemplates)
+      .where(
+        and(
+          eq(mealTemplates.id, id),
+          eq(mealTemplates.is_public, true),
+          isNull(mealTemplates.deleted_at),
+        ),
+      )
+      .limit(1);
+
+    return executeQuery(query, "fetchPublicById")
+      .andThen(fetchSingleRecord)
+      .andThen((record) => recordToMealTemplate(record));
+  },
+
+  fetchPublicWithIngredients(
+    id: string,
+  ): ResultAsync<MealTemplateWithIngredients, ErrRepository> {
+    return this.fetchPublicById(id).andThen((template) =>
+      this.fetchTemplateIngredients(id).map((ingredientsWithQuantity) => ({
+        ...template,
+        ingredients: ingredientsWithQuantity,
+      })),
+    );
+  },
+
+  setPublic(
+    id: string,
+    isPublic: boolean,
+    tx?: Transaction,
+  ): ResultAsync<void, ErrRepository> {
+    return ResultAsync.fromPromise(
+      (tx ?? db)
+        .update(mealTemplates)
+        .set({ is_public: isPublic, updated_at: new Date() })
+        .where(and(eq(mealTemplates.id, id), isNull(mealTemplates.deleted_at))),
+      (error) => {
+        logger.error({ err: error }, "Failed to set meal template visibility");
+        return "database_error" as const;
+      },
+    ).map(() => undefined);
+  },
+
   fetchTemplateIngredients(
     templateId: string,
   ): ResultAsync<readonly IngredientWithQuantity[], ErrRepository> {
