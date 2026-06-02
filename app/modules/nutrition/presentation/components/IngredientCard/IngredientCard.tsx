@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import type { Ingredient } from "~/modules/nutrition/domain/ingredient";
+import { getIngredientIcon } from "../../utils/ingredient-icon";
 
 export interface SelectedIngredient extends Ingredient {
   readonly quantity: number;
@@ -29,35 +30,6 @@ const TEXTURE_LABELS = {
   soft_solid: "🍮 Soft solid",
   firm_solid: "🥩 Firm solid",
 };
-
-function getIngredientIcon(name: string): string {
-  const iconMap: Record<string, string> = {
-    "Chicken Breast": "🍗",
-    "Beef, Lean Ground": "🥩",
-    "Eggs, Whole": "🥚",
-    "Tofu, Firm": "🧊",
-    "Salmon, Atlantic": "🐟",
-    "Greek Yogurt": "🥛",
-    "Milk, Whole": "🥛",
-    "Cheddar Cheese": "🧀",
-    "White Rice, Cooked": "🍚",
-    "Brown Rice, Cooked": "🍚",
-    "Pasta, Cooked": "🍝",
-    "Oats, Rolled": "🥣",
-    "Sweet Potato": "🍠",
-    "Quinoa, Cooked": "🌾",
-    "Broccoli, Steamed": "🥦",
-    "Spinach, Raw": "🥬",
-    "Bell Pepper": "🫑",
-    Carrots: "🥕",
-    Tomatoes: "🍅",
-    "Olive Oil": "🫒",
-    Avocado: "🥑",
-    Almonds: "🌰",
-    "Peanut Butter": "🥜",
-  };
-  return iconMap[name] || "🥘";
-}
 
 export function IngredientCard({
   ingredient,

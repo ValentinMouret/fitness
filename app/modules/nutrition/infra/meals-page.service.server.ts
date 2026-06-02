@@ -74,6 +74,22 @@ export async function deleteMealLog(input: {
   return { ok: true };
 }
 
+export async function setMealTemplatePublic(input: {
+  readonly templateId: string;
+  readonly isPublic: boolean;
+}): Promise<MealActionResult> {
+  const result = await NutritionService.setMealTemplatePublic(
+    input.templateId,
+    input.isPublic,
+  );
+
+  if (result.isErr()) {
+    return { ok: false, error: "Failed to update sharing" };
+  }
+
+  return { ok: true };
+}
+
 export async function saveMealAsTemplate(input: {
   readonly mealId: string;
   readonly name: string;

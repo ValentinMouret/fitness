@@ -42,6 +42,7 @@ import {
   deleteMealLog,
   getMealsPageData,
   saveMealAsTemplate,
+  setMealTemplatePublic,
 } from "~/modules/nutrition/infra/meals-page.service.server";
 import {
   createTemplateSelectionViewModel,
@@ -102,6 +103,24 @@ export async function action({ request }: ActionFunctionArgs) {
     const parsed = schema.parse(formData);
 
     const result = await deleteMealLog({ mealId: parsed.mealId });
+
+    if (!result.ok) {
+      return { success: false, error: result.error };
+    }
+    return { success: true };
+  }
+
+  if (intent === "toggle-template-public") {
+    const schema = zfd.formData({
+      templateId: formText(z.string().min(1)),
+      isPublic: formText(z.enum(["true", "false"])),
+    });
+    const parsed = schema.parse(formData);
+
+    const result = await setMealTemplatePublic({
+      templateId: parsed.templateId,
+      isPublic: parsed.isPublic === "true",
+    });
 
     if (!result.ok) {
       return { success: false, error: result.error };
@@ -370,6 +389,30 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
       setShowTemplateModal(false);
       setCurrentMealType(null);
     }
+  };
+
+  const copyShareLink = (templateId: string) => {
+    const url = `${window.location.origin}/share/meal/${templateId}`;
+    void navigator.clipboard?.writeText(url);
+  };
+
+  const handleCopyLink = (templateId: string) => {
+    copyShareLink(templateId);
+  };
+
+  const handleToggleShare = (templateId: string, makePublic: boolean) => {
+    if (makePublic) {
+      // Copy immediately while inside the user gesture, then publish.
+      copyShareLink(templateId);
+    }
+    fetcher.submit(
+      {
+        intent: "toggle-template-public",
+        templateId,
+        isPublic: String(makePublic),
+      },
+      { method: "post" },
+    );
   };
 
   const caloriePercent = Math.round(
@@ -687,6 +730,8 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
         }}
         viewModel={templateSelectionViewModel}
         onApply={handleApplyTemplate}
+        onCopyLink={handleCopyLink}
+        onToggleShare={handleToggleShare}
       />
 
       <SaveAsTemplateDialog

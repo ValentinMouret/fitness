@@ -48,6 +48,7 @@ export function recordToMealTemplate(
     totalFiber: record.total_fiber,
     satietyScore: record.satiety_score,
     usageCount: record.usage_count,
+    isPublic: record.is_public,
     createdAt: record.created_at,
     updatedAt: record.updated_at,
     deletedAt: record.deleted_at,

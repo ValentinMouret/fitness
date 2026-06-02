@@ -14,6 +14,7 @@ export interface TemplateItemViewModel {
   readonly id: string;
   readonly name: string;
   readonly usageCount: number;
+  readonly isPublic: boolean;
   readonly nutrition: {
     readonly calories: string;
     readonly protein: string;
@@ -48,6 +49,7 @@ export function createTemplateSelectionViewModel(
       id: template.id,
       name: template.name,
       usageCount: template.usageCount,
+      isPublic: template.isPublic,
       nutrition: {
         calories: Math.round(template.totalCalories).toString(),
         protein: Math.round(template.totalProtein).toString(),

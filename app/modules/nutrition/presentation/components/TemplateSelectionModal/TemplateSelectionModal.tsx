@@ -1,5 +1,20 @@
-import { Cross2Icon } from "@radix-ui/react-icons";
-import { Box, Card, Dialog, Flex, IconButton, Text } from "@radix-ui/themes";
+import {
+  Cross2Icon,
+  DotsHorizontalIcon,
+  Link2Icon,
+  Share1Icon,
+} from "@radix-ui/react-icons";
+import {
+  Badge,
+  Box,
+  Card,
+  Dialog,
+  DropdownMenu,
+  Flex,
+  IconButton,
+  Text,
+  Tooltip,
+} from "@radix-ui/themes";
 import type { TemplateSelectionViewModel } from "../../view-models/template-selection.view-model";
 import "./TemplateSelectionModal.css";
 
@@ -8,6 +23,8 @@ interface TemplateSelectionModalProps {
   readonly onClose: () => void;
   readonly viewModel: TemplateSelectionViewModel | null;
   readonly onApply: (templateId: string) => void;
+  readonly onCopyLink: (templateId: string) => void;
+  readonly onToggleShare: (templateId: string, makePublic: boolean) => void;
 }
 
 export function TemplateSelectionModal({
@@ -15,6 +32,8 @@ export function TemplateSelectionModal({
   onClose,
   viewModel,
   onApply,
+  onCopyLink,
+  onToggleShare,
 }: TemplateSelectionModalProps) {
   if (!viewModel) return null;
 
@@ -47,38 +66,88 @@ export function TemplateSelectionModal({
             <Box className="template-selection-modal__list">
               <Flex direction="column" gap="2">
                 {viewModel.templates.map((template) => (
-                  <Card key={template.id} size="1" asChild>
-                    <button
-                      type="button"
-                      onClick={() => onApply(template.id)}
-                      className="template-selection-modal__button"
-                    >
-                      <Flex justify="between" align="start" mb="2">
-                        <Text weight="medium" size="3">
-                          {template.name}
-                        </Text>
-                        <Text size="1" color="gray">
-                          Used {template.usageCount} times
-                        </Text>
-                      </Flex>
+                  <Card key={template.id} size="1">
+                    <Flex align="start" gap="2">
+                      <button
+                        type="button"
+                        onClick={() => onApply(template.id)}
+                        className="template-selection-modal__button"
+                      >
+                        <Flex justify="between" align="center" mb="2" gap="2">
+                          <Flex align="center" gap="2">
+                            <Text weight="medium" size="3">
+                              {template.name}
+                            </Text>
+                            {template.isPublic && (
+                              <Badge color="green" size="1" variant="soft">
+                                Shared
+                              </Badge>
+                            )}
+                          </Flex>
+                          <Text size="1" color="gray">
+                            Used {template.usageCount} times
+                          </Text>
+                        </Flex>
 
-                      <Text size="2" color="gray" mb="2">
-                        {template.nutrition.calories} kcal •{" "}
-                        {template.nutrition.protein}g protein •{" "}
-                        {template.nutrition.carbs}g carbs •{" "}
-                        {template.nutrition.fat}g fat
-                      </Text>
-
-                      {template.notes && (
-                        <Text
-                          size="1"
-                          color="gray"
-                          className="template-selection-modal__notes"
-                        >
-                          {template.notes}
+                        <Text size="2" color="gray">
+                          {template.nutrition.calories} kcal •{" "}
+                          {template.nutrition.protein}g protein •{" "}
+                          {template.nutrition.carbs}g carbs •{" "}
+                          {template.nutrition.fat}g fat
                         </Text>
-                      )}
-                    </button>
+
+                        {template.notes && (
+                          <Text
+                            size="1"
+                            color="gray"
+                            className="template-selection-modal__notes"
+                            mt="2"
+                          >
+                            {template.notes}
+                          </Text>
+                        )}
+                      </button>
+
+                      <DropdownMenu.Root>
+                        <Tooltip content="Share options">
+                          <DropdownMenu.Trigger>
+                            <IconButton
+                              variant="ghost"
+                              color="gray"
+                              aria-label={`Share options for ${template.name}`}
+                            >
+                              <DotsHorizontalIcon />
+                            </IconButton>
+                          </DropdownMenu.Trigger>
+                        </Tooltip>
+                        <DropdownMenu.Content>
+                          {template.isPublic ? (
+                            <>
+                              <DropdownMenu.Item
+                                onClick={() => onCopyLink(template.id)}
+                              >
+                                <Link2Icon /> Copy link
+                              </DropdownMenu.Item>
+                              <DropdownMenu.Separator />
+                              <DropdownMenu.Item
+                                color="red"
+                                onClick={() =>
+                                  onToggleShare(template.id, false)
+                                }
+                              >
+                                Stop sharing
+                              </DropdownMenu.Item>
+                            </>
+                          ) : (
+                            <DropdownMenu.Item
+                              onClick={() => onToggleShare(template.id, true)}
+                            >
+                              <Share1Icon /> Publish &amp; copy link
+                            </DropdownMenu.Item>
+                          )}
+                        </DropdownMenu.Content>
+                      </DropdownMenu.Root>
+                    </Flex>
                   </Card>
                 ))}
               </Flex>

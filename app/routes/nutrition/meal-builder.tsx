@@ -50,6 +50,7 @@ import {
 import {
   AIIngredientReviewModal,
   CurrentTotalsPanel,
+  getIngredientIcon,
   IngredientCard,
   type Objectives,
   ObjectivesPanel,
@@ -152,35 +153,6 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   throw new Error("Invalid intent");
-}
-
-function getIngredientIcon(name: string): string {
-  const iconMap: Record<string, string> = {
-    "Chicken Breast": "🍗",
-    "Beef, Lean Ground": "🥩",
-    "Eggs, Whole": "🥚",
-    "Tofu, Firm": "🧊",
-    "Salmon, Atlantic": "🐟",
-    "Greek Yogurt": "🥛",
-    "Milk, Whole": "🥛",
-    "Cheddar Cheese": "🧀",
-    "White Rice, Cooked": "🍚",
-    "Brown Rice, Cooked": "🍚",
-    "Pasta, Cooked": "🍝",
-    "Oats, Rolled": "🥣",
-    "Sweet Potato": "🍠",
-    "Quinoa, Cooked": "🌾",
-    "Broccoli, Steamed": "🥦",
-    "Spinach, Raw": "🥬",
-    "Bell Pepper": "🫑",
-    Carrots: "🥕",
-    Tomatoes: "🍅",
-    "Olive Oil": "🫒",
-    Avocado: "🥑",
-    Almonds: "🌰",
-    "Peanut Butter": "🥜",
-  };
-  return iconMap[name] || "🥘";
 }
 
 export default function MealBuilder({

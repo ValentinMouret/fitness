@@ -9,4 +9,5 @@ export * from "./MealCard";
 export type { Objectives } from "./ObjectivesPanel";
 export * from "./ObjectivesPanel";
 export * from "./QuickEstimateModal";
+export * from "./SharedMealView";
 export * from "./TemplateSelectionModal";

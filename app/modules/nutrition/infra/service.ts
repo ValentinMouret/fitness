@@ -78,6 +78,19 @@ export const NutritionService = {
     return MealTemplateRepository.fetchWithIngredients(id);
   },
 
+  getPublicMealTemplateWithIngredients(
+    id: string,
+  ): ResultAsync<MealTemplateWithIngredients, ErrRepository> {
+    return MealTemplateRepository.fetchPublicWithIngredients(id);
+  },
+
+  setMealTemplatePublic(
+    id: string,
+    isPublic: boolean,
+  ): ResultAsync<void, ErrRepository> {
+    return MealTemplateRepository.setPublic(id, isPublic);
+  },
+
   createMealTemplate(
     input: CreateMealTemplateInput,
   ): ResultAsync<MealTemplateWithIngredients, ErrRepository> {
