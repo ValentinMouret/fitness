@@ -51,3 +51,7 @@
 ## 2025-05-29 - [Dashboard Efficiency: Keyboard Shortcuts]
 **Learning:** For primary daily actions like weight logging, adding a simple keyboard shortcut (e.g., 'w') significantly improves user efficiency. To ensure discovery, reinforce the shortcut with a visual `<Kbd>` hint and an informative Tooltip that explicitly mentions the trigger key.
 **Action:** Identify high-frequency single-input actions and implement single-key shortcuts with appropriate discovery hints and input-focus guards.
+
+## 2025-05-30 - [Efficient Modal Interactions & Shortcuts]
+**Learning:** For modal-based editing features (like the Daily Note), the interaction loop is tightened by supporting 'Escape' to go back/close, 'E' to enter edit mode, and 'Cmd/Ctrl + Enter' for quick submission. Auto-focusing the input (using a ref/effect to bypass linting) makes the feature feel immediate and "active".
+**Action:** Implement a standard set of shortcuts (Esc, E, Cmd+Enter) and focus management for all modal-based form interactions.
