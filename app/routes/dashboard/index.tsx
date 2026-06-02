@@ -164,7 +164,7 @@ export default function DashboardPage({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.ctrlKey || e.metaKey || e.altKey || noteParam) return;
 
       const target = e.target as HTMLElement;
       const isInput =
@@ -185,7 +185,7 @@ export default function DashboardPage({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [goToDailyNote]);
+  }, [goToDailyNote, noteParam]);
 
   const calPct = Math.min(nutrition.calories / nutrition.calorieTarget, 1);
   const remaining = Math.max(
