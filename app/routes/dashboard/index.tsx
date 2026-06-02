@@ -7,8 +7,14 @@ import {
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
-import { useEffect, useRef, useState } from "react";
-import { Link, useFetcher, useFetchers, useSearchParams } from "react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Link,
+  useFetcher,
+  useFetchers,
+  useNavigate,
+  useSearchParams,
+} from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { Celebration, SuccessPulse } from "~/components/Celebration";
@@ -103,6 +109,7 @@ export default function DashboardPage({
   const weightFetcher = useFetcher();
   const weightInputRef = useRef<HTMLInputElement>(null);
   const fetchers = useFetchers();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const noteParam = searchParams.get("note");
 
@@ -149,6 +156,12 @@ export default function DashboardPage({
     prevLoggedToday.current = loggedToday;
   }, [loggedToday]);
 
+  const goToDailyNote = useCallback(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set("note", "open");
+    navigate(`?${params.toString()}`);
+  }, [navigate, searchParams]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -164,12 +177,15 @@ export default function DashboardPage({
       if (e.key.toLowerCase() === "w" && weightInputRef.current) {
         e.preventDefault();
         weightInputRef.current.focus();
+      } else if (e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        goToDailyNote();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [goToDailyNote]);
 
   const calPct = Math.min(nutrition.calories / nutrition.calorieTarget, 1);
   const remaining = Math.max(
