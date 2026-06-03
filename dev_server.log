@@ -1,0 +1,597 @@
+$ react-router dev
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+12:59:33 AM [vite] (client) ✨ new dependencies optimized: @radix-ui/themes, neverthrow, zod, zod-form-data
+12:59:33 AM [vite] (client) ✨ optimized dependencies changed. reloading
+[01:00:47.796] [31mERROR[39m (43359): [36mDatabase error[39m
+    [35moperation[39m: "fetchByMeasurementName"
+    err: {
+      "type": "DrizzleQueryError",
+      "message": "Failed query: select \"measurement_name\", \"t\", \"value\" from \"measures\" where \"measures\".\"measurement_name\" = $1 order by \"measures\".\"t\" desc limit $2\nparams: weight,1: ",
+      "stack":
+          Error: Failed query: select "measurement_name", "t", "value" from "measures" where "measures"."measurement_name" = $1 order by "measures"."t" desc limit $2
+          params: weight,1
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:73:11)
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 0)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+          caused by: AggregateError:
+              at /app/node_modules/pg-pool/index.js:45:11
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:161:13
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:71:12)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 0)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+      "query": "select \"measurement_name\", \"t\", \"value\" from \"measures\" where \"measures\".\"measurement_name\" = $1 order by \"measures\".\"t\" desc limit $2",
+      "params": [
+        "weight",
+        1
+      ]
+    }
+[01:00:47.806] [31mERROR[39m (43359): [36mDatabase error[39m
+    [35moperation[39m: "fetchByMeasurementName"
+    err: {
+      "type": "DrizzleQueryError",
+      "message": "Failed query: select \"measurement_name\", \"t\", \"value\" from \"measures\" where \"measures\".\"measurement_name\" = $1 order by \"measures\".\"t\" desc limit $2\nparams: weight,200: ",
+      "stack":
+          Error: Failed query: select "measurement_name", "t", "value" from "measures" where "measures"."measurement_name" = $1 order by "measures"."t" desc limit $2
+          params: weight,200
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:73:11)
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 1)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+          caused by: AggregateError:
+              at /app/node_modules/pg-pool/index.js:45:11
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:161:13
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:71:12)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 1)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+      "query": "select \"measurement_name\", \"t\", \"value\" from \"measures\" where \"measures\".\"measurement_name\" = $1 order by \"measures\".\"t\" desc limit $2",
+      "params": [
+        "weight",
+        200
+      ]
+    }
+[01:00:47.808] [31mERROR[39m (43359): [36mDatabase error[39m
+    [35moperation[39m: "fetchByName"
+    err: {
+      "type": "DrizzleQueryError",
+      "message": "Failed query: select \"name\", \"unit\", \"description\", \"created_at\", \"updated_at\", \"deleted_at\" from \"measurements\" where \"measurements\".\"name\" = $1 limit $2\nparams: weight,1: ",
+      "stack":
+          Error: Failed query: select "name", "unit", "description", "created_at", "updated_at", "deleted_at" from "measurements" where "measurements"."name" = $1 limit $2
+          params: weight,1
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:73:11)
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 2)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+          caused by: AggregateError:
+              at /app/node_modules/pg-pool/index.js:45:11
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:161:13
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:71:12)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 2)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+      "query": "select \"name\", \"unit\", \"description\", \"created_at\", \"updated_at\", \"deleted_at\" from \"measurements\" where \"measurements\".\"name\" = $1 limit $2",
+      "params": [
+        "weight",
+        1
+      ]
+    }
+[01:00:47.809] [31mERROR[39m (43359): [36mDatabase error[39m
+    [35moperation[39m: "fetchBetween"
+    err: {
+      "type": "DrizzleQueryError",
+      "message": "Failed query: select \"measurement_name\", \"t\", \"value\" from \"measures\" where (\"measures\".\"measurement_name\" = $1 and \"measures\".\"t\" between $2 and $3)\nparams: weight,2026-06-02T00:00:00.000Z,2026-06-04T00:00:00.000Z: ",
+      "stack":
+          Error: Failed query: select "measurement_name", "t", "value" from "measures" where ("measures"."measurement_name" = $1 and "measures"."t" between $2 and $3)
+          params: weight,2026-06-02T00:00:00.000Z,2026-06-04T00:00:00.000Z
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:73:11)
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 3)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+          caused by: AggregateError:
+              at /app/node_modules/pg-pool/index.js:45:11
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:161:13
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:71:12)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 3)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+      "query": "select \"measurement_name\", \"t\", \"value\" from \"measures\" where (\"measures\".\"measurement_name\" = $1 and \"measures\".\"t\" between $2 and $3)",
+      "params": [
+        "weight",
+        "2026-06-02T00:00:00.000Z",
+        "2026-06-04T00:00:00.000Z"
+      ]
+    }
+[01:00:47.811] [31mERROR[39m (43359): [36mDatabase error[39m
+    [35moperation[39m: "fetchByDateRange"
+    err: {
+      "type": "DrizzleQueryError",
+      "message": "Failed query: select \"habit_id\", \"completion_date\", \"completed\", \"notes\", \"created_at\", \"updated_at\", \"deleted_at\" from \"habit_completions\" where \"habit_completions\".\"completion_date\" between $1 and $2\nparams: 2026-06-03,2026-06-03: ",
+      "stack":
+          Error: Failed query: select "habit_id", "completion_date", "completed", "notes", "created_at", "updated_at", "deleted_at" from "habit_completions" where "habit_completions"."completion_date" between $1 and $2
+          params: 2026-06-03,2026-06-03
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:73:11)
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 5)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+          caused by: AggregateError:
+              at /app/node_modules/pg-pool/index.js:45:11
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:161:13
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:71:12)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 5)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+      "query": "select \"habit_id\", \"completion_date\", \"completed\", \"notes\", \"created_at\", \"updated_at\", \"deleted_at\" from \"habit_completions\" where \"habit_completions\".\"completion_date\" between $1 and $2",
+      "params": [
+        "2026-06-03",
+        "2026-06-03"
+      ]
+    }
+[01:00:47.812] [31mERROR[39m (43359): [36mDatabase error[39m
+    [35moperation[39m: "fetchActive"
+    err: {
+      "type": "DrizzleQueryError",
+      "message": "Failed query: select \"id\", \"name\", \"description\", \"identity_phrase\", \"time_of_day\", \"location\", \"is_keystone\", \"minimal_version\", \"color\", \"frequency_type\", \"frequency_config\", \"target_count\", \"start_date\", \"end_date\", \"is_active\", \"created_at\", \"updated_at\", \"deleted_at\" from \"habits\" where (\"habits\".\"is_active\" = $1 and \"habits\".\"start_date\" <= $2) order by \"habits\".\"is_keystone\" desc, \"habits\".\"name\"\nparams: true,2026-06-03: ",
+      "stack":
+          Error: Failed query: select "id", "name", "description", "identity_phrase", "time_of_day", "location", "is_keystone", "minimal_version", "color", "frequency_type", "frequency_config", "target_count", "start_date", "end_date", "is_active", "created_at", "updated_at", "deleted_at" from "habits" where ("habits"."is_active" = $1 and "habits"."start_date" <= $2) order by "habits"."is_keystone" desc, "habits"."name"
+          params: true,2026-06-03
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:73:11)
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 4)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+          caused by: AggregateError:
+              at /app/node_modules/pg-pool/index.js:45:11
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:161:13
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:71:12)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 4)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+      "query": "select \"id\", \"name\", \"description\", \"identity_phrase\", \"time_of_day\", \"location\", \"is_keystone\", \"minimal_version\", \"color\", \"frequency_type\", \"frequency_config\", \"target_count\", \"start_date\", \"end_date\", \"is_active\", \"created_at\", \"updated_at\", \"deleted_at\" from \"habits\" where (\"habits\".\"is_active\" = $1 and \"habits\".\"start_date\" <= $2) order by \"habits\".\"is_keystone\" desc, \"habits\".\"name\"",
+      "params": [
+        true,
+        "2026-06-03"
+      ]
+    }
+[01:00:47.818] [31mERROR[39m (43359): [36mDatabase error[39m
+    [35moperation[39m: "findInProgressWorkout"
+    err: {
+      "type": "DrizzleQueryError",
+      "message": "Failed query: select \"id\", \"name\", \"start\", \"stop\", \"notes\", \"imported_from_strong\", \"imported_from_fitbod\", \"template_id\", \"created_at\", \"updated_at\", \"deleted_at\" from \"workouts\" where (\"workouts\".\"deleted_at\" is null and \"workouts\".\"stop\" is null and \"workouts\".\"imported_from_fitbod\" = $1 and \"workouts\".\"imported_from_strong\" = $2) order by \"workouts\".\"start\" desc limit $3\nparams: false,false,1: ",
+      "stack":
+          Error: Failed query: select "id", "name", "start", "stop", "notes", "imported_from_strong", "imported_from_fitbod", "template_id", "created_at", "updated_at", "deleted_at" from "workouts" where ("workouts"."deleted_at" is null and "workouts"."stop" is null and "workouts"."imported_from_fitbod" = $1 and "workouts"."imported_from_strong" = $2) order by "workouts"."start" desc limit $3
+          params: false,false,1
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:73:11)
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 6)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+          caused by: AggregateError:
+              at /app/node_modules/pg-pool/index.js:45:11
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:161:13
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:71:12)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 6)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+      "query": "select \"id\", \"name\", \"start\", \"stop\", \"notes\", \"imported_from_strong\", \"imported_from_fitbod\", \"template_id\", \"created_at\", \"updated_at\", \"deleted_at\" from \"workouts\" where (\"workouts\".\"deleted_at\" is null and \"workouts\".\"stop\" is null and \"workouts\".\"imported_from_fitbod\" = $1 and \"workouts\".\"imported_from_strong\" = $2) order by \"workouts\".\"start\" desc limit $3",
+      "params": [
+        false,
+        false,
+        1
+      ]
+    }
+[01:00:47.819] [31mERROR[39m (43359): [36mDatabase error[39m
+    [35moperation[39m: "fetchLogsByDate"
+    err: {
+      "type": "DrizzleQueryError",
+      "message": "Failed query: select \"id\", \"meal_category\", \"logged_date\", \"is_completed\", \"notes\", \"meal_template_id\", \"created_at\", \"updated_at\", \"deleted_at\" from \"meal_logs\" where (\"meal_logs\".\"logged_date\" = $1 and \"meal_logs\".\"deleted_at\" is null)\nparams: 2026-06-03: ",
+      "stack":
+          Error: Failed query: select "id", "meal_category", "logged_date", "is_completed", "notes", "meal_template_id", "created_at", "updated_at", "deleted_at" from "meal_logs" where ("meal_logs"."logged_date" = $1 and "meal_logs"."deleted_at" is null)
+          params: 2026-06-03
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:73:11)
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 7)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+          caused by: AggregateError:
+              at /app/node_modules/pg-pool/index.js:45:11
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:161:13
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:71:12)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 7)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+      "query": "select \"id\", \"meal_category\", \"logged_date\", \"is_completed\", \"notes\", \"meal_template_id\", \"created_at\", \"updated_at\", \"deleted_at\" from \"meal_logs\" where (\"meal_logs\".\"logged_date\" = $1 and \"meal_logs\".\"deleted_at\" is null)",
+      "params": [
+        "2026-06-03"
+      ]
+    }
+[01:00:47.821] [31mERROR[39m (43359): [36mDatabase error[39m
+    [35moperation[39m: "listAllActive"
+    err: {
+      "type": "DrizzleQueryError",
+      "message": "Failed query: select \"id\", \"measurement_name\", \"value\", \"created_at\", \"updated_at\", \"deleted_at\" from \"targets\" where \"targets\".\"deleted_at\" is null\nparams: : ",
+      "stack":
+          Error: Failed query: select "id", "measurement_name", "value", "created_at", "updated_at", "deleted_at" from "targets" where "targets"."deleted_at" is null
+          params:
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:73:11)
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 8)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+          caused by: AggregateError:
+              at /app/node_modules/pg-pool/index.js:45:11
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:161:13
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:71:12)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 8)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+      "query": "select \"id\", \"measurement_name\", \"value\", \"created_at\", \"updated_at\", \"deleted_at\" from \"targets\" where \"targets\".\"deleted_at\" is null",
+      "params": []
+    }
+[01:00:47.822] [31mERROR[39m (43359): [36mFailed to fetch daily note[39m
+    err: {
+      "type": "DrizzleQueryError",
+      "message": "Failed query: select \"id\", \"content\", \"updated_at\" from \"daily_note\" where \"daily_note\".\"id\" = $1\nparams: 1: ",
+      "stack":
+          Error: Failed query: select "id", "content", "updated_at" from "daily_note" where "daily_note"."id" = $1
+          params: 1
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:73:11)
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 9)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+          caused by: AggregateError:
+              at /app/node_modules/pg-pool/index.js:45:11
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+              at file:///app/node_modules/src/node-postgres/session.ts:161:13
+              at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/src/pg-core/session.ts:71:12)
+              at file:///app/node_modules/src/node-postgres/session.ts:154:19
+              at async Promise.all (index 9)
+              at getDashboardData (/app/app/modules/dashboard/infra/dashboard.service.server.ts:37:18)
+              at callRouteHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:509:16)
+              at commonRoute.loader (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:659:19)
+              at file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4756:19
+              at callLoaderOrAction (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4808:16)
+              at async Promise.all (index 1)
+              at defaultDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4433:17)
+              at callDataStrategyImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:4702:17)
+              at callDataStrategy (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3742:19)
+              at loadRouteData (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3719:19)
+              at queryImpl (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3494:20)
+              at Object.query (file:///app/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs:3356:18)
+              at singleFetchLoaders (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:920:18)
+              at handleSingleFetchRequest (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1386:7)
+              at requestHandler (file:///app/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs:1221:18)
+              at nodeHandler (/app/node_modules/@react-router/dev/dist/vite.js:3528:30)
+              at /app/node_modules/@react-router/dev/dist/vite.js:3535:17
+      "query": "select \"id\", \"content\", \"updated_at\" from \"daily_note\" where \"daily_note\".\"id\" = $1",
+      "params": [
+        1
+      ]
+    }
+[01:00:47.823] [31mERROR[39m (43359): [36mFailed to fetch dashboard data[39m
+    [35mstatus[39m: 500
+    err: "database_error"
+1:00:49 AM [vite] (client) ✨ new dependencies optimized: @radix-ui/react-icons, recharts
+1:00:49 AM [vite] (client) ✨ optimized dependencies changed. reloading
+error: script "dev" exited with code 143

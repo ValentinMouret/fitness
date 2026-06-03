@@ -51,9 +51,25 @@ export function QuickEstimateModal({
   const [isResolving, setIsResolving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const acceptButtonRef = useRef<HTMLButtonElement>(null);
   const lastProcessedData = useRef<FetcherData | null>(null);
 
   const isLoading = fetcher.state !== "idle";
+
+  // Autofocus input on open and when estimate is cleared
+  useEffect(() => {
+    if (isOpen && !estimate && !isLoading && !isResolving) {
+      inputRef.current?.focus();
+    }
+  }, [isOpen, estimate, isLoading, isResolving]);
+
+  // Autofocus accept button when it appears
+  useEffect(() => {
+    if (estimate && !isLoading) {
+      acceptButtonRef.current?.focus();
+    }
+  }, [estimate, isLoading]);
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -183,9 +199,11 @@ export function QuickEstimateModal({
         <Flex justify="between" align="center" mb="3" flexShrink="0">
           <Dialog.Title size="5">Quick Estimate</Dialog.Title>
           <Dialog.Close>
-            <IconButton variant="ghost" aria-label="Close">
-              <Cross2Icon />
-            </IconButton>
+            <Tooltip content="Close (Esc)">
+              <IconButton variant="ghost" aria-label="Close Quick Estimate (Esc)">
+                <Cross2Icon />
+              </IconButton>
+            </Tooltip>
           </Dialog.Close>
         </Flex>
 
@@ -224,6 +242,7 @@ export function QuickEstimateModal({
         {estimate && (
           <Flex gap="2" mt="3" flexShrink="0">
             <Button
+              ref={acceptButtonRef}
               onClick={handleAcceptEstimate}
               disabled={isLoading}
               className="quick-estimate-modal__accept-button"
@@ -243,18 +262,21 @@ export function QuickEstimateModal({
           <Flex gap="2" mt="3" flexShrink="0">
             <Box flexGrow="1">
               <TextField.Root
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="I had a chicken caesar salad..."
                 disabled={isLoading}
+                aria-label="Meal description"
               />
             </Box>
             <Tooltip content="Send estimate request (Enter)">
               <IconButton
                 onClick={handleSend}
                 disabled={!input.trim() || isLoading}
-                aria-label="Send estimate request"
+                aria-label="Send estimate request (Enter)"
+                aria-keyshortcuts="Enter"
               >
                 <PaperPlaneIcon />
               </IconButton>
