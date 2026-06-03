@@ -200,7 +200,10 @@ export function QuickEstimateModal({
           <Dialog.Title size="5">Quick Estimate</Dialog.Title>
           <Dialog.Close>
             <Tooltip content="Close (Esc)">
-              <IconButton variant="ghost" aria-label="Close Quick Estimate (Esc)">
+              <IconButton
+                variant="ghost"
+                aria-label="Close Quick Estimate (Esc)"
+              >
                 <Cross2Icon />
               </IconButton>
             </Tooltip>
