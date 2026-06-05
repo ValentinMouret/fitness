@@ -55,3 +55,7 @@
 ## 2025-05-30 - [Efficient Modal Interactions & Shortcuts]
 **Learning:** For modal-based editing features (like the Daily Note), the interaction loop is tightened by supporting 'Escape' to go back/close, 'E' to enter edit mode, and 'Cmd/Ctrl + Enter' for quick submission. Auto-focusing the input (using a ref/effect to bypass linting) makes the feature feel immediate and "active".
 **Action:** Implement a standard set of shortcuts (Esc, E, Cmd+Enter) and focus management for all modal-based form interactions.
+
+## 2025-06-03 - [Accessible Pagination Landmarks]
+**Learning:** Pagination controls are critical navigation elements that should be wrapped in a semantic `<nav>` element with a descriptive `aria-label` (e.g., "Pagination") to provide a clear landmark for screen reader users. Individual buttons should have descriptive labels (e.g., "Go to next page") to provide more context than simple "Next" text, and decorative icons should be hidden with `aria-hidden="true"` to avoid redundant audio output.
+**Action:** Always wrap pagination components in a `<nav>` with `aria-label` and ensure navigation buttons have explicit, descriptive `aria-label` attributes.

@@ -20,32 +20,36 @@ export function Pagination({
   const hasNext = currentPage < totalPages;
 
   return (
-    <Flex justify="center" align="center" gap="3" py="4">
-      <Button
-        variant="outline"
-        disabled={!hasPrevious}
-        onClick={() => onPageChange(currentPage - 1)}
-        size="2"
-      >
-        <ChevronLeft size={16} />
-        Previous
-      </Button>
+    <nav aria-label="Pagination">
+      <Flex justify="center" align="center" gap="3" py="4">
+        <Button
+          variant="outline"
+          disabled={!hasPrevious}
+          onClick={() => onPageChange(currentPage - 1)}
+          size="2"
+          aria-label="Go to previous page"
+        >
+          <ChevronLeft size={16} aria-hidden="true" />
+          Previous
+        </Button>
 
-      <Flex align="center" gap="2">
-        <Text size="2" color="gray">
-          Page {currentPage} of {totalPages}
-        </Text>
+        <Flex align="center" gap="2">
+          <Text size="2" color="gray">
+            Page {currentPage} of {totalPages}
+          </Text>
+        </Flex>
+
+        <Button
+          variant="outline"
+          disabled={!hasNext}
+          onClick={() => onPageChange(currentPage + 1)}
+          size="2"
+          aria-label="Go to next page"
+        >
+          Next
+          <ChevronRight size={16} aria-hidden="true" />
+        </Button>
       </Flex>
-
-      <Button
-        variant="outline"
-        disabled={!hasNext}
-        onClick={() => onPageChange(currentPage + 1)}
-        size="2"
-      >
-        Next
-        <ChevronRight size={16} />
-      </Button>
-    </Flex>
+    </nav>
   );
 }
