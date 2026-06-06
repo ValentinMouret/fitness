@@ -140,6 +140,14 @@
 
 .recovery-muscle-row {
   min-height: 32px;
+  padding: 0 var(--space-2);
+  margin: 0 calc(-1 * var(--space-2));
+  border-radius: var(--radius-2);
+  transition: background-color 0.15s ease;
+}
+
+.recovery-muscle-row--hovered {
+  background-color: var(--gray-3);
 }
 
 .recovery-muscle-name {

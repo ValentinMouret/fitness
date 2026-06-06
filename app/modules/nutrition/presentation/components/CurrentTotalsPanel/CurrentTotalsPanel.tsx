@@ -89,7 +89,14 @@ const MacroProgressBar = ({
         </Text>
         {target && <Text size="2">{Math.round(progress)}%</Text>}
       </Flex>
-      <Box className={trackClassName}>
+      <Box
+        className={trackClassName}
+        role="progressbar"
+        aria-valuenow={Math.round(current)}
+        aria-valuemin={0}
+        aria-valuemax={target ?? undefined}
+        aria-label={`${label} progress`}
+      >
         <Box
           className="current-totals-panel__progress-fill"
           style={fillStyle}

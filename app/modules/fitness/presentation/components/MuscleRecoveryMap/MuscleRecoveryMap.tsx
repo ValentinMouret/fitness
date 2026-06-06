@@ -1,4 +1,6 @@
 import { Box, Flex, Text } from "@radix-ui/themes";
+import { useState } from "react";
+import type { MuscleGroup } from "~/modules/fitness/domain/workout";
 import type { MuscleRecoveryViewModel } from "../../view-models/muscle-recovery.view-model";
 import { groupByCategory } from "../../view-models/muscle-recovery.view-model";
 import { BodyMapSvg } from "./BodyMapSvg";
@@ -10,11 +12,16 @@ interface MuscleRecoveryMapProps {
 }
 
 export function MuscleRecoveryMap({ viewModels }: MuscleRecoveryMapProps) {
+  const [hoveredMuscle, setHoveredMuscle] = useState<MuscleGroup | null>(null);
   const grouped = groupByCategory(viewModels);
 
   return (
     <div className="muscle-recovery">
-      <BodyMapSvg viewModels={viewModels} />
+      <BodyMapSvg
+        viewModels={viewModels}
+        hoveredMuscle={hoveredMuscle}
+        onHoverMuscle={setHoveredMuscle}
+      />
       <MuscleRecoveryLegend />
 
       <div className="recovery-categories">
@@ -29,12 +36,25 @@ export function MuscleRecoveryMap({ viewModels }: MuscleRecoveryMapProps) {
                   key={muscle.muscleGroup}
                   align="center"
                   gap="3"
-                  className="recovery-muscle-row"
+                  className={`recovery-muscle-row ${
+                    hoveredMuscle === muscle.muscleGroup
+                      ? "recovery-muscle-row--hovered"
+                      : ""
+                  }`}
+                  onMouseEnter={() => setHoveredMuscle(muscle.muscleGroup)}
+                  onMouseLeave={() => setHoveredMuscle(null)}
                 >
                   <Text size="2" className="recovery-muscle-name">
                     {muscle.label}
                   </Text>
-                  <div className="recovery-bar-track">
+                  <div
+                    className="recovery-bar-track"
+                    role="progressbar"
+                    aria-valuenow={muscle.percentage}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${muscle.label} recovery progress`}
+                  >
                     <div
                       className="recovery-bar-fill"
                       style={{

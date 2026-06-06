@@ -17,6 +17,7 @@ import {
   Spinner,
   Strong,
   Text,
+  Tooltip,
 } from "@radix-ui/themes";
 import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
 import "./AIFeedbackModal.css";
@@ -43,9 +44,11 @@ export function AIFeedbackModal({
       <Dialog.Content maxWidth="800px" className="ai-feedback-modal">
         <Flex justify="between" align="center" mb="4">
           <Heading size="6">🤖 AI Fitness Coach Feedback</Heading>
-          <IconButton variant="ghost" onClick={onClose} aria-label="Close">
-            <Cross2Icon />
-          </IconButton>
+          <Tooltip content="Close">
+            <IconButton variant="ghost" onClick={onClose} aria-label="Close">
+              <Cross2Icon />
+            </IconButton>
+          </Tooltip>
         </Flex>
 
         {loading && (
@@ -100,6 +103,7 @@ export function AIFeedbackModal({
                         10
                       }
                       className="ai-feedback-modal__progress"
+                      aria-label="Consistency score"
                     />
                     <Text size="2" weight="bold">
                       {feedback.analysis.progressionAnalysis.consistencyScore}

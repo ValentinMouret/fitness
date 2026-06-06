@@ -1,9 +1,10 @@
-import { useState } from "react";
 import type { MuscleGroup } from "~/modules/fitness/domain/workout";
 import type { MuscleRecoveryViewModel } from "../../view-models/muscle-recovery.view-model";
 
 interface BodyMapSvgProps {
   readonly viewModels: ReadonlyArray<MuscleRecoveryViewModel>;
+  readonly hoveredMuscle: MuscleGroup | null;
+  readonly onHoverMuscle: (muscle: MuscleGroup | null) => void;
 }
 
 /**
@@ -225,7 +226,7 @@ function renderMusclePaths(
   groups: ReadonlyArray<MusclePathGroup>,
   viewModels: ReadonlyArray<MuscleRecoveryViewModel>,
   hoveredMuscle: MuscleGroup | null,
-  setHoveredMuscle: (m: MuscleGroup | null) => void,
+  onHoverMuscle: (m: MuscleGroup | null) => void,
 ) {
   return groups.flatMap(({ muscleGroup, paths }) =>
     paths.map(({ side, d }) => (
@@ -235,15 +236,18 @@ function renderMusclePaths(
         d={d}
         className={`muscle-path ${hoveredMuscle === muscleGroup ? "muscle-path--hovered" : ""}`}
         style={{ fill: getColorForMuscle(muscleGroup, viewModels) }}
-        onMouseEnter={() => setHoveredMuscle(muscleGroup)}
-        onMouseLeave={() => setHoveredMuscle(null)}
+        onMouseEnter={() => onHoverMuscle(muscleGroup)}
+        onMouseLeave={() => onHoverMuscle(null)}
       />
     )),
   );
 }
 
-export function BodyMapSvg({ viewModels }: BodyMapSvgProps) {
-  const [hoveredMuscle, setHoveredMuscle] = useState<MuscleGroup | null>(null);
+export function BodyMapSvg({
+  viewModels,
+  hoveredMuscle,
+  onHoverMuscle,
+}: BodyMapSvgProps) {
   const hoveredVm = hoveredMuscle
     ? viewModels.find((v) => v.muscleGroup === hoveredMuscle)
     : null;
@@ -265,7 +269,7 @@ export function BodyMapSvg({ viewModels }: BodyMapSvgProps) {
               FRONT_PATHS,
               viewModels,
               hoveredMuscle,
-              setHoveredMuscle,
+              onHoverMuscle,
             )}
           </svg>
         </div>
@@ -284,7 +288,7 @@ export function BodyMapSvg({ viewModels }: BodyMapSvgProps) {
               BACK_PATHS,
               viewModels,
               hoveredMuscle,
-              setHoveredMuscle,
+              onHoverMuscle,
             )}
           </svg>
         </div>
