@@ -59,3 +59,11 @@
 ## 2025-06-03 - [Accessible Pagination Landmarks]
 **Learning:** Pagination controls are critical navigation elements that should be wrapped in a semantic `<nav>` element with a descriptive `aria-label` (e.g., "Pagination") to provide a clear landmark for screen reader users. Individual buttons should have descriptive labels (e.g., "Go to next page") to provide more context than simple "Next" text, and decorative icons should be hidden with `aria-hidden="true"` to avoid redundant audio output.
 **Action:** Always wrap pagination components in a `<nav>` with `aria-label` and ensure navigation buttons have explicit, descriptive `aria-label` attributes.
+
+## 2025-06-05 - [Bi-directional Highlighting for Visual Maps]
+**Learning:** For complex visual maps (like a body map) linked to a data list, bi-directional highlighting (lifting hover state to a common parent) significantly improves the connection between visual elements and their textual descriptions, making the UI feel more integrated and responsive.
+**Action:** Implement shared hover state in a parent component when visual maps and data lists represent the same entities.
+
+## 2025-06-05 - [Accessibility for Custom Progress Bars]
+**Learning:** Custom progress bars built with primitive elements (e.g., `Box` or `div`) must explicitly include `role="progressbar"`, `aria-valuenow`, `aria-valuemin`, and `aria-valuemax` to be accessible. Even high-level components like Radix `Progress` require a descriptive `aria-label` if their purpose isn't immediately obvious from context.
+**Action:** Always verify ARIA attributes on both custom and component-library progress indicators.
