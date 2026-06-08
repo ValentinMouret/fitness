@@ -26,6 +26,7 @@ The preferred direction is Dokploy-first: use Dokploy for the deployment UI, Git
 - Review apps are destroyed when their pull request closes.
 - Review apps are served at `https://pr-<number>.review.valentinmouret.io`.
 - The wildcard DNS record already exists in Cloudflare.
+- Dokploy preview deployment domains must be generated under `review.valentinmouret.io`.
 - Review apps use the same application authentication environment as production.
 - Each review app gets its own PostgreSQL database on the same local PostgreSQL server.
 - Each review app database is copied from production, then migrated with the pull request code.
@@ -138,10 +139,10 @@ Deferred work:
 
 Concrete next steps:
 
-1. Persist the PostgreSQL Docker bridge firewall rules if they are not already persisted outside the current session.
+1. Persist PostgreSQL access from the Dokploy Docker bridge if it is not already persisted outside the current session.
 2. Add Tailscale-based admin access for Dokploy and other private server surfaces.
-3. Configure Dokploy preview deployment environment variables.
-4. Validate one preview deployment.
+3. Configure Dokploy preview deployment domains and environment variables.
+4. Route review-app hostnames through the active edge proxy and validate one preview deployment.
 5. Decide whether Caddy remains the front proxy for all services or whether Jellyfin, Plex, and torrent move to Dokploy-managed Traefik.
 
 ## Installation Notes
@@ -361,7 +362,7 @@ The endpoint must not expose secrets.
 
 ## TODO
 
-- Persist the PostgreSQL Docker bridge firewall rules if they are not already persisted outside the current session.
+- Persist PostgreSQL access from the Dokploy Docker bridge if it is not already persisted outside the current session.
 - Set up Tailscale-based admin access for Dokploy and other private server surfaces.
 - Later: configure Dokploy `GIT_SHA` injection.
 - Later: configure Dokploy-managed `/healthz` health checks if the feature is available.
