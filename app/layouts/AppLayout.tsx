@@ -22,7 +22,14 @@ import {
 import type React from "react";
 import "./AppLayout.css";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Form, NavLink, Outlet, useLocation, useMatches } from "react-router";
+import {
+  Form,
+  NavLink,
+  Outlet,
+  useLocation,
+  useMatches,
+  useNavigate,
+} from "react-router";
 import { z } from "zod";
 import { PageHeader, type PageHeaderProps } from "~/components/PageHeader";
 import { PageTransition } from "~/components/PageTransition";
@@ -83,30 +90,39 @@ const AppLayout: React.FC = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [quickSheetOpen, setQuickSheetOpen] = useState(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.key.toLowerCase() === "q" &&
-        !e.ctrlKey &&
-        !e.metaKey &&
-        !e.altKey
-      ) {
-        const target = e.target as HTMLElement;
-        const isInput =
-          target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-        if (!isInput) {
-          setQuickSheetOpen((prev) => !prev);
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (isInput) return;
+
+      const key = e.key.toLowerCase();
+      if (key === "q") {
+        setQuickSheetOpen((prev) => !prev);
+      } else if (
+        headerConfig?.primaryAction?.shortcut &&
+        key === headerConfig.primaryAction.shortcut.toLowerCase()
+      ) {
+        e.preventDefault();
+        if (headerConfig.primaryAction.onClick) {
+          headerConfig.primaryAction.onClick();
+        } else if (headerConfig.primaryAction.to) {
+          navigate(headerConfig.primaryAction.to);
         }
       }
     };
 
     window.addEventListener("keydown", handleGlobalKeyDown);
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-  }, []);
+  }, [headerConfig, navigate]);
 
   const isActiveWorkout =
     location.pathname.startsWith("/workouts/") &&

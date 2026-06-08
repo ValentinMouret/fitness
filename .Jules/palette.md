@@ -67,3 +67,7 @@
 ## 2025-06-05 - [Accessibility for Custom Progress Bars]
 **Learning:** Custom progress bars built with primitive elements (e.g., `Box` or `div`) must explicitly include `role="progressbar"`, `aria-valuenow`, `aria-valuemin`, and `aria-valuemax` to be accessible. Even high-level components like Radix `Progress` require a descriptive `aria-label` if their purpose isn't immediately obvious from context.
 **Action:** Always verify ARIA attributes on both custom and component-library progress indicators.
+
+## 2026-06-08 - [Scalable Header Shortcuts]
+**Learning:** Hardcoding shortcuts for page-specific primary actions in global layouts creates brittle code. Elevating shortcut configuration to the `PageHeader` component and having the layout dynamically respond to the active page's header config allows for a scalable and maintainable "power user" experience.
+**Action:** Use the `PageHeader.primaryAction.shortcut` property to implement page-level shortcuts, and ensure the global listener in `AppLayout` remains the single source of truth for handling these triggers.

@@ -1,3 +1,4 @@
+import { PlusIcon } from "@radix-ui/react-icons";
 import { Box, Button, Flex, Text, Tooltip } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { Link, useFetcher, useSearchParams } from "react-router";
@@ -34,6 +35,8 @@ export const handle = {
     primaryAction: {
       label: "Start Workout",
       type: "button" as const,
+      icon: <PlusIcon />,
+      shortcut: "s",
       onClick: () => {
         window.dispatchEvent(new CustomEvent("open-start-workout-dialog"));
       },

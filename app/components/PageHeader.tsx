@@ -5,6 +5,7 @@ import {
   Flex,
   Heading,
   IconButton,
+  Kbd,
   Text,
   Tooltip,
 } from "@radix-ui/themes";
@@ -24,6 +25,7 @@ export interface PageHeaderProps {
     loading?: boolean;
     disabled?: boolean;
     type?: "button" | "submit" | "link";
+    shortcut?: string;
   };
   customRight?: React.ReactNode;
 }
@@ -73,18 +75,31 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
               loading={primaryAction.loading}
               disabled={primaryAction.disabled}
               type={primaryAction.type === "submit" ? "submit" : "button"}
+              aria-keyshortcuts={primaryAction.shortcut}
             >
-              {primaryAction.to ? (
-                <Link to={primaryAction.to}>
-                  {primaryAction.icon}
-                  {primaryAction.label}
-                </Link>
-              ) : (
-                <>
-                  {primaryAction.icon}
-                  {primaryAction.label}
-                </>
-              )}
+              {(() => {
+                const content = (
+                  <>
+                    {primaryAction.icon}
+                    {primaryAction.label}
+                    {primaryAction.shortcut && (
+                      <Box
+                        ml="2"
+                        display={{ initial: "none", md: "inline-block" }}
+                      >
+                        <Kbd size="1">
+                          {primaryAction.shortcut.toUpperCase()}
+                        </Kbd>
+                      </Box>
+                    )}
+                  </>
+                );
+
+                if (primaryAction.to) {
+                  return <Link to={primaryAction.to}>{content}</Link>;
+                }
+                return content;
+              })()}
             </Button>
           )}
         </Flex>
