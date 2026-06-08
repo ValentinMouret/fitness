@@ -16,6 +16,7 @@ export const handle = {
     primaryAction: {
       label: "New Measurement",
       to: "/measurements/new",
+      shortcut: "n",
     },
   }),
 };
