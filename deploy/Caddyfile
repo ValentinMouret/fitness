@@ -16,3 +16,22 @@ fitness.valentinmouret.io {
         output file /var/log/caddy/fitness.log
     }
 }
+
+*.review.valentinmouret.io {
+    handle {
+        reverse_proxy 127.0.0.1:18080 {
+            header_up Host {host}
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+    }
+
+    log {
+        output file /var/log/caddy/fitness-review.log
+    }
+}

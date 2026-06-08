@@ -199,6 +199,32 @@ Run a review app health check:
 curl --fail --silent https://<dokploy-preview-host>/healthz
 ```
 
+If Safari or curl cannot resolve the preview host, verify that Dokploy generated a host under the review-app wildcard:
+
+```shell
+dig +short <dokploy-preview-host>
+dig +short test.review.valentinmouret.io
+```
+
+The expected review-app host shape is `*.review.valentinmouret.io`. A host like `preview-fitness-app-...valentinmouret.io` is outside the configured review-app wildcard and will not resolve unless a separate root-zone wildcard exists.
+
+If DNS resolves but HTTPS fails before reaching the app, check the edge proxy route. Caddy currently owns public `80/443`, so review-app hostnames must be routed from Caddy to Dokploy Traefik, or public `80/443` must move to Dokploy Traefik.
+
+With Caddy still owning the edge, apply the repository Caddyfile on the VPS and reload Caddy:
+
+```shell
+sudo caddy validate --config /etc/caddy/Caddyfile
+sudo systemctl reload caddy
+```
+
+If Caddy validation or reload fails because `*.review.valentinmouret.io` requires a DNS challenge, either install Caddy with the Cloudflare DNS module and configure wildcard TLS, or replace the wildcard site block with the exact Dokploy preview host while validating a single review app.
+
+After reloading Caddy, confirm the review hostname reaches the app:
+
+```shell
+curl --fail --verbose https://<dokploy-preview-host>/healthz
+```
+
 Dokploy preview environment variables:
 
 ```dotenv
@@ -262,6 +288,24 @@ Current production value:
 
 ```text
 DATABASE_URL=postgres://...@172.20.0.1:5432/fitness
+```
+
+If a review app fails with `no pg_hba.conf entry for host "172.20.0.x"`, allow the Dokploy Docker bridge subnet in PostgreSQL host-based authentication:
+
+```shell
+sudo grep -n "172.20" /etc/postgresql/17/main/pg_hba.conf
+sudo install -o postgres -g postgres -m 640 /etc/postgresql/17/main/pg_hba.conf /etc/postgresql/17/main/pg_hba.conf.bak
+sudo tee -a /etc/postgresql/17/main/pg_hba.conf >/dev/null <<'EOF'
+host    all             valentin        172.20.0.0/16           scram-sha-256
+EOF
+sudo systemctl reload postgresql@17-main
+```
+
+Validate the host-based authentication rule from a Dokploy app container:
+
+```shell
+APP="$(docker ps --format '{{.Names}}' | grep '^fitness-app-' | head -1)"
+docker exec "$APP" sh -lc 'psql "$DATABASE_URL" -c "select 1;"'
 ```
 
 Check bridge access from the app container:
