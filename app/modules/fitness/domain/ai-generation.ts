@@ -1,4 +1,4 @@
-/** Domain types for AI workout generation. */
+/** Domain types for AI workout generation and exercise suggestion. */
 
 export interface GeneratedExerciseSet {
   readonly setNumber: number;
@@ -100,4 +100,12 @@ export interface ExerciseCatalogEntry {
     readonly name: string;
     readonly split: number;
   }>;
+}
+
+export interface SuggestedExercise {
+  readonly exerciseId: string;
+  readonly exerciseName: string;
+  readonly exerciseType: string;
+  readonly rationale: string;
+  readonly muscleGroups: ReadonlyArray<string>;
 }

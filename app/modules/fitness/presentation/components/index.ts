@@ -1,3 +1,4 @@
+export { AIExerciseSuggestionsModal } from "./AIExerciseSuggestionsModal/AIExerciseSuggestionsModal";
 export { AIFeedbackModal } from "./AIFeedbackModal";
 export { EditMMCModal } from "./EditMMCModal";
 export { ExerciseHistoryModal } from "./ExerciseHistoryModal";

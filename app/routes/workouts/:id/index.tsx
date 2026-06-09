@@ -13,7 +13,11 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ArrowLeftIcon, DotsVerticalIcon } from "@radix-ui/react-icons";
+import {
+  ArrowLeftIcon,
+  DotsVerticalIcon,
+  MagicWandIcon,
+} from "@radix-ui/react-icons";
 import {
   Button,
   DropdownMenu,
@@ -36,6 +40,7 @@ import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
 import { logger } from "~/logger.server";
 import type { WorkoutExerciseGroup } from "~/modules/fitness/domain/workout";
+import { AIExerciseSuggestionService } from "~/modules/fitness/infra/ai-exercise-suggestion.service.server";
 import { duplicateWorkout } from "~/modules/fitness/infra/duplicate-workout.service.server";
 import {
   addExercisesToWorkout,
@@ -55,6 +60,7 @@ import {
 } from "~/modules/fitness/infra/workout-session.service.server";
 import { createTemplateFromWorkout } from "~/modules/fitness/infra/workout-template.service.server";
 import {
+  AIExerciseSuggestionsModal,
   createWorkoutExerciseCardViewModel,
   EditMMCModal,
   ExerciseHistoryModal,
@@ -252,6 +258,23 @@ export async function action({ request, params }: Route.ActionArgs) {
         return duplicateWorkout(id);
       }
 
+      case "suggest-exercises": {
+        const excludedExerciseIds = formData
+          .getAll("excludedExerciseIds")
+          .map(String);
+        const result = await AIExerciseSuggestionService.suggestExercises(
+          id,
+          excludedExerciseIds,
+        );
+        if (result.isErr()) {
+          return { error: "Failed to generate exercise suggestions" };
+        }
+        return {
+          intent: "suggest-exercises" as const,
+          suggestions: result.value,
+        };
+      }
+
       default:
         return { error: "Unknown intent" };
     }
@@ -281,6 +304,7 @@ function scrollToExercise(exerciseId: string): void {
 
 export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
+  const [showAISuggestions, setShowAISuggestions] = useState(false);
   const [replaceExerciseId, setReplaceExerciseId] = useState<string>();
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -676,6 +700,15 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
             >
               Add Exercise
             </Button>
+            <Button
+              onClick={() => setShowAISuggestions(true)}
+              size="2"
+              variant="soft"
+              color="violet"
+            >
+              <MagicWandIcon />
+              AI Suggestions
+            </Button>
           </div>
         )}
       </div>
@@ -688,6 +721,11 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
           if (!open) setReplaceExerciseId(undefined);
         }}
         replaceExerciseId={replaceExerciseId}
+      />
+
+      <AIExerciseSuggestionsModal
+        open={showAISuggestions}
+        onOpenChange={setShowAISuggestions}
       />
 
       <CompletionModal
