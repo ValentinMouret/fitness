@@ -293,6 +293,8 @@ export default function DashboardPage({
                     color="green"
                     weight="bold"
                     className="animate-fade-in"
+                    role="status"
+                    aria-live="polite"
                   >
                     All Done! ✨
                   </Text>

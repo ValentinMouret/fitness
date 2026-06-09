@@ -456,6 +456,9 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                 aria-keyshortcuts="t"
               >
                 Today
+                <Box ml="2" display={{ initial: "none", md: "inline-block" }}>
+                  <Kbd size="1">T</Kbd>
+                </Box>
               </Button>
             </Tooltip>
           </div>
@@ -561,6 +564,8 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                 color="green"
                 weight="bold"
                 className="animate-fade-in"
+                role="status"
+                aria-live="polite"
               >
                 All Done! ✨
               </Text>

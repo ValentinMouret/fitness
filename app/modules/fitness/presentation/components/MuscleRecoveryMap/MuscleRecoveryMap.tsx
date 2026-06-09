@@ -54,6 +54,7 @@ export function MuscleRecoveryMap({ viewModels }: MuscleRecoveryMapProps) {
                     aria-valuemin={0}
                     aria-valuemax={100}
                     aria-label={`${muscle.label} recovery progress`}
+                    aria-valuetext={muscle.percentageDisplay}
                   >
                     <div
                       className="recovery-bar-fill"
