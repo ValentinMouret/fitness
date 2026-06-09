@@ -71,3 +71,11 @@
 ## 2026-06-08 - [Scalable Header Shortcuts]
 **Learning:** Hardcoding shortcuts for page-specific primary actions in global layouts creates brittle code. Elevating shortcut configuration to the `PageHeader` component and having the layout dynamically respond to the active page's header config allows for a scalable and maintainable "power user" experience.
 **Action:** Use the `PageHeader.primaryAction.shortcut` property to implement page-level shortcuts, and ensure the global listener in `AppLayout` remains the single source of truth for handling these triggers.
+
+## 2024-06-12 - [Accessible Status Updates & Metric Clarity]
+**Learning:** Screen reader users often miss visual "All Done" messages or percentage-based metrics if they aren't explicitly announced. Using 'role="status"' and 'aria-live="polite"' for completion messages, and 'aria-valuetext' for custom progress indicators, ensures these moments of delight and information are accessible to everyone.
+**Action:** Always wrap completion messages in status regions and provide human-readable 'aria-valuetext' for custom progress bars.
+
+## 2024-06-12 - [Discovery Hints for Page Navigation]
+**Learning:** Standardizing shortcut hints (like <Kbd>T</Kbd> for Today) across different date-navigated pages reinforces the application's "power user" patterns. Including these hints inside the buttons themselves (on desktop) improves discovery without cluttering the mobile UI.
+**Action:** Include <Kbd> hints in primary navigation actions when a global shortcut is available.
