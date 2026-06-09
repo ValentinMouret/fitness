@@ -2,9 +2,11 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   DotsHorizontalIcon,
+  Link2Icon,
   MagicWandIcon,
   Pencil1Icon,
   PlusIcon,
+  Share1Icon,
 } from "@radix-ui/react-icons";
 import {
   AlertDialog,
@@ -668,6 +670,40 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                             >
                               Save as Template
                             </DropdownMenu.Item>
+                            {meal.mealTemplateId &&
+                              (() => {
+                                const template = mealTemplates.find(
+                                  (t) => t.id === meal.mealTemplateId,
+                                );
+                                if (!template) return null;
+                                return template.isPublic ? (
+                                  <>
+                                    <DropdownMenu.Item
+                                      onClick={() =>
+                                        handleCopyLink(template.id)
+                                      }
+                                    >
+                                      <Link2Icon /> Copy link
+                                    </DropdownMenu.Item>
+                                    <DropdownMenu.Item
+                                      color="red"
+                                      onClick={() =>
+                                        handleToggleShare(template.id, false)
+                                      }
+                                    >
+                                      Stop sharing
+                                    </DropdownMenu.Item>
+                                  </>
+                                ) : (
+                                  <DropdownMenu.Item
+                                    onClick={() =>
+                                      handleToggleShare(template.id, true)
+                                    }
+                                  >
+                                    <Share1Icon /> Publish &amp; copy link
+                                  </DropdownMenu.Item>
+                                );
+                              })()}
                             <DropdownMenu.Separator />
                             <DropdownMenu.Item
                               color="red"
