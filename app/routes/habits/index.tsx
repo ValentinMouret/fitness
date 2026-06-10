@@ -1,3 +1,4 @@
+import { Tooltip } from "@radix-ui/themes";
 import { data, Link, useFetcher } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -125,7 +126,10 @@ function CardFooter({
             transition: "color 0.3s ease",
           }}
         >
-          🔥 {streak}
+          <span role="img" aria-label="streak">
+            🔥
+          </span>{" "}
+          {streak}
         </span>
         <span style={{ fontSize: 10, color: "#c4bfba" }}>streak</span>
         <span style={{ fontSize: 10, color: "#e7e5e4", margin: "0 1px" }}>
@@ -328,7 +332,15 @@ function HabitCard({
               marginBottom: 2,
             }}
           >
-            {habit.isKeystone && <span style={{ fontSize: 13 }}>⚡</span>}
+            {habit.isKeystone && (
+              <span
+                role="img"
+                aria-label="keystone habit"
+                style={{ fontSize: 13 }}
+              >
+                ⚡
+              </span>
+            )}
             <span
               style={{
                 fontSize: 15,
@@ -570,27 +582,29 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
               </div>
             )}
           </div>
-          <Link
-            to="/habits/new"
-            aria-label="Add new habit"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 36,
-              height: 36,
-              borderRadius: "50%",
-              border: "1px solid #3d3935",
-              color: "#6b6560",
-              textDecoration: "none",
-              fontSize: 20,
-              lineHeight: 1,
-              flexShrink: 0,
-              marginTop: 4,
-            }}
-          >
-            +
-          </Link>
+          <Tooltip content="Add new habit">
+            <Link
+              to="/habits/new"
+              aria-label="Add new habit"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                border: "1px solid #3d3935",
+                color: "#6b6560",
+                textDecoration: "none",
+                fontSize: 20,
+                lineHeight: 1,
+                flexShrink: 0,
+                marginTop: 4,
+              }}
+            >
+              +
+            </Link>
+          </Tooltip>
         </div>
       </div>
 
@@ -605,6 +619,11 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
         <div
           className={allMorningDone ? "ring-bounce" : ""}
           style={{ position: "relative", width: 120, height: 120 }}
+          role="progressbar"
+          aria-valuenow={Math.round(progress * 100)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuetext={`${completedTodayCount} of ${totalScheduled} habits completed`}
         >
           <svg
             aria-hidden="true"
@@ -677,7 +696,11 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
           <div
             style={{ textAlign: "center", padding: "40px 0", color: "#a8a29e" }}
           >
-            <div style={{ fontSize: 32, marginBottom: 12 }}>🎉</div>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>
+              <span role="img" aria-label="celebration">
+                🎉
+              </span>
+            </div>
             <div
               style={{
                 fontSize: 18,
