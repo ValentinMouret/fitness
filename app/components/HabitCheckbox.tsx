@@ -1,5 +1,5 @@
 import { CheckIcon } from "@radix-ui/react-icons";
-import { Button, Flex, Text } from "@radix-ui/themes";
+import { Button, Flex, Text, Tooltip } from "@radix-ui/themes";
 import { useFetcher } from "react-router";
 import "./HabitCheckbox.css";
 
@@ -44,19 +44,21 @@ export default function HabitCheckbox({
         <input type="hidden" name="habitId" value={habitId} />
         <input type="hidden" name="completed" value={String(isCompleted)} />
 
-        <Button
-          type="submit"
-          variant={displayCompleted ? "solid" : "outline"}
-          color={displayCompleted ? "tomato" : "gray"}
-          size="2"
-          className="habit-checkbox__button"
-          loading={isSubmitting}
-          aria-label={label}
-        >
-          {displayCompleted && !isSubmitting && (
-            <CheckIcon className="habit-checkbox__icon--pop" />
-          )}
-        </Button>
+        <Tooltip content={label}>
+          <Button
+            type="submit"
+            variant={displayCompleted ? "solid" : "outline"}
+            color={displayCompleted ? "tomato" : "gray"}
+            size="2"
+            className="habit-checkbox__button"
+            loading={isSubmitting}
+            aria-label={label}
+          >
+            {displayCompleted && !isSubmitting && (
+              <CheckIcon className="habit-checkbox__icon--pop" />
+            )}
+          </Button>
+        </Tooltip>
 
         <Flex direction="column" flexGrow="1">
           <Text
