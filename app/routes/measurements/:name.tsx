@@ -7,13 +7,14 @@ import {
   Card,
   Flex,
   IconButton,
+  Kbd,
   Table,
   Text,
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
-import { useId } from "react";
-import { data, useFetcher, useLoaderData } from "react-router";
+import { useEffect, useId, useRef } from "react";
+import { data, useFetcher } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import MeasurementChart from "~/components/MeasurementChart";
@@ -97,12 +98,37 @@ export async function action({ request, params }: Route.ActionArgs) {
   return null;
 }
 
-export default function MeasurementPage(_: Route.ComponentProps) {
-  const { measurement, measures } = useLoaderData<typeof loader>();
+export default function MeasurementPage({
+  loaderData: { measurement, measures },
+}: Route.ComponentProps) {
   const fetcher = useFetcher();
   const addFetcher = useFetcher();
   const valueInputId = useId();
   const dateInputId = useId();
+  const valueInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable;
+
+      if (isInput) return;
+
+      if (e.key.toLowerCase() === "m" && valueInputRef.current) {
+        e.preventDefault();
+        valueInputRef.current.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const isSubmitting = addFetcher.state === "submitting";
   const actionData = z
@@ -131,7 +157,16 @@ export default function MeasurementPage(_: Route.ComponentProps) {
       )}
 
       <Card size="3" mb="6">
-        <SectionHeader title="Add New Measurement" />
+        <SectionHeader
+          title={
+            <Flex align="center" gap="2">
+              <Text>Add New Measurement</Text>
+              <Box display={{ initial: "none", md: "inline-block" }}>
+                <Kbd size="1">M</Kbd>
+              </Box>
+            </Flex>
+          }
+        />
         <addFetcher.Form method="post">
           <input type="hidden" name="intent" value="add-measure" />
           <Flex gap="3" align="end" wrap="wrap">
@@ -146,11 +181,13 @@ export default function MeasurementPage(_: Route.ComponentProps) {
                 Value ({measurement.unit})
               </Text>
               <NumberInput
+                ref={valueInputRef}
                 id={valueInputId}
                 name="value"
                 placeholder="Enter value"
                 required
                 disabled={isSubmitting}
+                aria-keyshortcuts="m"
               />
             </Box>
             <Box>
@@ -171,10 +208,12 @@ export default function MeasurementPage(_: Route.ComponentProps) {
                 disabled={isSubmitting}
               />
             </Box>
-            <Button type="submit" loading={isSubmitting}>
-              <PlusIcon />
-              Add Measurement
-            </Button>
+            <Tooltip content="Log measurement (Enter)">
+              <Button type="submit" loading={isSubmitting}>
+                <PlusIcon />
+                Add Measurement
+              </Button>
+            </Tooltip>
           </Flex>
         </addFetcher.Form>
       </Card>

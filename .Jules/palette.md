@@ -83,3 +83,7 @@
 ## 2024-06-10 - [Accessible Micro-UX for Habits]
 **Learning:** Custom SVG-based progress rings and decorative emojis often lack semantic meaning for assistive technologies. Adding standard ARIA attributes (`role="progressbar"`) and wrapping emojis in labeled `span` elements with `role="img"` ensures these features are delightful for all users. Surfacing identity phrases in Tooltips during the habit-checking interaction loop further strengthens the identity-building core of the application.
 **Action:** Proactively audit custom visual indicators for ARIA compliance and use Tooltips to surface reinforcement text (like identity phrases) on primary interaction triggers.
+
+## 2025-06-18 - [Measurement Detail Shortcuts & Visual Hints]
+**Learning:** Standardizing keyboard shortcuts (like 'm' for focus) across different data-entry views improves efficiency. Using `<Kbd>` for visual discovery and `aria-keyshortcuts` for assistive technology ensures these "power user" features are accessible to everyone. Incorporating `SELECT` elements in the `isInput` guard prevents global shortcuts from interfering with dropdown navigation.
+**Action:** Implement 'm' shortcut for focus in measurement-heavy views and always include `SELECT` in `isInput` focus guards.
