@@ -7,15 +7,17 @@ import {
   Card,
   Flex,
   IconButton,
+  Kbd,
   Table,
   Text,
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
-import { useId } from "react";
+import { useEffect, useId, useRef } from "react";
 import { data, useFetcher, useLoaderData } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import { SuccessPulse } from "~/components/Celebration";
 import MeasurementChart from "~/components/MeasurementChart";
 import { NumberInput } from "~/components/NumberInput";
 import { SectionHeader } from "~/components/SectionHeader";
@@ -103,8 +105,31 @@ export default function MeasurementPage(_: Route.ComponentProps) {
   const addFetcher = useFetcher();
   const valueInputId = useId();
   const dateInputId = useId();
+  const valueInputRef = useRef<HTMLInputElement>(null);
 
   const isSubmitting = addFetcher.state === "submitting";
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (isInput) return;
+
+      if (e.key.toLowerCase() === "m" && valueInputRef.current) {
+        e.preventDefault();
+        valueInputRef.current.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
   const actionData = z
     .object({ error: z.string().optional(), success: z.boolean().optional() })
     .nullable()
@@ -130,54 +155,67 @@ export default function MeasurementPage(_: Route.ComponentProps) {
         </Callout.Root>
       )}
 
-      <Card size="3" mb="6">
-        <SectionHeader title="Add New Measurement" />
-        <addFetcher.Form method="post">
-          <input type="hidden" name="intent" value="add-measure" />
-          <Flex gap="3" align="end" wrap="wrap">
-            <Box>
-              <Text
-                as="label"
-                htmlFor={valueInputId}
-                size="2"
-                mb="1"
-                style={{ display: "block" }}
-              >
-                Value ({measurement.unit})
-              </Text>
-              <NumberInput
-                id={valueInputId}
-                name="value"
-                placeholder="Enter value"
-                required
-                disabled={isSubmitting}
-              />
-            </Box>
-            <Box>
-              <Text
-                as="label"
-                htmlFor={dateInputId}
-                size="2"
-                mb="1"
-                style={{ display: "block" }}
-              >
-                Date
-              </Text>
-              <TextField.Root
-                id={dateInputId}
-                name="date"
-                type="date"
-                defaultValue={today().toISOString().split("T")[0]}
-                disabled={isSubmitting}
-              />
-            </Box>
-            <Button type="submit" loading={isSubmitting}>
-              <PlusIcon />
-              Add Measurement
-            </Button>
-          </Flex>
-        </addFetcher.Form>
-      </Card>
+      <SuccessPulse trigger={isSubmitting}>
+        <Card size="3" mb="6">
+          <SectionHeader
+            title="Add New Measurement"
+            right={
+              <Box display={{ initial: "none", md: "inline-block" }}>
+                <Kbd size="1">M</Kbd>
+              </Box>
+            }
+          />
+          <addFetcher.Form method="post">
+            <input type="hidden" name="intent" value="add-measure" />
+            <Flex gap="3" align="end" wrap="wrap">
+              <Box>
+                <Text
+                  as="label"
+                  htmlFor={valueInputId}
+                  size="2"
+                  mb="1"
+                  style={{ display: "block" }}
+                >
+                  Value ({measurement.unit})
+                </Text>
+                <NumberInput
+                  ref={valueInputRef}
+                  id={valueInputId}
+                  name="value"
+                  placeholder="Enter value"
+                  required
+                  disabled={isSubmitting}
+                  aria-keyshortcuts="m"
+                />
+              </Box>
+              <Box>
+                <Text
+                  as="label"
+                  htmlFor={dateInputId}
+                  size="2"
+                  mb="1"
+                  style={{ display: "block" }}
+                >
+                  Date
+                </Text>
+                <TextField.Root
+                  id={dateInputId}
+                  name="date"
+                  type="date"
+                  defaultValue={today().toISOString().split("T")[0]}
+                  disabled={isSubmitting}
+                />
+              </Box>
+              <Tooltip content="Add measurement (Enter)">
+                <Button type="submit" loading={isSubmitting}>
+                  <PlusIcon />
+                  Add Measurement
+                </Button>
+              </Tooltip>
+            </Flex>
+          </addFetcher.Form>
+        </Card>
+      </SuccessPulse>
 
       {measures.length > 0 && (
         <Card size="3" mb="6">
