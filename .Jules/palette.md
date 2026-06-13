@@ -87,3 +87,7 @@
 ## 2026-06-12 - [Measurement Entry Power Shortcuts]
 **Learning:** For detail pages centered around a single value input (like specific measurement tracking), adding an 'm' shortcut to focus the input field significantly streamlines data entry. This pattern is most effective when reinforced by a visual <Kbd> hint in the SectionHeader and an aria-keyshortcuts attribute on the input.
 **Action:** Use 'm' as a standard shortcut for focusing primary measurement value inputs across detail pages.
+
+## 2026-06-13 - [Precise Multi-Fetcher Feedback]
+**Learning:** In pages with multiple concurrent actions (like the Nutrition dashboard), relying on a single `fetcher` hook leads to race conditions and incorrect UI states if the user triggers another action before the first one finishes. Using `useFetchers()` to monitor the entire fetcher pool allows for precise, item-specific feedback even during rapid interactions.
+**Action:** Use `useFetchers()` to derive item-specific loading and success states in list views where multiple background actions are supported.
