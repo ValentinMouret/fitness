@@ -1,0 +1,63 @@
+$ react-router dev
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+12:59:02 AM [vite] (ssr) Error when evaluating SSR module virtual:react-router/server-build: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "DATABASE_URL"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  }
+]
+      at eval (/app/app/env.server.ts:16:20)
+      at ESModulesEvaluator.runInlinedModule (file:///app/node_modules/vite/dist/node/module-runner.js:913:3)
+      at SSRCompatModuleRunner.directRequest (file:///app/node_modules/vite/dist/node/module-runner.js:1146:59)
+      at SSRCompatModuleRunner.directRequest (file:///app/node_modules/vite/dist/node/chunks/config.js:15111:22)
+      at SSRCompatModuleRunner.cachedRequest (file:///app/node_modules/vite/dist/node/module-runner.js:1053:73)
+      at eval (/app/app/auth.server.ts:4:31)
+      at ESModulesEvaluator.runInlinedModule (file:///app/node_modules/vite/dist/node/module-runner.js:913:3)
+      at SSRCompatModuleRunner.directRequest (file:///app/node_modules/vite/dist/node/module-runner.js:1146:59)
+      at SSRCompatModuleRunner.directRequest (file:///app/node_modules/vite/dist/node/chunks/config.js:15111:22)
+      at SSRCompatModuleRunner.cachedRequest (file:///app/node_modules/vite/dist/node/module-runner.js:1053:73)
+12:59:02 AM [vite] Internal server error: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "DATABASE_URL"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  }
+]
+      at eval (/app/app/env.server.ts:16:20)
+      at ESModulesEvaluator.runInlinedModule (file:///app/node_modules/vite/dist/node/module-runner.js:913:3)
+      at SSRCompatModuleRunner.directRequest (file:///app/node_modules/vite/dist/node/module-runner.js:1146:59)
+      at SSRCompatModuleRunner.directRequest (file:///app/node_modules/vite/dist/node/chunks/config.js:15111:22)
+      at SSRCompatModuleRunner.cachedRequest (file:///app/node_modules/vite/dist/node/module-runner.js:1053:73)
+      at eval (/app/app/auth.server.ts:4:31)
+      at ESModulesEvaluator.runInlinedModule (file:///app/node_modules/vite/dist/node/module-runner.js:913:3)
+      at SSRCompatModuleRunner.directRequest (file:///app/node_modules/vite/dist/node/module-runner.js:1146:59)
+      at SSRCompatModuleRunner.directRequest (file:///app/node_modules/vite/dist/node/chunks/config.js:15111:22)
+      at SSRCompatModuleRunner.cachedRequest (file:///app/node_modules/vite/dist/node/module-runner.js:1053:73)
+12:59:03 AM [vite] Internal server error: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "DATABASE_URL"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  }
+]
+      at eval (/app/app/env.server.ts:16:20)
+      at ESModulesEvaluator.runInlinedModule (file:///app/node_modules/vite/dist/node/module-runner.js:913:3)
+      at SSRCompatModuleRunner.directRequest (file:///app/node_modules/vite/dist/node/module-runner.js:1146:59)
+      at SSRCompatModuleRunner.directRequest (file:///app/node_modules/vite/dist/node/chunks/config.js:15111:22)
+      at SSRCompatModuleRunner.cachedRequest (file:///app/node_modules/vite/dist/node/module-runner.js:1053:73)
+      at eval (/app/app/auth.server.ts:4:31)
+      at ESModulesEvaluator.runInlinedModule (file:///app/node_modules/vite/dist/node/module-runner.js:913:3)
+      at SSRCompatModuleRunner.directRequest (file:///app/node_modules/vite/dist/node/module-runner.js:1146:59)
+      at SSRCompatModuleRunner.directRequest (file:///app/node_modules/vite/dist/node/chunks/config.js:15111:22)
+      at SSRCompatModuleRunner.cachedRequest (file:///app/node_modules/vite/dist/node/module-runner.js:1053:73)

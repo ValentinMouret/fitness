@@ -1,5 +1,6 @@
 import { Tooltip } from "@radix-ui/themes";
 import { data, Link, useFetcher } from "react-router";
+import { SuccessPulse } from "~/components/Celebration";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import type { Habit } from "~/modules/habits/domain/entity";
@@ -258,9 +259,10 @@ function HabitCard({
     .join(" ");
 
   return (
-    // biome-ignore lint/a11y/useSemanticElements: outer card can't be <button> — contains a nested <button>
-    <div
-      className="habit-card-a"
+    <SuccessPulse trigger={submitting}>
+      {/* biome-ignore lint/a11y/useSemanticElements: outer card can't be <button> — contains a nested <button> */}
+      <div
+        className="habit-card-a"
       role="button"
       tabIndex={0}
       aria-label={ariaLabel}
@@ -406,17 +408,18 @@ function HabitCard({
         </div>
       </div>
 
-      <CardFooter
-        done={displayCompleted}
-        streak={displayStreak}
-        completionCount={displayCount}
-        color={habit.color}
-        missedTwice={nmt}
-        onMinimum={logMinimum}
-        habitName={habit.name}
-        submitting={submitting}
-      />
-    </div>
+        <CardFooter
+          done={displayCompleted}
+          streak={displayStreak}
+          completionCount={displayCount}
+          color={habit.color}
+          missedTwice={nmt}
+          onMinimum={logMinimum}
+          habitName={habit.name}
+          submitting={submitting}
+        />
+      </div>
+    </SuccessPulse>
   );
 }
 

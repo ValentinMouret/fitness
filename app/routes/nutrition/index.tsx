@@ -589,7 +589,6 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             </Button>
           </Tooltip>
         </div>
-        <SuccessPulse trigger={optimisticMealActions.length > 0}>
           <div className="nutrition-meals__list">
             {mealTypes.map((mealType) => {
               const meal = getMealForType(mealType);
@@ -610,10 +609,13 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                 fetcher.formData?.get("mealCategory") === mealType;
 
               return (
-                <div
+                <SuccessPulse
                   key={mealType}
-                  className={`nutrition-meal ${mealCompletionMap[mealType] ? "nutrition-meal--logged" : ""}`}
+                  trigger={isDeleting || isApplyingTemplate}
                 >
+                  <div
+                    className={`nutrition-meal ${mealCompletionMap[mealType] ? "nutrition-meal--logged" : ""}`}
+                  >
                   <span className="nutrition-meal__icon">{icon}</span>
                   <div className="nutrition-meal__body">
                     <div className="nutrition-meal__name">{label}</div>
@@ -747,10 +749,10 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                     )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </SuccessPulse>
+              </SuccessPulse>
+            );
+          })}
+        </div>
       </div>
 
       {/* Tools */}

@@ -276,13 +276,12 @@ export default function DashboardPage({
 
       {/* Habits */}
       {habitsTotal > 0 && (
-        <SuccessPulse trigger={optimisticHabitToggles.length > 0}>
-          <Box className="dashboard__card dashboard__card--habits">
-            <Celebration
-              trigger={celebrate}
-              onComplete={() => setCelebrate(false)}
-            />
-            <Flex className="dashboard__habits-header">
+        <Box className="dashboard__card dashboard__card--habits">
+          <Celebration
+            trigger={celebrate}
+            onComplete={() => setCelebrate(false)}
+          />
+          <Flex className="dashboard__habits-header">
               <Flex align="center" gap="2">
                 <p className="section-label" style={{ marginBottom: 0 }}>
                   Habits
@@ -337,7 +336,6 @@ export default function DashboardPage({
               ))}
             </Box>
           </Box>
-        </SuccessPulse>
       )}
 
       {/* Weight trend */}

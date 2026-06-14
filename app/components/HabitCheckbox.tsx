@@ -1,6 +1,7 @@
 import { CheckIcon } from "@radix-ui/react-icons";
 import { Button, Flex, Text, Tooltip } from "@radix-ui/themes";
 import { useFetcher } from "react-router";
+import { SuccessPulse } from "./Celebration";
 import "./HabitCheckbox.css";
 
 interface HabitCheckboxProps {
@@ -39,7 +40,8 @@ export default function HabitCheckbox({
 
   return (
     <fetcher.Form method="post">
-      <Flex align="center" gap="3" py="3" className="habit-checkbox__row">
+      <SuccessPulse trigger={isSubmitting}>
+        <Flex align="center" gap="3" py="3" className="habit-checkbox__row">
         <input type="hidden" name="intent" value={intent} />
         <input type="hidden" name="habitId" value={habitId} />
         <input type="hidden" name="completed" value={String(isCompleted)} />
@@ -78,15 +80,16 @@ export default function HabitCheckbox({
           )}
         </Flex>
 
-        {streak > 0 && (
-          <Text size="2" className="habit-checkbox__streak">
-            <span role="img" aria-label="streak">
-              🔥
-            </span>{" "}
-            {streak}
-          </Text>
-        )}
-      </Flex>
+          {streak > 0 && (
+            <Text size="2" className="habit-checkbox__streak">
+              <span role="img" aria-label="streak">
+                🔥
+              </span>{" "}
+              {streak}
+            </Text>
+          )}
+        </Flex>
+      </SuccessPulse>
     </fetcher.Form>
   );
 }
