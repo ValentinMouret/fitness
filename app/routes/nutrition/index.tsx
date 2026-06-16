@@ -184,7 +184,15 @@ function CalorieRing({ current, target }: { current: number; target: number }) {
   const circumference = 2 * Math.PI * r;
 
   return (
-    <div className="nutrition-hero__ring">
+    <div
+      className="nutrition-hero__ring"
+      role="progressbar"
+      aria-valuenow={Math.round(current)}
+      aria-valuemin={0}
+      aria-valuemax={target}
+      aria-label="Daily calorie progress"
+      aria-valuetext={`${Math.round(current)} of ${target} kcal`}
+    >
       <svg aria-hidden="true" width={140} height={140}>
         <circle
           cx={70}
@@ -508,6 +516,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             <Progress
               value={(dailyTotals.calories / dailyTargets.calories) * 100}
               aria-label="Calories progress"
+              aria-valuetext={`${Math.round(dailyTotals.calories)} / ${dailyTargets.calories} kcal`}
             />
           </Box>
           <Box>
@@ -520,6 +529,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             <Progress
               value={(dailyTotals.protein / dailyTargets.protein) * 100}
               aria-label="Protein progress"
+              aria-valuetext={`${Math.round(dailyTotals.protein)} / ${dailyTargets.protein} g`}
             />
           </Box>
           <Box>
@@ -532,6 +542,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             <Progress
               value={(dailyTotals.carbs / dailyTargets.carbs) * 100}
               aria-label="Carbs progress"
+              aria-valuetext={`${Math.round(dailyTotals.carbs)} / ${dailyTargets.carbs} g`}
             />
           </Box>
           <Box>
@@ -544,6 +555,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             <Progress
               value={(dailyTotals.fat / dailyTargets.fat) * 100}
               aria-label="Fat progress"
+              aria-valuetext={`${Math.round(dailyTotals.fat)} / ${dailyTargets.fat} g`}
             />
           </Box>
         </Grid>
@@ -589,29 +601,35 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             </Button>
           </Tooltip>
         </div>
-        <SuccessPulse trigger={optimisticMealActions.length > 0}>
-          <div className="nutrition-meals__list">
-            {mealTypes.map((mealType) => {
-              const meal = getMealForType(mealType);
-              const hasLogged = meal !== null;
-              const { label, icon } = mealConfig[mealType];
-              const ingredientNames = meal?.ingredients
-                ?.map((ing) => ing.ingredient.name)
-                .join(" · ");
+        <div className="nutrition-meals__list">
+          {mealTypes.map((mealType) => {
+            const meal = getMealForType(mealType);
+            const hasLogged = meal !== null;
+            const { label, icon } = mealConfig[mealType];
+            const ingredientNames = meal?.ingredients
+              ?.map((ing) => ing.ingredient.name)
+              .join(" · ");
 
-              const isDeleting =
-                fetcher.state !== "idle" &&
-                fetcher.formData?.get("intent") === "delete-meal" &&
-                fetcher.formData?.get("mealId") === meal?.id;
+            const isDeleting = fetchers.some(
+              (f) =>
+                f.state !== "idle" &&
+                f.formData?.get("intent") === "delete-meal" &&
+                f.formData?.get("mealId") === meal?.id,
+            );
 
-              const isApplyingTemplate =
-                fetcher.state !== "idle" &&
-                fetcher.formData?.get("intent") === "apply-template" &&
-                fetcher.formData?.get("mealCategory") === mealType;
+            const isApplyingTemplate = fetchers.some(
+              (f) =>
+                f.state !== "idle" &&
+                f.formData?.get("intent") === "apply-template" &&
+                f.formData?.get("mealCategory") === mealType,
+            );
 
-              return (
+            return (
+              <SuccessPulse
+                key={mealType}
+                trigger={isDeleting || isApplyingTemplate}
+              >
                 <div
-                  key={mealType}
                   className={`nutrition-meal ${mealCompletionMap[mealType] ? "nutrition-meal--logged" : ""}`}
                 >
                   <span className="nutrition-meal__icon">{icon}</span>
@@ -747,10 +765,10 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                     )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </SuccessPulse>
+              </SuccessPulse>
+            );
+          })}
+        </div>
       </div>
 
       {/* Tools */}

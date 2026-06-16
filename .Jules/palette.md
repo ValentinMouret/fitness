@@ -80,6 +80,10 @@
 **Learning:** Standardizing shortcut hints (like <Kbd>T</Kbd> for Today) across different date-navigated pages reinforces the application's "power user" patterns. Including these hints inside the buttons themselves (on desktop) improves discovery without cluttering the mobile UI.
 **Action:** Include <Kbd> hints in primary navigation actions when a global shortcut is available.
 
+## 2025-06-15 - [Localized Feedback & Custom Progress A11y]
+**Learning:** Applying visual feedback like `SuccessPulse` to an entire list causes distracting "flashing" for unrelated items. Localizing it to specific list items using `useFetchers()` to match item IDs provides precise, expected feedback. For custom SVG progress rings, applying `role="progressbar"` and detailed `aria-valuetext` (e.g., "1450 of 2100 kcal") ensures the "delight" is also accessible.
+**Action:** Always localize action feedback to the specific item triggered and provide human-readable `aria-valuetext` for custom progress indicators.
+
 ## 2024-06-10 - [Accessible Micro-UX for Habits]
 **Learning:** Custom SVG-based progress rings and decorative emojis often lack semantic meaning for assistive technologies. Adding standard ARIA attributes (`role="progressbar"`) and wrapping emojis in labeled `span` elements with `role="img"` ensures these features are delightful for all users. Surfacing identity phrases in Tooltips during the habit-checking interaction loop further strengthens the identity-building core of the application.
 **Action:** Proactively audit custom visual indicators for ARIA compliance and use Tooltips to surface reinforcement text (like identity phrases) on primary interaction triggers.
