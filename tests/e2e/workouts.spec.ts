@@ -28,7 +28,7 @@ test.describe("Workouts Page", () => {
     await page.getByRole("link", { name: "Manage Exercises" }).click();
     await expect(page).toHaveURL(/\/workouts\/exercises/);
     await expect(
-      page.getByRole("heading", { name: "Exercises" }),
+      page.getByRole("heading", { name: "Exercises", exact: true }),
     ).toBeVisible();
   });
 
@@ -294,18 +294,18 @@ test.describe("Exercises Page", () => {
 
   test("should display exercises page with header", async ({ page }) => {
     await expect(
-      page.getByRole("heading", { name: "Exercises" }),
+      page.getByRole("heading", { name: "Exercises", exact: true }),
     ).toBeVisible();
   });
 
   test("should have Add Exercise link", async ({ page }) => {
     await expect(
-      page.getByRole("link", { name: "Add Exercise" }),
+      page.getByRole("link", { name: "Add Exercise" }).first(),
     ).toBeVisible();
   });
 
   test("should navigate to create exercise page", async ({ page }) => {
-    await page.getByRole("link", { name: "Add Exercise" }).click();
+    await page.getByRole("link", { name: "Add Exercise" }).first().click();
     await expect(page).toHaveURL(/\/workouts\/exercises\/create/);
     await expect(
       page.getByRole("heading", { name: "New Exercise" }),
