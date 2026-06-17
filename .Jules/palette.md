@@ -91,3 +91,7 @@
 ## 2026-06-13 - [Precise Multi-Fetcher Feedback]
 **Learning:** In pages with multiple concurrent actions (like the Nutrition dashboard), relying on a single `fetcher` hook leads to race conditions and incorrect UI states if the user triggers another action before the first one finishes. Using `useFetchers()` to monitor the entire fetcher pool allows for precise, item-specific feedback even during rapid interactions.
 **Action:** Use `useFetchers()` to derive item-specific loading and success states in list views where multiple background actions are supported.
+
+## 2026-06-15 - [Context-Aware Empty States & Filter Persistence]
+**Learning:** For search and filtering interfaces, distinguishing between "no data" and "no results" empty states improves clarity. Using the `EmptyState` component with a primary action (e.g., "Add Exercise") for empty collections, and a recovery action (e.g., "Clear Filters") when active filters yield no matches, provides a clear path forward. Syncing input values with URL `searchParams` ensures the UI remains consistent with the filtered state.
+**Action:** Implement dual-path empty states and bind filter inputs to URL parameters in all searchable collection views.

@@ -1,8 +1,9 @@
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
-import { Container, Flex, Select, Text, TextField } from "@radix-ui/themes";
+import { Container, Flex, Select, TextField } from "@radix-ui/themes";
 import { Form, useSearchParams } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import { EmptyState } from "~/components/EmptyState";
 import ExerciseCard from "~/components/ExerciseCard";
 import { exerciseTypes } from "~/modules/fitness/domain/workout";
 import {
@@ -48,8 +49,18 @@ export const action = async ({ request }: Route.ActionArgs) => {
 export default function ExercisesIndexPage({
   loaderData,
 }: Route.ComponentProps) {
-  const [_, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { allExercises } = loaderData;
+
+  const hasFilters = !!(searchParams.get("q") || searchParams.get("type"));
+
+  const clearFilters = () => {
+    setSearchParams((ps) => {
+      ps.delete("q");
+      ps.delete("type");
+      return ps;
+    });
+  };
 
   return (
     <>
@@ -58,6 +69,7 @@ export default function ExercisesIndexPage({
           <Flex gap="2">
             <Select.Root
               name="type"
+              value={searchParams.get("type") ?? "all"}
               onValueChange={(v) => {
                 if (v === "all") {
                   setSearchParams((ps) => {
@@ -72,7 +84,10 @@ export default function ExercisesIndexPage({
                 }
               }}
             >
-              <Select.Trigger placeholder="Type" />
+              <Select.Trigger
+                placeholder="Filter by type"
+                aria-label="Filter by exercise type"
+              />
               <Select.Content>
                 {["all", ...exerciseTypes].map((t) => (
                   <Select.Item key={t} value={t}>
@@ -81,7 +96,13 @@ export default function ExercisesIndexPage({
                 ))}
               </Select.Content>
             </Select.Root>
-            <TextField.Root type="search" name="q">
+            <TextField.Root
+              type="search"
+              name="q"
+              placeholder="Search exercises..."
+              aria-label="Search exercises"
+              defaultValue={searchParams.get("q") ?? ""}
+            >
               <TextField.Slot>
                 <MagnifyingGlassIcon height="16" width="16" />
               </TextField.Slot>
@@ -90,7 +111,23 @@ export default function ExercisesIndexPage({
         </Form>
       </Container>
       {allExercises.length === 0 ? (
-        <Text>Exercises will show here once you add them</Text>
+        hasFilters ? (
+          <EmptyState
+            icon="🔍"
+            title="No exercises found"
+            description="Try adjusting your search or filters to find what you're looking for."
+            actionLabel="Clear Filters"
+            onAction={clearFilters}
+          />
+        ) : (
+          <EmptyState
+            icon="🏋️"
+            title="No exercises yet"
+            description="Your exercise library is empty. Add your first exercise to start tracking your progress!"
+            actionLabel="Add Exercise"
+            actionTo="/workouts/exercises/create"
+          />
+        )
       ) : (
         <Flex direction="column" pt="4" gap="2">
           {allExercises.map((exercise) => (
