@@ -1,5 +1,6 @@
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
-import { Container, Flex, Select, TextField } from "@radix-ui/themes";
+import { Box, Container, Flex, Kbd, Select, TextField } from "@radix-ui/themes";
+import { useEffect, useRef } from "react";
 import { Form, useSearchParams } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -32,6 +33,7 @@ export const handle = {
     primaryAction: {
       label: "Add Exercise",
       to: "/workouts/exercises/create",
+      shortcut: "n",
     },
   }),
 };
@@ -51,6 +53,29 @@ export default function ExercisesIndexPage({
 }: Route.ComponentProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { allExercises } = loaderData;
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (isInput) return;
+
+      if (e.key === "/") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const hasFilters = !!(searchParams.get("q") || searchParams.get("type"));
 
@@ -97,14 +122,21 @@ export default function ExercisesIndexPage({
               </Select.Content>
             </Select.Root>
             <TextField.Root
+              ref={searchInputRef}
               type="search"
               name="q"
               placeholder="Search exercises..."
               aria-label="Search exercises"
               defaultValue={searchParams.get("q") ?? ""}
+              aria-keyshortcuts="/"
             >
               <TextField.Slot>
                 <MagnifyingGlassIcon height="16" width="16" />
+              </TextField.Slot>
+              <TextField.Slot pr="3">
+                <Box display={{ initial: "none", md: "inline-block" }}>
+                  <Kbd size="1">/</Kbd>
+                </Box>
               </TextField.Slot>
             </TextField.Root>
           </Flex>
