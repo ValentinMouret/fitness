@@ -95,3 +95,7 @@
 ## 2026-06-15 - [Context-Aware Empty States & Filter Persistence]
 **Learning:** For search and filtering interfaces, distinguishing between "no data" and "no results" empty states improves clarity. Using the `EmptyState` component with a primary action (e.g., "Add Exercise") for empty collections, and a recovery action (e.g., "Clear Filters") when active filters yield no matches, provides a clear path forward. Syncing input values with URL `searchParams` ensures the UI remains consistent with the filtered state.
 **Action:** Implement dual-path empty states and bind filter inputs to URL parameters in all searchable collection views.
+
+## 2026-06-19 - [Search Focus Shortcut]
+**Learning:** Implementing a '/' shortcut for search inputs is a common power-user pattern. Using `useRef` on the `TextField.Root` (which forwards to the input) and a global `keydown` listener with an `isInput` guard ensures a smooth transition to search without interfering with existing input fields.
+**Action:** Use '/' as a standard shortcut for focusing search inputs, providing a visual `<Kbd>` hint in a `TextField.Slot` for discovery.
