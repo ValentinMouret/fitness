@@ -1,5 +1,6 @@
 import { Tooltip } from "@radix-ui/themes";
-import { data, Link, useFetcher } from "react-router";
+import { useEffect } from "react";
+import { data, Link, useFetcher, useNavigate } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import type { Habit } from "~/modules/habits/domain/entity";
@@ -75,6 +76,13 @@ export async function action({ request }: Route.ActionArgs) {
 function isMorning(timeOfDay: string): boolean {
   if (!timeOfDay) return true;
   return parseInt(timeOfDay.split(":")[0], 10) < 12;
+}
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning.";
+  if (hour < 18) return "Good afternoon.";
+  return "Good evening.";
 }
 
 function formatDate(date: Date): string {
@@ -496,6 +504,15 @@ function TabBar({ active }: { active: "today" | "week" }) {
 }
 
 export default function HabitsPage({ loaderData }: Route.ComponentProps) {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|TEXTAREA)$/.test((e.target as HTMLElement).tagName) || (e.target as HTMLElement).isContentEditable) return;
+      if (e.key.toLowerCase() === "n") { e.preventDefault(); navigate("/habits/new"); }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
   const {
     todayHabits,
     completionMap,
@@ -511,6 +528,9 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
 
   const allMorningDone =
     morningHabits.length > 0 && morningHabits.every((h) => completionMap[h.id]);
+
+  const allDone =
+    todayHabits.length > 0 && todayHabits.every((h) => completionMap[h.id]);
 
   const totalScheduled = todayHabits.length;
   const progress =
@@ -561,6 +581,7 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
               {formatDate(new Date())}
             </div>
             <div
+              key={allDone ? "ad" : allMorningDone ? "md" : "gr"}
               className="heading-in"
               style={{
                 fontSize: 28,
@@ -568,11 +589,13 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
                 fontWeight: 600,
               }}
             >
-              {allMorningDone
-                ? "Morning done. You showed up."
-                : "Good morning."}
+              {allDone
+                ? "All habits completed. Great work."
+                : allMorningDone
+                  ? "Morning done. You showed up."
+                  : getGreeting()}
             </div>
-            {allMorningDone && firstUncompleteEvening && (
+            {allMorningDone && !allDone && firstUncompleteEvening && (
               <div
                 className="sub-in"
                 style={{ fontSize: 13, color: "#a8a29e", marginTop: 5 }}
@@ -582,10 +605,10 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
               </div>
             )}
           </div>
-          <Tooltip content="Add new habit">
+          <Tooltip content="Add new habit (N)">
             <Link
               to="/habits/new"
-              aria-label="Add new habit"
+              aria-label="Add new habit (N)"
               style={{
                 display: "flex",
                 alignItems: "center",
