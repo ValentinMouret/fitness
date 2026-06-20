@@ -507,8 +507,18 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|TEXTAREA)$/.test((e.target as HTMLElement).tagName) || (e.target as HTMLElement).isContentEditable) return;
-      if (e.key.toLowerCase() === "n") { e.preventDefault(); navigate("/habits/new"); }
+      if (
+        e.ctrlKey ||
+        e.metaKey ||
+        e.altKey ||
+        /^(INPUT|TEXTAREA)$/.test((e.target as HTMLElement).tagName) ||
+        (e.target as HTMLElement).isContentEditable
+      )
+        return;
+      if (e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        navigate("/habits/new");
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
