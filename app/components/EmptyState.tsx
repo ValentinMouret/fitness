@@ -29,7 +29,15 @@ export function EmptyState({
       py="9"
       className="empty-state animate-fade-slide-up"
     >
-      <div className="empty-state__icon">{icon}</div>
+      <div className="empty-state__icon">
+        {typeof icon === "string" ? (
+          <span role="img" aria-hidden="true">
+            {icon}
+          </span>
+        ) : (
+          icon
+        )}
+      </div>
 
       <Flex direction="column" align="center" gap="2">
         <Heading size="4" className="empty-state__title">
