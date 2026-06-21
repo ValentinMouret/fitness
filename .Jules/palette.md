@@ -95,3 +95,7 @@
 ## 2026-06-15 - [Context-Aware Empty States & Filter Persistence]
 **Learning:** For search and filtering interfaces, distinguishing between "no data" and "no results" empty states improves clarity. Using the `EmptyState` component with a primary action (e.g., "Add Exercise") for empty collections, and a recovery action (e.g., "Clear Filters") when active filters yield no matches, provides a clear path forward. Syncing input values with URL `searchParams` ensures the UI remains consistent with the filtered state.
 **Action:** Implement dual-path empty states and bind filter inputs to URL parameters in all searchable collection views.
+
+## 2025-06-18 - [Dialog Keyboard Navigation & Discovery]
+**Learning:** When interactive elements use `all: unset` for custom styling (common in list-based dialogs like 'Start Workout'), they lose default browser focus rings, making them invisible to keyboard users. Adding programmatic shortcuts (e.g., 'F' for 'Fresh', '1-9' for templates) and visual `<Kbd>` hints significantly accelerates the interaction for power users while ensuring the dialog remains accessible.
+**Action:** Always verify `:focus-visible` states when using `all: unset` and consider 'accelerator' keys (F, 1-9) for high-frequency dialog selections.
