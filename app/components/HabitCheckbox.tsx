@@ -1,6 +1,7 @@
 import { CheckIcon } from "@radix-ui/react-icons";
 import { Button, Flex, Text, Tooltip } from "@radix-ui/themes";
 import { useFetcher } from "react-router";
+import { SuccessPulse } from "~/components/Celebration";
 import "./HabitCheckbox.css";
 
 interface HabitCheckboxProps {
@@ -39,54 +40,56 @@ export default function HabitCheckbox({
 
   return (
     <fetcher.Form method="post">
-      <Flex align="center" gap="3" py="3" className="habit-checkbox__row">
-        <input type="hidden" name="intent" value={intent} />
-        <input type="hidden" name="habitId" value={habitId} />
-        <input type="hidden" name="completed" value={String(isCompleted)} />
+      <SuccessPulse trigger={isSubmitting}>
+        <Flex align="center" gap="3" py="3" className="habit-checkbox__row">
+          <input type="hidden" name="intent" value={intent} />
+          <input type="hidden" name="habitId" value={habitId} />
+          <input type="hidden" name="completed" value={String(isCompleted)} />
 
-        <Tooltip content={label}>
-          <Button
-            type="submit"
-            variant={displayCompleted ? "solid" : "outline"}
-            color={displayCompleted ? "tomato" : "gray"}
-            size="2"
-            className="habit-checkbox__button"
-            loading={isSubmitting}
-            aria-label={label}
-          >
-            {displayCompleted && !isSubmitting && (
-              <CheckIcon className="habit-checkbox__icon--pop" />
-            )}
-          </Button>
-        </Tooltip>
-
-        <Flex direction="column" flexGrow="1">
-          <Text
-            size="3"
-            weight="medium"
-            className={`habit-checkbox__label ${displayCompleted ? "habit-checkbox__label--completed" : ""}`}
-          >
-            {habitName}
-          </Text>
-          {identityPhrase && (
-            <Text
-              size="1"
-              className={`habit-checkbox__description ${displayCompleted ? "habit-checkbox__description--completed" : ""}`}
+          <Tooltip content={label}>
+            <Button
+              type="submit"
+              variant={displayCompleted ? "solid" : "outline"}
+              color={displayCompleted ? "tomato" : "gray"}
+              size="2"
+              className="habit-checkbox__button"
+              loading={isSubmitting}
+              aria-label={label}
             >
-              {identityPhrase}
+              {displayCompleted && !isSubmitting && (
+                <CheckIcon className="habit-checkbox__icon--pop" />
+              )}
+            </Button>
+          </Tooltip>
+
+          <Flex direction="column" flexGrow="1">
+            <Text
+              size="3"
+              weight="medium"
+              className={`habit-checkbox__label ${displayCompleted ? "habit-checkbox__label--completed" : ""}`}
+            >
+              {habitName}
+            </Text>
+            {identityPhrase && (
+              <Text
+                size="1"
+                className={`habit-checkbox__description ${displayCompleted ? "habit-checkbox__description--completed" : ""}`}
+              >
+                {identityPhrase}
+              </Text>
+            )}
+          </Flex>
+
+          {streak > 0 && (
+            <Text size="2" className="habit-checkbox__streak">
+              <span role="img" aria-label="streak">
+                🔥
+              </span>{" "}
+              {streak}
             </Text>
           )}
         </Flex>
-
-        {streak > 0 && (
-          <Text size="2" className="habit-checkbox__streak">
-            <span role="img" aria-label="streak">
-              🔥
-            </span>{" "}
-            {streak}
-          </Text>
-        )}
-      </Flex>
+      </SuccessPulse>
     </fetcher.Form>
   );
 }
