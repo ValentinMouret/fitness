@@ -276,68 +276,66 @@ export default function DashboardPage({
 
       {/* Habits */}
       {habitsTotal > 0 && (
-        <SuccessPulse trigger={optimisticHabitToggles.length > 0}>
-          <Box className="dashboard__card dashboard__card--habits">
-            <Celebration
-              trigger={celebrate}
-              onComplete={() => setCelebrate(false)}
-            />
-            <Flex className="dashboard__habits-header">
-              <Flex align="center" gap="2">
-                <p className="section-label" style={{ marginBottom: 0 }}>
-                  Habits
-                </p>
-                {optimisticCompletedCount === habitsTotal && (
-                  <Text
-                    size="1"
-                    color="green"
-                    weight="bold"
-                    className="animate-fade-in"
-                    role="status"
-                    aria-live="polite"
-                  >
-                    All Done! ✨
-                  </Text>
-                )}
-              </Flex>
-              <span className="dashboard__habits-fraction">
-                {optimisticCompletedCount}
-                <span className="dashboard__habits-fraction-total">
-                  /{habitsTotal}
-                </span>
-              </span>
+        <Box className="dashboard__card dashboard__card--habits">
+          <Celebration
+            trigger={celebrate}
+            onComplete={() => setCelebrate(false)}
+          />
+          <Flex className="dashboard__habits-header">
+            <Flex align="center" gap="2">
+              <p className="section-label" style={{ marginBottom: 0 }}>
+                Habits
+              </p>
+              {optimisticCompletedCount === habitsTotal && (
+                <Text
+                  size="1"
+                  color="green"
+                  weight="bold"
+                  className="animate-fade-in"
+                  role="status"
+                  aria-live="polite"
+                >
+                  All Done! ✨
+                </Text>
+              )}
             </Flex>
+            <span className="dashboard__habits-fraction">
+              {optimisticCompletedCount}
+              <span className="dashboard__habits-fraction-total">
+                /{habitsTotal}
+              </span>
+            </span>
+          </Flex>
 
+          <Box
+            className="dashboard__habits-progress"
+            role="progressbar"
+            aria-valuenow={Math.round(habitsPct)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Habits completion progress"
+          >
             <Box
-              className="dashboard__habits-progress"
-              role="progressbar"
-              aria-valuenow={Math.round(habitsPct)}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label="Habits completion progress"
-            >
-              <Box
-                className="dashboard__habits-progress-fill"
-                style={{ width: `${habitsPct}%` }}
-              />
-            </Box>
-
-            <Box>
-              {todayHabits.map((habit, i) => (
-                <Box key={habit.id}>
-                  {i > 0 && <hr className="rule-divider" />}
-                  <HabitCheckbox
-                    habitId={habit.id}
-                    habitName={habit.name}
-                    identityPhrase={habit.identityPhrase}
-                    isCompleted={completionMap.get(habit.id) ?? false}
-                    streak={habitStreaks.get(habit.id) ?? 0}
-                  />
-                </Box>
-              ))}
-            </Box>
+              className="dashboard__habits-progress-fill"
+              style={{ width: `${habitsPct}%` }}
+            />
           </Box>
-        </SuccessPulse>
+
+          <Box>
+            {todayHabits.map((habit, i) => (
+              <Box key={habit.id}>
+                {i > 0 && <hr className="rule-divider" />}
+                <HabitCheckbox
+                  habitId={habit.id}
+                  habitName={habit.name}
+                  identityPhrase={habit.identityPhrase}
+                  isCompleted={completionMap.get(habit.id) ?? false}
+                  streak={habitStreaks.get(habit.id) ?? 0}
+                />
+              </Box>
+            ))}
+          </Box>
+        </Box>
       )}
 
       {/* Weight trend */}
