@@ -17,6 +17,11 @@
   background: var(--gray-3);
 }
 
+.start-workout-dialog__option:focus-visible {
+  outline: 2px solid var(--brand-coral);
+  outline-offset: -2px;
+}
+
 .start-workout-dialog__option--disabled {
   cursor: default;
 }

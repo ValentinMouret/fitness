@@ -1,5 +1,14 @@
-import { Box, Button, Dialog, Flex, ScrollArea, Text } from "@radix-ui/themes";
-import { Form, useNavigation } from "react-router";
+import {
+  Box,
+  Button,
+  Dialog,
+  Flex,
+  Kbd,
+  ScrollArea,
+  Text,
+} from "@radix-ui/themes";
+import { useEffect } from "react";
+import { Form, useNavigation, useSubmit } from "react-router";
 import type { WorkoutTemplateCardViewModel } from "../../view-models/workout-template-card.view-model";
 import "./StartWorkoutDialog.css";
 
@@ -16,6 +25,28 @@ export function StartWorkoutDialog({
 }: StartWorkoutDialogProps) {
   const navigation = useNavigation();
   const isBusy = navigation.state !== "idle";
+  const submit = useSubmit();
+
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || isBusy) return;
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      )
+        return;
+
+      if (e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        submit(null, { method: "post", action: "/workouts/create" });
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, isBusy, submit]);
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -28,14 +59,22 @@ export function StartWorkoutDialog({
           <button
             type="submit"
             disabled={isBusy}
+            aria-label="Start Fresh (F)"
             className={`start-workout-dialog__option ${isBusy ? "start-workout-dialog__option--disabled" : ""}`}
           >
-            <Text size="3" weight="medium" as="p">
-              Start Fresh
-            </Text>
-            <Text size="2" color="gray" as="p" mt="1">
-              Begin with an empty workout
-            </Text>
+            <Flex justify="between" align="center">
+              <Box>
+                <Text size="3" weight="medium" as="p">
+                  Start Fresh
+                </Text>
+                <Text size="2" color="gray" as="p" mt="1">
+                  Begin with an empty workout
+                </Text>
+              </Box>
+              <Box display={{ initial: "none", md: "block" }}>
+                <Kbd size="1">F</Kbd>
+              </Box>
+            </Flex>
           </button>
         </Form>
 
