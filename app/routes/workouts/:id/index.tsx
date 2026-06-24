@@ -15,10 +15,12 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { ArrowLeftIcon, DotsVerticalIcon } from "@radix-ui/react-icons";
 import {
+  Box,
   Button,
   DropdownMenu,
   Flex,
   IconButton,
+  Kbd,
   Text,
   TextField,
   Tooltip,
@@ -346,6 +348,29 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   exerciseGroupsRef.current = workoutSession.exerciseGroups;
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (isInput) return;
+
+      if (e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        setReplaceExerciseId(undefined);
+        setShowExerciseSelector(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState !== "visible") return;
       const groups = exerciseGroupsRef.current;
@@ -563,7 +588,15 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
           </div>
 
           <div className="active-workout-progress">
-            <div className="active-workout-progress__bar">
+            <div
+              className="active-workout-progress__bar"
+              role="progressbar"
+              aria-valuenow={Math.round(progressPercent)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Workout progress"
+              aria-valuetext={`${completedSets} of ${totalSets} sets completed`}
+            >
               <div
                 className="active-workout-progress__fill"
                 style={{ width: `${progressPercent}%` }}
@@ -673,8 +706,12 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
               }}
               size="2"
               variant="soft"
+              aria-keyshortcuts="n"
             >
               Add Exercise
+              <Box ml="2" display={{ initial: "none", md: "inline-block" }}>
+                <Kbd size="1">N</Kbd>
+              </Box>
             </Button>
           </div>
         )}

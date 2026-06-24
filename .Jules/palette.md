@@ -99,3 +99,11 @@
 ## 2025-06-18 - [Dialog Keyboard Navigation & Discovery]
 **Learning:** When interactive elements use `all: unset` for custom styling (common in list-based dialogs like 'Start Workout'), they lose default browser focus rings, making them invisible to keyboard users. Adding programmatic shortcuts (e.g., 'F' for 'Fresh', '1-9' for templates) and visual `<Kbd>` hints significantly accelerates the interaction for power users while ensuring the dialog remains accessible.
 **Action:** Always verify `:focus-visible` states when using `all: unset` and consider 'accelerator' keys (F, 1-9) for high-frequency dialog selections.
+
+## 2024-06-20 - [Contextual Accessibility for Workout Progress]
+**Learning:** Generic progress percentages (e.g., "30%") lack context in a workout setting. Using `aria-valuetext` to provide a human-readable summary (e.g., "3 of 10 sets completed") significantly improves the experience for screen reader users by providing absolute progress context alongside relative percentage.
+**Action:** Use `aria-valuetext` on progress bars to provide domain-specific context (e.g., set counts, task completion) that complements the numerical percentage.
+
+## 2024-06-20 - [Standardizing 'Add' Shortcuts]
+**Learning:** Users naturally look for a way to add new items in active sessions. Standardizing the 'n' shortcut for "Add Exercise" in workout sessions (matching the pattern in the Exercise index and Daily Notes) creates a consistent and predictable "power user" language across the application. Discovery is ensured by adding `aria-keyshortcuts` and visual `<Kbd>` hints.
+**Action:** Use 'n' as the standard shortcut for "New" or "Add" primary actions within a context, and always provide both visual and ARIA-based hints.
