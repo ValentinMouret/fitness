@@ -203,7 +203,8 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
             variant="outline"
             size="2"
             onClick={handleAIFeedback}
-            disabled={aiFetcher.state === "submitting" || workouts.length < 5}
+            loading={aiFetcher.state === "submitting"}
+            disabled={workouts.length < 5}
           >
             AI Feedback
           </Button>
