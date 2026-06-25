@@ -88,6 +88,10 @@
 **Learning:** For detail pages centered around a single value input (like specific measurement tracking), adding an 'm' shortcut to focus the input field significantly streamlines data entry. This pattern is most effective when reinforced by a visual <Kbd> hint in the SectionHeader and an aria-keyshortcuts attribute on the input.
 **Action:** Use 'm' as a standard shortcut for focusing primary measurement value inputs across detail pages.
 
+## 2025-06-15 - [Modal Focus Management & Async Feedback]
+**Learning:** In conversational or result-focused modals (e.g., AI feedback), users often want to immediately act on or dismiss the result. Shifting focus to the "Close" or "Accept" button once the async result is generated (using `useRef` and `useEffect`) optimizes the keyboard flow. Additionally, using `role="status"` and `aria-live="polite"` on loading states ensures screen reader users are kept informed of the background process.
+**Action:** Implement automatic focus transitions in modals upon async completion and always wrap loading states in ARIA live regions.
+
 ## 2026-06-13 - [Precise Multi-Fetcher Feedback]
 **Learning:** In pages with multiple concurrent actions (like the Nutrition dashboard), relying on a single `fetcher` hook leads to race conditions and incorrect UI states if the user triggers another action before the first one finishes. Using `useFetchers()` to monitor the entire fetcher pool allows for precise, item-specific feedback even during rapid interactions.
 **Action:** Use `useFetchers()` to derive item-specific loading and success states in list views where multiple background actions are supported.
