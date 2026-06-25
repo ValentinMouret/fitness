@@ -19,6 +19,7 @@ import {
   Text,
   Tooltip,
 } from "@radix-ui/themes";
+import { useEffect, useRef } from "react";
 import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
 import "./AIFeedbackModal.css";
 
@@ -37,6 +38,15 @@ export function AIFeedbackModal({
   loading,
   error,
 }: AIFeedbackModalProps) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Focus close button once feedback or error is loaded
+  useEffect(() => {
+    if ((feedback || error) && !loading) {
+      closeButtonRef.current?.focus();
+    }
+  }, [feedback, error, loading]);
+
   if (!feedback && !loading && !error) return null;
 
   return (
@@ -44,15 +54,26 @@ export function AIFeedbackModal({
       <Dialog.Content maxWidth="800px" className="ai-feedback-modal">
         <Flex justify="between" align="center" mb="4">
           <Heading size="6">🤖 AI Fitness Coach Feedback</Heading>
-          <Tooltip content="Close">
-            <IconButton variant="ghost" onClick={onClose} aria-label="Close">
+          <Tooltip content="Close (Esc)">
+            <IconButton
+              variant="ghost"
+              onClick={onClose}
+              aria-label="Close (Esc)"
+            >
               <Cross2Icon />
             </IconButton>
           </Tooltip>
         </Flex>
 
         {loading && (
-          <Flex direction="column" gap="4" align="center" py="8">
+          <Flex
+            direction="column"
+            gap="4"
+            align="center"
+            py="8"
+            role="status"
+            aria-live="polite"
+          >
             <Spinner size="2" />
             <Text>Analyzing your workout data...</Text>
           </Flex>
@@ -65,7 +86,7 @@ export function AIFeedbackModal({
                 Analysis Failed
               </Text>
               <Text color="gray">{error}</Text>
-              <Button variant="soft" onClick={onClose}>
+              <Button ref={closeButtonRef} variant="soft" onClick={onClose}>
                 Close
               </Button>
             </Flex>
@@ -211,7 +232,9 @@ export function AIFeedbackModal({
                 Analysis based on your training data • {feedback.tokensUsed}{" "}
                 tokens used
               </Text>
-              <Button onClick={onClose}>Close</Button>
+              <Button ref={closeButtonRef} onClick={onClose}>
+                Close
+              </Button>
             </Flex>
           </Flex>
         )}
