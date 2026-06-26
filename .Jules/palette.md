@@ -107,3 +107,7 @@
 ## 2024-06-20 - [Standardizing 'Add' Shortcuts]
 **Learning:** Users naturally look for a way to add new items in active sessions. Standardizing the 'n' shortcut for "Add Exercise" in workout sessions (matching the pattern in the Exercise index and Daily Notes) creates a consistent and predictable "power user" language across the application. Discovery is ensured by adding `aria-keyshortcuts` and visual `<Kbd>` hints.
 **Action:** Use 'n' as the standard shortcut for "New" or "Add" primary actions within a context, and always provide both visual and ARIA-based hints.
+
+## 2025-06-21 - [Tooltip Visibility for Disabled Elements]
+**Learning:** In Radix UI Themes, `Tooltip` triggers often fail when they wrap a `disabled` element (like a `Button`) because the element doesn't fire the necessary mouse events. Wrapping the disabled element in a `Box` with `display="inline-block"` provides a non-disabled surface that correctly triggers the tooltip.
+**Action:** Always wrap disabled interactive elements in a `Box` when they are inside a `Tooltip`.

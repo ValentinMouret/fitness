@@ -1,4 +1,4 @@
-import { Button, Flex, Text, Tooltip } from "@radix-ui/themes";
+import { Box, Button, Flex, Text, Tooltip } from "@radix-ui/themes";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect } from "react";
 
@@ -49,17 +49,19 @@ export function Pagination({
     <nav aria-label="Pagination">
       <Flex justify="center" align="center" gap="3" py="4">
         <Tooltip content="Previous page (Left Arrow)">
-          <Button
-            variant="outline"
-            disabled={!hasPrevious}
-            onClick={() => onPageChange(currentPage - 1)}
-            size="2"
-            aria-label="Go to previous page (Left Arrow)"
-            aria-keyshortcuts="ArrowLeft"
-          >
-            <ChevronLeft size={16} aria-hidden="true" />
-            Previous
-          </Button>
+          <Box display="inline-block">
+            <Button
+              variant="outline"
+              disabled={!hasPrevious}
+              onClick={() => onPageChange(currentPage - 1)}
+              size="2"
+              aria-label="Go to previous page (Left Arrow)"
+              aria-keyshortcuts="ArrowLeft"
+            >
+              <ChevronLeft size={16} aria-hidden="true" />
+              Previous
+            </Button>
+          </Box>
         </Tooltip>
 
         <Flex align="center" gap="2">
@@ -69,17 +71,19 @@ export function Pagination({
         </Flex>
 
         <Tooltip content="Next page (Right Arrow)">
-          <Button
-            variant="outline"
-            disabled={!hasNext}
-            onClick={() => onPageChange(currentPage + 1)}
-            size="2"
-            aria-label="Go to next page (Right Arrow)"
-            aria-keyshortcuts="ArrowRight"
-          >
-            Next
-            <ChevronRight size={16} aria-hidden="true" />
-          </Button>
+          <Box display="inline-block">
+            <Button
+              variant="outline"
+              disabled={!hasNext}
+              onClick={() => onPageChange(currentPage + 1)}
+              size="2"
+              aria-label="Go to next page (Right Arrow)"
+              aria-keyshortcuts="ArrowRight"
+            >
+              Next
+              <ChevronRight size={16} aria-hidden="true" />
+            </Button>
+          </Box>
         </Tooltip>
       </Flex>
     </nav>
