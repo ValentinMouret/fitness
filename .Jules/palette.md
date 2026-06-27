@@ -107,3 +107,7 @@
 ## 2024-06-20 - [Standardizing 'Add' Shortcuts]
 **Learning:** Users naturally look for a way to add new items in active sessions. Standardizing the 'n' shortcut for "Add Exercise" in workout sessions (matching the pattern in the Exercise index and Daily Notes) creates a consistent and predictable "power user" language across the application. Discovery is ensured by adding `aria-keyshortcuts` and visual `<Kbd>` hints.
 **Action:** Use 'n' as the standard shortcut for "New" or "Add" primary actions within a context, and always provide both visual and ARIA-based hints.
+
+## 2026-06-27 - [Optimizing Modal Form Interaction]
+**Learning:** For modal-based forms like "Save as Template", using Radix UI's `onOpenAutoFocus` prop is more robust than `useEffect` with `setTimeout` for focusing the primary input. Combining this with `Cmd/Ctrl+Enter` shortcuts and a visible `<Kbd>` hint significantly accelerates the interaction loop for power users.
+**Action:** Prefer Radix focus management props over manual `useEffect` hooks in dialogs, and always provide both technical (`aria-keyshortcuts`) and visual (`<Kbd>`) cues for keyboard accelerators.
