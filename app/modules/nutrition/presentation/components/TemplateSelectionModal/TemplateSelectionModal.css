@@ -4,15 +4,22 @@
 }
 
 .template-selection-modal__button {
+  appearance: none;
   flex: 1;
   min-width: 0;
   cursor: pointer;
   text-align: left;
-  background: none;
+  background: transparent;
   border: none;
   padding: 0;
   font: inherit;
   color: inherit;
+  border-radius: var(--radius-2);
+}
+
+.template-selection-modal__button:focus-visible {
+  outline: 2px solid var(--brand-coral);
+  outline-offset: 4px;
 }
 
 .template-selection-modal__notes {

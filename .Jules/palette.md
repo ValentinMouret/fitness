@@ -107,3 +107,11 @@
 ## 2024-06-20 - [Standardizing 'Add' Shortcuts]
 **Learning:** Users naturally look for a way to add new items in active sessions. Standardizing the 'n' shortcut for "Add Exercise" in workout sessions (matching the pattern in the Exercise index and Daily Notes) creates a consistent and predictable "power user" language across the application. Discovery is ensured by adding `aria-keyshortcuts` and visual `<Kbd>` hints.
 **Action:** Use 'n' as the standard shortcut for "New" or "Add" primary actions within a context, and always provide both visual and ARIA-based hints.
+
+## 2024-06-21 - [Modal Efficiency & Accessibility Guards]
+**Learning:** For selection modals (e.g., TemplateSelectionModal), implementing '1'-'9' keys for quick selection significantly accelerates the workflow. To ensure this doesn't interfere with user input, the listener must include a guard for input, textarea, and contentEditable elements. From an accessibility standpoint, avoid using `aria-label` on the parent button if it wraps meaningful text (like names and metrics), as this silences the children for screen readers.
+**Action:** Implement '1'-'9' shortcuts for selection lists with input guards, and rely on natural text content for accessibility labels in complex list items.
+
+## 2024-06-21 - [Polished Scrolling & CSS Resets]
+**Learning:** Native CSS `overflow` in dialogs can feel unpolished. Using Radix `ScrollArea` provides a more consistent, themed scrolling experience. When styling custom interactive elements, prefer specific resets (e.g., `appearance: none`, `background: transparent`) over `all: unset` to avoid resetting critical layout properties like `box-sizing` and inherited font styles.
+**Action:** Use `ScrollArea` for long lists in dialogs and specific CSS resets for custom buttons to maintain layout stability.

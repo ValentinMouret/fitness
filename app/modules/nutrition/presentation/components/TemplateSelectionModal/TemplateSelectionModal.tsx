@@ -12,9 +12,12 @@ import {
   DropdownMenu,
   Flex,
   IconButton,
+  Kbd,
+  ScrollArea,
   Text,
   Tooltip,
 } from "@radix-ui/themes";
+import { useEffect } from "react";
 import type { TemplateSelectionViewModel } from "../../view-models/template-selection.view-model";
 import "./TemplateSelectionModal.css";
 
@@ -35,6 +38,35 @@ export function TemplateSelectionModal({
   onCopyLink,
   onToggleShare,
 }: TemplateSelectionModalProps) {
+  useEffect(() => {
+    if (!isOpen || !viewModel) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (isInput) return;
+
+      const key = e.key;
+      if (key >= "1" && key <= "9") {
+        const index = Number.parseInt(key, 10) - 1;
+        const template = viewModel.templates[index];
+        if (template) {
+          e.preventDefault();
+          onApply(template.id);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, viewModel, onApply]);
+
   if (!viewModel) return null;
 
   return (
@@ -45,9 +77,11 @@ export function TemplateSelectionModal({
             Choose Template for {viewModel.mealDisplayName}
           </Dialog.Title>
           <Dialog.Close>
-            <IconButton variant="ghost" aria-label="Close">
-              <Cross2Icon />
-            </IconButton>
+            <Tooltip content="Close (Esc)">
+              <IconButton variant="ghost" aria-label="Close (Esc)">
+                <Cross2Icon />
+              </IconButton>
+            </Tooltip>
           </Dialog.Close>
         </Flex>
 
@@ -63,15 +97,18 @@ export function TemplateSelectionModal({
               </Text>
             </Box>
           ) : (
-            <Box className="template-selection-modal__list">
-              <Flex direction="column" gap="2">
-                {viewModel.templates.map((template) => (
+            <ScrollArea className="template-selection-modal__list">
+              <Flex direction="column" gap="2" p="1">
+                {viewModel.templates.map((template, index) => (
                   <Card key={template.id} size="1">
                     <Flex align="start" gap="2">
                       <button
                         type="button"
                         onClick={() => onApply(template.id)}
                         className="template-selection-modal__button"
+                        aria-keyshortcuts={
+                          index < 9 ? String(index + 1) : undefined
+                        }
                       >
                         <Flex justify="between" align="center" mb="2" gap="2">
                           <Flex align="center" gap="2">
@@ -84,9 +121,16 @@ export function TemplateSelectionModal({
                               </Badge>
                             )}
                           </Flex>
-                          <Text size="1" color="gray">
-                            Used {template.usageCount} times
-                          </Text>
+                          <Flex align="center" gap="2">
+                            <Text size="1" color="gray">
+                              Used {template.usageCount} times
+                            </Text>
+                            {index < 9 && (
+                              <Box display={{ initial: "none", md: "block" }}>
+                                <Kbd size="1">{index + 1}</Kbd>
+                              </Box>
+                            )}
+                          </Flex>
                         </Flex>
 
                         <Text size="2" color="gray">
@@ -151,7 +195,7 @@ export function TemplateSelectionModal({
                   </Card>
                 ))}
               </Flex>
-            </Box>
+            </ScrollArea>
           )}
         </Flex>
       </Dialog.Content>
