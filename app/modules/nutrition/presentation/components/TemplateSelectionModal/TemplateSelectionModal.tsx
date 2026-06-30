@@ -132,7 +132,10 @@ export function TemplateSelectionModal({
                             </Text>
                             {index < 9 && (
                               <Box
-                                display={{ initial: "none", md: "inline-block" }}
+                                display={{
+                                  initial: "none",
+                                  md: "inline-block",
+                                }}
                               >
                                 <Kbd size="1">{index + 1}</Kbd>
                               </Box>
