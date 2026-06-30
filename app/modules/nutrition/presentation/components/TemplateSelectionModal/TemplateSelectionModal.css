@@ -1,18 +1,26 @@
 .template-selection-modal__list {
-  height: 400px;
-  overflow: auto;
+  max-height: 400px;
 }
 
 .template-selection-modal__button {
+  all: unset;
+  display: block;
   flex: 1;
   min-width: 0;
   cursor: pointer;
-  text-align: left;
-  background: none;
-  border: none;
-  padding: 0;
-  font: inherit;
-  color: inherit;
+  padding: var(--space-2);
+  border-radius: var(--radius-2);
+  transition: background 0.15s;
+}
+
+.template-selection-modal__button:hover:not(:disabled) {
+  background: var(--gray-3);
+}
+
+.template-selection-modal__button:focus-visible {
+  background: var(--gray-3);
+  outline: 2px solid var(--brand-coral);
+  outline-offset: -1px;
 }
 
 .template-selection-modal__notes {
