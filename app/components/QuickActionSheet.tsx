@@ -12,6 +12,7 @@ import {
   Heading,
   IconButton,
   Kbd,
+  ScrollArea,
   Spinner,
   Text,
   TextField,
@@ -43,7 +44,15 @@ interface QuickActionSheetProps {
   readonly onOpenChange: (open: boolean) => void;
 }
 
-function QuickActionHabitItem({ habit }: { readonly habit: Habit }) {
+function QuickActionHabitItem({
+  habit,
+  index,
+  onToggleReady,
+}: {
+  readonly habit: Habit;
+  readonly index: number;
+  readonly onToggleReady: (index: number, toggle: () => void) => void;
+}) {
   const fetcher = useFetcher();
 
   const isOptimisticCompleted =
@@ -53,7 +62,8 @@ function QuickActionHabitItem({ habit }: { readonly habit: Habit }) {
 
   const isToggling = fetcher.state !== "idle";
 
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
+    if (isToggling) return;
     fetcher.submit(
       {
         intent: "toggle-habit",
@@ -62,7 +72,14 @@ function QuickActionHabitItem({ habit }: { readonly habit: Habit }) {
       },
       { method: "post", action: "/dashboard" },
     );
-  };
+  }, [fetcher, habit.id, isOptimisticCompleted, isToggling]);
+
+  useEffect(() => {
+    onToggleReady(index, handleToggle);
+    return () => onToggleReady(index, () => {});
+  }, [index, handleToggle, onToggleReady]);
+
+  const shortcutHint = index < 9 ? String(index + 1) : undefined;
 
   const ariaLabel = [
     isOptimisticCompleted ? "Unmark" : "Mark",
@@ -70,6 +87,7 @@ function QuickActionHabitItem({ habit }: { readonly habit: Habit }) {
     habit.identityPhrase ? `('${habit.identityPhrase}')` : "",
     "as completed",
     habit.streak > 0 ? `(${habit.streak} day streak)` : "",
+    shortcutHint ? `(${shortcutHint})` : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -83,6 +101,7 @@ function QuickActionHabitItem({ habit }: { readonly habit: Habit }) {
         loading={isToggling}
         className="quick-action-sheet__habit-button"
         aria-label={ariaLabel}
+        aria-keyshortcuts={shortcutHint}
       >
         <Flex
           align="center"
@@ -128,6 +147,11 @@ function QuickActionHabitItem({ habit }: { readonly habit: Habit }) {
               {habit.streak}
             </Text>
           )}
+          {shortcutHint && (
+            <Box ml="2" display={{ initial: "none", md: "inline-block" }}>
+              <Kbd size="1">{shortcutHint}</Kbd>
+            </Box>
+          )}
         </Flex>
       </Button>
     </SuccessPulse>
@@ -142,8 +166,13 @@ export function QuickActionSheet({
   const dataFetcher = useFetcher<QuickActionsData>();
   const weightFetcher = useFetcher();
   const weightInputRef = useRef<HTMLInputElement>(null);
+  const habitToggles = useRef<(() => void)[]>([]);
   const [weightValue, setWeightValue] = useState("");
   const [hasPrefilled, setHasPrefilled] = useState(false);
+
+  const handleToggleReady = useCallback((index: number, toggle: () => void) => {
+    habitToggles.current[index] = toggle;
+  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -216,6 +245,13 @@ export function QuickActionSheet({
       } else if (key === "w" && weightInputRef.current) {
         e.preventDefault();
         weightInputRef.current.focus();
+      } else if (key >= "1" && key <= "9") {
+        const index = Number.parseInt(key, 10) - 1;
+        const toggle = habitToggles.current[index];
+        if (toggle) {
+          e.preventDefault();
+          toggle();
+        }
       }
     };
 
@@ -231,8 +267,8 @@ export function QuickActionSheet({
             <Heading size="5">Quick Actions</Heading>
           </Dialog.Title>
           <Dialog.Close>
-            <Tooltip content="Close">
-              <IconButton variant="ghost" size="2" aria-label="Close">
+            <Tooltip content="Close (Esc)">
+              <IconButton variant="ghost" size="2" aria-label="Close (Esc)">
                 <Cross2Icon />
               </IconButton>
             </Tooltip>
@@ -250,11 +286,22 @@ export function QuickActionSheet({
                 <Text size="2" color="gray" mb="2" weight="medium">
                   Today's Habits
                 </Text>
-                <Flex direction="column" gap="2">
-                  {data.habits.map((habit) => (
-                    <QuickActionHabitItem key={habit.id} habit={habit} />
-                  ))}
-                </Flex>
+                <ScrollArea
+                  type="auto"
+                  scrollbars="vertical"
+                  className="quick-action-sheet__habits-scroll"
+                >
+                  <Flex direction="column" gap="2" pr="3">
+                    {data.habits.map((habit, index) => (
+                      <QuickActionHabitItem
+                        key={habit.id}
+                        habit={habit}
+                        index={index}
+                        onToggleReady={handleToggleReady}
+                      />
+                    ))}
+                  </Flex>
+                </ScrollArea>
               </Box>
             )}
 
@@ -302,16 +349,18 @@ export function QuickActionSheet({
                           )}
                         </NumberInput>
                       </Box>
-                      <Button
-                        type="submit"
-                        loading={weightFetcher.state !== "idle"}
-                        disabled={
-                          !weightValue && weightFetcher.state === "idle"
-                        }
-                        aria-label="Log weight"
-                      >
-                        Log
-                      </Button>
+                      <Tooltip content="Log weight (Enter)">
+                        <Button
+                          type="submit"
+                          loading={weightFetcher.state !== "idle"}
+                          disabled={
+                            !weightValue && weightFetcher.state === "idle"
+                          }
+                          aria-label="Log weight (Enter)"
+                        >
+                          Log
+                        </Button>
+                      </Tooltip>
                     </Flex>
                   </weightFetcher.Form>
                 </Box>
