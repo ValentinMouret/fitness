@@ -56,3 +56,8 @@
 .quick-action-sheet__habit-streak {
   margin-left: auto;
 }
+
+.quick-action-sheet__habits-scroll {
+  max-height: 240px;
+  margin-right: -12px;
+}
