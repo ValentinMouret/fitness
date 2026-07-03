@@ -107,3 +107,7 @@
 ## 2024-06-20 - [Standardizing 'Add' Shortcuts]
 **Learning:** Users naturally look for a way to add new items in active sessions. Standardizing the 'n' shortcut for "Add Exercise" in workout sessions (matching the pattern in the Exercise index and Daily Notes) creates a consistent and predictable "power user" language across the application. Discovery is ensured by adding `aria-keyshortcuts` and visual `<Kbd>` hints.
 **Action:** Use 'n' as the standard shortcut for "New" or "Add" primary actions within a context, and always provide both visual and ARIA-based hints.
+
+## 2025-06-25 - [Polishing Entry Forms for Accessibility & Usability]
+**Learning:** Even simple forms like Login benefit significantly from standard accessibility and usability patterns. Using semantic labels with proper `htmlFor` association, providing `autoComplete` hints for password managers, and adding immediate loading feedback on the submit button creates a much more robust and professional first impression.
+**Action:** Always apply the "Entry Form Checklist": semantic labels via `useId`, `autoComplete` attributes, visual mandatory indicators (`RequiredStar`), and `useNavigation` for loading states.

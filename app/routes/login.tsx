@@ -1,3 +1,4 @@
+import { InfoCircledIcon } from "@radix-ui/react-icons";
 import {
   Button,
   Callout,
@@ -7,9 +8,11 @@ import {
   Text,
   TextField,
 } from "@radix-ui/themes";
-import { Form, useSearchParams } from "react-router";
+import { useId } from "react";
+import { Form, useNavigation, useSearchParams } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import RequiredStar from "~/components/RequiredStar";
 import { loginWithCredentials } from "~/modules/auth/application/auth.service.server";
 import { syncSessionFromCookie } from "~/modules/auth/application/session-sync";
 import { formOptionalText, formText } from "~/utils/form-data";
@@ -43,44 +46,65 @@ export async function clientLoader() {
 export default function Login({ actionData }: Route.ComponentProps) {
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+  const navigation = useNavigation();
+  const isLoggingIn = navigation.state === "submitting";
+
+  const usernameId = useId();
+  const passwordId = useId();
 
   return (
     <Flex align="center" justify="center" className="login-page">
       <Card size="4" className="login-card">
-        <Heading as="h1" size="6" align="center" mb="6">
+        <Heading as="h1" size="6" align="center" mb="1">
           Login
         </Heading>
+        <Text as="p" size="2" color="gray" align="center" mb="6">
+          Welcome back! Please enter your details.
+        </Text>
+
         <Form method="post">
           <input type="hidden" name="redirectTo" value={redirectTo} />
 
-          <Text as="div" size="2" weight="medium" mb="2">
-            Username
+          <Text as="label" htmlFor={usernameId} size="2" weight="medium" mb="2">
+            Username <RequiredStar />
           </Text>
           <TextField.Root
+            id={usernameId}
             name="username"
+            autoComplete="username"
             required
             mb="4"
             placeholder="Enter your username"
           />
 
-          <Text as="div" size="2" weight="medium" mb="2">
-            Password
+          <Text as="label" htmlFor={passwordId} size="2" weight="medium" mb="2">
+            Password <RequiredStar />
           </Text>
           <TextField.Root
+            id={passwordId}
             name="password"
             type="password"
+            autoComplete="current-password"
             required
             mb="4"
             placeholder="Enter your password"
           />
 
           {actionData?.error && (
-            <Callout.Root color="red" mb="4">
+            <Callout.Root color="red" mb="4" variant="soft" size="1">
+              <Callout.Icon>
+                <InfoCircledIcon />
+              </Callout.Icon>
               <Callout.Text>{actionData.error}</Callout.Text>
             </Callout.Root>
           )}
 
-          <Button type="submit" size="3" className="login-submit">
+          <Button
+            type="submit"
+            size="3"
+            className="login-submit"
+            loading={isLoggingIn}
+          >
             Login
           </Button>
         </Form>
