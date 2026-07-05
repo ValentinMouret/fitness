@@ -7,10 +7,12 @@ import {
   Text,
   TextField,
 } from "@radix-ui/themes";
-import { Form, useSearchParams } from "react-router";
+import { useId } from "react";
+import { Form, useNavigation, useSearchParams } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { loginWithCredentials } from "~/modules/auth/application/auth.service.server";
+import RequiredStar from "~/components/RequiredStar";
 import { syncSessionFromCookie } from "~/modules/auth/application/session-sync";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/login";
@@ -43,6 +45,10 @@ export async function clientLoader() {
 export default function Login({ actionData }: Route.ComponentProps) {
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+  const navigation = useNavigation();
+  const isLoggingIn = navigation.state !== "idle";
+  const usernameId = useId();
+  const passwordId = useId();
 
   return (
     <Flex align="center" justify="center" className="login-page">
@@ -53,34 +59,43 @@ export default function Login({ actionData }: Route.ComponentProps) {
         <Form method="post">
           <input type="hidden" name="redirectTo" value={redirectTo} />
 
-          <Text as="div" size="2" weight="medium" mb="2">
-            Username
+          <Text as="label" htmlFor={usernameId} size="2" weight="medium" mb="2">
+            Username <RequiredStar />
           </Text>
           <TextField.Root
+            id={usernameId}
             name="username"
             required
             mb="4"
             placeholder="Enter your username"
+            autoComplete="username"
           />
 
-          <Text as="div" size="2" weight="medium" mb="2">
-            Password
+          <Text as="label" htmlFor={passwordId} size="2" weight="medium" mb="2">
+            Password <RequiredStar />
           </Text>
           <TextField.Root
+            id={passwordId}
             name="password"
             type="password"
             required
             mb="4"
             placeholder="Enter your password"
+            autoComplete="current-password"
           />
 
           {actionData?.error && (
-            <Callout.Root color="red" mb="4">
+            <Callout.Root color="red" mb="4" role="alert">
               <Callout.Text>{actionData.error}</Callout.Text>
             </Callout.Root>
           )}
 
-          <Button type="submit" size="3" className="login-submit">
+          <Button
+            type="submit"
+            size="3"
+            className="login-submit"
+            loading={isLoggingIn}
+          >
             Login
           </Button>
         </Form>
