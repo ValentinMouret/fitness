@@ -112,11 +112,11 @@
 **Learning:** Users naturally look for a way to add new items in active sessions. Standardizing the 'n' shortcut for "Add Exercise" in workout sessions (matching the pattern in the Exercise index and Daily Notes) creates a consistent and predictable "power user" language across the application. Discovery is ensured by adding `aria-keyshortcuts` and visual `<Kbd>` hints.
 **Action:** Use 'n' as the standard shortcut for "New" or "Add" primary actions within a context, and always provide both visual and ARIA-based hints.
 
-## 2024-06-25 - [Accessible & Robust Form Entry]
+## 2026-06-25 - [Accessible & Robust Form Entry]
 **Learning:** For critical entry points like login, standardizing accessibility and usability features (unique `useId` for label association, `autoComplete` hints, and `aria-hidden` on decorative required indicators) significantly improves the experience for both screen reader users and those using password managers. Providing immediate visual feedback through `loading` states on buttons via `useNavigation` makes the interface feel more responsive.
 **Action:** Apply the "Semantic Form Pattern" (useId, semantic label, autoComplete, loading button) to all primary data entry forms.
 
-## 2024-06-25 - [SPA Navigation Consistency]
+## 2026-06-25 - [SPA Navigation Consistency]
 **Learning:** Mixing standard `<a>` tags with router `<Link>` components for internal navigation causes inconsistent behavior (full page reloads vs. SPA transitions), which breaks the "smooth" feel of the app and discards ephemeral state.
 **Action:** Proactively replace `<a>` tags with `<Link>` for all internal application routes, especially for 'Cancel' and 'Back' actions.
 
