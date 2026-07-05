@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { data, redirect } from "react-router";
+import { data, Link, redirect } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import {
@@ -587,8 +587,8 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
         >
           {STEPS[step].q}
         </div>
-        <a
-          href="/habits"
+        <Link
+          to="/habits"
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -599,7 +599,7 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
           }}
         >
           ← Cancel
-        </a>
+        </Link>
       </div>
 
       <div

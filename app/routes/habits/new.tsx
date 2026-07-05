@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { data, redirect } from "react-router";
+import { data, Link, redirect } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { createHabit } from "~/modules/habits/infra/create-habit.service.server";
@@ -556,8 +556,8 @@ export default function NewHabit() {
         >
           {STEPS[step].q}
         </div>
-        <a
-          href="/habits"
+        <Link
+          to="/habits"
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -568,7 +568,7 @@ export default function NewHabit() {
           }}
         >
           ← Cancel
-        </a>
+        </Link>
       </div>
 
       <div
