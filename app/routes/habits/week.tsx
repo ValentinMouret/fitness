@@ -137,6 +137,7 @@ function TodayCell({ habit, isCompleted }: TodayCellProps) {
     <button
       type="button"
       aria-label={`${isCompleted ? "Unmark" : "Mark"} ${habit.name} as completed`}
+      aria-pressed={displayCompleted}
       onClick={toggle}
       style={{
         display: "flex",
@@ -224,6 +225,7 @@ function PastCell({
     <button
       type="button"
       aria-label={`${isCompleted ? "Unmark" : "Mark"} ${habit.name} as completed on ${date.toISOString().split("T")[0]}`}
+      aria-pressed={displayCompleted}
       onClick={toggle}
       style={{
         display: "flex",
@@ -318,6 +320,7 @@ function TabBar({ active }: { active: "today" | "week" }) {
       </Link>
       <Link
         to="/habits"
+        aria-current={active === "today" ? "page" : undefined}
         style={{
           flex: 1.5,
           padding: "10px 0",
@@ -336,6 +339,7 @@ function TabBar({ active }: { active: "today" | "week" }) {
       </Link>
       <Link
         to="/habits/week"
+        aria-current={active === "week" ? "page" : undefined}
         style={{
           flex: 1.5,
           padding: "10px 0",
@@ -428,6 +432,11 @@ export default function HabitsWeekPage({ loaderData }: Route.ComponentProps) {
         <div
           className="ring-bounce"
           style={{ position: "relative", width: 88, height: 88 }}
+          role="progressbar"
+          aria-valuenow={Math.round(progress * 100)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuetext={`${totalDone} of ${totalScheduled} habits completed this week`}
         >
           <svg
             aria-hidden="true"

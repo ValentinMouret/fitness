@@ -123,3 +123,7 @@
 ## 2025-06-21 - [Tooltip Visibility for Disabled Elements]
 **Learning:** In Radix UI Themes, `Tooltip` triggers often fail when they wrap a `disabled` element (like a `Button`) because the element doesn't fire the necessary mouse events. Wrapping the disabled element in a `Box` with `display="inline-block"` provides a non-disabled surface that correctly triggers the tooltip.
 **Action:** Always wrap disabled interactive elements in a `Box` when they are inside a `Tooltip`.
+
+## 2024-06-28 - [Accessible Toggle Semantic & Progress Context]
+**Learning:** For custom-built toggle elements (like habit cards) and progress rings, standard visual cues (colors, checkmarks) aren't enough for screen reader users. Adding 'aria-pressed' to toggles and 'aria-valuetext' to progress indicators provides the necessary semantic state and completion context (e.g., "3 of 5 habits completed") that makes the interface truly accessible.
+**Action:** Always include 'aria-pressed' on custom toggle buttons and provide human-readable 'aria-valuetext' for progress components.

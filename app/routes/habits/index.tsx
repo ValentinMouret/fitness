@@ -274,6 +274,7 @@ function HabitCard({
       role="button"
       tabIndex={0}
       aria-label={ariaLabel}
+      aria-pressed={displayCompleted}
       onClick={toggle}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") toggle();
@@ -467,6 +468,7 @@ function TabBar({ active }: { active: "today" | "week" }) {
       </Link>
       <Link
         to="/habits"
+        aria-current={active === "today" ? "page" : undefined}
         style={{
           flex: 1.5,
           padding: "10px 0",
@@ -485,6 +487,7 @@ function TabBar({ active }: { active: "today" | "week" }) {
       </Link>
       <Link
         to="/habits/week"
+        aria-current={active === "week" ? "page" : undefined}
         style={{
           flex: 1.5,
           padding: "10px 0",
@@ -621,6 +624,7 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
             <Link
               to="/habits/new"
               aria-label="Add new habit (N)"
+              aria-keyshortcuts="n"
               style={{
                 display: "flex",
                 alignItems: "center",
