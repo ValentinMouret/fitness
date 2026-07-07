@@ -55,6 +55,7 @@ export default function HabitCheckbox({
               className="habit-checkbox__button"
               loading={isSubmitting}
               aria-label={label}
+              aria-pressed={displayCompleted}
             >
               {displayCompleted && !isSubmitting && (
                 <CheckIcon className="habit-checkbox__icon--pop" />

@@ -102,6 +102,7 @@ function QuickActionHabitItem({
         className="quick-action-sheet__habit-button"
         aria-label={ariaLabel}
         aria-keyshortcuts={shortcutHint}
+        aria-pressed={isOptimisticCompleted}
       >
         <Flex
           align="center"

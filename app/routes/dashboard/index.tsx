@@ -314,6 +314,7 @@ export default function DashboardPage({
             aria-valuemin={0}
             aria-valuemax={100}
             aria-label="Habits completion progress"
+            aria-valuetext={`${optimisticCompletedCount} of ${habitsTotal} habits completed`}
           >
             <Box
               className="dashboard__habits-progress-fill"
