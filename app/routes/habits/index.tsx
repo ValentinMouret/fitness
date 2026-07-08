@@ -1,8 +1,9 @@
 import { Tooltip } from "@radix-ui/themes";
-import { useEffect } from "react";
-import { data, Link, useFetcher, useNavigate } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { data, Link, useFetcher, useFetchers, useNavigate } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import { Celebration } from "~/components/Celebration";
 import type { Habit } from "~/modules/habits/domain/entity";
 import {
   getHabitsPageData,
@@ -510,6 +511,8 @@ function TabBar({ active }: { active: "today" | "week" }) {
 
 export default function HabitsPage({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
+  const fetchers = useFetchers();
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -538,23 +541,55 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
     habitStreaks,
   } = loaderData;
 
+  const optimisticHabitToggles = fetchers.filter(
+    (f) => f.formData?.get("intent") === "toggle-completion",
+  );
+
+  const optimisticCompletionMap = { ...completionMap };
+  for (const f of optimisticHabitToggles) {
+    const habitId = f.formData?.get("habitId") as string;
+    const completed = f.formData?.get("completed") === "true";
+    optimisticCompletionMap[habitId] = !completed;
+  }
+
+  const optimisticCompletedTodayCount = Object.values(
+    optimisticCompletionMap,
+  ).filter(Boolean).length;
+
   const morningHabits = todayHabits.filter((h) => isMorning(h.timeOfDay));
   const eveningHabits = todayHabits.filter((h) => !isMorning(h.timeOfDay));
 
   const allMorningDone =
-    morningHabits.length > 0 && morningHabits.every((h) => completionMap[h.id]);
+    morningHabits.length > 0 &&
+    morningHabits.every((h) => optimisticCompletionMap[h.id]);
 
   const allDone =
-    todayHabits.length > 0 && todayHabits.every((h) => completionMap[h.id]);
+    todayHabits.length > 0 &&
+    todayHabits.every((h) => optimisticCompletionMap[h.id]);
 
   const totalScheduled = todayHabits.length;
   const progress =
-    totalScheduled > 0 ? completedTodayCount / totalScheduled : 0;
+    totalScheduled > 0 ? optimisticCompletedTodayCount / totalScheduled : 0;
+
+  const [celebrate, setCelebrate] = useState(false);
+  const previouslyCompletedCount = useRef(completedTodayCount);
+
+  useEffect(() => {
+    if (
+      optimisticCompletedTodayCount === totalScheduled &&
+      totalScheduled > 0 &&
+      previouslyCompletedCount.current < totalScheduled
+    ) {
+      setCelebrate(true);
+    }
+    previouslyCompletedCount.current = optimisticCompletedTodayCount;
+  }, [optimisticCompletedTodayCount, totalScheduled]);
+
   const circumference = 2 * Math.PI * 52;
   const ringColor = allMorningDone ? "#22c55e" : "#e15a46";
 
   const firstUncompleteEvening = eveningHabits.find(
-    (h) => !completionMap[h.id],
+    (h) => !optimisticCompletionMap[h.id],
   );
 
   return (
@@ -568,6 +603,8 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
       }}
     >
       <style>{STYLES}</style>
+
+      <Celebration trigger={celebrate} onComplete={() => setCelebrate(false)} />
 
       {/* Header */}
       <div
@@ -662,7 +699,7 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
           aria-valuenow={Math.round(progress * 100)}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-valuetext={`${completedTodayCount} of ${totalScheduled} habits completed`}
+          aria-valuetext={`${optimisticCompletedTodayCount} of ${totalScheduled} habits completed`}
         >
           <svg
             aria-hidden="true"
@@ -713,7 +750,7 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
                 lineHeight: 1,
               }}
             >
-              {completedTodayCount}/{totalScheduled}
+              {optimisticCompletedTodayCount}/{totalScheduled}
             </span>
             <span style={{ fontSize: 11, color: "#a8a29e", marginTop: 2 }}>
               today

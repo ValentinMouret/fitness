@@ -127,3 +127,7 @@
 ## 2024-06-28 - [Accessible Toggle Semantic & Progress Context]
 **Learning:** For custom-built toggle elements (like habit cards) and progress rings, standard visual cues (colors, checkmarks) aren't enough for screen reader users. Adding 'aria-pressed' to toggles and 'aria-valuetext' to progress indicators provides the necessary semantic state and completion context (e.g., "3 of 5 habits completed") that makes the interface truly accessible.
 **Action:** Always include 'aria-pressed' on custom toggle buttons and provide human-readable 'aria-valuetext' for progress components.
+
+## 2026-07-08 - [Optimistic Habit Completion & Celebrations]
+**Learning:** page-level optimistic UI using `useFetchers()` significantly improves the perceived performance of high-frequency actions like habit checking. combining this with a `Celebration` component triggered by a `useEffect` and `useRef` completion-guard creates a cohesive and delightful feedback loop.
+**Action:** favor page-level optimistic state aggregation for primary interaction loops and use `useRef` to safely trigger one-time "delight" effects based on state transitions.
