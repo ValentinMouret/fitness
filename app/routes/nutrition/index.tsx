@@ -37,6 +37,7 @@ import {
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { Celebration, SuccessPulse } from "~/components/Celebration";
+import RequiredStar from "~/components/RequiredStar";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import {
@@ -863,7 +864,7 @@ function SaveAsTemplateDialog({
         <Flex direction="column" gap="3" mt="4">
           <Box>
             <Text as="label" size="2" weight="medium" mb="1">
-              Template Name *
+              Template Name <RequiredStar />
             </Text>
             <TextField.Root
               value={name}

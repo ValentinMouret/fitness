@@ -14,6 +14,7 @@ import {
   Grid,
   Heading,
   IconButton,
+  Kbd,
   RadioGroup,
   Spinner,
   Tabs,
@@ -31,6 +32,7 @@ import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { PageHeader } from "~/components/PageHeader";
 import { SectionHeader } from "~/components/SectionHeader";
+import RequiredStar from "~/components/RequiredStar";
 import type {
   CreateAIIngredientInput,
   Ingredient,
@@ -181,6 +183,32 @@ export default function MealBuilder({
     useState<CreateAIIngredientInput | null>(null);
   const [isAIReviewModalOpen, setIsAIReviewModalOpen] = useState(false);
   const [aiSearchError, setAiSearchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable;
+
+      if (isInput) return;
+
+      // Prevent triggering if other dialogs are open
+      if (showSaveDialog || isAIReviewModalOpen || isAddModalOpen) return;
+
+      if (e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        setIsAddModalOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showSaveDialog, isAIReviewModalOpen, isAddModalOpen]);
 
   // Pre-populate ingredients when editing an existing meal
   useEffect(() => {
@@ -439,9 +467,16 @@ export default function MealBuilder({
       <Flex gap="3" mb="6">
         <Dialog.Root open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <Dialog.Trigger>
-            <Button variant="outline">
+            <Button
+              variant="outline"
+              aria-keyshortcuts="n"
+              aria-label="Add Ingredient (N)"
+            >
               <PlusIcon width="16" height="16" />
               Add Ingredient
+              <Box ml="2" display={{ initial: "none", md: "inline-block" }}>
+                <Kbd size="1">N</Kbd>
+              </Box>
             </Button>
           </Dialog.Trigger>
           <AddIngredientModal
@@ -558,9 +593,16 @@ function AddIngredientModal({
   aiSearchError: string | null;
 }) {
   const categories = ["all", ...ingredientCategories];
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <Dialog.Content size="3">
+    <Dialog.Content
+      size="3"
+      onOpenAutoFocus={(e) => {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }}
+    >
       <Flex justify="between" align="center" mb="3">
         <Dialog.Title>Add Ingredient</Dialog.Title>
         <Dialog.Close>
@@ -574,6 +616,7 @@ function AddIngredientModal({
 
       <Flex direction="column" gap="3">
         <TextField.Root
+          ref={searchInputRef}
           placeholder="Search ingredients..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -738,7 +781,7 @@ function SaveTemplateDialog({
       <Flex direction="column" gap="3" mt="4">
         <Box>
           <Text as="label" size="2" weight="medium" mb="1">
-            Template Name *
+            Template Name <RequiredStar />
           </Text>
           <TextField.Root
             value={templateName}
