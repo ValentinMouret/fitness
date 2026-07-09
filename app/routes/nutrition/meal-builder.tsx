@@ -31,8 +31,8 @@ import {
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { PageHeader } from "~/components/PageHeader";
-import { SectionHeader } from "~/components/SectionHeader";
 import RequiredStar from "~/components/RequiredStar";
+import { SectionHeader } from "~/components/SectionHeader";
 import type {
   CreateAIIngredientInput,
   Ingredient,
