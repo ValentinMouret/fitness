@@ -77,6 +77,7 @@ export function IngredientCard({
           min={ingredient.defaultRange[0]}
           max={ingredient.defaultRange[1]}
           step={5}
+          aria-label={`Quantity for ${ingredient.name}`}
         />
         <Flex justify="center" mt="2">
           <Text weight="bold">

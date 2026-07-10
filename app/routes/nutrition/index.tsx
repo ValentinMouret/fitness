@@ -822,6 +822,7 @@ function SaveAsTemplateDialog({
   readonly fetcher: ReturnType<typeof useFetcher>;
 }) {
   const [name, setName] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const [category, setCategory] = useState<MealCategory>("lunch");
   const [notes, setNotes] = useState("");
 
@@ -855,7 +856,12 @@ function SaveAsTemplateDialog({
       open={meal !== null}
       onOpenChange={(open) => !open && onClose()}
     >
-      <AlertDialog.Content>
+      <AlertDialog.Content
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          nameInputRef.current?.focus();
+        }}
+      >
         <AlertDialog.Title>Save as Template</AlertDialog.Title>
         <AlertDialog.Description>
           Save this meal as a reusable template.
@@ -867,6 +873,7 @@ function SaveAsTemplateDialog({
               Template Name <RequiredStar />
             </Text>
             <TextField.Root
+              ref={nameInputRef}
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Post-workout meal"

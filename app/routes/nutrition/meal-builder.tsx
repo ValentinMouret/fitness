@@ -2,6 +2,7 @@ import {
   Cross2Icon,
   DownloadIcon,
   MagicWandIcon,
+  MagnifyingGlassIcon,
   PlusIcon,
 } from "@radix-ui/react-icons";
 import {
@@ -523,6 +524,7 @@ export default function MealBuilder({
               );
             }}
             disabled={selectedIngredients.length === 0}
+            loading={fetcher.state !== "idle"}
           >
             <DownloadIcon width="16" height="16" />
             {mealLoggingMode.existingMeal ? "Update Meal" : "Save Meal"}
@@ -595,6 +597,28 @@ function AddIngredientModal({
   const categories = ["all", ...ingredientCategories];
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (isInput) return;
+
+      if (e.key === "/") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <Dialog.Content
       size="3"
@@ -620,7 +644,18 @@ function AddIngredientModal({
           placeholder="Search ingredients..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-        />
+          aria-label="Search ingredients"
+          aria-keyshortcuts="/"
+        >
+          <TextField.Slot>
+            <MagnifyingGlassIcon height="16" width="16" />
+          </TextField.Slot>
+          <TextField.Slot pr="3">
+            <Box display={{ initial: "none", md: "inline-block" }}>
+              <Kbd size="1">/</Kbd>
+            </Box>
+          </TextField.Slot>
+        </TextField.Root>
 
         <Tabs.Root value={selectedCategory} onValueChange={setSelectedCategory}>
           <Tabs.List>
@@ -744,6 +779,7 @@ function SaveTemplateDialog({
   fetcher: ReturnType<typeof useFetcher>;
 }) {
   const [templateName, setTemplateName] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const [templateCategory, setTemplateCategory] = useState<
     "breakfast" | "lunch" | "dinner" | "snack"
   >("lunch");
@@ -772,7 +808,12 @@ function SaveTemplateDialog({
   };
 
   return (
-    <AlertDialog.Content>
+    <AlertDialog.Content
+      onOpenAutoFocus={(e) => {
+        e.preventDefault();
+        nameInputRef.current?.focus();
+      }}
+    >
       <AlertDialog.Title>Save Meal Template</AlertDialog.Title>
       <AlertDialog.Description>
         Save this meal combination as a reusable template.
@@ -784,6 +825,7 @@ function SaveTemplateDialog({
             Template Name <RequiredStar />
           </Text>
           <TextField.Root
+            ref={nameInputRef}
             value={templateName}
             onChange={(e) => setTemplateName(e.target.value)}
             placeholder="e.g., Post-workout meal"
