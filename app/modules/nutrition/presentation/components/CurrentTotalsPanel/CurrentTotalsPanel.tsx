@@ -76,6 +76,10 @@ const MacroProgressBar = ({
     backgroundColor: color,
   } as CSSProperties;
 
+  const ariaValueText = target
+    ? `${Math.round(current)} of ${target}${unit} ${label} (${Math.round(progress)}%)`
+    : `${Math.round(current)}${unit} ${label}`;
+
   return (
     <Box>
       <Flex justify="between" mb="1">
@@ -96,6 +100,7 @@ const MacroProgressBar = ({
         aria-valuemin={0}
         aria-valuemax={target ?? undefined}
         aria-label={`${label} progress`}
+        aria-valuetext={ariaValueText}
       >
         <Box
           className="current-totals-panel__progress-fill"
@@ -157,7 +162,7 @@ export function CurrentTotalsPanel({
             Satiety Prediction
           </Heading>
           <Flex align="center" gap="2" mb="1">
-            <Flex gap="1">
+            <Flex gap="1" aria-hidden="true">
               {[1, 2, 3, 4, 5].map((level) => (
                 <Text
                   key={level}
