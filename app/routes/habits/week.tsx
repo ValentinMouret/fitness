@@ -1,4 +1,6 @@
-import { data, Link, useFetcher } from "react-router";
+import { Tooltip } from "@radix-ui/themes";
+import { useEffect } from "react";
+import { data, Link, useFetcher, useNavigate } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { getScheduledDays, type Habit } from "~/modules/habits/domain/entity";
@@ -361,6 +363,27 @@ function TabBar({ active }: { active: "today" | "week" }) {
 }
 
 export default function HabitsWeekPage({ loaderData }: Route.ComponentProps) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.ctrlKey ||
+        e.metaKey ||
+        e.altKey ||
+        /^(INPUT|TEXTAREA)$/.test((e.target as HTMLElement).tagName) ||
+        (e.target as HTMLElement).isContentEditable
+      )
+        return;
+      if (e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        navigate("/habits/new");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
+
   const { habits, weekStart, todayIndex, completionMap, todayCompletionMap } =
     loaderData;
 
@@ -400,25 +423,58 @@ export default function HabitsWeekPage({ loaderData }: Route.ComponentProps) {
       >
         <div
           style={{
-            fontSize: 11,
-            color: "#a8a29e",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            marginBottom: 6,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
           }}
         >
-          {weekStart instanceof Date
-            ? formatWeekRange(weekStart)
-            : formatWeekRange(new Date(weekStart))}
-        </div>
-        <div
-          style={{
-            fontSize: 24,
-            fontFamily: "Crimson Pro, Georgia, serif",
-            fontWeight: 600,
-          }}
-        >
-          Your week at a glance.
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#a8a29e",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                marginBottom: 6,
+              }}
+            >
+              {weekStart instanceof Date
+                ? formatWeekRange(weekStart)
+                : formatWeekRange(new Date(weekStart))}
+            </div>
+            <div
+              style={{
+                fontSize: 24,
+                fontFamily: "Crimson Pro, Georgia, serif",
+                fontWeight: 600,
+              }}
+            >
+              Your week at a glance.
+            </div>
+          </div>
+          <Tooltip content="Add new habit (N)">
+            <Link
+              to="/habits/new"
+              aria-label="Add new habit (N)"
+              aria-keyshortcuts="n"
+              className="add-habit-btn"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                textDecoration: "none",
+                fontSize: 20,
+                lineHeight: 1,
+                flexShrink: 0,
+                marginTop: 4,
+              }}
+            >
+              +
+            </Link>
+          </Tooltip>
         </div>
       </div>
 

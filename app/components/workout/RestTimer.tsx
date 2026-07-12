@@ -1,4 +1,4 @@
-import { Button, IconButton, Text, Tooltip } from "@radix-ui/themes";
+import { Box, Button, IconButton, Text, Tooltip } from "@radix-ui/themes";
 import { Bell, BellOff, BellRing } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { sendNotification, useNotificationPermission } from "~/notifications";
@@ -136,15 +136,17 @@ function NotificationBell() {
   if (permission === "denied") {
     return (
       <Tooltip content="Notifications blocked in browser settings">
-        <IconButton
-          size="1"
-          variant="ghost"
-          color="gray"
-          disabled
-          aria-label="Notifications blocked in browser settings"
-        >
-          <BellOff size={BELL_SIZE} />
-        </IconButton>
+        <Box display="inline-block">
+          <IconButton
+            size="1"
+            variant="ghost"
+            color="gray"
+            disabled
+            aria-label="Notifications blocked in browser settings"
+          >
+            <BellOff size={BELL_SIZE} />
+          </IconButton>
+        </Box>
       </Tooltip>
     );
   }

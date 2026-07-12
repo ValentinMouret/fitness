@@ -507,3 +507,19 @@ button.rt-Card:hover,
   padding: 1rem;
   overflow: auto;
 }
+
+/* Habits Add Button (shared across habits routes) */
+.add-habit-btn {
+  transition: all 0.2s ease;
+  border: 1px solid #3d3935;
+  color: #6b6560;
+}
+.add-habit-btn:hover {
+  background: #292524;
+  color: #faf9f7;
+  border-color: #57534e;
+}
+.add-habit-btn:focus-visible {
+  outline: 2px solid #e15a46;
+  outline-offset: 2px;
+}

@@ -379,16 +379,18 @@ function HabitCard({
               </span>
             )}
           </div>
-          <div
-            style={{
-              fontSize: 12,
-              color: "#a8a29e",
-              lineHeight: 1.4,
-              marginBottom: 10,
-            }}
-          >
-            {habit.identityPhrase}
-          </div>
+          {habit.identityPhrase && (
+            <div
+              style={{
+                fontSize: 12,
+                color: "#a8a29e",
+                lineHeight: 1.4,
+                marginBottom: 10,
+              }}
+            >
+              {habit.identityPhrase}
+            </div>
+          )}
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             {displayHistory.map((hit, i) => (
               <div
@@ -662,6 +664,7 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
               to="/habits/new"
               aria-label="Add new habit (N)"
               aria-keyshortcuts="n"
+              className="add-habit-btn"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -669,8 +672,6 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
                 width: 36,
                 height: 36,
                 borderRadius: "50%",
-                border: "1px solid #3d3935",
-                color: "#6b6560",
                 textDecoration: "none",
                 fontSize: 20,
                 lineHeight: 1,
