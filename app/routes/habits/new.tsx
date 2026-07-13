@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { data, Link, redirect } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -124,6 +124,13 @@ export async function action({ request }: Route.ActionArgs) {
 export default function NewHabit() {
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState<"forward" | "back">("forward");
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (step === 0) {
+      nameInputRef.current?.focus();
+    }
+  }, [step]);
   const [animKey, setAnimKey] = useState(0);
 
   const [name, setName] = useState("");
@@ -165,6 +172,7 @@ export default function NewHabit() {
         <div style={{ padding: "24px 24px 0" }}>
           <div style={fieldLabel}>Name</div>
           <input
+            ref={nameInputRef}
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Morning Run"
