@@ -1,4 +1,4 @@
-import { Tooltip } from "@radix-ui/themes";
+import { Box, Tooltip } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { data, Link, useFetcher, useFetchers, useNavigate } from "react-router";
 import { z } from "zod";
@@ -161,40 +161,42 @@ function CardFooter({
         <span style={{ fontSize: 11, color: "#b5b0a8" }}>Done ✓</span>
       ) : (
         <Tooltip content="Never miss twice. Log a smaller version to keep your streak alive.">
-          <button
-            type="button"
-            onClick={onMinimum}
-            disabled={submitting}
-            aria-label={
-              missedTwice
-                ? `Do the minimum for ${habitName}`
-                : `Log minimum for ${habitName}${
-                    streak > 0 ? ` (${streak} day streak)` : ""
-                  }`
-            }
-            style={{
-              background: "transparent",
-              border: "1px solid #e7e5e4",
-              borderRadius: 20,
-              padding: "4px 12px",
-              fontSize: 11,
-              color: "#79756d",
-              fontWeight: 500,
-              cursor: "pointer",
-              fontFamily: "inherit",
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              opacity: submitting ? 0.6 : 1,
-            }}
-          >
-            {submitting
-              ? "Logging..."
-              : missedTwice
-                ? "Do the minimum"
-                : "Log minimum"}{" "}
-            {!submitting && <span style={{ color: "#b5b0a8" }}>→</span>}
-          </button>
+          <Box display="inline-block">
+            <button
+              type="button"
+              onClick={onMinimum}
+              disabled={submitting}
+              aria-label={
+                missedTwice
+                  ? `Do the minimum for ${habitName}`
+                  : `Log minimum for ${habitName}${
+                      streak > 0 ? ` (${streak} day streak)` : ""
+                    }`
+              }
+              style={{
+                background: "transparent",
+                border: "1px solid #e7e5e4",
+                borderRadius: 20,
+                padding: "4px 12px",
+                fontSize: 11,
+                color: "#79756d",
+                fontWeight: 500,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                opacity: submitting ? 0.6 : 1,
+              }}
+            >
+              {submitting
+                ? "Logging..."
+                : missedTwice
+                  ? "Do the minimum"
+                  : "Log minimum"}{" "}
+              {!submitting && <span style={{ color: "#b5b0a8" }}>→</span>}
+            </button>
+          </Box>
         </Tooltip>
       )}
     </div>
@@ -379,16 +381,18 @@ function HabitCard({
               </span>
             )}
           </div>
-          <div
-            style={{
-              fontSize: 12,
-              color: "#a8a29e",
-              lineHeight: 1.4,
-              marginBottom: 10,
-            }}
-          >
-            {habit.identityPhrase}
-          </div>
+          {habit.identityPhrase && (
+            <div
+              style={{
+                fontSize: 12,
+                color: "#a8a29e",
+                lineHeight: 1.4,
+                marginBottom: 10,
+              }}
+            >
+              {habit.identityPhrase}
+            </div>
+          )}
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             {displayHistory.map((hit, i) => (
               <div
