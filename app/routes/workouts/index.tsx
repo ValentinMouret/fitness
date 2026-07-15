@@ -119,6 +119,8 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
             icon="💪"
             title="No workouts yet"
             description="Ready to crush it? Hit 'Start Workout' to get started!"
+            actionLabel="Start Workout"
+            onAction={() => setShowStartDialog(true)}
           />
         ) : (
           workouts.map((workout: WorkoutWithSummary, i: number) => {
@@ -199,15 +201,17 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
               : "Get AI feedback on your training"
           }
         >
-          <Button
-            variant="outline"
-            size="2"
-            onClick={handleAIFeedback}
-            loading={aiFetcher.state === "submitting"}
-            disabled={workouts.length < 5}
-          >
-            AI Feedback
-          </Button>
+          <Box display="inline-block">
+            <Button
+              variant="outline"
+              size="2"
+              onClick={handleAIFeedback}
+              loading={aiFetcher.state === "submitting"}
+              disabled={workouts.length < 5}
+            >
+              AI Feedback
+            </Button>
+          </Box>
         </Tooltip>
         <Button variant="outline" size="2" asChild>
           <Link to="/workouts/recovery">Recovery Map</Link>
