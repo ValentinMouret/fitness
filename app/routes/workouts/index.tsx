@@ -118,8 +118,8 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
           <EmptyState
             icon="💪"
             title="No workouts yet"
-            description="Ready to crush it? Hit 'Start Workout' to get started!"
-            actionLabel="Start Workout"
+            description="Ready to crush it? Let's get moving."
+            actionLabel="Get Started"
             onAction={() => setShowStartDialog(true)}
           />
         ) : (
