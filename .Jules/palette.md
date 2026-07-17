@@ -97,7 +97,7 @@
 **Action:** Use `useFetchers()` to derive item-specific loading and success states in list views where multiple background actions are supported.
 
 ## 2026-06-15 - [Context-Aware Empty States & Filter Persistence]
-**Learning:** For search and filtering interfaces, distinguishing between "no data" and "no results" empty states improves clarity. Using the `EmptyState` component with a primary action (e.g., "Add Exercise") for empty collections, and a recovery action (e.g., "Clear Filters") when active filters yield no matches, provides a clear path forward. Syncing input values with URL `searchParams` ensures the UI remains consistent with the filtered state.
+**Learning:** For search and filtering interfaces, distinguishing between "no data" and "no results" empty states improves clarity. Using the `EmptyState` component with a primary action (e.g., "Add Exercise") for empty collections, and a recovery action (e.g., "Clear Filters") when active filters yield no matches, provides a a clear path forward. Syncing input values with URL `searchParams` ensures the UI remains consistent with the filtered state.
 **Action:** Implement dual-path empty states and bind filter inputs to URL parameters in all searchable collection views.
 
 ## 2025-06-18 - [Dialog Keyboard Navigation & Discovery]
@@ -131,3 +131,7 @@
 ## 2026-07-08 - [Optimistic Habit Completion & Celebrations]
 **Learning:** page-level optimistic UI using `useFetchers()` significantly improves the perceived performance of high-frequency actions like habit checking. combining this with a `Celebration` component triggered by a `useEffect` and `useRef` completion-guard creates a cohesive and delightful feedback loop.
 **Action:** favor page-level optimistic state aggregation for primary interaction loops and use `useRef` to safely trigger one-time "delight" effects based on state transitions.
+
+## 2026-07-15 - [The Semantic Form Entry Pattern]
+**Learning:** Standardizing the accessibility and interaction details of entry forms (like creating a new Measurement) makes them highly polished. This is achieved by combining unique `useId`s for label-to-input association, visual indicators (`RequiredStar`), autofocusing the first input on mount (using `useRef` and `useEffect` to satisfy linters), adding `Cmd+Enter` / `Ctrl+Enter` shortcut handlers with `aria-keyshortcuts` + `Tooltip` hints, and utilizing `useNavigation` to provide disable/loading states.
+**Action:** Apply the full Semantic Form Entry Pattern to all standard input/creation form pages.
