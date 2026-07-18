@@ -1,4 +1,3 @@
-import { ArrowLeftIcon } from "@radix-ui/react-icons";
 import {
   AlertDialog,
   Badge,
@@ -8,11 +7,10 @@ import {
   Flex,
   Grid,
   Heading,
-  IconButton,
 } from "@radix-ui/themes";
 import { Result } from "neverthrow";
 import { useState } from "react";
-import { Form, Link } from "react-router";
+import { Form } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import MacrosChart from "~/components/MacrosChart";
@@ -24,6 +22,13 @@ import { coerceFloat, coerceInt, expect } from "~/utils";
 import { formNumber } from "~/utils/form-data";
 import MaintenanceForm from "../MaintenanceForm";
 import type { Route } from "./+types";
+
+export const handle = {
+  header: () => ({
+    title: "Calculate Targets",
+    backTo: "/nutrition",
+  }),
+};
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -65,15 +70,6 @@ export default function CalculateTargetsPage({
 
   return (
     <>
-      <Flex align="center" gap="4" mb="6">
-        <IconButton asChild size="3" variant="ghost" aria-label="Back">
-          <Link to="/nutrition">
-            <ArrowLeftIcon />
-          </Link>
-        </IconButton>
-        <Heading size="7">Calculate Targets</Heading>
-      </Flex>
-
       <MaintenanceForm
         age={loaderData?.age}
         height={loaderData?.height}

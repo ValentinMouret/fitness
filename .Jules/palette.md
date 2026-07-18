@@ -135,3 +135,7 @@
 ## 2026-07-15 - [The Semantic Form Entry Pattern]
 **Learning:** Standardizing the accessibility and interaction details of entry forms (like creating a new Measurement) makes them highly polished. This is achieved by combining unique `useId`s for label-to-input association, visual indicators (`RequiredStar`), autofocusing the first input on mount (using `useRef` and `useEffect` to satisfy linters), adding `Cmd+Enter` / `Ctrl+Enter` shortcut handlers with `aria-keyshortcuts` + `Tooltip` hints, and utilizing `useNavigation` to provide disable/loading states.
 **Action:** Apply the full Semantic Form Entry Pattern to all standard input/creation form pages.
+
+## 2026-07-18 - [Standardizing Page Headers across Routes]
+**Learning:** Standardizing page headers across routes by exporting a `handle` object with a `header` function (which receives loaderData, allowing dynamic titles like 'Edit {name}') is extremely elegant and clean. This integrates pages with the global layout's `<PageHeader />`, ensures consistent navigation transitions, and automatically equips back buttons with standardized Radix UI Tooltips and ARIA support.
+**Action:** Always favor page-level header handles over custom header layouts in page components for standard CRUD and form routes.

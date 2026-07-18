@@ -1,6 +1,3 @@
-import { ArrowLeftIcon } from "@radix-ui/react-icons";
-import { Flex, Heading, IconButton } from "@radix-ui/themes";
-import { Link } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import ExerciseForm from "~/components/ExerciseForm";
@@ -17,6 +14,13 @@ export const loader = async ({ params }: Route.LoaderArgs) => {
 
   const exercise = await getExerciseForEdit(exerciseId);
   return { exercise };
+};
+
+export const handle = {
+  header: (data: Route.ComponentProps["loaderData"]) => ({
+    title: `Edit ${data?.exercise?.exercise?.name || "Exercise"}`,
+    backTo: "/workouts/exercises",
+  }),
 };
 
 export const action = async ({ request, params }: Route.ActionArgs) => {
@@ -62,20 +66,10 @@ export default function EditExercisePage({ loaderData }: Route.ComponentProps) {
   const { exercise } = loaderData;
 
   return (
-    <>
-      <Flex align="center" gap="4" mb="6">
-        <IconButton asChild size="3" variant="ghost" aria-label="Back">
-          <Link to="/workouts/exercises">
-            <ArrowLeftIcon />
-          </Link>
-        </IconButton>
-        <Heading size="7">Edit exercise</Heading>
-      </Flex>
-      <ExerciseForm
-        initialExercise={exercise.exercise}
-        initialSplits={exercise.muscleGroupSplits}
-        mode="edit"
-      />
-    </>
+    <ExerciseForm
+      initialExercise={exercise.exercise}
+      initialSplits={exercise.muscleGroupSplits}
+      mode="edit"
+    />
   );
 }
