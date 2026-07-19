@@ -30,6 +30,9 @@ const STYLES = `
   }
   .check-pop { animation: checkPop 0.42s cubic-bezier(0.34,1.56,0.64,1) forwards; }
   .ring-bounce { animation: ringBounce 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+  .habit-add-btn:focus-visible { outline: 2px solid #e15a46; outline-offset: 2px; }
+  .habit-tab-link:focus-visible { outline: 2px solid #e15a46; outline-offset: 2px; }
+  .habit-week-cell:focus-visible { outline: 2px solid #e15a46; outline-offset: 2px; }
 `;
 
 const WEEK_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -141,6 +144,7 @@ function TodayCell({ habit, isCompleted }: TodayCellProps) {
       aria-label={`${isCompleted ? "Unmark" : "Mark"} ${habit.name} as completed`}
       aria-pressed={displayCompleted}
       onClick={toggle}
+      className="habit-week-cell"
       style={{
         display: "flex",
         justifyContent: "center",
@@ -229,6 +233,7 @@ function PastCell({
       aria-label={`${isCompleted ? "Unmark" : "Mark"} ${habit.name} as completed on ${date.toISOString().split("T")[0]}`}
       aria-pressed={displayCompleted}
       onClick={toggle}
+      className="habit-week-cell"
       style={{
         display: "flex",
         justifyContent: "center",
@@ -304,6 +309,7 @@ function TabBar({ active }: { active: "today" | "week" }) {
     >
       <Link
         to="/"
+        className="habit-tab-link"
         style={{
           flex: 1,
           padding: "10px 0",
@@ -322,6 +328,7 @@ function TabBar({ active }: { active: "today" | "week" }) {
       </Link>
       <Link
         to="/habits"
+        className="habit-tab-link"
         aria-current={active === "today" ? "page" : undefined}
         style={{
           flex: 1.5,
@@ -341,6 +348,7 @@ function TabBar({ active }: { active: "today" | "week" }) {
       </Link>
       <Link
         to="/habits/week"
+        className="habit-tab-link"
         aria-current={active === "week" ? "page" : undefined}
         style={{
           flex: 1.5,
@@ -457,6 +465,7 @@ export default function HabitsWeekPage({ loaderData }: Route.ComponentProps) {
               to="/habits/new"
               aria-label="Add new habit (N)"
               aria-keyshortcuts="n"
+              className="habit-add-btn"
               style={{
                 display: "flex",
                 alignItems: "center",
