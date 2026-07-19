@@ -39,6 +39,10 @@ const STYLES = `
   .ring-bounce { animation: ringBounce 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
   .sub-in { animation: subIn 0.4s ease 0.18s both; }
   .habit-card-a { transition: border-left-color 0.3s ease, box-shadow 0.3s ease; }
+  .habit-card-a:focus-visible { outline: 2px solid #e15a46; outline-offset: 2px; }
+  .habit-add-btn:focus-visible { outline: 2px solid #e15a46; outline-offset: 2px; }
+  .habit-tab-link:focus-visible { outline: 2px solid #e15a46; outline-offset: 2px; }
+  .habit-min-btn:focus-visible { outline: 2px solid #e15a46; outline-offset: 2px; }
 `;
 
 export async function loader() {
@@ -173,6 +177,7 @@ function CardFooter({
                       streak > 0 ? ` (${streak} day streak)` : ""
                     }`
               }
+              className="habit-min-btn"
               style={{
                 background: "transparent",
                 border: "1px solid #e7e5e4",
@@ -455,6 +460,7 @@ function TabBar({ active }: { active: "today" | "week" }) {
     >
       <Link
         to="/"
+        className="habit-tab-link"
         style={{
           flex: 1,
           padding: "10px 0",
@@ -473,6 +479,7 @@ function TabBar({ active }: { active: "today" | "week" }) {
       </Link>
       <Link
         to="/habits"
+        className="habit-tab-link"
         aria-current={active === "today" ? "page" : undefined}
         style={{
           flex: 1.5,
@@ -492,6 +499,7 @@ function TabBar({ active }: { active: "today" | "week" }) {
       </Link>
       <Link
         to="/habits/week"
+        className="habit-tab-link"
         aria-current={active === "week" ? "page" : undefined}
         style={{
           flex: 1.5,
@@ -666,6 +674,7 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
               to="/habits/new"
               aria-label="Add new habit (N)"
               aria-keyshortcuts="n"
+              className="habit-add-btn"
               style={{
                 display: "flex",
                 alignItems: "center",
