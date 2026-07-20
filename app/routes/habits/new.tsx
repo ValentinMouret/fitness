@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { data, Link, redirect } from "react-router";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { data, Link, redirect, useNavigate } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { createHabit } from "~/modules/habits/infra/create-habit.service.server";
@@ -9,6 +9,7 @@ import {
   formRepeatableText,
   formText,
 } from "~/utils/form-data";
+import { Box, Tooltip } from "@radix-ui/themes";
 import type { Route } from "./+types/new";
 
 const STEPS = [
@@ -52,6 +53,7 @@ const STYLES = `
 `;
 
 const fieldLabel: React.CSSProperties = {
+  display: "block",
   fontSize: 11,
   color: "#a8a29e",
   textTransform: "uppercase",
@@ -124,13 +126,33 @@ export async function action({ request }: Route.ActionArgs) {
 export default function NewHabit() {
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState<"forward" | "back">("forward");
+  const navigate = useNavigate();
+
+  // Field IDs for Accessibility
+  const nameId = useId();
+  const identityId = useId();
+  const timeId = useId();
+  const locationId = useId();
+  const minimalVersionId = useId();
+
+  // Refs for Autofocus Management
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const identityInputRef = useRef<HTMLTextAreaElement>(null);
+  const locationInputRef = useRef<HTMLInputElement>(null);
+  const minVersionInputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (step === 0) {
       nameInputRef.current?.focus();
+    } else if (step === 1) {
+      identityInputRef.current?.focus();
+    } else if (step === 2) {
+      locationInputRef.current?.focus();
+    } else if (step === 3) {
+      minVersionInputRef.current?.focus();
     }
   }, [step]);
+
   const [animKey, setAnimKey] = useState(0);
 
   const [name, setName] = useState("");
@@ -148,11 +170,30 @@ export default function NewHabit() {
 
   const formRef = useRef<HTMLFormElement>(null);
 
-  function go(n: number) {
-    if (n < 0 || n > 4) return;
-    setDir(n > step ? "forward" : "back");
-    setAnimKey((k) => k + 1);
-    setStep(n);
+  const go = useCallback(
+    (n: number) => {
+      if (n < 0 || n > 4) return;
+      setDir(n > step ? "forward" : "back");
+      setAnimKey((k) => k + 1);
+      setStep(n);
+    },
+    [step],
+  );
+
+  function handleInputKeyDown(
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+    isTextArea = false,
+  ) {
+    if (e.key === "Enter") {
+      if (!isTextArea || e.metaKey || e.ctrlKey) {
+        e.preventDefault();
+        if (step === 4) {
+          formRef.current?.requestSubmit();
+        } else if (!(step === 0 && name.trim() === "")) {
+          go(step + 1);
+        }
+      }
+    }
   }
 
   function toggleDay(d: string) {
@@ -170,13 +211,17 @@ export default function NewHabit() {
     if (step === 0) {
       return (
         <div style={{ padding: "24px 24px 0" }}>
-          <div style={fieldLabel}>Name</div>
+          <label htmlFor={nameId} style={fieldLabel}>
+            Name
+          </label>
           <input
+            id={nameId}
             ref={nameInputRef}
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Morning Run"
             style={fieldInput}
+            onKeyDown={handleInputKeyDown}
           />
         </div>
       );
@@ -185,13 +230,18 @@ export default function NewHabit() {
     if (step === 1) {
       return (
         <div style={{ padding: "24px 24px 0" }}>
-          <div style={fieldLabel}>Identity phrase</div>
+          <label htmlFor={identityId} style={fieldLabel}>
+            Identity phrase
+          </label>
           <textarea
+            id={identityId}
+            ref={identityInputRef}
             value={identityPhrase}
             onChange={(e) => setIdentityPhrase(e.target.value)}
             placeholder='Start with "I am…"'
             rows={4}
             style={{ ...fieldInput, resize: "none", lineHeight: 1.7 }}
+            onKeyDown={(e) => handleInputKeyDown(e, true)}
           />
         </div>
       );
@@ -300,21 +350,30 @@ export default function NewHabit() {
           )}
           {freqMode !== "monthly" && (
             <>
-              <div style={fieldLabel}>Time</div>
+              <label htmlFor={timeId} style={fieldLabel}>
+                Time
+              </label>
               <input
+                id={timeId}
                 value={timeOfDay}
                 onChange={(e) => setTimeOfDay(e.target.value)}
                 type="time"
                 style={{ ...fieldInput, marginBottom: 20 }}
+                onKeyDown={handleInputKeyDown}
               />
             </>
           )}
-          <div style={fieldLabel}>Location</div>
+          <label htmlFor={locationId} style={fieldLabel}>
+            Location
+          </label>
           <input
+            id={locationId}
+            ref={locationInputRef}
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. Home, Gym"
             style={fieldInput}
+            onKeyDown={handleInputKeyDown}
           />
         </div>
       );
@@ -323,8 +382,12 @@ export default function NewHabit() {
     if (step === 3) {
       return (
         <div style={{ padding: "24px 24px 0" }}>
-          <div style={fieldLabel}>Minimum version</div>
+          <label htmlFor={minimalVersionId} style={fieldLabel}>
+            Minimum version
+          </label>
           <textarea
+            id={minimalVersionId}
+            ref={minVersionInputRef}
             value={minimalVersion}
             onChange={(e) => setMinimalVersion(e.target.value)}
             placeholder="e.g. Just put on your shoes"
@@ -335,9 +398,12 @@ export default function NewHabit() {
               lineHeight: 1.7,
               marginBottom: 28,
             }}
+            onKeyDown={(e) => handleInputKeyDown(e, true)}
           />
           <button
             type="button"
+            role="switch"
+            aria-checked={isKeystone}
             onClick={() => setIsKeystone(!isKeystone)}
             style={{
               display: "flex",
@@ -404,6 +470,8 @@ export default function NewHabit() {
               <button
                 key={c}
                 type="button"
+                aria-label={`Select color ${c}`}
+                aria-pressed={c === color}
                 onClick={() => setColor(c)}
                 style={{
                   width: 36,
@@ -523,6 +591,21 @@ export default function NewHabit() {
     return null;
   }
 
+  // Listen for escape globally when focused in this component
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (step === 0) {
+          navigate("/habits");
+        } else {
+          go(step - 1);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [step, navigate, go]);
+
   return (
     <div
       style={{
@@ -624,51 +707,75 @@ export default function NewHabit() {
           gap: 12,
         }}
       >
-        <button
-          type="button"
-          onClick={() => go(step - 1)}
-          disabled={step === 0}
-          style={{
-            flex: 1,
-            padding: "13px 0",
-            border: "1px solid #3d3935",
-            borderRadius: 12,
-            background: "transparent",
-            color: step === 0 ? "#3d3935" : "#a8a29e",
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: step === 0 ? "default" : "pointer",
-            fontFamily: "inherit",
-          }}
+        <Tooltip
+          content={
+            step === 0
+              ? "Cancel (Esc)"
+              : `Back to ${STEPS[step - 1].short} (Esc)`
+          }
         >
-          {step > 0 ? `← ${STEPS[step - 1].short}` : "Back"}
-        </button>
-        <button
-          type="button"
-          disabled={step === 0 && name.trim() === ""}
-          onClick={() => {
-            if (step === 4) {
-              formRef.current?.requestSubmit();
-            } else {
-              go(step + 1);
-            }
-          }}
-          style={{
-            flex: 2,
-            padding: "13px 0",
-            border: "none",
-            borderRadius: 12,
-            background:
-              step === 0 && name.trim() === "" ? "#c4bfba" : "#e15a46",
-            color: "#fff",
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: step === 0 && name.trim() === "" ? "default" : "pointer",
-            fontFamily: "inherit",
-          }}
+          <Box display="inline-block" style={{ flex: 1 }}>
+            <button
+              type="button"
+              onClick={() => go(step - 1)}
+              disabled={step === 0}
+              style={{
+                width: "100%",
+                padding: "13px 0",
+                border: "1px solid #3d3935",
+                borderRadius: 12,
+                background: "transparent",
+                color: step === 0 ? "#3d3935" : "#a8a29e",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: step === 0 ? "default" : "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              {step > 0 ? `← ${STEPS[step - 1].short}` : "Back"}
+            </button>
+          </Box>
+        </Tooltip>
+
+        <Tooltip
+          content={
+            step === 4
+              ? "Save (Cmd+Enter)"
+              : step === 0 && name.trim() === ""
+                ? "Please enter a habit name"
+                : `Next to ${STEPS[step + 1].short} (Enter)`
+          }
         >
-          {step === 4 ? "Add habit" : `${STEPS[step + 1].short} →`}
-        </button>
+          <Box display="inline-block" style={{ flex: 2 }}>
+            <button
+              type="button"
+              disabled={step === 0 && name.trim() === ""}
+              onClick={() => {
+                if (step === 4) {
+                  formRef.current?.requestSubmit();
+                } else {
+                  go(step + 1);
+                }
+              }}
+              style={{
+                width: "100%",
+                padding: "13px 0",
+                border: "none",
+                borderRadius: 12,
+                background:
+                  step === 0 && name.trim() === "" ? "#c4bfba" : "#e15a46",
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor:
+                  step === 0 && name.trim() === "" ? "default" : "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              {step === 4 ? "Add habit" : `${STEPS[step + 1].short} →`}
+            </button>
+          </Box>
+        </Tooltip>
       </div>
     </div>
   );

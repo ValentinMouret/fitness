@@ -49,7 +49,7 @@
 **Action:** Consistently wrap icon-only interactive elements in a `Tooltip`. For composite Radix components, always follow the `<Tooltip><Trigger><IconButton /></Trigger></Tooltip>` nesting order.
 
 ## 2025-05-29 - [Dashboard Efficiency: Keyboard Shortcuts]
-**Learning:** For primary daily actions like weight logging, adding a simple keyboard shortcut (e.g., 'w') significantly improves user efficiency. To ensure discovery, reinforce the shortcut with a visual `<Kbd>` hint and an informative Tooltip that explicitly mentions the trigger key.
+**Learning:** For daily actions like weight logging, adding a simple keyboard shortcut (e.g., 'w') significantly improves user efficiency. To ensure discovery, reinforce the shortcut with a visual `<Kbd>` hint and an informative Tooltip that explicitly mentions the trigger key.
 **Action:** Identify high-frequency single-input actions and implement single-key shortcuts with appropriate discovery hints and input-focus guards.
 
 ## 2025-05-30 - [Efficient Modal Interactions & Shortcuts]
@@ -135,3 +135,7 @@
 ## 2026-07-15 - [The Semantic Form Entry Pattern]
 **Learning:** Standardizing the accessibility and interaction details of entry forms (like creating a new Measurement) makes them highly polished. This is achieved by combining unique `useId`s for label-to-input association, visual indicators (`RequiredStar`), autofocusing the first input on mount (using `useRef` and `useEffect` to satisfy linters), adding `Cmd+Enter` / `Ctrl+Enter` shortcut handlers with `aria-keyshortcuts` + `Tooltip` hints, and utilizing `useNavigation` to provide disable/loading states.
 **Action:** Apply the full Semantic Form Entry Pattern to all standard input/creation form pages.
+
+## 2026-07-17 - [Semantic Multi-Step Wizard Pattern]
+**Learning:** For multi-step wizard flows (such as `app/routes/habits/new.tsx`), we can standardize accessibility and keyboard-only loop optimization. This is done by associating semantic `<label>` elements with input/textarea fields via React `useId` and `htmlFor` attributes, managing active step-based autofocusing via `useRef` and `useEffect`, adding `onKeyDown` listeners to text inputs (`Enter`) and textareas (`Cmd/Ctrl+Enter`) to seamlessly go to the next step (or submit), intercepting the `Escape` key globally via `window` keydown listener to navigate to the previous step (or cancel to the list), and adding `<Kbd>` visual helper hints inside Radix UI Tooltips wrapped in an inline-block `Box` wrapper.
+**Action:** Apply the Semantic Multi-Step Wizard Pattern to improve multi-step questionnaire layouts.
