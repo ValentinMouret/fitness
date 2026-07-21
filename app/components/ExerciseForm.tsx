@@ -1,5 +1,6 @@
 import { InfoCircledIcon, PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import {
+  Box,
   Button,
   Flex,
   IconButton,
@@ -10,8 +11,8 @@ import {
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
-import { useState } from "react";
-import { Form } from "react-router";
+import { useEffect, useId, useRef, useState } from "react";
+import { Form, useNavigation } from "react-router";
 import { NumberInput } from "~/components/NumberInput";
 import RequiredStar from "~/components/RequiredStar";
 import { humanFormatting } from "~/strings";
@@ -83,32 +84,67 @@ export default function ExerciseForm({
     setSplits(splits.map((s, i) => (i === index ? split : s)));
   };
 
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state !== "idle";
+
+  const nameId = useId();
+  const typeId = useId();
+  const descriptionId = useId();
+  const mmcId = useId();
+
+  const formRef = useRef<HTMLFormElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (nameInputRef.current) {
+      nameInputRef.current.focus();
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        if (formRef.current?.contains(document.activeElement)) {
+          e.preventDefault();
+          formRef.current.requestSubmit();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
-    <Form method="post">
+    <Form ref={formRef} method="post">
       <Flex direction="column" gap="2" pt="4">
         <Flex direction="column" gap="2">
-          <Text as="label" size="2" weight="medium">
+          <Text as="label" htmlFor={nameId} size="2" weight="medium">
             Name <RequiredStar />
           </Text>
           <TextField.Root
+            ref={nameInputRef}
+            id={nameId}
             name="name"
             type="text"
             placeholder="Chest press"
             required
             defaultValue={initialExercise?.name}
+            disabled={isSubmitting}
           />
         </Flex>
 
         <Flex direction="column" gap="2">
-          <Text as="label" size="2" weight="medium">
+          <Text as="label" htmlFor={typeId} size="2" weight="medium">
             Type <RequiredStar />
           </Text>
           <Select.Root
             required
             name="type"
             defaultValue={initialExercise?.type ?? "barbell"}
+            disabled={isSubmitting}
           >
-            <Select.Trigger />
+            <Select.Trigger id={typeId} />
             <Select.Content>
               {EXERCISE_TYPES.map((exerciseType) => (
                 <Select.Item key={exerciseType} value={exerciseType}>
@@ -120,25 +156,29 @@ export default function ExerciseForm({
         </Flex>
 
         <Flex direction="column" gap="2">
-          <Text as="label" size="2" weight="medium">
+          <Text as="label" htmlFor={descriptionId} size="2" weight="medium">
             Description
           </Text>
           <TextField.Root
+            id={descriptionId}
             name="description"
             type="text"
             defaultValue={initialExercise?.description}
+            disabled={isSubmitting}
           />
         </Flex>
 
         <Flex direction="column" gap="2">
-          <Text as="label" size="2" weight="medium">
+          <Text as="label" htmlFor={mmcId} size="2" weight="medium">
             Mind-Muscle Connection
           </Text>
           <TextArea
+            id={mmcId}
             name="mmcInstructions"
             placeholder="Focus cues to engage target muscles, e.g. 'Squeeze at the top', 'Feel the stretch at the bottom'"
             defaultValue={initialExercise?.mmcInstructions}
             rows={3}
+            disabled={isSubmitting}
           />
         </Flex>
 
@@ -173,6 +213,7 @@ export default function ExerciseForm({
                       required
                       name={`${index}-muscle-group`}
                       defaultValue={muscleGroupSplit.muscleGroup}
+                      disabled={isSubmitting}
                       onValueChange={(value) =>
                         updateSplitMuscleGroup(
                           {
@@ -203,6 +244,7 @@ export default function ExerciseForm({
                       max="100"
                       name={`${index}-split`}
                       defaultValue={muscleGroupSplit.split}
+                      disabled={isSubmitting}
                     />
                   </Table.Cell>
                   <Table.Cell>
@@ -212,6 +254,7 @@ export default function ExerciseForm({
                       color="red"
                       onClick={() => deleteSplit(index)}
                       aria-label="Delete muscle group split"
+                      disabled={isSubmitting}
                     >
                       <TrashIcon />
                     </IconButton>
@@ -221,7 +264,7 @@ export default function ExerciseForm({
             </Table.Body>
           </Table.Root>
           <Button
-            disabled={availableMuscleGroups.length === 0}
+            disabled={availableMuscleGroups.length === 0 || isSubmitting}
             type="button"
             variant="soft"
             onClick={createNextSplit}
@@ -233,7 +276,20 @@ export default function ExerciseForm({
           </Button>
         </Flex>
 
-        <Button>{mode === "create" ? "Create" : "Update"}</Button>
+        <Tooltip
+          content={`${mode === "create" ? "Create" : "Update"} exercise (Cmd+Enter)`}
+        >
+          <Box display="inline-block" style={{ width: "100%" }} mt="4">
+            <Button
+              type="submit"
+              loading={isSubmitting}
+              aria-keyshortcuts="Meta+Enter Control+Enter"
+              style={{ width: "100%" }}
+            >
+              {mode === "create" ? "Create Exercise" : "Update Exercise"}
+            </Button>
+          </Box>
+        </Tooltip>
       </Flex>
     </Form>
   );
