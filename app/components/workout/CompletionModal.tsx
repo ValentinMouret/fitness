@@ -7,9 +7,11 @@ import {
   Heading,
   Text,
   TextField,
+  Tooltip,
 } from "@radix-ui/themes";
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Form, useNavigation } from "react-router";
+import RequiredStar from "~/components/RequiredStar";
 import { useLiveDuration } from "./useLiveDuration";
 import "./CompletionModal.css";
 
@@ -49,6 +51,33 @@ export function CompletionModal({
     navigation.formData?.get("intent") === "complete-workout";
   const isBusy = navigation.state !== "idle";
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
+  const templateNameId = useId();
+  const templateNameInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (saveAsTemplate) {
+      setTimeout(() => {
+        templateNameInputRef.current?.focus();
+      }, 0);
+    }
+  }, [saveAsTemplate]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        if (!isBusy) {
+          e.preventDefault();
+          formRef.current?.requestSubmit();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, isBusy]);
 
   const { formattedDuration } = useLiveDuration({
     startTime: workoutSession.workout.start,
@@ -68,7 +97,7 @@ export function CompletionModal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content className="completion-modal">
-        <Form method="post">
+        <Form ref={formRef} method="post">
           <input type="hidden" name="intent" value="complete-workout" />
           {saveAsTemplate && (
             <input type="hidden" name="saveAsTemplate" value="true" />
@@ -121,11 +150,24 @@ export function CompletionModal({
 
               {saveAsTemplate && (
                 <Box mt="3">
+                  <Text
+                    as="label"
+                    htmlFor={templateNameId}
+                    size="2"
+                    weight="medium"
+                    mb="1"
+                    style={{ display: "block" }}
+                  >
+                    Template Name <RequiredStar />
+                  </Text>
                   <TextField.Root
+                    ref={templateNameInputRef}
+                    id={templateNameId}
                     name="templateName"
                     placeholder="Template name"
                     defaultValue={workoutSession.workout.name}
                     size="2"
+                    required
                   />
                 </Box>
               )}
@@ -142,9 +184,19 @@ export function CompletionModal({
             >
               Continue
             </Button>
-            <Button type="submit" size="2" disabled={isBusy}>
-              {isCompleting ? "Completing..." : "Finish"}
-            </Button>
+            <Tooltip content="Finish workout (Cmd/Ctrl+Enter)">
+              <Box display="inline-block">
+                <Button
+                  type="submit"
+                  size="2"
+                  disabled={isBusy}
+                  loading={isCompleting}
+                  aria-keyshortcuts="Meta+Enter Control+Enter"
+                >
+                  Finish
+                </Button>
+              </Box>
+            </Tooltip>
           </Flex>
         </Form>
       </Dialog.Content>
