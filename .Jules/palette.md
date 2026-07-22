@@ -1,5 +1,9 @@
 # Palette's Journal
 
+## 2026-07-22 - [Conditionally-Rendered Dialog Input Focus]
+**Learning:** For conditionally-rendered input fields nested within dialogs (e.g., entering a template name only after selecting 'Save as template'), standard dialog auto-focus patterns like `onOpenAutoFocus` are insufficient because the input is initially unmounted. Using a localized `useRef` and a `useEffect` hook watching the conditional state allows for programmatically focusing the input immediately upon rendering, keeping keyboard-only flows fluid.
+**Action:** Use a ref and a visibility state listener with a micro-tick timeout to manage focus on nested conditionally-rendered dialog input elements.
+
 ## 2025-05-15 - [Identity-Focused Habit UI]
 **Learning:** The app's philosophy (based on Atomic Habits) emphasizes "Identity Phrases" (e.g., "I am the type of person who..."). Surfacing these phrases during the interaction loop (like habit checking) reinforces the identity-building aspect of the habit, making the UX more meaningful than a simple checkbox.
 **Action:** Always look for opportunities to surface identity phrases or habit descriptions in tooltips or subtext when the user interacts with habits.
