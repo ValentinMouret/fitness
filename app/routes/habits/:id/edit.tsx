@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
-import { data, Link, redirect } from "react-router";
+import { Box, Tooltip } from "@radix-ui/themes";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { data, Link, redirect, useNavigate } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import {
@@ -146,10 +147,25 @@ function initialSelectedDays(habit: {
 
 export default function EditHabit({ loaderData }: Route.ComponentProps) {
   const { habit } = loaderData;
+  const navigate = useNavigate();
 
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState<"forward" | "back">("forward");
   const [animKey, setAnimKey] = useState(0);
+
+  // Unique IDs for semantic label association
+  const nameInputId = useId();
+  const identityInputId = useId();
+  const timeInputId = useId();
+  const locationInputId = useId();
+  const minimalVersionInputId = useId();
+
+  // Step-specific refs for auto-focusing
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const identityInputRef = useRef<HTMLTextAreaElement>(null);
+  const timeInputRef = useRef<HTMLInputElement>(null);
+  const locationInputRef = useRef<HTMLInputElement>(null);
+  const minimalVersionInputRef = useRef<HTMLTextAreaElement>(null);
 
   const [name, setName] = useState(habit.name);
   const [identityPhrase, setIdentityPhrase] = useState(habit.identityPhrase);
@@ -178,12 +194,87 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
 
   const formRef = useRef<HTMLFormElement>(null);
 
-  function go(n: number) {
-    if (n < 0 || n > 4) return;
-    setDir(n > step ? "forward" : "back");
-    setAnimKey((k) => k + 1);
-    setStep(n);
-  }
+  // Auto-focusing active step inputs
+  useEffect(() => {
+    if (step === 0) {
+      nameInputRef.current?.focus();
+    } else if (step === 1) {
+      identityInputRef.current?.focus();
+    } else if (step === 2) {
+      if (freqMode !== "monthly" && timeInputRef.current) {
+        timeInputRef.current.focus();
+      } else {
+        locationInputRef.current?.focus();
+      }
+    } else if (step === 3) {
+      minimalVersionInputRef.current?.focus();
+    }
+  }, [step, freqMode]);
+
+  const go = useCallback(
+    (n: number) => {
+      if (n < 0 || n > 4) return;
+      setDir(n > step ? "forward" : "back");
+      setAnimKey((k) => k + 1);
+      setStep(n);
+    },
+    [step],
+  );
+
+  // Global keydown keyboard navigation (Enter/Cmd+Enter to advance, Escape to go back)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Allow Cmd+Enter or Ctrl+Enter even if modifier is pressed
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+          // Continue to enter logic
+        } else {
+          return;
+        }
+      }
+
+      if (e.key === "Escape") {
+        e.preventDefault();
+        if (step > 0) {
+          go(step - 1);
+        } else {
+          navigate("/habits");
+        }
+        return;
+      }
+
+      if (e.key === "Enter") {
+        const target = e.target as HTMLElement;
+        const isButton = target.tagName === "BUTTON";
+        const isLink = target.tagName === "A" || target.closest("a") !== null;
+
+        if (isButton || isLink) {
+          return;
+        }
+
+        const isTextarea = target.tagName === "TEXTAREA";
+
+        // Require Cmd/Ctrl + Enter in textareas to allow standard line breaks
+        if (isTextarea && !e.ctrlKey && !e.metaKey) {
+          return;
+        }
+
+        if (step === 0 && name.trim() === "") {
+          return;
+        }
+
+        e.preventDefault();
+        if (step === 4) {
+          formRef.current?.requestSubmit();
+        } else {
+          go(step + 1);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [step, name, navigate, go]);
 
   function toggleDay(d: string) {
     setSelectedDays((prev) => {
@@ -196,16 +287,31 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
 
   const actualDays = [...selectedDays].map((d) => DAY_MAP[d]);
 
+  function getNextTooltipContent() {
+    if (step === 4) return "Save changes (Enter)";
+    if (step === 1 || step === 3)
+      return `Next: ${STEPS[step + 1].short} (Cmd+Enter)`;
+    return `Next: ${STEPS[step + 1].short} (Enter)`;
+  }
+
   function renderStep() {
     if (step === 0) {
       return (
         <div style={{ padding: "24px 24px 0" }}>
-          <div style={fieldLabel}>Name</div>
+          <label
+            htmlFor={nameInputId}
+            style={{ ...fieldLabel, display: "block" }}
+          >
+            Name
+          </label>
           <input
+            id={nameInputId}
+            ref={nameInputRef}
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Morning Run"
             style={fieldInput}
+            required
           />
         </div>
       );
@@ -214,8 +320,15 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
     if (step === 1) {
       return (
         <div style={{ padding: "24px 24px 0" }}>
-          <div style={fieldLabel}>Identity phrase</div>
+          <label
+            htmlFor={identityInputId}
+            style={{ ...fieldLabel, display: "block" }}
+          >
+            Identity phrase
+          </label>
           <textarea
+            id={identityInputId}
+            ref={identityInputRef}
             value={identityPhrase}
             onChange={(e) => setIdentityPhrase(e.target.value)}
             placeholder='Start with "I am…"'
@@ -329,8 +442,15 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
           )}
           {freqMode !== "monthly" && (
             <>
-              <div style={fieldLabel}>Time</div>
+              <label
+                htmlFor={timeInputId}
+                style={{ ...fieldLabel, display: "block" }}
+              >
+                Time
+              </label>
               <input
+                id={timeInputId}
+                ref={timeInputRef}
                 value={timeOfDay}
                 onChange={(e) => setTimeOfDay(e.target.value)}
                 type="time"
@@ -338,8 +458,15 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
               />
             </>
           )}
-          <div style={fieldLabel}>Location</div>
+          <label
+            htmlFor={locationInputId}
+            style={{ ...fieldLabel, display: "block" }}
+          >
+            Location
+          </label>
           <input
+            id={locationInputId}
+            ref={locationInputRef}
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. Home, Gym"
@@ -352,8 +479,15 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
     if (step === 3) {
       return (
         <div style={{ padding: "24px 24px 0" }}>
-          <div style={fieldLabel}>Minimum version</div>
+          <label
+            htmlFor={minimalVersionInputId}
+            style={{ ...fieldLabel, display: "block" }}
+          >
+            Minimum version
+          </label>
           <textarea
+            id={minimalVersionInputId}
+            ref={minimalVersionInputRef}
             value={minimalVersion}
             onChange={(e) => setMinimalVersion(e.target.value)}
             placeholder="e.g. Just put on your shoes"
@@ -367,6 +501,8 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
           />
           <button
             type="button"
+            role="switch"
+            aria-checked={isKeystone}
             onClick={() => setIsKeystone(!isKeystone)}
             style={{
               display: "flex",
@@ -448,7 +584,13 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
               />
             ))}
           </div>
-          <div style={{ background: "#f0ede8", borderRadius: 14, padding: 16 }}>
+          <div
+            style={{
+              background: "#f0ede8",
+              borderRadius: 14,
+              padding: 16,
+            }}
+          >
             <div
               style={{
                 display: "flex",
@@ -587,19 +729,23 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
         >
           {STEPS[step].q}
         </div>
-        <Link
-          to="/habits"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            fontSize: 12,
-            color: "#6b6560",
-            textDecoration: "none",
-          }}
-        >
-          ← Cancel
-        </Link>
+        <Tooltip content="Cancel and go back (Esc)">
+          <Box display="inline-block">
+            <Link
+              to="/habits"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12,
+                color: "#6b6560",
+                textDecoration: "none",
+              }}
+            >
+              ← Cancel
+            </Link>
+          </Box>
+        </Tooltip>
       </div>
 
       <div
@@ -619,6 +765,7 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
         </div>
       </div>
 
+      {/* Hidden form submitted on step 5 */}
       <form ref={formRef} method="post" style={{ display: "none" }}>
         <input type="hidden" name="name" value={name} />
         <input type="hidden" name="identityPhrase" value={identityPhrase} />
@@ -646,49 +793,70 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
           gap: 12,
         }}
       >
-        <button
-          type="button"
-          onClick={() => go(step - 1)}
-          disabled={step === 0}
-          style={{
-            flex: 1,
-            padding: "13px 0",
-            border: "1px solid #3d3935",
-            borderRadius: 12,
-            background: "transparent",
-            color: step === 0 ? "#3d3935" : "#a8a29e",
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: step === 0 ? "default" : "pointer",
-            fontFamily: "inherit",
-          }}
+        <Tooltip
+          content={
+            step > 0 ? "Previous step (Esc)" : "Cancel and go back (Esc)"
+          }
         >
-          {step > 0 ? `← ${STEPS[step - 1].short}` : "Back"}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (step === 4) {
-              formRef.current?.requestSubmit();
-            } else {
-              go(step + 1);
-            }
-          }}
-          style={{
-            flex: 2,
-            padding: "13px 0",
-            border: "none",
-            borderRadius: 12,
-            background: "#e15a46",
-            color: "#fff",
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: "pointer",
-            fontFamily: "inherit",
-          }}
-        >
-          {step === 4 ? "Save changes" : `${STEPS[step + 1].short} →`}
-        </button>
+          <Box display="inline-block" style={{ flex: 1 }}>
+            <button
+              type="button"
+              onClick={() => {
+                if (step > 0) {
+                  go(step - 1);
+                } else {
+                  navigate("/habits");
+                }
+              }}
+              style={{
+                width: "100%",
+                padding: "13px 0",
+                border: "1px solid #3d3935",
+                borderRadius: 12,
+                background: "transparent",
+                color: "#a8a29e",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              {step > 0 ? `← ${STEPS[step - 1].short}` : "Back"}
+            </button>
+          </Box>
+        </Tooltip>
+
+        <Tooltip content={getNextTooltipContent()}>
+          <Box display="inline-block" style={{ flex: 2 }}>
+            <button
+              type="button"
+              disabled={step === 0 && name.trim() === ""}
+              onClick={() => {
+                if (step === 4) {
+                  formRef.current?.requestSubmit();
+                } else {
+                  go(step + 1);
+                }
+              }}
+              style={{
+                width: "100%",
+                padding: "13px 0",
+                border: "none",
+                borderRadius: 12,
+                background:
+                  step === 0 && name.trim() === "" ? "#c4bfba" : "#e15a46",
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor:
+                  step === 0 && name.trim() === "" ? "default" : "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              {step === 4 ? "Save changes" : `${STEPS[step + 1].short} →`}
+            </button>
+          </Box>
+        </Tooltip>
       </div>
     </div>
   );
