@@ -11,7 +11,7 @@ import {
   Text,
   TextArea,
 } from "@radix-ui/themes";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useFetcher } from "react-router";
 import type { ImportResult } from "../../../domain/strong-import";
 import "./StrongImportForm.css";
@@ -30,6 +30,9 @@ export function StrongImportForm({
   const [skipUnmappedExercises, setSkipUnmappedExercises] = useState(false);
   const [customImportTime, setCustomImportTime] = useState("");
   const [useCustomTime, setUseCustomTime] = useState(false);
+
+  const strongTextId = useId();
+  const customTimeId = useId();
 
   const fetcher = useFetcher<{
     success: boolean;
@@ -93,10 +96,18 @@ export function StrongImportForm({
           <Flex direction="column" gap="4">
             {/* Strong Text Input */}
             <Box>
-              <Text as="label" size="2" weight="medium" mb="2">
+              <Text
+                as="label"
+                htmlFor={strongTextId}
+                size="2"
+                weight="medium"
+                mb="2"
+                style={{ display: "block" }}
+              >
                 Strong Workout Export
               </Text>
               <TextArea
+                id={strongTextId}
                 placeholder={`Early Morning Workout
 Wednesday 13 August 2025 at 07:32
 
@@ -157,10 +168,18 @@ Set 2: 20 kg × 14
 
             {useCustomTime && (
               <Box>
-                <Text as="label" size="2" weight="medium" mb="2">
+                <Text
+                  as="label"
+                  htmlFor={customTimeId}
+                  size="2"
+                  weight="medium"
+                  mb="2"
+                  style={{ display: "block" }}
+                >
                   Custom Import Time
                 </Text>
                 <input
+                  id={customTimeId}
                   type="datetime-local"
                   value={customImportTime}
                   onChange={(e) => setCustomImportTime(e.target.value)}
