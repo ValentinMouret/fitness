@@ -10,7 +10,7 @@ import {
   Spinner,
   Text,
 } from "@radix-ui/themes";
-import { useCallback, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { useFetcher } from "react-router";
 import type { ImportResult } from "../../../domain/fitbod-import";
 import "./FitbodImportForm.css";
@@ -30,6 +30,9 @@ export function FitbodImportForm({
   const [customImportTime, setCustomImportTime] = useState("");
   const [useCustomTime, setUseCustomTime] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
+
+  const fileInputId = useId();
+  const customTimeId = useId();
 
   const fetcher = useFetcher<{
     success: boolean;
@@ -133,10 +136,18 @@ export function FitbodImportForm({
         <form onSubmit={handleSubmit}>
           <Flex direction="column" gap="4">
             <Box>
-              <Text as="label" size="2" weight="medium" mb="2">
+              <Text
+                as="label"
+                htmlFor={fileInputId}
+                size="2"
+                weight="medium"
+                mb="2"
+                style={{ display: "block" }}
+              >
                 Fitbod Export File
               </Text>
               <input
+                id={fileInputId}
                 type="file"
                 accept=".csv"
                 onChange={handleFileChange}
@@ -199,10 +210,18 @@ export function FitbodImportForm({
 
             {useCustomTime && (
               <Box>
-                <Text as="label" size="2" weight="medium" mb="2">
+                <Text
+                  as="label"
+                  htmlFor={customTimeId}
+                  size="2"
+                  weight="medium"
+                  mb="2"
+                  style={{ display: "block" }}
+                >
                   Custom Import Time
                 </Text>
                 <input
+                  id={customTimeId}
                   type="datetime-local"
                   value={customImportTime}
                   onChange={(e) => setCustomImportTime(e.target.value)}
