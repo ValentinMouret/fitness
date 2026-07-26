@@ -1,5 +1,9 @@
 # Palette's Journal
 
+## 2026-07-26 - [Collapsible Card Toggle Accessibility]
+**Learning:** For collapsible or expandable cards (e.g., `ExerciseCard`), relying solely on container-level click events prevents keyboard and screen reader users from triggering the expansion, as they navigate via focusable buttons. Explicitly binding the toggle click handler to the Chevron `IconButton` (with `event.stopPropagation()`) ensures direct interactive parity and robust event scoping.
+**Action:** When creating expandable/collapsible components, ensure the focusable toggle button has its own explicit click handler with event propagation blockers.
+
 ## 2026-07-24 - [Multi-Step Wizard Parity & Accessibility]
 **Learning:** Copy-pasted wizard flows (like creating vs. editing a habit) are prone to accessibility and polish regressions if features like focus management, tooltips, and keyboard shortcuts are only applied to one and not kept in sync. Aligning both with the "Semantic Form & Keyboard Navigation Pattern" ensures high-fidelity interaction and accessibility parity across CRUD lifecycles.
 **Action:** Always audit both creation and editing wizards simultaneously to ensure identical UX features, semantic labelling, autofocusing, and keyboard navigation.
