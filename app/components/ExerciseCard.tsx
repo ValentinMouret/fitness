@@ -100,6 +100,10 @@ export default function ExerciseCard({
                 variant="ghost"
                 size="1"
                 className={`rotating-chevron ${isExpanded ? "rotated" : ""}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  toggleExpanded();
+                }}
                 aria-label={isExpanded ? "Collapse" : "Expand"}
                 aria-expanded={isExpanded}
               >
