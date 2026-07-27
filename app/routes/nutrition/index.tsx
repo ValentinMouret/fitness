@@ -59,6 +59,7 @@ import {
   toDateString,
   today,
 } from "~/time";
+import { isEditableTarget } from "~/utils/dom";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types";
 import "./index.css";
@@ -257,19 +258,20 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
   const fetchers = useFetchers();
 
   const activeFetchers = fetchers.filter((f) => f.state !== "idle");
-  const optimisticMealActions = activeFetchers.filter((f) =>
-    ["apply-template", "delete-meal"].includes(
-      f.formData?.get("intent") as string,
-    ),
-  );
+  const optimisticMealActions = activeFetchers.filter((f) => {
+    const intent = f.formData?.get("intent");
+    return intent === "apply-template" || intent === "delete-meal";
+  });
 
   const mealCompletionMap = Object.fromEntries(
     mealTypes.map((t) => [t, !!dailySummary.meals[t]]),
   );
   for (const f of optimisticMealActions) {
-    const category = f.formData?.get("mealCategory") as string;
-    if (category)
-      mealCompletionMap[category] =
+    const category = z
+      .enum(mealTypes)
+      .safeParse(f.formData?.get("mealCategory"));
+    if (category.success)
+      mealCompletionMap[category.data] =
         f.formData?.get("intent") === "apply-template";
     else if (f.formData?.get("intent") === "delete-meal") {
       const id = f.formData?.get("mealId");
@@ -327,13 +329,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      const target = e.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
-
-      if (isInput) return;
+      if (isEditableTarget(e.target)) return;
 
       if (e.key === "ArrowLeft") {
         e.preventDefault();

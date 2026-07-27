@@ -106,7 +106,7 @@ test.describe("Weekly Habits", () => {
     await expect(weekLink).toBeVisible();
     // Active tab has red background (#e15a46), inactive is transparent
     const bg = await weekLink.evaluate(
-      (el) => (el as HTMLElement).style.background,
+      (element) => window.getComputedStyle(element).backgroundColor,
     );
     expect(bg).toBe("rgb(225, 90, 70)");
   });

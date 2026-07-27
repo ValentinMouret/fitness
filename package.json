@@ -14,10 +14,11 @@
     "db:migrate": "bun app/db/migrate.ts",
     "db:seed": "tsx app/db/index.ts",
     "dev": "react-router dev",
-    "check": "biome check --write && oxlint -A all -D no-restricted-imports -c .oxlintrc.jsonc app/modules",
+    "check": "biome check --write && oxlint -A all -D no-restricted-imports -c .oxlintrc.jsonc app/modules && bun run lint:type-assertions",
     "fmt": "biome format --write",
-    "lint": "biome lint --write && oxlint -A all -D no-restricted-imports -c .oxlintrc.jsonc app/modules",
+    "lint": "biome lint --write && oxlint -A all -D no-restricted-imports -c .oxlintrc.jsonc app/modules && bun run lint:type-assertions",
     "lint:boundaries": "oxlint -A all -D no-restricted-imports -c .oxlintrc.jsonc app/modules",
+    "lint:type-assertions": "oxlint --type-aware -A all -D typescript/no-unnecessary-type-assertion -D typescript/no-unsafe-type-assertion app tests",
     "prepare": "husky",
     "start": "react-router-serve ./build/server/index.js",
     "tc": "bun typecheck",
@@ -30,7 +31,7 @@
   "lint-staged": {
     "*.{ts,tsx}": [
       "biome check --write --no-errors-on-unmatched",
-      "oxlint -A all -D no-restricted-imports -c .oxlintrc.jsonc --quiet"
+      "oxlint -A all -D no-restricted-imports -D typescript/no-unnecessary-type-assertion -D typescript/no-unsafe-type-assertion -c .oxlintrc.jsonc --quiet"
     ],
     "*.css": [
       "biome check --write --no-errors-on-unmatched"
@@ -79,6 +80,7 @@
     "lint-staged": "^16.2.7",
     "nodemon": "^3.1.11",
     "oxlint": "^1.53.0",
+    "oxlint-tsgolint": "7.0.2001",
     "pino-pretty": "^13.1.3",
     "sharp": "^0.34.5",
     "tsx": "^4.21.0",

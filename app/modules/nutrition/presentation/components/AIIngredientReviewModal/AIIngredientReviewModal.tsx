@@ -15,11 +15,10 @@ import {
 } from "@radix-ui/themes";
 import { useState } from "react";
 import { NumberInput } from "~/components/NumberInput";
+import { isOneOf } from "~/strings";
 import {
   type CreateAIIngredientInput,
-  type IngredientCategory,
   ingredientCategories,
-  type TextureCategory,
   textureCategories,
 } from "../../../domain/ingredient";
 import "./AIIngredientReviewModal.css";
@@ -50,12 +49,21 @@ export function AIIngredientReviewModal({
   };
 
   const handleNumberFieldChange = (
-    field: keyof CreateAIIngredientInput,
+    field:
+      | "calories"
+      | "protein"
+      | "carbs"
+      | "fat"
+      | "fiber"
+      | "waterPercentage"
+      | "energyDensity"
+      | "sliderMin"
+      | "sliderMax",
     value: string,
   ) => {
     const numValue = Number.parseFloat(value);
     if (!Number.isNaN(numValue)) {
-      handleFieldChange(field, numValue as never);
+      setFormData((previous) => ({ ...previous, [field]: numValue }));
     }
   };
 
@@ -107,9 +115,11 @@ export function AIIngredientReviewModal({
               </Text>
               <Select.Root
                 value={formData.category}
-                onValueChange={(value) =>
-                  handleFieldChange("category", value as IngredientCategory)
-                }
+                onValueChange={(value) => {
+                  if (isOneOf(ingredientCategories, value)) {
+                    handleFieldChange("category", value);
+                  }
+                }}
               >
                 <Select.Trigger />
                 <Select.Content>
@@ -238,9 +248,11 @@ export function AIIngredientReviewModal({
               </Text>
               <Select.Root
                 value={formData.texture}
-                onValueChange={(value) =>
-                  handleFieldChange("texture", value as TextureCategory)
-                }
+                onValueChange={(value) => {
+                  if (isOneOf(textureCategories, value)) {
+                    handleFieldChange("texture", value);
+                  }
+                }}
               >
                 <Select.Trigger />
                 <Select.Content>

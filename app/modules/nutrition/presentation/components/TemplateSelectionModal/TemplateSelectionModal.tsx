@@ -17,6 +17,7 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import { useEffect } from "react";
+import { isEditableTarget } from "~/utils/dom";
 import type { TemplateSelectionViewModel } from "../../view-models/template-selection.view-model";
 import "./TemplateSelectionModal.css";
 
@@ -43,13 +44,7 @@ export function TemplateSelectionModal({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      const target = e.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
-
-      if (isInput) return;
+      if (isEditableTarget(e.target)) return;
 
       const key = e.key;
       if (key >= "1" && key <= "9") {

@@ -17,11 +17,19 @@ export const muscleGroups = [
   "triceps",
 ] as const;
 export type MuscleGroup = (typeof muscleGroups)[number];
+
+function isIncluded<T extends string>(
+  values: ReadonlyArray<T>,
+  value: string,
+): value is T {
+  return values.some((candidate) => candidate === value);
+}
+
 export function parseMuscleGroup(
   s: string,
 ): Result<MuscleGroup, ErrValidation> {
-  if (!muscleGroups.includes(s as MuscleGroup)) return err("validation_error");
-  return ok(s as MuscleGroup);
+  if (!isIncluded(muscleGroups, s)) return err("validation_error");
+  return ok(s);
 }
 
 const allMuscleGroupCategories = ["core", "legs", "arms", "back"] as const;
@@ -54,9 +62,8 @@ export type ExerciseType = (typeof exerciseTypes)[number];
 export function parseExerciseType(
   s: string,
 ): Result<ExerciseType, ErrValidation> {
-  if (!exerciseTypes.includes(s as ExerciseType))
-    return err("validation_error");
-  return ok(s as ExerciseType);
+  if (!isIncluded(exerciseTypes, s)) return err("validation_error");
+  return ok(s);
 }
 
 export const movementPatterns = [
@@ -73,9 +80,8 @@ export type MovementPattern = (typeof movementPatterns)[number];
 export function parseMovementPattern(
   s: string,
 ): Result<MovementPattern, ErrValidation> {
-  if (!movementPatterns.includes(s as MovementPattern))
-    return err("validation_error");
-  return ok(s as MovementPattern);
+  if (!isIncluded(movementPatterns, s)) return err("validation_error");
+  return ok(s);
 }
 
 export interface Exercise {

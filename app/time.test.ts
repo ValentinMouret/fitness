@@ -28,7 +28,7 @@ describe("time module", () => {
 
   describe("Day.sortDays", () => {
     it("should sort days in chronological order", () => {
-      const unsortedDays = ["Friday", "Monday", "Wednesday", "Sunday"];
+      const unsortedDays = ["Friday", "Monday", "Wednesday", "Sunday"] as const;
       const sorted = Day.sortDays(unsortedDays);
       expect(sorted).toEqual(["Monday", "Wednesday", "Friday", "Sunday"]);
     });
@@ -42,7 +42,7 @@ describe("time module", () => {
     });
 
     it("should not mutate original array", () => {
-      const original = ["Friday", "Monday"];
+      const original = ["Friday", "Monday"] as const;
       const sorted = Day.sortDays(original);
       expect(original).toEqual(["Friday", "Monday"]);
       expect(sorted).toEqual(["Monday", "Friday"]);

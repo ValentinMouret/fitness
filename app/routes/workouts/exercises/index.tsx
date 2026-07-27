@@ -12,6 +12,7 @@ import {
   getExercisesPageData,
 } from "~/modules/fitness/infra/exercises-page.service.server";
 import { humanFormatting } from "~/strings";
+import { isEditableTarget } from "~/utils/dom";
 import { formText } from "~/utils/form-data";
 import type { Route } from "./+types";
 
@@ -59,13 +60,7 @@ export default function ExercisesIndexPage({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      const target = e.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
-
-      if (isInput) return;
+      if (isEditableTarget(e.target)) return;
 
       if (e.key === "/") {
         e.preventDefault();

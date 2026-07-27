@@ -31,13 +31,15 @@ const AIIngredientResponseSchema = z
     path: ["sliderMax"],
   });
 
-export interface AIIngredientSearchResult {
-  found: boolean;
-  data: CreateIngredientInput & {
-    aiGenerated: true;
-    aiGeneratedAt: Date;
-  };
-}
+export type AIIngredientSearchResult =
+  | { readonly found: false }
+  | {
+      readonly found: true;
+      readonly data: CreateIngredientInput & {
+        readonly aiGenerated: true;
+        readonly aiGeneratedAt: Date;
+      };
+    };
 
 const extractIngredientTool: Anthropic.Messages.Tool = {
   name: "extract_ingredient_data",
@@ -159,10 +161,7 @@ function parseIngredientResult(
   );
 
   if (!toolUse || toolUse.type !== "tool_use") {
-    return ok({
-      found: false,
-      data: {} as AIIngredientSearchResult["data"],
-    });
+    return ok({ found: false });
   }
 
   const validationResult = AIIngredientResponseSchema.safeParse(toolUse.input);

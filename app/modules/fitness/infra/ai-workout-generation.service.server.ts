@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { ResultAsync } from "neverthrow";
+import { err, ResultAsync } from "neverthrow";
 import { z } from "zod";
 import { env } from "~/env.server";
 import { logger } from "~/logger.server";
@@ -13,6 +13,7 @@ import type {
   MuscleGroupVolumeStats,
   WorkoutSummary,
 } from "../domain/ai-generation";
+import { GenerationContextSchema } from "../domain/ai-generation";
 import {
   AIWorkoutGenerationRepository,
   type ProgressionRow,
@@ -114,7 +115,7 @@ export const AIWorkoutGenerationService = {
     const model = env.ANTHROPIC_MODEL;
 
     return AIWorkoutGenerationRepository.createConversation(
-      context as unknown as Record<string, unknown>,
+      { ...context },
       model,
     )
       .mapErr(() => "context_assembly_failed" as const)
@@ -171,9 +172,18 @@ export const AIWorkoutGenerationService = {
           );
         }
 
-        const context =
-          conversation.contextSnapshot as unknown as GenerationContext;
-        const systemPrompt = buildSystemPrompt(context);
+        const context = GenerationContextSchema.safeParse(
+          conversation.contextSnapshot,
+        );
+
+        if (!context.success) {
+          logger.error(
+            { err: context.error, conversationId },
+            "Stored workout generation context is invalid",
+          );
+          return err("context_assembly_failed" as const);
+        }
+        const systemPrompt = buildSystemPrompt(context.data);
 
         const updatedMessages: ConversationMessage[] = [
           ...conversation.messages,
@@ -181,7 +191,7 @@ export const AIWorkoutGenerationService = {
         ];
 
         const apiMessages = updatedMessages.map((m) => ({
-          role: m.role as "user" | "assistant",
+          role: m.role,
           content: m.content,
         }));
 
@@ -321,7 +331,7 @@ async function callClaude(
 
   const assistantMessage = response.content
     .filter((c) => c.type === "text")
-    .map((c) => (c as { type: "text"; text: string }).text)
+    .map((c) => c.text)
     .join(" ");
 
   const tokensUsed = response.usage.input_tokens + response.usage.output_tokens;

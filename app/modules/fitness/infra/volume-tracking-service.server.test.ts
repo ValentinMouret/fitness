@@ -28,15 +28,14 @@ vi.mock("~/modules/fitness/domain/workout", () => ({
 import { WeeklyVolumeTracker } from "~/modules/fitness/domain/workout";
 import { VolumeTrackingRepository } from "~/modules/fitness/infra/volume-tracking-repository.server";
 
-const mockGetWeeklyVolume =
-  VolumeTrackingRepository.getWeeklyVolume as ReturnType<typeof vi.fn>;
-const mockRecordWorkoutVolume =
-  VolumeTrackingRepository.recordWorkoutVolume as ReturnType<typeof vi.fn>;
-const mockWeeklyVolumeTrackerCreate = WeeklyVolumeTracker.create as ReturnType<
-  typeof vi.fn
->;
-const mockWeeklyVolumeTrackerGetVolumeNeeds =
-  WeeklyVolumeTracker.getVolumeNeeds as ReturnType<typeof vi.fn>;
+const mockGetWeeklyVolume = vi.mocked(VolumeTrackingRepository.getWeeklyVolume);
+const mockRecordWorkoutVolume = vi.mocked(
+  VolumeTrackingRepository.recordWorkoutVolume,
+);
+const mockWeeklyVolumeTrackerCreate = vi.mocked(WeeklyVolumeTracker.create);
+const mockWeeklyVolumeTrackerGetVolumeNeeds = vi.mocked(
+  WeeklyVolumeTracker.getVolumeNeeds,
+);
 
 const createWorkout = (overrides?: Partial<Workout>): Workout => ({
   id: "workout-1",
@@ -136,7 +135,7 @@ describe("VolumeTrackingService", () => {
       mockGetWeeklyVolume.mockReturnValue(
         ResultAsync.fromPromise(
           Promise.reject("database_error"),
-          (error) => error as "database_error",
+          () => "database_error" as const,
         ),
       );
 
@@ -190,7 +189,7 @@ describe("VolumeTrackingService", () => {
       mockRecordWorkoutVolume.mockReturnValue(
         ResultAsync.fromPromise(
           Promise.reject("database_error"),
-          (error) => error as "database_error",
+          () => "database_error" as const,
         ),
       );
 
@@ -233,7 +232,7 @@ describe("VolumeTrackingService", () => {
       mockGetWeeklyVolume.mockReturnValue(
         ResultAsync.fromPromise(
           Promise.reject("database_error"),
-          (error) => error as "database_error",
+          () => "database_error" as const,
         ),
       );
 

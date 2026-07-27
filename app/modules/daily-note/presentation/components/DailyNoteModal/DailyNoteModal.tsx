@@ -59,8 +59,8 @@ export function DailyNoteModal({ note, mode }: Props) {
         handleEdit();
       } else if (isEditing && e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        const form = document.getElementById(formId) as HTMLFormElement;
-        if (form) form.requestSubmit();
+        const form = document.getElementById(formId);
+        if (form instanceof HTMLFormElement) form.requestSubmit();
       }
     };
 

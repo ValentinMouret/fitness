@@ -1,5 +1,6 @@
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
-import { ResultAsync } from "neverthrow";
+import { err, ok, Result, ResultAsync } from "neverthrow";
+import { z } from "zod";
 import { db } from "~/db";
 import {
   exerciseMuscleGroups,
@@ -15,6 +16,13 @@ import type {
   GenerationConversation,
   TrainingPreference,
 } from "../domain/ai-generation";
+import { ConversationMessageSchema } from "../domain/ai-generation";
+
+const trainingPreferenceSourceSchema = z.enum(["refinement", "manual"]);
+const conversationDataSchema = z.object({
+  messages: z.array(ConversationMessageSchema),
+  contextSnapshot: z.record(z.string(), z.unknown()),
+});
 
 export const AIWorkoutGenerationRepository = {
   /** Fetch recent completed workouts with all sets, grouped by exercise. */
@@ -51,13 +59,16 @@ export const AIWorkoutGenerationRepository = {
       ORDER BY w.start DESC, we.order_index ASC, ws.set ASC
     `;
 
-    return ResultAsync.fromPromise(db.execute(query), (error) => {
-      logger.error(
-        { err: error },
-        "Error fetching recent workouts for AI context",
-      );
-      return "database_error" as const;
-    }).map((result) => result.rows as unknown as RecentWorkoutRow[]);
+    return ResultAsync.fromPromise(
+      db.execute<RecentWorkoutRow>(query),
+      (error) => {
+        logger.error(
+          { err: error },
+          "Error fetching recent workouts for AI context",
+        );
+        return "database_error" as const;
+      },
+    ).map((result) => result.rows);
   },
 
   /** Fetch all exercises with their muscle group splits for the catalog. */
@@ -115,10 +126,13 @@ export const AIWorkoutGenerationRepository = {
       ORDER BY e.name, w.start ASC
     `;
 
-    return ResultAsync.fromPromise(db.execute(query), (error) => {
-      logger.error({ err: error }, "Error fetching exercise progressions");
-      return "database_error" as const;
-    }).map((result) => result.rows as unknown as ProgressionRow[]);
+    return ResultAsync.fromPromise(
+      db.execute<ProgressionRow>(query),
+      (error) => {
+        logger.error({ err: error }, "Error fetching exercise progressions");
+        return "database_error" as const;
+      },
+    ).map((result) => result.rows);
   },
 
   // --- Training Preferences ---
@@ -133,13 +147,22 @@ export const AIWorkoutGenerationRepository = {
       .where(isNull(trainingPreferences.deleted_at))
       .orderBy(desc(trainingPreferences.created_at));
 
-    return executeQuery(query, "getTrainingPreferences").map((records) =>
-      records.map((r) => ({
-        id: r.id,
-        content: r.content,
-        source: r.source as "refinement" | "manual",
-        createdAt: r.created_at,
-      })),
+    return executeQuery(query, "getTrainingPreferences").andThen((records) =>
+      Result.combine(
+        records.map((record) => {
+          const source = trainingPreferenceSourceSchema.safeParse(
+            record.source,
+          );
+          return source.success
+            ? ok({
+                id: record.id,
+                content: record.content,
+                source: source.data,
+                createdAt: record.created_at,
+              })
+            : err("validation_error" as const);
+        }),
+      ),
     );
   },
 
@@ -150,12 +173,21 @@ export const AIWorkoutGenerationRepository = {
     return executeQuery(
       db.insert(trainingPreferences).values({ content, source }).returning(),
       "saveTrainingPreference",
-    ).map((records) => ({
-      id: records[0].id,
-      content: records[0].content,
-      source: records[0].source as "refinement" | "manual",
-      createdAt: records[0].created_at,
-    }));
+    ).andThen((records) => {
+      const record = records[0];
+      const parsedSource = trainingPreferenceSourceSchema.safeParse(
+        record?.source,
+      );
+
+      if (!record || !parsedSource.success) return err("validation_error");
+
+      return ok({
+        id: record.id,
+        content: record.content,
+        source: parsedSource.data,
+        createdAt: record.created_at,
+      });
+    });
   },
 
   deletePreference(id: string): ResultAsync<void, ErrRepository> {
@@ -184,7 +216,9 @@ export const AIWorkoutGenerationRepository = {
         })
         .returning(),
       "createConversation",
-    ).map((records) => conversationToDomain(records[0]));
+    ).andThen((records) =>
+      records[0] ? conversationToDomain(records[0]) : err("database_error"),
+    );
   },
 
   getConversation(
@@ -201,8 +235,12 @@ export const AIWorkoutGenerationRepository = {
           ),
         ),
       "getConversation",
-    ).map((records) =>
-      records.length > 0 ? conversationToDomain(records[0]) : null,
+    ).andThen((records) =>
+      records[0]
+        ? conversationToDomain(records[0]).map<GenerationConversation | null>(
+            (conversation) => conversation,
+          )
+        : ok(null),
     );
   },
 
@@ -215,7 +253,7 @@ export const AIWorkoutGenerationRepository = {
       db
         .update(generationConversations)
         .set({
-          messages: messages as ConversationMessage[],
+          messages: messages,
           total_tokens: totalTokens,
           updated_at: new Date(),
         })
@@ -240,20 +278,33 @@ export const AIWorkoutGenerationRepository = {
 
 function conversationToDomain(
   record: typeof generationConversations.$inferSelect,
-): GenerationConversation {
-  return {
+): Result<GenerationConversation, ErrRepository> {
+  const conversationData = conversationDataSchema.safeParse({
+    messages: record.messages,
+    contextSnapshot: record.context_snapshot,
+  });
+
+  if (!conversationData.success) {
+    logger.error(
+      { err: conversationData.error, conversationId: record.id },
+      "Generation conversation contains invalid data",
+    );
+    return err("validation_error");
+  }
+
+  return ok({
     id: record.id,
     workoutId: record.workout_id ?? undefined,
-    messages: record.messages as ConversationMessage[],
-    contextSnapshot: record.context_snapshot as Record<string, unknown>,
+    messages: conversationData.data.messages,
+    contextSnapshot: conversationData.data.contextSnapshot,
     model: record.model,
     totalTokens: record.total_tokens,
     createdAt: record.created_at,
-  };
+  });
 }
 
 // Raw row types from SQL queries
-export interface RecentWorkoutRow {
+export type RecentWorkoutRow = {
   readonly workout_id: string;
   readonly workout_name: string;
   readonly workout_start: Date;
@@ -269,7 +320,7 @@ export interface RecentWorkoutRow {
   readonly is_completed: boolean;
   readonly is_failure: boolean;
   readonly rpe: number | null;
-}
+};
 
 export type ExerciseCatalogRow = {
   readonly id: string;
@@ -280,11 +331,11 @@ export type ExerciseCatalogRow = {
   readonly split: number;
 };
 
-export interface ProgressionRow {
+export type ProgressionRow = {
   readonly exercise_name: string;
   readonly workout_date: Date;
   readonly best_weight: number;
   readonly best_reps: number;
   readonly avg_rpe: number | null;
   readonly estimated_one_rep_max: number;
-}
+};

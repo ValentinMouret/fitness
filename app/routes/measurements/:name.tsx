@@ -27,6 +27,7 @@ import {
   getMeasurementDetail,
 } from "~/modules/core/infra/measurement-detail.service.server";
 import { today } from "~/time";
+import { isEditableTarget } from "~/utils/dom";
 import { formNumber, formOptionalText } from "~/utils/form-data";
 import type { Route } from "./+types/:name";
 import "./measurement-detail.css";
@@ -113,13 +114,7 @@ export default function MeasurementPage(_: Route.ComponentProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      const target = e.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
-
-      if (isInput) return;
+      if (isEditableTarget(e.target)) return;
 
       if (e.key.toLowerCase() === "m" && valueInputRef.current) {
         e.preventDefault();

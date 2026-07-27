@@ -12,6 +12,10 @@ describe("AIIngredientService (integration)", () => {
       const searchResult = result._unsafeUnwrap();
       expect(searchResult.found).toBe(true);
 
+      if (!searchResult.found) {
+        throw new Error("Expected AI ingredient search to find a result");
+      }
+
       const data = searchResult.data;
 
       // Huel Daily A-Z Protein (per 100g of powder):

@@ -14,3 +14,10 @@ export const humanFormatting = _.flow(snakeCaseToHuman, capitalize);
 export function coerceEmpty(str: string): string | undefined {
   return str === "" ? undefined : str;
 }
+
+export function isOneOf<T extends string>(
+  values: ReadonlyArray<T>,
+  value: string,
+): value is T {
+  return values.some((candidate) => candidate === value);
+}

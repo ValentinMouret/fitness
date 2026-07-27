@@ -1,6 +1,7 @@
 import { Box, Button, Flex, Text, Tooltip } from "@radix-ui/themes";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect } from "react";
+import { isEditableTarget } from "~/utils/dom";
 
 export interface PaginationProps {
   currentPage: number;
@@ -20,13 +21,7 @@ export function Pagination({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      const target = e.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
-
-      if (isInput) return;
+      if (isEditableTarget(e.target)) return;
 
       if (e.key === "ArrowLeft" && hasPrevious) {
         e.preventDefault();

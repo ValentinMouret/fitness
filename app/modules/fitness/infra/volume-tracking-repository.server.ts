@@ -56,7 +56,7 @@ export const VolumeTrackingRepository = {
       const volumeMap = new Map<MuscleGroup, number>();
 
       for (const record of records) {
-        const muscleGroup = record.muscle_group as MuscleGroup;
+        const muscleGroup = record.muscle_group;
         const weightedSets = (record.set_count * record.split) / 100;
         const currentVolume = volumeMap.get(muscleGroup) ?? 0;
         volumeMap.set(muscleGroup, currentVolume + weightedSets);

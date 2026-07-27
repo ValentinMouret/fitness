@@ -49,7 +49,7 @@ const createIngredientWithQuantity = (
 const createMealLogInput = (
   overrides?: Partial<CreateMealLogInput>,
 ): CreateMealLogInput => ({
-  mealCategory: "lunch" as MealCategory,
+  mealCategory: "lunch",
   loggedDate: new Date("2025-01-15"),
   ...overrides,
 });

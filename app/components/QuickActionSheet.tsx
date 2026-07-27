@@ -20,6 +20,7 @@ import {
 } from "@radix-ui/themes";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useFetcher, useNavigate } from "react-router";
+import { isEditableTarget } from "~/utils/dom";
 import { SuccessPulse } from "./Celebration";
 import { NumberInput } from "./NumberInput";
 import "./QuickActionSheet.css";
@@ -228,13 +229,7 @@ export function QuickActionSheet({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      const target = e.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
-
-      if (isInput) return;
+      if (isEditableTarget(e.target)) return;
 
       const key = e.key.toLowerCase();
       if (key === "s") {

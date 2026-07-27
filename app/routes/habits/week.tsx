@@ -11,6 +11,7 @@ import {
 } from "~/modules/habits/infra/habits-week.service.server";
 import { HabitWeekActionsMenu } from "~/modules/habits/presentation/components/HabitWeekActionsMenu";
 import { allDays } from "~/time";
+import { isEditableTarget } from "~/utils/dom";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/week";
 
@@ -375,13 +376,7 @@ export default function HabitsWeekPage({ loaderData }: Route.ComponentProps) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.ctrlKey ||
-        e.metaKey ||
-        e.altKey ||
-        /^(INPUT|TEXTAREA)$/.test((e.target as HTMLElement).tagName) ||
-        (e.target as HTMLElement).isContentEditable
-      )
+      if (e.ctrlKey || e.metaKey || e.altKey || isEditableTarget(e.target))
         return;
       if (e.key.toLowerCase() === "n") {
         e.preventDefault();
