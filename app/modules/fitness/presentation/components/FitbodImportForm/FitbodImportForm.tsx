@@ -9,8 +9,9 @@ import {
   Heading,
   Spinner,
   Text,
+  Tooltip,
 } from "@radix-ui/themes";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useId, useEffect, useRef } from "react";
 import { useFetcher } from "react-router";
 import type { ImportResult } from "../../../domain/fitbod-import";
 import "./FitbodImportForm.css";
@@ -30,6 +31,24 @@ export function FitbodImportForm({
   const [customImportTime, setCustomImportTime] = useState("");
   const [useCustomTime, setUseCustomTime] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
+
+  const fileInputId = useId();
+  const customImportTimeId = useId();
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        if (formRef.current?.contains(document.activeElement)) {
+          e.preventDefault();
+          formRef.current.requestSubmit();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const fetcher = useFetcher<{
     success: boolean;
@@ -130,19 +149,22 @@ export function FitbodImportForm({
           exercises and create your workouts.
         </Text>
 
-        <form onSubmit={handleSubmit}>
+        <form ref={formRef} onSubmit={handleSubmit}>
           <Flex direction="column" gap="4">
             <Box>
-              <Text as="label" size="2" weight="medium" mb="2">
-                Fitbod Export File
-              </Text>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                disabled={isSubmitting}
-                className="fitness-import-form__input"
-              />
+              <Flex direction="column" gap="2">
+                <Text as="label" htmlFor={fileInputId} size="2" weight="medium">
+                  Fitbod Export File
+                </Text>
+                <input
+                  id={fileInputId}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileChange}
+                  disabled={isSubmitting}
+                  className="fitness-import-form__input"
+                />
+              </Flex>
               {fileError && (
                 <Text size="1" color="red" mt="1">
                   {fileError}
@@ -199,16 +221,24 @@ export function FitbodImportForm({
 
             {useCustomTime && (
               <Box>
-                <Text as="label" size="2" weight="medium" mb="2">
-                  Custom Import Time
-                </Text>
-                <input
-                  type="datetime-local"
-                  value={customImportTime}
-                  onChange={(e) => setCustomImportTime(e.target.value)}
-                  disabled={isSubmitting}
-                  className="fitness-import-form__input"
-                />
+                <Flex direction="column" gap="2">
+                  <Text
+                    as="label"
+                    htmlFor={customImportTimeId}
+                    size="2"
+                    weight="medium"
+                  >
+                    Custom Import Time
+                  </Text>
+                  <input
+                    id={customImportTimeId}
+                    type="datetime-local"
+                    value={customImportTime}
+                    onChange={(e) => setCustomImportTime(e.target.value)}
+                    disabled={isSubmitting}
+                    className="fitness-import-form__input"
+                  />
+                </Flex>
               </Box>
             )}
 
@@ -297,10 +327,18 @@ export function FitbodImportForm({
                   Cancel
                 </Button>
               )}
-              <Button type="submit" disabled={!selectedFile || isSubmitting}>
-                {isSubmitting && <Spinner size="1" />}
-                {isSubmitting ? "Importing..." : "Import Workouts"}
-              </Button>
+              <Tooltip content="Import workouts (Cmd+Enter)">
+                <Box display="inline-block">
+                  <Button
+                    type="submit"
+                    disabled={!selectedFile || isSubmitting}
+                    aria-keyshortcuts="Meta+Enter Control+Enter"
+                  >
+                    {isSubmitting && <Spinner size="1" />}
+                    {isSubmitting ? "Importing..." : "Import Workouts"}
+                  </Button>
+                </Box>
+              </Tooltip>
             </Flex>
           </Flex>
         </form>
