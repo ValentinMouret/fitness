@@ -29,6 +29,7 @@ const TEXTURE_LABELS = {
   semi_liquid: "🥤 Semi-liquid",
   soft_solid: "🍮 Soft solid",
   firm_solid: "🥩 Firm solid",
+  powder: "🥄 Powder",
 };
 
 export function IngredientCard({
@@ -45,8 +46,6 @@ export function IngredientCard({
     fiber: Math.round(ingredient.fiber * nutritionFactor * 10) / 10,
   };
 
-  const textureKey = ingredient.texture as keyof typeof TEXTURE_LABELS;
-
   return (
     <Card size="2">
       <Flex justify="between" align="center" mb="3">
@@ -54,7 +53,7 @@ export function IngredientCard({
           <Text size="4">{getIngredientIcon(ingredient.name)}</Text>
           <Text weight="medium">{ingredient.name}</Text>
           <Badge size="1" color="gray">
-            {TEXTURE_LABELS[textureKey]}
+            {TEXTURE_LABELS[ingredient.texture]}
           </Badge>
         </Flex>
         <Tooltip content="Remove ingredient">

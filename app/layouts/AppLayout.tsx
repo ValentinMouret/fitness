@@ -35,6 +35,7 @@ import { PageHeader, type PageHeaderProps } from "~/components/PageHeader";
 import { PageTransition } from "~/components/PageTransition";
 import { QuickActionFAB } from "~/components/QuickActionFAB";
 import { QuickActionSheet } from "~/components/QuickActionSheet";
+import { isEditableTarget } from "~/utils/dom";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
@@ -96,13 +97,7 @@ const AppLayout: React.FC = () => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      const target = e.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
-
-      if (isInput) return;
+      if (isEditableTarget(e.target)) return;
 
       const key = e.key.toLowerCase();
       if (key === "q") {
@@ -157,15 +152,15 @@ const AppLayout: React.FC = () => {
     [isMobileOpen, closeMobileSidebar],
   );
 
+  const layoutStyle: React.CSSProperties & { "--sidebar-width": string } = {
+    "--sidebar-width": isCollapsed ? "60px" : "240px",
+  };
+
   return (
     <Flex
       direction="row"
       className="app-layout"
-      style={
-        {
-          "--sidebar-width": isCollapsed ? "60px" : "240px",
-        } as React.CSSProperties
-      }
+      style={layoutStyle}
       onKeyDown={handleKeyDown}
     >
       <IconButton

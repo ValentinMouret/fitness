@@ -1,5 +1,7 @@
 /** Domain types for AI workout generation. */
 
+import { z } from "zod";
+
 export interface GeneratedExerciseSet {
   readonly setNumber: number;
   readonly targetReps: number;
@@ -35,6 +37,12 @@ export interface ConversationMessage {
   readonly content: string;
 }
 
+export const ConversationMessageSchema: z.ZodType<ConversationMessage> =
+  z.object({
+    role: z.enum(["user", "assistant"]),
+    content: z.string(),
+  });
+
 export interface GenerationConversation {
   readonly id: string;
   readonly workoutId?: string;
@@ -54,6 +62,70 @@ export interface GenerationContext {
   readonly preferences: ReadonlyArray<string>;
   readonly timeConstraintMinutes?: number;
 }
+
+export const GenerationContextSchema: z.ZodType<GenerationContext> = z.object({
+  recentWorkouts: z.array(
+    z.object({
+      date: z.string(),
+      name: z.string(),
+      durationMinutes: z.number().optional(),
+      exercises: z.array(
+        z.object({
+          name: z.string(),
+          muscleGroups: z.array(z.string()),
+          sets: z.array(
+            z.object({
+              reps: z.number().optional(),
+              weight: z.number().optional(),
+              rpe: z.number().optional(),
+              isWarmup: z.boolean(),
+            }),
+          ),
+        }),
+      ),
+    }),
+  ),
+  volumeStats: z.array(
+    z.object({
+      muscleGroup: z.string(),
+      currentWeekSets: z.number(),
+      targetMinSets: z.number(),
+      targetMaxSets: z.number(),
+      remainingSets: z.number(),
+    }),
+  ),
+  exerciseProgressions: z.array(
+    z.object({
+      exerciseName: z.string(),
+      recentSessions: z.array(
+        z.object({
+          date: z.string(),
+          bestWeight: z.number(),
+          bestReps: z.number(),
+          avgRpe: z.number().optional(),
+          estimatedOneRepMax: z.number(),
+        }),
+      ),
+      trend: z.enum(["improving", "stable", "declining"]),
+    }),
+  ),
+  availableExercises: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      type: z.string(),
+      movementPattern: z.string(),
+      muscleGroups: z.array(
+        z.object({
+          name: z.string(),
+          split: z.number(),
+        }),
+      ),
+    }),
+  ),
+  preferences: z.array(z.string()),
+  timeConstraintMinutes: z.number().optional(),
+});
 
 export interface WorkoutSummary {
   readonly date: string;

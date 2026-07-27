@@ -24,10 +24,12 @@ vi.mock("~/modules/fitness/infra/adaptive-workout-repository.server", () => ({
 import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
 import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 
-const mockExerciseMuscleGroupsListAll =
-  ExerciseMuscleGroupsRepository.listAll as ReturnType<typeof vi.fn>;
-const mockAdaptiveWorkoutFindSubstitutes =
-  AdaptiveWorkoutRepository.findSubstitutes as ReturnType<typeof vi.fn>;
+const mockExerciseMuscleGroupsListAll = vi.mocked(
+  ExerciseMuscleGroupsRepository.listAll,
+);
+const mockAdaptiveWorkoutFindSubstitutes = vi.mocked(
+  AdaptiveWorkoutRepository.findSubstitutes,
+);
 
 const createExercise = (overrides?: Partial<Exercise>): Exercise => ({
   id: "exercise-1",
@@ -162,7 +164,7 @@ describe("AdaptiveWorkoutService", () => {
       mockExerciseMuscleGroupsListAll.mockReturnValue(
         ResultAsync.fromPromise(
           Promise.reject("database_error"),
-          (error) => error as "database_error",
+          () => "database_error" as const,
         ),
       );
 

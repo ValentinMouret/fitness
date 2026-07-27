@@ -7,7 +7,7 @@
 import { allDays, type Day } from "../../../time";
 
 export interface FrequencyConfig {
-  days_of_week?: Day[];
+  readonly days_of_week?: ReadonlyArray<Day>;
   interval_days?: number;
   day_of_month?: number;
 }
@@ -64,9 +64,9 @@ export const Habit = {
   },
 };
 
-export function getScheduledDays(habit: Habit): Day[] {
-  if (habit.frequencyType === "daily") return [...allDays] as Day[];
-  return (habit.frequencyConfig.days_of_week as Day[]) ?? [];
+export function getScheduledDays(habit: Habit): ReadonlyArray<Day> {
+  if (habit.frequencyType === "daily") return allDays;
+  return habit.frequencyConfig.days_of_week ?? [];
 }
 
 export interface HabitCompletion {

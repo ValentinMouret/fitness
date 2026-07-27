@@ -15,7 +15,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Form, useNavigation } from "react-router";
 import { NumberInput } from "~/components/NumberInput";
 import RequiredStar from "~/components/RequiredStar";
-import { humanFormatting } from "~/strings";
+import { humanFormatting, isOneOf } from "~/strings";
 
 const EXERCISE_TYPES = [
   "barbell",
@@ -214,15 +214,13 @@ export default function ExerciseForm({
                       name={`${index}-muscle-group`}
                       defaultValue={muscleGroupSplit.muscleGroup}
                       disabled={isSubmitting}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
+                        if (!isOneOf(MUSCLE_GROUPS, value)) return;
                         updateSplitMuscleGroup(
-                          {
-                            ...muscleGroupSplit,
-                            muscleGroup: value as MuscleGroup,
-                          },
+                          { ...muscleGroupSplit, muscleGroup: value },
                           index,
-                        )
-                      }
+                        );
+                      }}
                     >
                       <Select.Trigger />
                       <Select.Content>

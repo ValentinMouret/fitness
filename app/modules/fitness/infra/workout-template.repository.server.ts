@@ -14,8 +14,19 @@ import { executeQuery } from "~/repository.server";
 import type { Exercise } from "../domain/workout";
 import type {
   WorkoutTemplate,
+  WorkoutTemplateExercise,
+  WorkoutTemplateSet,
   WorkoutTemplateWithDetails,
 } from "../domain/workout-template";
+
+type WorkoutTemplateBuilder = Omit<
+  WorkoutTemplateWithDetails,
+  "exercises" | "sets" | "exerciseDetails"
+> & {
+  readonly exercises: WorkoutTemplateExercise[];
+  readonly sets: WorkoutTemplateSet[];
+  readonly exerciseDetails: Exercise[];
+};
 
 export const WorkoutTemplateRepository = {
   save(
@@ -148,7 +159,7 @@ export const WorkoutTemplateRepository = {
         ]),
       );
 
-      const templateMap = new Map<string, WorkoutTemplateWithDetails>();
+      const templateMap = new Map<string, WorkoutTemplateBuilder>();
 
       for (const r of records) {
         if (!templateMap.has(r.id)) {
@@ -179,14 +190,12 @@ export const WorkoutTemplateRepository = {
             (e) => e.exerciseId === r.exercise_id,
           );
           if (!exerciseExists) {
-            (template.exercises as WorkoutTemplate["exercises"][number][]).push(
-              {
-                exerciseId: r.exercise_id,
-                orderIndex: r.order_index ?? 0,
-                notes: r.exercise_notes ?? undefined,
-              },
-            );
-            (template.exerciseDetails as Exercise[]).push({
+            template.exercises.push({
+              exerciseId: r.exercise_id,
+              orderIndex: r.order_index ?? 0,
+              notes: r.exercise_notes ?? undefined,
+            });
+            template.exerciseDetails.push({
               id: r.exercise_id,
               name: r.exercise_name,
               type: r.exercise_type,
@@ -201,7 +210,7 @@ export const WorkoutTemplateRepository = {
               (s) => s.exerciseId === r.exercise_id && s.set === r.set_number,
             );
             if (!setExists) {
-              (template.sets as WorkoutTemplate["sets"][number][]).push({
+              template.sets.push({
                 exerciseId: r.exercise_id,
                 set: r.set_number,
                 targetReps: r.target_reps ?? undefined,

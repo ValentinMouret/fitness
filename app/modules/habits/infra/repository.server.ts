@@ -11,17 +11,40 @@ import {
   lte,
 } from "drizzle-orm";
 import { err, ok, Result, ResultAsync } from "neverthrow";
+import { z } from "zod";
 import { db } from "../../../db";
 import { habit_completions, habits } from "../../../db/schema";
 import { logger } from "../../../logger.server";
 import type { ErrRepository, ErrValidation } from "../../../repository";
 import { executeQuery, fetchSingleRecord } from "../../../repository.server";
-import { today } from "../../../time";
+import { allDays, today } from "../../../time";
 import type { Habit, HabitCompletion } from "../domain/entity";
+
+const habitFrequencySchema = z.object({
+  frequencyType: z.enum(["daily", "weekly", "monthly", "custom"]),
+  frequencyConfig: z.object({
+    days_of_week: z.array(z.enum(allDays)).optional(),
+    interval_days: z.number().int().positive().optional(),
+    day_of_month: z.number().int().min(1).max(31).optional(),
+  }),
+});
 
 function recordToHabit(
   record: InferSelectModel<typeof habits>,
 ): Result<Habit, ErrValidation> {
+  const frequency = habitFrequencySchema.safeParse({
+    frequencyType: record.frequency_type,
+    frequencyConfig: record.frequency_config,
+  });
+
+  if (!frequency.success) {
+    logger.error(
+      { err: frequency.error, habitId: record.id },
+      "Habit has invalid frequency data",
+    );
+    return err("validation_error");
+  }
+
   return ok({
     id: record.id,
     name: record.name,
@@ -31,8 +54,8 @@ function recordToHabit(
     isKeystone: record.is_keystone,
     minimalVersion: record.minimal_version,
     color: record.color,
-    frequencyType: record.frequency_type as Habit["frequencyType"],
-    frequencyConfig: record.frequency_config as Habit["frequencyConfig"],
+    frequencyType: frequency.data.frequencyType,
+    frequencyConfig: frequency.data.frequencyConfig,
     targetCount: record.target_count,
     startDate: new Date(record.start_date),
     endDate: record.end_date ? new Date(record.end_date) : undefined,

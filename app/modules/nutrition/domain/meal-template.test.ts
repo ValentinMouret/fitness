@@ -43,7 +43,7 @@ const createMealTemplateInput = (
   overrides?: Partial<CreateMealTemplateInput>,
 ): CreateMealTemplateInput => ({
   name: "Test Meal",
-  category: "lunch" as MealCategory,
+  category: "lunch",
   ingredients: [],
   ...overrides,
 });

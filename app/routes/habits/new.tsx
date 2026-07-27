@@ -4,12 +4,9 @@ import { data, Link, redirect, useNavigate } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { createHabit } from "~/modules/habits/infra/create-habit.service.server";
-import { getOrdinalSuffix } from "~/time";
-import {
-  formOptionalText,
-  formRepeatableText,
-  formText,
-} from "~/utils/form-data";
+import { allDays, type Day, getOrdinalSuffix } from "~/time";
+import { isButtonTarget, isLinkTarget, isTextAreaTarget } from "~/utils/dom";
+import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/new";
 
 const STEPS = [
@@ -20,8 +17,9 @@ const STEPS = [
   { q: "Make it yours", short: "Color" },
 ] as const;
 
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const DAY_MAP: Record<string, string> = {
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+type ShortDay = (typeof DAYS)[number];
+const DAY_MAP: Record<ShortDay, Day> = {
   Mon: "Monday",
   Tue: "Tuesday",
   Wed: "Wednesday",
@@ -86,7 +84,7 @@ export async function action({ request }: Route.ActionArgs) {
     minimalVersion: formOptionalText(),
     color: formText(z.string().default("#e15a46")),
     freqMode: formText(z.enum(["daily", "weekly", "monthly"])),
-    daysOfWeek: formRepeatableText(),
+    daysOfWeek: zfd.repeatableOfType(zfd.text(z.enum(allDays))),
     dayOfMonth: formOptionalText(),
   });
 
@@ -208,15 +206,14 @@ export default function NewHabit() {
       }
 
       if (e.key === "Enter") {
-        const target = e.target as HTMLElement;
-        const isButton = target.tagName === "BUTTON";
-        const isLink = target.tagName === "A" || target.closest("a") !== null;
+        const isButton = isButtonTarget(e.target);
+        const isLink = isLinkTarget(e.target);
 
         if (isButton || isLink) {
           return;
         }
 
-        const isTextarea = target.tagName === "TEXTAREA";
+        const isTextarea = isTextAreaTarget(e.target);
 
         // Require Cmd/Ctrl + Enter in textareas to allow standard line breaks
         if (isTextarea && !e.ctrlKey && !e.metaKey) {
@@ -240,7 +237,7 @@ export default function NewHabit() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [step, name, navigate, go]);
 
-  function toggleDay(d: string) {
+  function toggleDay(d: ShortDay) {
     setSelectedDays((prev) => {
       const next = new Set(prev);
       if (next.has(d)) next.delete(d);

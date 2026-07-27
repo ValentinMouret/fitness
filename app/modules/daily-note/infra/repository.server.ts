@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { ResultAsync } from "neverthrow";
 import { db } from "~/db";
 import { daily_note } from "~/db/schema";
+import { UnknownError } from "~/errors";
 import { logger } from "~/logger.server";
 import type { DailyNote } from "../domain/entity";
 
@@ -17,7 +18,7 @@ export const DailyNoteRepository = {
         .then((rows) => (rows[0] ? { content: rows[0].content } : undefined)),
       (error) => {
         logger.error({ err: error }, "Failed to fetch daily note");
-        return error as Error;
+        return error instanceof Error ? error : new UnknownError(error);
       },
     );
   },
@@ -34,7 +35,7 @@ export const DailyNoteRepository = {
         .then(() => undefined),
       (error) => {
         logger.error({ err: error }, "Failed to save daily note");
-        return error as Error;
+        return error instanceof Error ? error : new UnknownError(error);
       },
     );
   },

@@ -3,16 +3,14 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { data, Link, redirect, useNavigate } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import type { Habit } from "~/modules/habits/domain/entity";
 import {
   getHabitForEdit,
   updateHabit,
 } from "~/modules/habits/infra/edit-habit.service.server";
-import { getOrdinalSuffix } from "~/time";
-import {
-  formOptionalText,
-  formRepeatableText,
-  formText,
-} from "~/utils/form-data";
+import { allDays, type Day, getOrdinalSuffix } from "~/time";
+import { isButtonTarget, isLinkTarget, isTextAreaTarget } from "~/utils/dom";
+import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/edit";
 
 const STEPS = [
@@ -23,8 +21,9 @@ const STEPS = [
   { q: "Make it yours", short: "Color" },
 ] as const;
 
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const DAY_MAP: Record<string, string> = {
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+type ShortDay = (typeof DAYS)[number];
+const DAY_MAP: Record<ShortDay, Day> = {
   Mon: "Monday",
   Tue: "Tuesday",
   Wed: "Wednesday",
@@ -33,9 +32,6 @@ const DAY_MAP: Record<string, string> = {
   Sat: "Saturday",
   Sun: "Sunday",
 };
-const DAY_REVERSE: Record<string, string> = Object.fromEntries(
-  Object.entries(DAY_MAP).map(([k, v]) => [v, k]),
-);
 const COLORS = [
   "#e15a46",
   "#f59e0b",
@@ -97,7 +93,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     minimalVersion: formOptionalText(),
     color: formText(z.string().default("#e15a46")),
     freqMode: formText(z.enum(["daily", "weekly", "monthly"])),
-    daysOfWeek: formRepeatableText(),
+    daysOfWeek: zfd.repeatableOfType(zfd.text(z.enum(allDays))),
     dayOfMonth: formOptionalText(),
   });
 
@@ -134,15 +130,19 @@ export async function action({ request, params }: Route.ActionArgs) {
   return redirect("/habits");
 }
 
-function initialSelectedDays(habit: {
-  frequencyType: string;
-  frequencyConfig: { days_of_week?: string[] };
-}): Set<string> {
+function initialSelectedDays(
+  habit: Pick<Habit, "frequencyType" | "frequencyConfig">,
+): Set<ShortDay> {
   if (habit.frequencyType === "daily") {
     return new Set(DAYS);
   }
   const dows = habit.frequencyConfig.days_of_week ?? [];
-  return new Set(dows.map((d) => DAY_REVERSE[d] ?? d));
+  return new Set(
+    dows.flatMap((day) => {
+      const shortDay = DAYS.find((candidate) => DAY_MAP[candidate] === day);
+      return shortDay ? [shortDay] : [];
+    }),
+  );
 }
 
 export default function EditHabit({ loaderData }: Route.ComponentProps) {
@@ -170,8 +170,7 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
   const [name, setName] = useState(habit.name);
   const [identityPhrase, setIdentityPhrase] = useState(habit.identityPhrase);
   const [dayOfMonth, setDayOfMonth] = useState(
-    (habit.frequencyConfig as { day_of_month?: number }).day_of_month ??
-      new Date().getDate(),
+    habit.frequencyConfig.day_of_month ?? new Date().getDate(),
   );
   const [freqMode, setFreqMode] = useState<"daily" | "weekly" | "monthly">(
     () =>
@@ -244,15 +243,14 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
       }
 
       if (e.key === "Enter") {
-        const target = e.target as HTMLElement;
-        const isButton = target.tagName === "BUTTON";
-        const isLink = target.tagName === "A" || target.closest("a") !== null;
+        const isButton = isButtonTarget(e.target);
+        const isLink = isLinkTarget(e.target);
 
         if (isButton || isLink) {
           return;
         }
 
-        const isTextarea = target.tagName === "TEXTAREA";
+        const isTextarea = isTextAreaTarget(e.target);
 
         // Require Cmd/Ctrl + Enter in textareas to allow standard line breaks
         if (isTextarea && !e.ctrlKey && !e.metaKey) {
@@ -276,7 +274,7 @@ export default function EditHabit({ loaderData }: Route.ComponentProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [step, name, navigate, go]);
 
-  function toggleDay(d: string) {
+  function toggleDay(d: ShortDay) {
     setSelectedDays((prev) => {
       const next = new Set(prev);
       if (next.has(d)) next.delete(d);

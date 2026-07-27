@@ -30,6 +30,7 @@ import {
   toggleHabitCompletion,
 } from "~/modules/dashboard/infra/dashboard.service.server";
 import { formatStartedAgo } from "~/time";
+import { isEditableTarget } from "~/utils/dom";
 import { createValidationError } from "~/utils/errors";
 import { formBoolean, formNumber, formText } from "~/utils/form-data";
 import type { Route } from "./+types/index";
@@ -119,7 +120,8 @@ export default function DashboardPage({
 
   const optimisticCompletionMap = new Map(completionMap);
   for (const f of optimisticHabitToggles) {
-    const habitId = f.formData?.get("habitId") as string;
+    const habitId = f.formData?.get("habitId");
+    if (typeof habitId !== "string") continue;
     const completed = f.formData?.get("completed") === "true";
     optimisticCompletionMap.set(habitId, !completed);
   }
@@ -166,13 +168,7 @@ export default function DashboardPage({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey || noteParam) return;
 
-      const target = e.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
-
-      if (isInput) return;
+      if (isEditableTarget(e.target)) return;
 
       if (e.key.toLowerCase() === "w" && weightInputRef.current) {
         e.preventDefault();

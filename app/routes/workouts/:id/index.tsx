@@ -63,6 +63,7 @@ import {
   WorkoutExerciseCard,
 } from "~/modules/fitness/presentation";
 import { reorderExerciseGroups } from "~/modules/fitness/presentation/reorder-exercise-groups";
+import { isEditableTarget } from "~/utils/dom";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/index";
 import "./active-workout.css";
@@ -351,13 +352,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      const target = e.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
-
-      if (isInput) return;
+      if (isEditableTarget(e.target)) return;
 
       if (e.key.toLowerCase() === "n") {
         e.preventDefault();
@@ -428,11 +423,12 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     );
   };
 
+  const pageStyle: React.CSSProperties & { "--header-height": string } = {
+    "--header-height": `${headerHeight}px`,
+  };
+
   return (
-    <div
-      className="active-workout-page"
-      style={{ "--header-height": `${headerHeight}px` } as React.CSSProperties}
-    >
+    <div className="active-workout-page" style={pageStyle}>
       {/* Header — editorial style */}
       <header ref={headerRef} className="active-workout-header">
         <Flex justify="between" align="start" gap="2">

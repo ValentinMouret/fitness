@@ -9,7 +9,6 @@ import {
   workouts,
 } from "~/db/schema";
 import type { MuscleFatigueEvent } from "~/modules/fitness/domain/muscle-recovery";
-import type { MuscleGroup } from "~/modules/fitness/domain/workout";
 import type { ErrRepository } from "~/repository";
 import { executeQuery } from "~/repository.server";
 
@@ -82,7 +81,7 @@ export const MuscleRecoveryRepository = {
           });
         } else {
           grouped.set(key, {
-            muscleGroup: record.muscle_group as MuscleGroup,
+            muscleGroup: record.muscle_group,
             volumeLoad: volumeContribution,
             workoutDate: record.workout_date,
           });

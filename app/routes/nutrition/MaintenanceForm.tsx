@@ -47,7 +47,11 @@ export default function MaintenanceForm({
             <input type="hidden" name="gender" value={genderValue} />
             <SegmentedControl.Root
               value={genderValue}
-              onValueChange={(value) => setGenderValue(value as Gender)}
+              onValueChange={(value) => {
+                if (value === "male" || value === "female") {
+                  setGenderValue(value);
+                }
+              }}
             >
               <SegmentedControl.Item value="male">Male</SegmentedControl.Item>
               <SegmentedControl.Item value="female">

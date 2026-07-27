@@ -21,6 +21,23 @@ import type {
 } from "../domain/workout";
 import { ExerciseHistorySession } from "../domain/workout";
 
+type ExerciseHistoryRow = {
+  readonly workout_id: string;
+  readonly workout_name: string;
+  readonly workout_date: Date;
+  readonly set: number;
+  readonly reps: number | null;
+  readonly weight: string | null;
+  readonly is_warmup: boolean;
+  readonly rpe: number | null;
+};
+
+type LastCompletedSetRow = {
+  readonly set: number;
+  readonly reps: number | null;
+  readonly weight: string | null;
+};
+
 export const WorkoutRepository: IWorkoutRepository = {
   save(
     workout: Omit<Workout, "id"> | Workout,
@@ -891,20 +908,14 @@ export const WorkoutSessionRepository = {
       ORDER BY w.start DESC, ws.set ASC
     `;
 
-    return ResultAsync.fromPromise(db.execute(query), (error) => {
-      logger.error({ err: error }, "Error fetching exercise history");
-      return "database_error" as const;
-    }).map((result) => {
-      const rows = result.rows as Array<{
-        workout_id: string;
-        workout_name: string;
-        workout_date: Date;
-        set: number;
-        reps: number | null;
-        weight: string | null;
-        is_warmup: boolean;
-        rpe: number | null;
-      }>;
+    return ResultAsync.fromPromise(
+      db.execute<ExerciseHistoryRow>(query),
+      (error) => {
+        logger.error({ err: error }, "Error fetching exercise history");
+        return "database_error" as const;
+      },
+    ).map((result) => {
+      const rows = result.rows;
 
       // Group rows by workout
       const workoutMap = new Map<
@@ -940,9 +951,7 @@ export const WorkoutSessionRepository = {
         entry.sets.push({
           set: row.set,
           reps: row.reps ?? undefined,
-          weight: row.weight
-            ? Number.parseFloat(row.weight as string)
-            : undefined,
+          weight: row.weight ? Number.parseFloat(row.weight) : undefined,
           isWarmup: row.is_warmup,
           rpe: row.rpe ?? undefined,
         });
@@ -997,20 +1006,17 @@ export const WorkoutSessionRepository = {
       ORDER BY ws.set ASC
     `;
 
-    return ResultAsync.fromPromise(db.execute(query), (error) => {
-      logger.error(
-        { err: error },
-        "Error fetching last completed sets for exercise",
-      );
-      return "database_error" as const;
-    }).map((result) =>
-      (
-        result.rows as Array<{
-          set: number;
-          reps: number | null;
-          weight: string | null;
-        }>
-      ).map((row) => ({
+    return ResultAsync.fromPromise(
+      db.execute<LastCompletedSetRow>(query),
+      (error) => {
+        logger.error(
+          { err: error },
+          "Error fetching last completed sets for exercise",
+        );
+        return "database_error" as const;
+      },
+    ).map((result) =>
+      result.rows.map((row) => ({
         set: row.set,
         reps: row.reps ?? undefined,
         weight: row.weight ? Number.parseFloat(row.weight) : undefined,

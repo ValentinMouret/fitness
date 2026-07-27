@@ -6,12 +6,12 @@ export const allDays = [
   "Friday",
   "Saturday",
   "Sunday",
-];
+] as const;
 
 export type Day = (typeof allDays)[number];
 
 export const Day = {
-  sortDays(days: Day[]): Day[] {
+  sortDays(days: ReadonlyArray<Day>): Day[] {
     return days.toSorted((a, b) => allDays.indexOf(a) - allDays.indexOf(b));
   },
 

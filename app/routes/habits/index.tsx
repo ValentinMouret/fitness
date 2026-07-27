@@ -9,6 +9,7 @@ import {
   getHabitsPageData,
   toggleHabitCompletion,
 } from "~/modules/habits/infra/habits-page.service.server";
+import { isEditableTarget } from "~/utils/dom";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/index";
 
@@ -527,13 +528,7 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.ctrlKey ||
-        e.metaKey ||
-        e.altKey ||
-        /^(INPUT|TEXTAREA)$/.test((e.target as HTMLElement).tagName) ||
-        (e.target as HTMLElement).isContentEditable
-      )
+      if (e.ctrlKey || e.metaKey || e.altKey || isEditableTarget(e.target))
         return;
       if (e.key.toLowerCase() === "n") {
         e.preventDefault();
@@ -559,7 +554,8 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
 
   const optimisticCompletionMap = { ...completionMap };
   for (const f of optimisticHabitToggles) {
-    const habitId = f.formData?.get("habitId") as string;
+    const habitId = f.formData?.get("habitId");
+    if (typeof habitId !== "string") continue;
     const completed = f.formData?.get("completed") === "true";
     optimisticCompletionMap[habitId] = !completed;
   }

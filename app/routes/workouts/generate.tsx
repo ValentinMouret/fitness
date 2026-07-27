@@ -59,13 +59,13 @@ type ActionResult =
       intent: "generate";
       workout: GeneratedWorkout;
       conversationId: string;
-      messages: ConversationMessage[];
+      messages: ReadonlyArray<ConversationMessage>;
     }
   | {
       intent: "refine";
       workout: GeneratedWorkout;
       conversationId: string;
-      messages: ConversationMessage[];
+      messages: ReadonlyArray<ConversationMessage>;
     }
   | { intent: "save-preference"; success: true }
   | { error: string };
@@ -145,8 +145,7 @@ export async function action({
         intent: "refine",
         workout: refineResult.value.workout,
         conversationId: parsed.conversationId,
-        messages: (conversationResult.value?.messages ??
-          []) as ConversationMessage[],
+        messages: conversationResult.value?.messages ?? [],
       };
     }
 
@@ -193,7 +192,9 @@ export default function GenerateWorkout({ loaderData }: Route.ComponentProps) {
     null,
   );
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [messages, setMessages] = useState<ReadonlyArray<ConversationMessage>>(
+    [],
+  );
 
   // Update state from fetcher data
   const fetcherData = generateFetcher.data;

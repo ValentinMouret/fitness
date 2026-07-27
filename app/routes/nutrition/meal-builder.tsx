@@ -60,9 +60,19 @@ import {
   type SelectedIngredient,
 } from "~/modules/nutrition/presentation";
 import { humanFormatting } from "~/strings";
+import { isEditableTarget } from "~/utils/dom";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/meal-builder";
 import "./meal-builder.css";
+
+const quickEstimateSchema = z.object({
+  ingredients: z.array(
+    z.object({
+      ingredientId: z.string(),
+      quantity: z.number(),
+    }),
+  ),
+});
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -189,14 +199,7 @@ export default function MealBuilder({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      const target = e.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT" ||
-        target.isContentEditable;
-
-      if (isInput) return;
+      if (isEditableTarget(e.target)) return;
 
       // Prevent triggering if other dialogs are open
       if (showSaveDialog || isAIReviewModalOpen || isAddModalOpen) return;
@@ -240,12 +243,9 @@ export default function MealBuilder({
     sessionStorage.removeItem("quickEstimate");
 
     try {
-      const { ingredients: estimated } = JSON.parse(stored) as {
-        ingredients: ReadonlyArray<{
-          ingredientId: string;
-          quantity: number;
-        }>;
-      };
+      const estimate = quickEstimateSchema.safeParse(JSON.parse(stored));
+      if (!estimate.success) return;
+      const estimated = estimate.data.ingredients;
 
       const converted: SelectedIngredient[] = estimated
         .map((item) => {
@@ -601,13 +601,7 @@ function AddIngredientModal({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      const target = e.target as HTMLElement;
-      const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
-
-      if (isInput) return;
+      if (isEditableTarget(e.target)) return;
 
       if (e.key === "/") {
         e.preventDefault();

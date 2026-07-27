@@ -1,4 +1,4 @@
-import { err, ok, type Result, ResultAsync } from "neverthrow";
+import { err, ok, type Result, type ResultAsync } from "neverthrow";
 import type {
   AdaptiveWorkoutRequest,
   AdaptiveWorkoutResult,
@@ -38,10 +38,7 @@ export const AdaptiveWorkoutService = {
       );
 
       if (availableExercises.length === 0) {
-        return ResultAsync.fromPromise(
-          Promise.reject("no_available_equipment" as const),
-          (error) => error as ErrWorkoutGeneration,
-        );
+        return err("no_available_equipment" as const);
       }
 
       const selectedExercises = this.selectOptimalExercises(
@@ -50,10 +47,7 @@ export const AdaptiveWorkoutService = {
       );
 
       if (selectedExercises.isErr()) {
-        return ResultAsync.fromPromise(
-          Promise.reject(selectedExercises.error),
-          (error) => error as ErrWorkoutGeneration,
-        );
+        return err(selectedExercises.error);
       }
 
       const workout = WorkoutNamespace.create({
@@ -87,7 +81,7 @@ export const AdaptiveWorkoutService = {
         estimatedDuration,
       };
 
-      return ResultAsync.fromSafePromise(Promise.resolve(result));
+      return ok(result);
     });
   },
 
@@ -99,10 +93,7 @@ export const AdaptiveWorkoutService = {
     return AdaptiveWorkoutRepository.findSubstitutes(exerciseId).andThen(
       (substitutes) => {
         if (substitutes.length === 0) {
-          return ResultAsync.fromPromise(
-            Promise.reject("no_suitable_substitutes" as const),
-            (error) => error as ErrSubstitution,
-          );
+          return err("no_suitable_substitutes" as const);
         }
 
         const availableSubstitutes = this.filterByAvailableEquipment(
@@ -111,10 +102,7 @@ export const AdaptiveWorkoutService = {
         );
 
         if (availableSubstitutes.length === 0) {
-          return ResultAsync.fromPromise(
-            Promise.reject("equipment_unavailable" as const),
-            (error) => error as ErrSubstitution,
-          );
+          return err("equipment_unavailable" as const);
         }
 
         // Select best substitute based on similarity score
@@ -122,9 +110,7 @@ export const AdaptiveWorkoutService = {
           this.compareSubstitutes(best, current) > 0 ? best : current,
         );
 
-        return ResultAsync.fromSafePromise(
-          Promise.resolve(bestSubstitute.exercise),
-        );
+        return ok(bestSubstitute.exercise);
       },
     );
   },
