@@ -1,5 +1,9 @@
 # Palette's Journal
 
+## 2026-07-28 - [Accessible TabBar Keyboard Navigation]
+**Learning:** For bespoke, custom-styled navigation or tab bars (such as those in the Habits daily/weekly views), implementing keyboard-only shortcuts (e.g., 't' for Today and 'w' for Week) dramatically speeds up user workflow. To ensure high-contrast visual discoverability, wrap the tab links in Radix UI `Tooltip` components indicating the shortcut key, and include `aria-keyshortcuts` to maintain accessibility compliance for screen reader users.
+**Action:** Identify tab-based layouts and equip key tab links with fast-navigation keyboard listeners, tooltips containing the keyboard hint, and semantic `aria-keyshortcuts` attributes.
+
 ## 2026-07-26 - [Collapsible Card Toggle Accessibility]
 **Learning:** For collapsible or expandable cards (e.g., `ExerciseCard`), relying solely on container-level click events prevents keyboard and screen reader users from triggering the expansion, as they navigate via focusable buttons. Explicitly binding the toggle click handler to the Chevron `IconButton` (with `event.stopPropagation()`) ensures direct interactive parity and robust event scoping.
 **Action:** When creating expandable/collapsible components, ensure the focusable toggle button has its own explicit click handler with event propagation blockers.
