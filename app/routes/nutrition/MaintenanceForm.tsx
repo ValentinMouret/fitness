@@ -7,7 +7,7 @@ import {
   Slider,
   Text,
 } from "@radix-ui/themes";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Form } from "react-router";
 import { NumberInput } from "~/components/NumberInput";
 import type { Gender } from "~/modules/nutrition/domain/nutrition-calculation-service";
@@ -32,6 +32,13 @@ export default function MaintenanceForm({
   const [deltaValue, setDeltaValue] = useState(delta ?? 0);
   const [genderValue, setGenderValue] = useState<Gender>(gender ?? "male");
 
+  const genderLabelId = useId();
+  const ageId = useId();
+  const heightId = useId();
+  const weightId = useId();
+  const activityId = useId();
+  const deltaLabelId = useId();
+
   return (
     <Card size="3" mb="6">
       <Heading size="5" mb="4">
@@ -41,7 +48,7 @@ export default function MaintenanceForm({
       <Form>
         <Flex direction="column" gap="4">
           <Flex direction="column" gap="2">
-            <Text as="label" size="2" weight="medium">
+            <Text id={genderLabelId} as="label" size="2" weight="medium">
               Gender
             </Text>
             <input type="hidden" name="gender" value={genderValue} />
@@ -52,6 +59,7 @@ export default function MaintenanceForm({
                   setGenderValue(value);
                 }
               }}
+              aria-labelledby={genderLabelId}
             >
               <SegmentedControl.Item value="male">Male</SegmentedControl.Item>
               <SegmentedControl.Item value="female">
@@ -61,10 +69,11 @@ export default function MaintenanceForm({
           </Flex>
 
           <Flex direction="column" gap="2">
-            <Text as="label" size="2" weight="medium">
+            <Text as="label" htmlFor={ageId} size="2" weight="medium">
               Age
             </Text>
             <NumberInput
+              id={ageId}
               name="age"
               allowDecimals={false}
               defaultValue={age ?? 30}
@@ -74,10 +83,11 @@ export default function MaintenanceForm({
           </Flex>
 
           <Flex direction="column" gap="2">
-            <Text as="label" size="2" weight="medium">
+            <Text as="label" htmlFor={heightId} size="2" weight="medium">
               Height (cm)
             </Text>
             <NumberInput
+              id={heightId}
               name="height"
               allowDecimals={false}
               defaultValue={height ?? 180}
@@ -87,10 +97,11 @@ export default function MaintenanceForm({
           </Flex>
 
           <Flex direction="column" gap="2">
-            <Text as="label" size="2" weight="medium">
+            <Text as="label" htmlFor={weightId} size="2" weight="medium">
               Weight (kg)
             </Text>
             <NumberInput
+              id={weightId}
               name="weight"
               allowDecimals={false}
               defaultValue={weight ?? 70}
@@ -100,10 +111,11 @@ export default function MaintenanceForm({
           </Flex>
 
           <Flex direction="column" gap="2">
-            <Text as="label" size="2" weight="medium">
+            <Text as="label" htmlFor={activityId} size="2" weight="medium">
               Activity Level
             </Text>
             <NumberInput
+              id={activityId}
               name="activity"
               defaultValue={activity ?? 1.4}
               min={0.8}
@@ -118,7 +130,7 @@ export default function MaintenanceForm({
 
           <Flex direction="column" gap="2">
             <Flex justify="between" align="center">
-              <Text as="label" size="2" weight="medium">
+              <Text id={deltaLabelId} as="label" size="2" weight="medium">
                 Target Deficit/Surplus
               </Text>
               <Text
@@ -139,6 +151,7 @@ export default function MaintenanceForm({
               max={15}
               step={1}
               onValueChange={(values) => setDeltaValue(values[0])}
+              aria-labelledby={deltaLabelId}
             />
             <Flex justify="between">
               <Text size="1" color="gray">
