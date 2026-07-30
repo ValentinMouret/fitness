@@ -163,7 +163,7 @@ export function ExerciseSelector({
           </Text>
 
           <ScrollArea className="exercise-selector__results">
-            <Box>
+            <Box pr="3">
               {filteredExercises.length === 0 ? (
                 <Text
                   size="2"

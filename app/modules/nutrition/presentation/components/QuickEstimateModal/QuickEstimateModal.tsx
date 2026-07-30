@@ -212,7 +212,7 @@ export function QuickEstimateModal({
 
         <Box flexGrow="1" className="quick-estimate-modal__scroll-inner">
           <ScrollArea className="quick-estimate-modal__scroll" ref={scrollRef}>
-            <Flex direction="column" gap="3" p="1">
+            <Flex direction="column" gap="3" p="1" pr="3">
               {messages.length === 0 && (
                 <Text size="2" color="gray" align="center" mt="6">
                   Describe what you ate and I'll estimate the calories and

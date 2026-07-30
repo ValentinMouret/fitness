@@ -97,7 +97,7 @@ export function StartWorkoutDialog({
             </Text>
 
             <ScrollArea className="start-workout-dialog__templates">
-              <Flex direction="column" gap="2">
+              <Flex direction="column" gap="2" pr="3">
                 {templates.map((template, index) => (
                   <Form
                     key={template.id}
