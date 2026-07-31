@@ -1,4 +1,15 @@
-import { Link } from "react-router";
+import {
+  Box,
+  Button,
+  Callout,
+  Card,
+  Flex,
+  ScrollArea,
+  Text,
+  Tooltip,
+} from "@radix-ui/themes";
+import { useEffect, useRef } from "react";
+import { Form, Link, useNavigation } from "react-router";
 import { zfd } from "zod-form-data";
 import {
   getSubstituteExerciseData,
@@ -43,110 +54,180 @@ export async function action({ params, request }: Route.ActionArgs) {
   });
 }
 
+export const handle = {
+  header: (data: Route.ComponentProps["loaderData"]) => ({
+    title: "Find Exercise Substitute",
+    backTo: `/workouts/${data?.workoutId || ""}`,
+  }),
+};
+
 export default function SubstituteExercise({
   loaderData,
 }: Route.ComponentProps) {
   const { workoutId, availableEquipment, potentialSubstitutes } = loaderData;
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state !== "idle";
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Focus the first checkbox on mount to assist keyboard navigation
+  const firstCheckboxRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    firstCheckboxRef.current?.focus();
+  }, []);
+
+  // Handle Cmd/Ctrl + Enter global/form keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        if (formRef.current?.contains(document.activeElement)) {
+          e.preventDefault();
+          formRef.current.requestSubmit();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold">Find Exercise Substitute</h1>
-        <p className="text-gray-600 mt-2">
-          Select available equipment to find suitable exercise alternatives
-        </p>
-      </div>
+    <Box maxWidth="600px" mx="auto" pt="4" px="2">
+      <Card size="3" mb="4">
+        <Text size="2" color="gray" mb="4" as="div">
+          Select available equipment to find suitable exercise alternatives.
+        </Text>
 
-      <form method="post" className="space-y-6">
-        {/* Available Equipment */}
-        <div>
-          <div className="block text-sm font-medium text-gray-700 mb-3">
-            Available Equipment
-          </div>
-          <div className="space-y-2 max-h-64 overflow-y-auto border rounded-md p-4">
-            {availableEquipment.map((equipment) => (
-              <div key={equipment.id} className="flex items-center">
-                <input
-                  type="checkbox"
-                  id={equipment.id}
-                  name="equipment"
-                  value={equipment.id}
-                  defaultChecked={equipment.isAvailable}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor={equipment.id}
-                  className="ml-2 text-sm text-gray-900"
-                >
-                  {equipment.name} ({equipment.exerciseType})
-                  {!equipment.isAvailable && (
-                    <span className="text-red-500 ml-1">(Unavailable)</span>
-                  )}
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Form ref={formRef} method="post">
+          <Flex direction="column" gap="4">
+            <Box>
+              <Text as="div" size="2" weight="bold" mb="2">
+                Available Equipment
+              </Text>
+              <Card variant="ghost" style={{ padding: 0 }}>
+                <ScrollArea scrollbars="vertical" style={{ maxHeight: 220 }}>
+                  <Flex direction="column" gap="2" p="2" pr="4">
+                    {availableEquipment.map((equipment, idx) => (
+                      <label
+                        key={equipment.id}
+                        htmlFor={equipment.id}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Flex gap="3" align="center">
+                          <input
+                            ref={idx === 0 ? firstCheckboxRef : undefined}
+                            type="checkbox"
+                            id={equipment.id}
+                            name="equipment"
+                            value={equipment.id}
+                            defaultChecked={equipment.isAvailable}
+                            style={{
+                              width: 16,
+                              height: 16,
+                              accentColor: "var(--accent-9)",
+                              cursor: "pointer",
+                            }}
+                          />
+                          <Text size="2">
+                            {equipment.name}{" "}
+                            <Text size="1" color="gray">
+                              ({equipment.exerciseType})
+                            </Text>
+                            {!equipment.isAvailable && (
+                              <Text size="1" color="red" ml="2">
+                                (Unavailable)
+                              </Text>
+                            )}
+                          </Text>
+                        </Flex>
+                      </label>
+                    ))}
+                  </Flex>
+                </ScrollArea>
+              </Card>
+            </Box>
 
-        {/* Potential Substitutes Preview */}
-        {potentialSubstitutes.length > 0 && (
-          <div className="bg-blue-50 p-4 rounded-md">
-            <h3 className="text-sm font-medium text-blue-800 mb-3">
-              Potential Substitute Exercises
-            </h3>
-            <div className="space-y-2">
-              {potentialSubstitutes.slice(0, 5).map((substitute) => (
-                <div
-                  key={substitute.exercise.id}
-                  className="flex justify-between items-center text-sm"
-                >
-                  <span className="text-blue-700">
-                    {substitute.exercise.name}
-                  </span>
-                  <div className="text-xs text-blue-600">
-                    <span className="capitalize">
-                      {substitute.exercise.type}
-                    </span>
-                    <span className="ml-2 capitalize">
-                      {substitute.exercise.movementPattern}
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {potentialSubstitutes.length > 5 && (
-                <div className="text-xs text-blue-600 italic">
-                  +{potentialSubstitutes.length - 5} more options available
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+            {potentialSubstitutes.length > 0 ? (
+              <Callout.Root color="blue" size="2">
+                <Callout.Text>
+                  <Text size="2" weight="bold" mb="2" as="div">
+                    Potential Substitute Exercises
+                  </Text>
+                  <Flex direction="column" gap="1">
+                    {potentialSubstitutes.slice(0, 5).map((substitute) => (
+                      <Flex
+                        key={substitute.exercise.id}
+                        justify="between"
+                        align="center"
+                      >
+                        <Text size="2" weight="medium">
+                          {substitute.exercise.name}
+                        </Text>
+                        <Text
+                          size="1"
+                          color="gray"
+                          style={{ textTransform: "capitalize" }}
+                        >
+                          {substitute.exercise.type} ·{" "}
+                          {substitute.exercise.movementPattern}
+                        </Text>
+                      </Flex>
+                    ))}
+                    {potentialSubstitutes.length > 5 && (
+                      <Text
+                        size="1"
+                        color="gray"
+                        style={{ fontStyle: "italic" }}
+                        mt="1"
+                      >
+                        +{potentialSubstitutes.length - 5} more options
+                        available
+                      </Text>
+                    )}
+                  </Flex>
+                </Callout.Text>
+              </Callout.Root>
+            ) : (
+              <Callout.Root color="yellow" size="2">
+                <Callout.Text>
+                  <Text size="2">
+                    No pre-defined substitute exercises found. The system will
+                    find the best available alternative based on your equipment
+                    selection.
+                  </Text>
+                </Callout.Text>
+              </Callout.Root>
+            )}
 
-        {potentialSubstitutes.length === 0 && (
-          <div className="bg-yellow-50 p-4 rounded-md">
-            <p className="text-sm text-yellow-800">
-              No pre-defined substitute exercises found. The system will find
-              the best available alternative based on your equipment selection.
-            </p>
-          </div>
-        )}
+            <Flex gap="3" mt="2">
+              <Tooltip content="Find Substitute (Cmd+Enter)">
+                <Box display="inline-block" style={{ flex: 1 }}>
+                  <Button
+                    type="submit"
+                    loading={isSubmitting}
+                    style={{ width: "100%" }}
+                    aria-keyshortcuts="Meta+Enter Control+Enter"
+                  >
+                    Find Substitute
+                  </Button>
+                </Box>
+              </Tooltip>
 
-        {/* Action Buttons */}
-        <div className="flex space-x-4">
-          <button
-            type="submit"
-            className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Find Substitute
-          </button>
-          <Link
-            to={`/workouts/${workoutId}`}
-            className="flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-center"
-          >
-            Cancel
-          </Link>
-        </div>
-      </form>
-    </div>
+              <Tooltip content="Cancel and return to workout">
+                <Box display="inline-block" style={{ flex: 1 }}>
+                  <Button
+                    variant="soft"
+                    color="gray"
+                    style={{ width: "100%" }}
+                    asChild
+                  >
+                    <Link to={`/workouts/${workoutId}`}>Cancel</Link>
+                  </Button>
+                </Box>
+              </Tooltip>
+            </Flex>
+          </Flex>
+        </Form>
+      </Card>
+    </Box>
   );
 }
