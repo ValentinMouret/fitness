@@ -1,5 +1,9 @@
 # Palette's Journal
 
+## 2026-07-28 - [Utility Route Header Standardization & Form Polish]
+**Learning:** Secondary utility or action routes (like exercise substitution) often get left out of layout header systems, leading to inconsistent navigation, raw unstyled elements, and poor keyboard accessibility. Standardizing these routes to use the `handle.header` layout pattern and replacing manual headers instantly provides standard back-navigation, ARIA support, and Radix Tooltips. Wrapping raw list inputs in a bounded Radix `ScrollArea` with proper right padding maintains fluid keyboard navigation without visual layout breakages.
+**Action:** Always export a `handle.header` on secondary/action routes instead of designing custom back navigation, and wrap list selections in a bounded `ScrollArea` to ensure desktop scrollbar parity.
+
 ## 2026-07-26 - [Collapsible Card Toggle Accessibility]
 **Learning:** For collapsible or expandable cards (e.g., `ExerciseCard`), relying solely on container-level click events prevents keyboard and screen reader users from triggering the expansion, as they navigate via focusable buttons. Explicitly binding the toggle click handler to the Chevron `IconButton` (with `event.stopPropagation()`) ensures direct interactive parity and robust event scoping.
 **Action:** When creating expandable/collapsible components, ensure the focusable toggle button has its own explicit click handler with event propagation blockers.
