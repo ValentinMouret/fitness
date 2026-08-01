@@ -1,5 +1,9 @@
 # Palette's Journal
 
+## 2026-07-30 - [Bespoke TabBar Keyboard Shortcuts & Accessible Tooltips]
+**Learning:** Bespoke bottom TabBars designed for mobile aesthetic focus often miss critical accessibility indicators and desktop power shortcuts. Binding keydown navigation hooks (such as 't' for Today and 'w' for Week) directly to their respective view redirects, coupled with outer `Tooltip` components and `aria-keyshortcuts` attributes on individual tab Links, significantly elevates both sighted discoverability and screen reader landmark transparency.
+**Action:** Wrap custom navigation bar TabLinks in Radix UI `Tooltip` wrappers with keyboard shortcut hints, add matching `aria-keyshortcuts`, and handle navigation hooks with focus guards in corresponding route listeners.
+
 ## 2026-07-28 - [Utility Route Header Standardization & Form Polish]
 **Learning:** Secondary utility or action routes (like exercise substitution) often get left out of layout header systems, leading to inconsistent navigation, raw unstyled elements, and poor keyboard accessibility. Standardizing these routes to use the `handle.header` layout pattern and replacing manual headers instantly provides standard back-navigation, ARIA support, and Radix Tooltips. Wrapping raw list inputs in a bounded Radix `ScrollArea` with proper right padding maintains fluid keyboard navigation without visual layout breakages.
 **Action:** Always export a `handle.header` on secondary/action routes instead of designing custom back navigation, and wrap list selections in a bounded `ScrollArea` to ensure desktop scrollbar parity.
