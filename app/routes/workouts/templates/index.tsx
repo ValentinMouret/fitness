@@ -1,5 +1,6 @@
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import {
+  AlertDialog,
   Box,
   Button,
   DropdownMenu,
@@ -8,6 +9,7 @@ import {
   Text,
   Tooltip,
 } from "@radix-ui/themes";
+import { useState } from "react";
 import { Form, Link, useFetcher } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -126,7 +128,10 @@ export default function TemplatesPage({ loaderData }: Route.ComponentProps) {
                     </Button>
                   </Form>
 
-                  <TemplateActions templateId={template.id} />
+                  <TemplateActions
+                    templateId={template.id}
+                    templateName={template.name}
+                  />
                 </Flex>
               </Flex>
             </Box>
@@ -143,31 +148,62 @@ export default function TemplatesPage({ loaderData }: Route.ComponentProps) {
   );
 }
 
-function TemplateActions({ templateId }: { readonly templateId: string }) {
+function TemplateActions({
+  templateId,
+  templateName,
+}: {
+  readonly templateId: string;
+  readonly templateName: string;
+}) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const fetcher = useFetcher();
 
   return (
-    <DropdownMenu.Root>
-      <Tooltip content="Template actions">
-        <DropdownMenu.Trigger>
-          <IconButton variant="ghost" size="1" aria-label="Template actions">
-            <DotsVerticalIcon />
-          </IconButton>
-        </DropdownMenu.Trigger>
-      </Tooltip>
-      <DropdownMenu.Content>
-        <DropdownMenu.Item
-          color="red"
-          onSelect={() =>
-            fetcher.submit(
-              { intent: "delete-template", templateId },
-              { method: "post" },
-            )
-          }
-        >
-          Delete Template
-        </DropdownMenu.Item>
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
+    <>
+      <DropdownMenu.Root>
+        <Tooltip content="Template actions">
+          <DropdownMenu.Trigger>
+            <IconButton variant="ghost" size="1" aria-label="Template actions">
+              <DotsVerticalIcon />
+            </IconButton>
+          </DropdownMenu.Trigger>
+        </Tooltip>
+        <DropdownMenu.Content>
+          <DropdownMenu.Item
+            color="red"
+            onSelect={() => setShowDeleteDialog(true)}
+          >
+            Delete Template
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
+
+      <AlertDialog.Root
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+      >
+        <AlertDialog.Content maxWidth="450px">
+          <AlertDialog.Title>Delete template</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            Delete {templateName}? This action cannot be undone.
+          </AlertDialog.Description>
+
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Cancel
+              </Button>
+            </AlertDialog.Cancel>
+            <fetcher.Form method="post">
+              <input type="hidden" name="intent" value="delete-template" />
+              <input type="hidden" name="templateId" value={templateId} />
+              <Button type="submit" color="red">
+                Delete
+              </Button>
+            </fetcher.Form>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+    </>
   );
 }

@@ -1,5 +1,9 @@
 # Palette's Journal
 
+## 2026-07-31 - [Destructive Action Confirmation in Lists & Dropdowns]
+**Learning:** Destructive actions nested within dropdown menus or quick-action icons (like deleting a workout template) are highly prone to accidental clicks. Presenting a native `AlertDialog` to confirm the action ensures robust protection of user blueprints while maintaining screen reader focus bounds and keyboard interactions (Escape to cancel) flawlessly.
+**Action:** Always intercept destructive menu/list item actions with an explicit, accessible confirmation modal (like Radix UI's `AlertDialog`) to prevent immediate background data loss.
+
 ## 2026-07-28 - [Utility Route Header Standardization & Form Polish]
 **Learning:** Secondary utility or action routes (like exercise substitution) often get left out of layout header systems, leading to inconsistent navigation, raw unstyled elements, and poor keyboard accessibility. Standardizing these routes to use the `handle.header` layout pattern and replacing manual headers instantly provides standard back-navigation, ARIA support, and Radix Tooltips. Wrapping raw list inputs in a bounded Radix `ScrollArea` with proper right padding maintains fluid keyboard navigation without visual layout breakages.
 **Action:** Always export a `handle.header` on secondary/action routes instead of designing custom back navigation, and wrap list selections in a bounded `ScrollArea` to ensure desktop scrollbar parity.
