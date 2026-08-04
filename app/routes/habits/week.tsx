@@ -327,46 +327,52 @@ function TabBar({ active }: { active: "today" | "week" }) {
       >
         ← App
       </Link>
-      <Link
-        to="/habits"
-        className="habit-tab-link"
-        aria-current={active === "today" ? "page" : undefined}
-        style={{
-          flex: 1.5,
-          padding: "10px 0",
-          borderRadius: 10,
-          background: active === "today" ? "#e15a46" : "transparent",
-          border: active === "today" ? "none" : "1px solid #3d3935",
-          color: active === "today" ? "#fff" : "#a8a29e",
-          fontSize: 13,
-          fontWeight: 600,
-          textAlign: "center",
-          textDecoration: "none",
-          fontFamily: "DM Sans, system-ui, sans-serif",
-        }}
-      >
-        Today
-      </Link>
-      <Link
-        to="/habits/week"
-        className="habit-tab-link"
-        aria-current={active === "week" ? "page" : undefined}
-        style={{
-          flex: 1.5,
-          padding: "10px 0",
-          borderRadius: 10,
-          background: active === "week" ? "#e15a46" : "transparent",
-          border: active === "week" ? "none" : "1px solid #3d3935",
-          color: active === "week" ? "#fff" : "#a8a29e",
-          fontSize: 13,
-          fontWeight: 600,
-          textAlign: "center",
-          textDecoration: "none",
-          fontFamily: "DM Sans, system-ui, sans-serif",
-        }}
-      >
-        Week
-      </Link>
+      <Tooltip content="Today (T)">
+        <Link
+          to="/habits"
+          className="habit-tab-link"
+          aria-current={active === "today" ? "page" : undefined}
+          aria-keyshortcuts="t"
+          style={{
+            flex: 1.5,
+            padding: "10px 0",
+            borderRadius: 10,
+            background: active === "today" ? "#e15a46" : "transparent",
+            border: active === "today" ? "none" : "1px solid #3d3935",
+            color: active === "today" ? "#fff" : "#a8a29e",
+            fontSize: 13,
+            fontWeight: 600,
+            textAlign: "center",
+            textDecoration: "none",
+            fontFamily: "DM Sans, system-ui, sans-serif",
+          }}
+        >
+          Today
+        </Link>
+      </Tooltip>
+      <Tooltip content="Week (W)">
+        <Link
+          to="/habits/week"
+          className="habit-tab-link"
+          aria-current={active === "week" ? "page" : undefined}
+          aria-keyshortcuts="w"
+          style={{
+            flex: 1.5,
+            padding: "10px 0",
+            borderRadius: 10,
+            background: active === "week" ? "#e15a46" : "transparent",
+            border: active === "week" ? "none" : "1px solid #3d3935",
+            color: active === "week" ? "#fff" : "#a8a29e",
+            fontSize: 13,
+            fontWeight: 600,
+            textAlign: "center",
+            textDecoration: "none",
+            fontFamily: "DM Sans, system-ui, sans-serif",
+          }}
+        >
+          Week
+        </Link>
+      </Tooltip>
     </div>
   );
 }
@@ -378,9 +384,16 @@ export default function HabitsWeekPage({ loaderData }: Route.ComponentProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey || isEditableTarget(e.target))
         return;
-      if (e.key.toLowerCase() === "n") {
+      const key = e.key.toLowerCase();
+      if (key === "n") {
         e.preventDefault();
         navigate("/habits/new");
+      } else if (key === "t") {
+        e.preventDefault();
+        navigate("/habits");
+      } else if (key === "w") {
+        e.preventDefault();
+        navigate("/habits/week");
       }
     };
     window.addEventListener("keydown", handleKeyDown);
