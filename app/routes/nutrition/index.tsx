@@ -25,7 +25,7 @@ import {
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import {
   type ActionFunctionArgs,
   Link,
@@ -822,6 +822,13 @@ function SaveAsTemplateDialog({
   const [category, setCategory] = useState<MealCategory>("lunch");
   const [notes, setNotes] = useState("");
 
+  const nameId = useId();
+  const notesId = useId();
+  const breakfastId = useId();
+  const lunchId = useId();
+  const dinnerId = useId();
+  const snackId = useId();
+
   useEffect(() => {
     if (meal) {
       setCategory(meal.category);
@@ -847,6 +854,13 @@ function SaveAsTemplateDialog({
     onClose();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && name) {
+      e.preventDefault();
+      handleSave();
+    }
+  };
+
   return (
     <AlertDialog.Root
       open={meal !== null}
@@ -857,6 +871,7 @@ function SaveAsTemplateDialog({
           e.preventDefault();
           nameInputRef.current?.focus();
         }}
+        onKeyDown={handleKeyDown}
       >
         <AlertDialog.Title>Save as Template</AlertDialog.Title>
         <AlertDialog.Description>
@@ -865,10 +880,18 @@ function SaveAsTemplateDialog({
 
         <Flex direction="column" gap="3" mt="4">
           <Box>
-            <Text as="label" size="2" weight="medium" mb="1">
+            <Text
+              as="label"
+              htmlFor={nameId}
+              size="2"
+              weight="medium"
+              mb="1"
+              style={{ display: "block" }}
+            >
               Template Name <RequiredStar />
             </Text>
             <TextField.Root
+              id={nameId}
               ref={nameInputRef}
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -877,7 +900,7 @@ function SaveAsTemplateDialog({
           </Box>
 
           <Box>
-            <Text as="label" size="2" weight="medium" mb="1">
+            <Text as="p" size="2" weight="medium" mb="1">
               Category
             </Text>
             <RadioGroup.Root
@@ -886,30 +909,66 @@ function SaveAsTemplateDialog({
             >
               <Flex gap="4">
                 <Flex align="center" gap="2">
-                  <RadioGroup.Item value="breakfast" />
-                  <Text size="2">Breakfast</Text>
+                  <RadioGroup.Item value="breakfast" id={breakfastId} />
+                  <Text
+                    as="label"
+                    htmlFor={breakfastId}
+                    size="2"
+                    style={{ cursor: "pointer" }}
+                  >
+                    Breakfast
+                  </Text>
                 </Flex>
                 <Flex align="center" gap="2">
-                  <RadioGroup.Item value="lunch" />
-                  <Text size="2">Lunch</Text>
+                  <RadioGroup.Item value="lunch" id={lunchId} />
+                  <Text
+                    as="label"
+                    htmlFor={lunchId}
+                    size="2"
+                    style={{ cursor: "pointer" }}
+                  >
+                    Lunch
+                  </Text>
                 </Flex>
                 <Flex align="center" gap="2">
-                  <RadioGroup.Item value="dinner" />
-                  <Text size="2">Dinner</Text>
+                  <RadioGroup.Item value="dinner" id={dinnerId} />
+                  <Text
+                    as="label"
+                    htmlFor={dinnerId}
+                    size="2"
+                    style={{ cursor: "pointer" }}
+                  >
+                    Dinner
+                  </Text>
                 </Flex>
                 <Flex align="center" gap="2">
-                  <RadioGroup.Item value="snack" />
-                  <Text size="2">Snack</Text>
+                  <RadioGroup.Item value="snack" id={snackId} />
+                  <Text
+                    as="label"
+                    htmlFor={snackId}
+                    size="2"
+                    style={{ cursor: "pointer" }}
+                  >
+                    Snack
+                  </Text>
                 </Flex>
               </Flex>
             </RadioGroup.Root>
           </Box>
 
           <Box>
-            <Text as="label" size="2" weight="medium" mb="1">
+            <Text
+              as="label"
+              htmlFor={notesId}
+              size="2"
+              weight="medium"
+              mb="1"
+              style={{ display: "block" }}
+            >
               Notes (optional)
             </Text>
             <TextField.Root
+              id={notesId}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add any notes about this meal..."
@@ -924,9 +983,17 @@ function SaveAsTemplateDialog({
             </Button>
           </AlertDialog.Cancel>
           <AlertDialog.Action>
-            <Button onClick={handleSave} disabled={!name}>
-              Save Template
-            </Button>
+            <Tooltip content="Save (Cmd/Ctrl+Enter)">
+              <Box display="inline-block">
+                <Button
+                  onClick={handleSave}
+                  disabled={!name}
+                  aria-keyshortcuts="Meta+Enter Control+Enter"
+                >
+                  Save Template
+                </Button>
+              </Box>
+            </Tooltip>
           </AlertDialog.Action>
         </Flex>
       </AlertDialog.Content>

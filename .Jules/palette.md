@@ -1,5 +1,9 @@
 # Palette's Journal
 
+## 2026-07-31 - [Conditional Dialog Accessible Form Semantics & Power Shortcuts]
+**Learning:** Nested creation or setting dialogs (like "Save as Template") often lack basic semantic binding and desktop accelerators. Applying `useId` and `htmlFor` to bind text inputs and option radios, handling `Cmd/Ctrl+Enter` keydowns at the dialog content level, and wrapping action buttons in a non-disabled `Box` within a `Tooltip` ensures both perfect keyboard-only accessibility and visible discoverability even in disabled states.
+**Action:** Always fully bind label-to-input fields using unique IDs in auxiliary/conditional dialogs, and support `Cmd/Ctrl+Enter` submit shortcuts with a hoverable tooltip.
+
 ## 2026-07-30 - [Bespoke TabBar Keyboard Shortcuts & Accessible Tooltips]
 **Learning:** Bespoke bottom TabBars designed for mobile aesthetic focus often miss critical accessibility indicators and desktop power shortcuts. Binding keydown navigation hooks (such as 't' for Today and 'w' for Week) directly to their respective view redirects, coupled with outer `Tooltip` components and `aria-keyshortcuts` attributes on individual tab Links, significantly elevates both sighted discoverability and screen reader landmark transparency.
 **Action:** Wrap custom navigation bar TabLinks in Radix UI `Tooltip` wrappers with keyboard shortcut hints, add matching `aria-keyshortcuts`, and handle navigation hooks with focus guards in corresponding route listeners.
