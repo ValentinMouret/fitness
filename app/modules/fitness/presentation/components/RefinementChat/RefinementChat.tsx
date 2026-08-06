@@ -1,5 +1,5 @@
 import { Button, Text, TextField } from "@radix-ui/themes";
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useFetcher } from "react-router";
 import type { ConversationMessage } from "~/modules/fitness/domain/ai-generation";
 import "./RefinementChat.css";
@@ -17,7 +17,16 @@ export function RefinementChat({
 }: RefinementChatProps) {
   const [input, setInput] = useState("");
   const refineFetcher = useFetcher();
-  const savePrefFetcher = useFetcher();
+  const savePrefFetcher = useFetcher<{
+    readonly intent: string;
+    readonly success?: boolean;
+  }>();
+
+  const labelId = useId();
+  const [savedContents, setSavedContents] = useState<ReadonlySet<string>>(
+    new Set(),
+  );
+  const [pendingContent, setPendingContent] = useState<string | null>(null);
 
   const isRefining = refineFetcher.state !== "idle";
 
@@ -37,6 +46,7 @@ export function RefinementChat({
   };
 
   const handleSavePreference = (content: string) => {
+    setPendingContent(content);
     savePrefFetcher.submit(
       {
         intent: "save-preference",
@@ -46,6 +56,22 @@ export function RefinementChat({
     );
   };
 
+  useEffect(() => {
+    if (savePrefFetcher.state === "idle" && pendingContent) {
+      if (
+        savePrefFetcher.data?.intent === "save-preference" &&
+        savePrefFetcher.data?.success
+      ) {
+        setSavedContents((prev) => {
+          const next = new Set(prev);
+          next.add(pendingContent);
+          return next;
+        });
+      }
+      setPendingContent(null);
+    }
+  }, [savePrefFetcher.state, savePrefFetcher.data, pendingContent]);
+
   // Only show user messages in the chat (assistant responses are reflected in the workout preview)
   const visibleMessages = messages.filter(
     (_, i) => i > 0, // skip the initial "Generate my next workout" message
@@ -53,7 +79,14 @@ export function RefinementChat({
 
   return (
     <div className="refinement-chat">
-      <Text size="2" weight="medium" mb="2" as="p">
+      <Text
+        as="label"
+        htmlFor={labelId}
+        size="2"
+        weight="medium"
+        mb="2"
+        style={{ display: "block" }}
+      >
         Refine your workout
       </Text>
 
@@ -67,14 +100,31 @@ export function RefinementChat({
               <Text size="2">{msg.content}</Text>
               {msg.role === "user" && (
                 <div className="refinement-chat__save-pref">
-                  <Button
-                    size="1"
-                    variant="ghost"
-                    onClick={() => handleSavePreference(msg.content)}
-                    disabled={savePrefFetcher.state !== "idle"}
-                  >
-                    Save as preference
-                  </Button>
+                  {(() => {
+                    const isThisPending =
+                      pendingContent === msg.content &&
+                      savePrefFetcher.state !== "idle";
+                    const isThisSaved = savedContents.has(msg.content);
+                    return (
+                      <Button
+                        size="1"
+                        variant="ghost"
+                        onClick={() => handleSavePreference(msg.content)}
+                        disabled={
+                          isThisPending ||
+                          isThisSaved ||
+                          savePrefFetcher.state !== "idle"
+                        }
+                        color={isThisSaved ? "green" : undefined}
+                      >
+                        {isThisPending
+                          ? "Saving..."
+                          : isThisSaved
+                            ? "Saved!"
+                            : "Save as preference"}
+                      </Button>
+                    );
+                  })()}
                 </div>
               )}
             </div>
@@ -85,6 +135,7 @@ export function RefinementChat({
 
       <form onSubmit={handleSubmit} className="refinement-chat__input-row">
         <TextField.Root
+          id={labelId}
           className="refinement-chat__input"
           placeholder="e.g., swap bench for incline, add more back work..."
           value={input}

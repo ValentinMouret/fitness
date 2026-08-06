@@ -1,5 +1,9 @@
 # Palette's Journal
 
+## 2026-08-01 - [Precise Per-Item Localized Async Feedback in Collections]
+**Learning:** When using a single fetcher to perform async actions on elements within a list (such as "Save as preference" inside a chat list), relying on global fetcher state (`fetcher.state !== "idle"`) disables or changes the state of all list elements simultaneously. Storing the specific pending content or item ID in a local React state during submission, coupled with a `useEffect` that monitors completion, allows for highly precise, per-item visual feedback (e.g., "Saving..." and "Saved!" in green) without interfering with other list elements.
+**Action:** Always track the active item's identifier locally when executing fetcher actions on items in a collection to deliver independent and highly responsive visual states.
+
 ## 2026-07-31 - [Conditional Dialog Accessible Form Semantics & Power Shortcuts]
 **Learning:** Nested creation or setting dialogs (like "Save as Template") often lack basic semantic binding and desktop accelerators. Applying `useId` and `htmlFor` to bind text inputs and option radios, handling `Cmd/Ctrl+Enter` keydowns at the dialog content level, and wrapping action buttons in a non-disabled `Box` within a `Tooltip` ensures both perfect keyboard-only accessibility and visible discoverability even in disabled states.
 **Action:** Always fully bind label-to-input fields using unique IDs in auxiliary/conditional dialogs, and support `Cmd/Ctrl+Enter` submit shortcuts with a hoverable tooltip.
