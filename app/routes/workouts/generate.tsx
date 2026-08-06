@@ -13,9 +13,10 @@ import {
   Progress,
   Spinner,
   Text,
+  Tooltip,
 } from "@radix-ui/themes";
 import { Activity } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -187,10 +188,34 @@ export default function GenerateWorkout({ loaderData }: Route.ComponentProps) {
   const { weeklyProgress } = loaderData;
   const generateFetcher = useFetcher<ActionResult>();
 
+  const timeConstraintId = useId();
+  const formRef = useRef<HTMLFormElement>(null);
+  const timeInputRef = useRef<HTMLInputElement>(null);
+
   // Track the latest workout/conversation state across generate + refine actions
   const [currentWorkout, setCurrentWorkout] = useState<GeneratedWorkout | null>(
     null,
   );
+
+  useEffect(() => {
+    if (!currentWorkout && timeInputRef.current) {
+      timeInputRef.current.focus();
+    }
+  }, [currentWorkout]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        if (formRef.current?.contains(document.activeElement)) {
+          e.preventDefault();
+          formRef.current.requestSubmit();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ReadonlyArray<ConversationMessage>>(
     [],
@@ -301,13 +326,22 @@ export default function GenerateWorkout({ loaderData }: Route.ComponentProps) {
 
       {/* Generate Form (shown when no workout yet) */}
       {!currentWorkout && (
-        <form onSubmit={handleGenerate}>
+        <form ref={formRef} onSubmit={handleGenerate}>
           <Flex direction="column" gap="4">
             <Box>
-              <Text as="label" size="2" weight="medium" mb="2">
+              <Text
+                as="label"
+                htmlFor={timeConstraintId}
+                size="2"
+                weight="medium"
+                mb="2"
+                style={{ display: "block" }}
+              >
                 Time constraint (minutes, optional)
               </Text>
               <NumberInput
+                ref={timeInputRef}
+                id={timeConstraintId}
                 allowDecimals={false}
                 name="timeConstraint"
                 placeholder="e.g., 60"
@@ -316,17 +350,27 @@ export default function GenerateWorkout({ loaderData }: Route.ComponentProps) {
                 size="3"
               />
             </Box>
-            <Button type="submit" size="3" disabled={isGenerating}>
-              {isGenerating ? (
-                <>
-                  <Spinner size="1" /> Generating...
-                </>
-              ) : (
-                <>
-                  <LightningBoltIcon /> Generate with AI
-                </>
-              )}
-            </Button>
+            <Tooltip content="Generate with AI (Cmd+Enter)">
+              <Box display="inline-block" style={{ width: "100%" }}>
+                <Button
+                  type="submit"
+                  size="3"
+                  disabled={isGenerating}
+                  aria-keyshortcuts="Meta+Enter Control+Enter"
+                  style={{ width: "100%" }}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Spinner size="1" /> Generating...
+                    </>
+                  ) : (
+                    <>
+                      <LightningBoltIcon /> Generate with AI
+                    </>
+                  )}
+                </Button>
+              </Box>
+            </Tooltip>
           </Flex>
         </form>
       )}
