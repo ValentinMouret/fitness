@@ -5,7 +5,9 @@ import {
   Flex,
   Heading,
   Text,
+  Tooltip,
 } from "@radix-ui/themes";
+import { useEffect, useRef } from "react";
 import { Form, useNavigation } from "react-router";
 import { useLiveDuration } from "./useLiveDuration";
 import "./CancelConfirmationDialog.css";
@@ -58,6 +60,24 @@ export function CancelConfirmationDialog({
     0,
   );
 
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        if (!isBusy) {
+          e.preventDefault();
+          formRef.current?.requestSubmit();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, isBusy]);
+
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
       <AlertDialog.Content className="cancel-workout-dialog">
@@ -103,11 +123,21 @@ export function CancelConfirmationDialog({
             </Button>
           </AlertDialog.Cancel>
 
-          <Form method="post">
+          <Form ref={formRef} method="post">
             <input type="hidden" name="intent" value="cancel-workout" />
-            <Button type="submit" size="2" color="red" disabled={isBusy}>
-              {isCancelling ? "Cancelling..." : "Cancel"}
-            </Button>
+            <Tooltip content="Cancel workout (Cmd/Ctrl+Enter)">
+              <Box display="inline-block">
+                <Button
+                  type="submit"
+                  size="2"
+                  color="red"
+                  disabled={isBusy}
+                  aria-keyshortcuts="Meta+Enter Control+Enter"
+                >
+                  {isCancelling ? "Cancelling..." : "Cancel"}
+                </Button>
+              </Box>
+            </Tooltip>
           </Form>
         </Flex>
       </AlertDialog.Content>

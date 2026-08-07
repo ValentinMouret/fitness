@@ -1,5 +1,9 @@
 # Palette's Journal
 
+## 2026-08-02 - [Destructive Action Dialog Keyboard Shortcuts & Accessible Tooltips]
+**Learning:** Destructive actions nested within confirmation dialogs (like Cancelling or Deleting a workout) should support standard accelerators like `Cmd/Ctrl+Enter` to quickly confirm, mirroring the form submission pattern. Wrapping the destructive button in a `Tooltip` with a non-disabled `Box` wrapper ensures that the keyboard shortcut is highly discoverable and fully accessible even when the form or button is in an async/disabled state.
+**Action:** Always wrap action buttons in confirmation dialogs with a Tooltip and an inline-block Box wrapper to support `Cmd/Ctrl+Enter` accelerators and maintain hover discovery during form submissions.
+
 ## 2026-08-01 - [Precise Per-Item Localized Async Feedback in Collections]
 **Learning:** When using a single fetcher to perform async actions on elements within a list (such as "Save as preference" inside a chat list), relying on global fetcher state (`fetcher.state !== "idle"`) disables or changes the state of all list elements simultaneously. Storing the specific pending content or item ID in a local React state during submission, coupled with a `useEffect` that monitors completion, allows for highly precise, per-item visual feedback (e.g., "Saving..." and "Saved!" in green) without interfering with other list elements.
 **Action:** Always track the active item's identifier locally when executing fetcher actions on items in a collection to deliver independent and highly responsive visual states.
