@@ -1,4 +1,13 @@
-import { AlertDialog, Box, Button, Card, Flex, Text } from "@radix-ui/themes";
+import {
+  AlertDialog,
+  Box,
+  Button,
+  Card,
+  Flex,
+  Text,
+  Tooltip,
+} from "@radix-ui/themes";
+import { useEffect, useRef } from "react";
 import { Form, useNavigation } from "react-router";
 import "./DeleteConfirmationDialog.css";
 
@@ -33,6 +42,24 @@ export function DeleteConfirmationDialog({
     navigation.state === "submitting" &&
     navigation.formData?.get("intent") === "delete-workout";
   const isBusy = navigation.state !== "idle";
+
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        if (!isBusy) {
+          e.preventDefault();
+          formRef.current?.requestSubmit();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, isBusy]);
 
   const totalSets = workoutSession.exerciseGroups.reduce(
     (sum, group) => sum + group.sets.length,
@@ -100,11 +127,20 @@ export function DeleteConfirmationDialog({
               </Button>
             </AlertDialog.Cancel>
 
-            <Form method="post">
+            <Form ref={formRef} method="post">
               <input type="hidden" name="intent" value="delete-workout" />
-              <Button type="submit" color="red" disabled={isBusy}>
-                {isDeleting ? "Deleting..." : "Delete Workout"}
-              </Button>
+              <Tooltip content="Delete workout (Cmd/Ctrl+Enter)">
+                <Box display="inline-block">
+                  <Button
+                    type="submit"
+                    color="red"
+                    disabled={isBusy}
+                    aria-keyshortcuts="Meta+Enter Control+Enter"
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Workout"}
+                  </Button>
+                </Box>
+              </Tooltip>
             </Form>
           </Flex>
         </Flex>
