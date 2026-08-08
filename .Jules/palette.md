@@ -1,5 +1,9 @@
 # Palette's Journal
 
+## 2026-08-03 - [Continuous Multi-State Fetcher Loading States]
+**Learning:** Checking only `fetcher.state === "submitting"` for async actions (like deleting a workout template) creates a UX regression where the loading state vanishes during the subsequent `loading` phase (transitioning from submitting back to idle). Checking `fetcher.state !== "idle"` prevents premature state restoration and double-submission visual flickers.
+**Action:** Always use `fetcher.state !== "idle"` to check if a localized fetcher is executing an action, rather than just checking for `"submitting"`.
+
 ## 2026-08-02 - [Destructive Action Dialog Keyboard Shortcuts & Accessible Tooltips]
 **Learning:** Destructive actions nested within confirmation dialogs (like Cancelling or Deleting a workout) should support standard accelerators like `Cmd/Ctrl+Enter` to quickly confirm, mirroring the form submission pattern. Wrapping the destructive button in a `Tooltip` with a non-disabled `Box` wrapper ensures that the keyboard shortcut is highly discoverable and fully accessible even when the form or button is in an async/disabled state.
 **Action:** Always wrap action buttons in confirmation dialogs with a Tooltip and an inline-block Box wrapper to support `Cmd/Ctrl+Enter` accelerators and maintain hover discovery during form submissions.
