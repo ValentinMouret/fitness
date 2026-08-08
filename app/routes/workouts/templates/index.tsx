@@ -9,7 +9,7 @@ import {
   Text,
   Tooltip,
 } from "@radix-ui/themes";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Form, Link, useFetcher } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -158,6 +158,27 @@ function TemplateActions({
   const fetcher = useFetcher();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  const isDeleting = fetcher.state !== "idle";
+
+  useEffect(() => {
+    if (!showDeleteConfirm) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        if (!isDeleting) {
+          e.preventDefault();
+          fetcher.submit(
+            { intent: "delete-template", templateId },
+            { method: "post" },
+          );
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showDeleteConfirm, isDeleting, templateId, fetcher]);
+
   return (
     <>
       <DropdownMenu.Root>
@@ -191,23 +212,29 @@ function TemplateActions({
 
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>
-              <Button variant="soft" color="gray">
+              <Button variant="soft" color="gray" disabled={isDeleting}>
                 Cancel
               </Button>
             </AlertDialog.Cancel>
             <AlertDialog.Action>
-              <Button
-                variant="solid"
-                color="red"
-                onClick={() =>
-                  fetcher.submit(
-                    { intent: "delete-template", templateId },
-                    { method: "post" },
-                  )
-                }
-              >
-                Delete
-              </Button>
+              <Tooltip content="Delete template (Cmd/Ctrl+Enter)">
+                <Box display="inline-block">
+                  <Button
+                    variant="solid"
+                    color="red"
+                    loading={isDeleting}
+                    aria-keyshortcuts="Meta+Enter Control+Enter"
+                    onClick={() =>
+                      fetcher.submit(
+                        { intent: "delete-template", templateId },
+                        { method: "post" },
+                      )
+                    }
+                  >
+                    Delete
+                  </Button>
+                </Box>
+              </Tooltip>
             </AlertDialog.Action>
           </Flex>
         </AlertDialog.Content>
