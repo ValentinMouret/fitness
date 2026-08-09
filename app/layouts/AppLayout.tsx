@@ -183,14 +183,18 @@ const AppLayout: React.FC = () => {
               {!isCollapsed && <Heading size="4">fitness</Heading>}
             </Flex>
 
-            <IconButton
-              variant="ghost"
-              size="1"
-              onClick={toggleCollapsed}
-              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            <Tooltip
+              content={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-            </IconButton>
+              <IconButton
+                variant="ghost"
+                size="1"
+                onClick={toggleCollapsed}
+                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+              </IconButton>
+            </Tooltip>
           </Flex>
 
           <Flex

@@ -1,5 +1,9 @@
 # Palette's Journal
 
+## 2026-08-15 - [Persona Boundaries & Micro-UX Scope Discipline]
+**Learning:** Even when underlying domain models or route schemas seem incomplete or have apparent missing fields (such as a missing `movementPattern` dropdown in a creation form), the Palette agent must resist the temptation to add functional form fields, which are classified as feature/domain model updates rather than pure micro-UX/accessibility improvements. Changes must strictly stick to visual polish, tooltips, ARIA labels, and keyboard enhancements to prevent functional scope creep and backend action parse mismatches.
+**Action:** Focus strictly on micro-UX enhancements (tooltips, aria-labels, loading states) rather than functional input additions when operating as Palette.
+
 ## 2026-08-02 - [Destructive Action Dialog Keyboard Shortcuts & Accessible Tooltips]
 **Learning:** Destructive actions nested within confirmation dialogs (like Cancelling or Deleting a workout) should support standard accelerators like `Cmd/Ctrl+Enter` to quickly confirm, mirroring the form submission pattern. Wrapping the destructive button in a `Tooltip` with a non-disabled `Box` wrapper ensures that the keyboard shortcut is highly discoverable and fully accessible even when the form or button is in an async/disabled state.
 **Action:** Always wrap action buttons in confirmation dialogs with a Tooltip and an inline-block Box wrapper to support `Cmd/Ctrl+Enter` accelerators and maintain hover discovery during form submissions.

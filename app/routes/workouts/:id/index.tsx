@@ -453,6 +453,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                   ref={inputRef}
                   defaultValue={optimisticName}
                   size="3"
+                  aria-label="Workout name"
                   onBlur={(e) => handleNameSubmit(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
