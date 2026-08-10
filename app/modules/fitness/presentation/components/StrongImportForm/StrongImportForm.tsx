@@ -41,7 +41,7 @@ export function StrongImportForm({
     unmappedExercises?: string[];
   }>();
 
-  const isSubmitting = fetcher.state === "submitting";
+  const isSubmitting = fetcher.state !== "idle";
   const hasError = fetcher.data?.success === false;
   const hasSuccess = fetcher.data?.success === true;
 

@@ -1,5 +1,9 @@
 # Palette's Journal
 
+## 2026-08-08 - [Secondary Page Header Standardization & Redirection Transition Polish]
+**Learning:** Auxiliary or secondary action pages (like `/workouts/import`) should utilize the global layout `handle.header` pattern rather than implementing redundant heading wrappers and customized back navigation, instantly providing accessible back buttons with tooltip and ARIA helpers. During localized form submissions, checking `state !== "idle"` instead of `state === "submitting"` prevents form inputs and buttons from flickering back to active states during subsequent redirection or transition phases.
+**Action:** Export `handle.header` with `backTo` properties on secondary/action routes to utilize the standardized page header component, and use `fetcher.state !== "idle"` to manage form submission transitions cleanly without flicker.
+
 ## 2026-08-02 - [Destructive Action Dialog Keyboard Shortcuts & Accessible Tooltips]
 **Learning:** Destructive actions nested within confirmation dialogs (like Cancelling or Deleting a workout) should support standard accelerators like `Cmd/Ctrl+Enter` to quickly confirm, mirroring the form submission pattern. Wrapping the destructive button in a `Tooltip` with a non-disabled `Box` wrapper ensures that the keyboard shortcut is highly discoverable and fully accessible even when the form or button is in an async/disabled state.
 **Action:** Always wrap action buttons in confirmation dialogs with a Tooltip and an inline-block Box wrapper to support `Cmd/Ctrl+Enter` accelerators and maintain hover discovery during form submissions.
