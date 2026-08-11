@@ -481,6 +481,7 @@ export default function MealBuilder({
             </Button>
           </Dialog.Trigger>
           <AddIngredientModal
+            isOpen={isAddModalOpen}
             ingredients={filteredIngredients}
             onAdd={handleAddIngredient}
             searchQuery={searchQuery}
@@ -574,6 +575,7 @@ export default function MealBuilder({
 }
 
 function AddIngredientModal({
+  isOpen,
   ingredients,
   onAdd,
   searchQuery,
@@ -584,6 +586,7 @@ function AddIngredientModal({
   isAISearching,
   aiSearchError,
 }: {
+  isOpen: boolean;
   ingredients: readonly Ingredient[];
   onAdd: (ingredient: Ingredient) => void;
   searchQuery: string;
@@ -598,12 +601,22 @@ function AddIngredientModal({
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
       if (isEditableTarget(e.target)) return;
 
-      if (e.key === "/") {
+      const key = e.key;
+      if (key >= "1" && key <= "9") {
+        const index = Number.parseInt(key, 10) - 1;
+        const ingredient = ingredients[index];
+        if (ingredient) {
+          e.preventDefault();
+          onAdd(ingredient);
+        }
+      } else if (e.key === "/") {
         e.preventDefault();
         searchInputRef.current?.focus();
       }
@@ -611,7 +624,7 @@ function AddIngredientModal({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [isOpen, ingredients, onAdd]);
 
   return (
     <Dialog.Content
@@ -700,12 +713,16 @@ function AddIngredientModal({
                 )}
               </Flex>
             ) : (
-              ingredients.map((ingredient: Ingredient) => (
+              ingredients.map((ingredient: Ingredient, index) => (
                 <Card key={ingredient.id} size="1" asChild>
                   <button
                     type="button"
                     onClick={() => onAdd(ingredient)}
                     className="meal-builder__ingredient-button"
+                    aria-label={`${ingredient.name}${index < 9 ? ` (${index + 1})` : ""}`}
+                    aria-keyshortcuts={
+                      index < 9 ? String(index + 1) : undefined
+                    }
                   >
                     <Flex justify="between" align="center">
                       <Flex align="center" gap="2">
@@ -714,10 +731,19 @@ function AddIngredientModal({
                         </Text>
                         <Text>{ingredient.name}</Text>
                       </Flex>
-                      <Text size="1" color="gray">
-                        {ingredient.calories} kcal/100g • {ingredient.protein}g
-                        pro
-                      </Text>
+                      <Flex align="center" gap="2">
+                        <Text size="1" color="gray">
+                          {ingredient.calories} kcal/100g • {ingredient.protein}
+                          g pro
+                        </Text>
+                        {index < 9 && (
+                          <Box
+                            display={{ initial: "none", md: "inline-block" }}
+                          >
+                            <Kbd size="1">{index + 1}</Kbd>
+                          </Box>
+                        )}
+                      </Flex>
                     </Flex>
                   </button>
                 </Card>
