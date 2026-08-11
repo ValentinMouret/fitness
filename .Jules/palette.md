@@ -1,5 +1,9 @@
 # Palette's Journal
 
+## 2026-08-04 - [List Selection Modal 1-9 Keyboard Accelerators & Discovery]
+**Learning:** For high-frequency search-and-select modals (like "Add Ingredient"), adding single-character number hotkeys ('1'-'9') significantly accelerates data entry. It is crucial to guard the global listener with both `isOpen` modal state and `isEditableTarget` element focus checks to prevent triggering when typing queries. Displaying corresponding `<Kbd>` badges and updating `aria-keyshortcuts` / `aria-label` ensures sighted and screen-reader users alike discover the shortcuts.
+**Action:** Always implement '1'-'9' key accelerators in list selection modals, using focus and visibility guards, and render clear `<Kbd>` discoverability hints.
+
 ## 2026-08-03 - [Continuous Multi-State Fetcher Loading States]
 **Learning:** Checking only `fetcher.state === "submitting"` for async actions (like deleting a workout template) creates a UX regression where the loading state vanishes during the subsequent `loading` phase (transitioning from submitting back to idle). Checking `fetcher.state !== "idle"` prevents premature state restoration and double-submission visual flickers.
 **Action:** Always use `fetcher.state !== "idle"` to check if a localized fetcher is executing an action, rather than just checking for `"submitting"`.
