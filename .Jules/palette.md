@@ -1,5 +1,9 @@
 # Palette's Journal
 
+## 2026-08-05 - [Global Confirmation Dialog Keyboard Shortcuts, Disabled State Wrappers & Fetcher Loading States]
+**Learning:** Destructive confirm/delete modals (such as deleting an exercise) should support standard accelerators like `Cmd/Ctrl+Enter` to quickly confirm, matching standard forms. To make this keyboard shortcut discoverable and accessible, wrap the confirm button in a `Tooltip` with a non-disabled `Box` wrapper. This ensures the tooltip displays even if the button itself is disabled or in a loading state. Additionally, checking `fetcher.state !== "idle"` rather than `submitting` keeps the loading state robust until the transition/redirect fully settles.
+**Action:** Always wrap confirm/delete action buttons in confirmation dialogs with a Tooltip and an inline-block Box wrapper to support `Cmd/Ctrl+Enter` accelerators, and manage disabled/loading states using robust `fetcher.state !== "idle"` checks.
+
 ## 2026-08-04 - [List Selection Modal 1-9 Keyboard Accelerators & Discovery]
 **Learning:** For high-frequency search-and-select modals (like "Add Ingredient"), adding single-character number hotkeys ('1'-'9') significantly accelerates data entry. It is crucial to guard the global listener with both `isOpen` modal state and `isEditableTarget` element focus checks to prevent triggering when typing queries. Displaying corresponding `<Kbd>` badges and updating `aria-keyshortcuts` / `aria-label` ensures sighted and screen-reader users alike discover the shortcuts.
 **Action:** Always implement '1'-'9' key accelerators in list selection modals, using focus and visibility guards, and render clear `<Kbd>` discoverability hints.

@@ -2,6 +2,7 @@ import { ChevronDownIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 import {
   AlertDialog,
   Badge,
+  Box,
   Button,
   Card,
   Flex,
@@ -9,7 +10,7 @@ import {
   Text,
   Tooltip,
 } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useFetcher } from "react-router";
 import { humanFormatting } from "~/strings";
 import "./ExerciseCard.css";
@@ -40,6 +41,9 @@ export default function ExerciseCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const fetcher = useFetcher();
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const isDeleting = fetcher.state !== "idle";
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
@@ -50,6 +54,22 @@ export default function ExerciseCard({
       setShowDeleteDialog(false);
     }
   }, [fetcher.state, fetcher.data, showDeleteDialog]);
+
+  useEffect(() => {
+    if (!showDeleteDialog) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        if (!isDeleting) {
+          e.preventDefault();
+          formRef.current?.requestSubmit();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showDeleteDialog, isDeleting]);
 
   return (
     <Card>
@@ -145,15 +165,24 @@ export default function ExerciseCard({
 
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>
-              <Button variant="soft" color="gray">
+              <Button variant="soft" color="gray" disabled={isDeleting}>
                 Cancel
               </Button>
             </AlertDialog.Cancel>
-            <fetcher.Form method="post">
+            <fetcher.Form ref={formRef} method="post">
               <input type="hidden" name="exerciseId" value={exercise.id} />
-              <Button type="submit" color="red">
-                Delete
-              </Button>
+              <Tooltip content="Delete exercise (Cmd/Ctrl+Enter)">
+                <Box display="inline-block">
+                  <Button
+                    type="submit"
+                    color="red"
+                    loading={isDeleting}
+                    aria-keyshortcuts="Meta+Enter Control+Enter"
+                  >
+                    Delete
+                  </Button>
+                </Box>
+              </Tooltip>
             </fetcher.Form>
           </Flex>
         </AlertDialog.Content>
