@@ -23,7 +23,14 @@ import {
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
@@ -804,8 +811,10 @@ function SaveTemplateDialog({
     "breakfast" | "lunch" | "dinner" | "snack"
   >("lunch");
   const [templateNotes, setTemplateNotes] = useState("");
+  const nameId = useId();
+  const notesId = useId();
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (!templateName) return;
 
     const ingredientsData = selectedIngredients.map((ing) => ({
@@ -825,7 +834,25 @@ function SaveTemplateDialog({
     );
 
     onClose();
-  };
+  }, [
+    templateName,
+    templateCategory,
+    templateNotes,
+    selectedIngredients,
+    onClose,
+    fetcher,
+  ]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleSave]);
 
   return (
     <AlertDialog.Content
@@ -841,10 +868,11 @@ function SaveTemplateDialog({
 
       <Flex direction="column" gap="3" mt="4">
         <Box>
-          <Text as="label" size="2" weight="medium" mb="1">
+          <Text as="label" htmlFor={nameId} size="2" weight="medium" mb="1">
             Template Name <RequiredStar />
           </Text>
           <TextField.Root
+            id={nameId}
             ref={nameInputRef}
             value={templateName}
             onChange={(e) => setTemplateName(e.target.value)}
@@ -884,10 +912,11 @@ function SaveTemplateDialog({
         </Box>
 
         <Box>
-          <Text as="label" size="2" weight="medium" mb="1">
+          <Text as="label" htmlFor={notesId} size="2" weight="medium" mb="1">
             Notes (optional)
           </Text>
           <TextField.Root
+            id={notesId}
             value={templateNotes}
             onChange={(e) => setTemplateNotes(e.target.value)}
             placeholder="Add any notes about this meal..."
@@ -902,9 +931,17 @@ function SaveTemplateDialog({
           </Button>
         </AlertDialog.Cancel>
         <AlertDialog.Action>
-          <Button onClick={handleSave} disabled={!templateName}>
-            Save Template
-          </Button>
+          <Tooltip content="Save template (Cmd/Ctrl+Enter)">
+            <Box display="inline-block">
+              <Button
+                onClick={handleSave}
+                disabled={!templateName}
+                aria-keyshortcuts="Meta+Enter Control+Enter"
+              >
+                Save Template
+              </Button>
+            </Box>
+          </Tooltip>
         </AlertDialog.Action>
       </Flex>
     </AlertDialog.Content>
