@@ -275,14 +275,16 @@ export function QuickEstimateModal({
               />
             </Box>
             <Tooltip content="Send estimate request (Enter)">
-              <IconButton
-                onClick={handleSend}
-                disabled={!input.trim() || isLoading}
-                aria-label="Send estimate request (Enter)"
-                aria-keyshortcuts="Enter"
-              >
-                <PaperPlaneIcon />
-              </IconButton>
+              <Box display="inline-block">
+                <IconButton
+                  onClick={handleSend}
+                  disabled={!input.trim() || isLoading}
+                  aria-label="Send estimate request (Enter)"
+                  aria-keyshortcuts="Enter"
+                >
+                  <PaperPlaneIcon />
+                </IconButton>
+              </Box>
             </Tooltip>
           </Flex>
         )}

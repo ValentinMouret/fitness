@@ -346,16 +346,18 @@ export function QuickActionSheet({
                         </NumberInput>
                       </Box>
                       <Tooltip content="Log weight (Enter)">
-                        <Button
-                          type="submit"
-                          loading={weightFetcher.state !== "idle"}
-                          disabled={
-                            !weightValue && weightFetcher.state === "idle"
-                          }
-                          aria-label="Log weight (Enter)"
-                        >
-                          Log
-                        </Button>
+                        <Box display="inline-block">
+                          <Button
+                            type="submit"
+                            loading={weightFetcher.state !== "idle"}
+                            disabled={
+                              !weightValue && weightFetcher.state === "idle"
+                            }
+                            aria-label="Log weight (Enter)"
+                          >
+                            Log
+                          </Button>
+                        </Box>
                       </Tooltip>
                     </Flex>
                   </weightFetcher.Form>
