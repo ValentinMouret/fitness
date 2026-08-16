@@ -1,7 +1,8 @@
-import { Button, IconButton, Text, Tooltip } from "@radix-ui/themes";
+import { Button, IconButton, Kbd, Text, Tooltip } from "@radix-ui/themes";
 import { Bell, BellOff, BellRing } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { sendNotification, useNotificationPermission } from "~/notifications";
+import { isEditableTarget } from "~/utils/dom";
 import "./RestTimer.css";
 
 const DEFAULT_REST_SECONDS = 90;
@@ -195,9 +196,34 @@ export function RestTimer({
   onDismiss,
   onSetDuration,
 }: RestTimerProps) {
+  const isFinished = secondsRemaining === 0;
+
+  useEffect(() => {
+    if (!isActive || isFinished) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) {
+        return;
+      }
+
+      if (isEditableTarget(event.target)) {
+        return;
+      }
+
+      const key = event.key;
+      const index = Number.parseInt(key, 10) - 1;
+      if (index >= 0 && index < REST_PRESETS.length) {
+        event.preventDefault();
+        onSetDuration(REST_PRESETS[index]);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isActive, isFinished, onSetDuration]);
+
   if (!isActive) return null;
 
-  const isFinished = secondsRemaining === 0;
   const progress = 1 - secondsRemaining / totalSeconds;
 
   return (
@@ -234,17 +260,28 @@ export function RestTimer({
 
         {!isFinished && (
           <div className="rest-timer__presets">
-            {REST_PRESETS.map((preset) => (
-              <Button
-                key={preset}
-                size="1"
-                variant={preset === totalSeconds ? "solid" : "soft"}
-                className="rest-timer__preset"
-                onClick={() => onSetDuration(preset)}
-              >
-                {formatPreset(preset)}
-              </Button>
-            ))}
+            {REST_PRESETS.map((preset, idx) => {
+              const shortcut = String(idx + 1);
+              return (
+                <Tooltip
+                  key={preset}
+                  content={`Set rest to ${formatPreset(preset)} (${shortcut})`}
+                >
+                  <Button
+                    size="1"
+                    variant={preset === totalSeconds ? "solid" : "soft"}
+                    className="rest-timer__preset"
+                    onClick={() => onSetDuration(preset)}
+                    aria-keyshortcuts={shortcut}
+                  >
+                    {formatPreset(preset)}
+                    <Kbd size="1" style={{ marginLeft: "4px" }}>
+                      {shortcut}
+                    </Kbd>
+                  </Button>
+                </Tooltip>
+              );
+            })}
           </div>
         )}
       </div>
