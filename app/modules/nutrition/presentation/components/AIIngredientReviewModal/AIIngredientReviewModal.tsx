@@ -13,7 +13,7 @@ import {
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { NumberInput } from "~/components/NumberInput";
 import { isOneOf } from "~/strings";
 import {
@@ -67,9 +67,26 @@ export function AIIngredientReviewModal({
     }
   };
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
+    if (isLoading || !formData.name.trim()) return;
     onSave(formData);
-  };
+  }, [formData, isLoading, onSave]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        if (!isLoading && formData.name.trim()) {
+          e.preventDefault();
+          handleSave();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, isLoading, formData.name, handleSave]);
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
@@ -82,8 +99,8 @@ export function AIIngredientReviewModal({
             </Flex>
           </Dialog.Title>
           <Dialog.Close>
-            <Tooltip content="Close">
-              <IconButton variant="ghost" aria-label="Close">
+            <Tooltip content="Close (Esc)">
+              <IconButton variant="ghost" aria-label="Close (Esc)">
                 <Cross2Icon />
               </IconButton>
             </Tooltip>
@@ -407,12 +424,17 @@ export function AIIngredientReviewModal({
               Cancel
             </Button>
           </Dialog.Close>
-          <Button
-            onClick={handleSave}
-            disabled={isLoading || !formData.name.trim()}
-          >
-            {isLoading ? "Adding..." : "Add to Database"}
-          </Button>
+          <Tooltip content="Add to Database (Cmd/Ctrl+Enter)">
+            <Box display="inline-block">
+              <Button
+                onClick={handleSave}
+                disabled={isLoading || !formData.name.trim()}
+                aria-keyshortcuts="Meta+Enter Control+Enter"
+              >
+                {isLoading ? "Adding..." : "Add to Database"}
+              </Button>
+            </Box>
+          </Tooltip>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>
