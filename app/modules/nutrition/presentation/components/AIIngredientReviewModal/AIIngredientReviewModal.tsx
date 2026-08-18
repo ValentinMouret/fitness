@@ -13,7 +13,7 @@ import {
   TextField,
   Tooltip,
 } from "@radix-ui/themes";
-import { useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { NumberInput } from "~/components/NumberInput";
 import { isOneOf } from "~/strings";
 import {
@@ -38,6 +38,19 @@ export function AIIngredientReviewModal({
   onSave,
   isLoading = false,
 }: AIIngredientReviewModalProps) {
+  const nameId = useId();
+  const categoryId = useId();
+  const caloriesId = useId();
+  const proteinId = useId();
+  const carbsId = useId();
+  const fatId = useId();
+  const fiberId = useId();
+  const waterPercentageId = useId();
+  const energyDensityId = useId();
+  const textureId = useId();
+  const sliderMinId = useId();
+  const sliderMaxId = useId();
+
   const [formData, setFormData] =
     useState<CreateAIIngredientInput>(aiIngredientData);
 
@@ -67,9 +80,24 @@ export function AIIngredientReviewModal({
     }
   };
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
+    if (isLoading || !formData.name.trim()) return;
     onSave(formData);
-  };
+  }, [formData, isLoading, onSave]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, handleSave]);
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
@@ -82,8 +110,8 @@ export function AIIngredientReviewModal({
             </Flex>
           </Dialog.Title>
           <Dialog.Close>
-            <Tooltip content="Close">
-              <IconButton variant="ghost" aria-label="Close">
+            <Tooltip content="Close (Esc)">
+              <IconButton variant="ghost" aria-label="Close (Esc)">
                 <Cross2Icon />
               </IconButton>
             </Tooltip>
@@ -99,10 +127,11 @@ export function AIIngredientReviewModal({
           <Grid columns="2" gap="4">
             {/* Basic Information */}
             <Box>
-              <Text as="label" size="2" weight="medium" mb="1">
+              <Text as="label" htmlFor={nameId} size="2" weight="medium" mb="1">
                 Name *
               </Text>
               <TextField.Root
+                id={nameId}
                 value={formData.name}
                 onChange={(e) => handleFieldChange("name", e.target.value)}
                 placeholder="Ingredient name"
@@ -110,7 +139,13 @@ export function AIIngredientReviewModal({
             </Box>
 
             <Box>
-              <Text as="label" size="2" weight="medium" mb="1">
+              <Text
+                as="label"
+                htmlFor={categoryId}
+                size="2"
+                weight="medium"
+                mb="1"
+              >
                 Category *
               </Text>
               <Select.Root
@@ -121,7 +156,7 @@ export function AIIngredientReviewModal({
                   }
                 }}
               >
-                <Select.Trigger />
+                <Select.Trigger id={categoryId} />
                 <Select.Content>
                   <Select.Group>
                     {ingredientCategories.map((category) => (
@@ -138,10 +173,17 @@ export function AIIngredientReviewModal({
 
             {/* Nutritional Information */}
             <Box>
-              <Text as="label" size="2" weight="medium" mb="1">
+              <Text
+                as="label"
+                htmlFor={caloriesId}
+                size="2"
+                weight="medium"
+                mb="1"
+              >
                 Calories (per 100g) *
               </Text>
               <NumberInput
+                id={caloriesId}
                 allowDecimals={false}
                 value={formData.calories.toString()}
                 onChange={(e) =>
@@ -154,10 +196,17 @@ export function AIIngredientReviewModal({
             </Box>
 
             <Box>
-              <Text as="label" size="2" weight="medium" mb="1">
+              <Text
+                as="label"
+                htmlFor={proteinId}
+                size="2"
+                weight="medium"
+                mb="1"
+              >
                 Protein (g per 100g) *
               </Text>
               <NumberInput
+                id={proteinId}
                 value={formData.protein.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("protein", e.target.value)
@@ -169,10 +218,17 @@ export function AIIngredientReviewModal({
             </Box>
 
             <Box>
-              <Text as="label" size="2" weight="medium" mb="1">
+              <Text
+                as="label"
+                htmlFor={carbsId}
+                size="2"
+                weight="medium"
+                mb="1"
+              >
                 Carbs (g per 100g) *
               </Text>
               <NumberInput
+                id={carbsId}
                 value={formData.carbs.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("carbs", e.target.value)
@@ -184,10 +240,11 @@ export function AIIngredientReviewModal({
             </Box>
 
             <Box>
-              <Text as="label" size="2" weight="medium" mb="1">
+              <Text as="label" htmlFor={fatId} size="2" weight="medium" mb="1">
                 Fat (g per 100g) *
               </Text>
               <NumberInput
+                id={fatId}
                 value={formData.fat.toString()}
                 onChange={(e) => handleNumberFieldChange("fat", e.target.value)}
                 placeholder="0"
@@ -197,10 +254,17 @@ export function AIIngredientReviewModal({
             </Box>
 
             <Box>
-              <Text as="label" size="2" weight="medium" mb="1">
+              <Text
+                as="label"
+                htmlFor={fiberId}
+                size="2"
+                weight="medium"
+                mb="1"
+              >
                 Fiber (g per 100g) *
               </Text>
               <NumberInput
+                id={fiberId}
                 value={formData.fiber.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("fiber", e.target.value)
@@ -212,10 +276,17 @@ export function AIIngredientReviewModal({
             </Box>
 
             <Box>
-              <Text as="label" size="2" weight="medium" mb="1">
+              <Text
+                as="label"
+                htmlFor={waterPercentageId}
+                size="2"
+                weight="medium"
+                mb="1"
+              >
                 Water Percentage (%) *
               </Text>
               <NumberInput
+                id={waterPercentageId}
                 value={formData.waterPercentage.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("waterPercentage", e.target.value)
@@ -228,10 +299,17 @@ export function AIIngredientReviewModal({
 
             {/* Additional Properties */}
             <Box>
-              <Text as="label" size="2" weight="medium" mb="1">
+              <Text
+                as="label"
+                htmlFor={energyDensityId}
+                size="2"
+                weight="medium"
+                mb="1"
+              >
                 Energy Density (kcal/g) *
               </Text>
               <NumberInput
+                id={energyDensityId}
                 value={formData.energyDensity.toString()}
                 onChange={(e) =>
                   handleNumberFieldChange("energyDensity", e.target.value)
@@ -243,7 +321,13 @@ export function AIIngredientReviewModal({
             </Box>
 
             <Box>
-              <Text as="label" size="2" weight="medium" mb="1">
+              <Text
+                as="label"
+                htmlFor={textureId}
+                size="2"
+                weight="medium"
+                mb="1"
+              >
                 Texture *
               </Text>
               <Select.Root
@@ -254,7 +338,7 @@ export function AIIngredientReviewModal({
                   }
                 }}
               >
-                <Select.Trigger />
+                <Select.Trigger id={textureId} />
                 <Select.Content>
                   <Select.Group>
                     {textureCategories.map((texture) => (
@@ -271,10 +355,17 @@ export function AIIngredientReviewModal({
 
             {/* Portion Settings */}
             <Box>
-              <Text as="label" size="2" weight="medium" mb="1">
+              <Text
+                as="label"
+                htmlFor={sliderMinId}
+                size="2"
+                weight="medium"
+                mb="1"
+              >
                 Minimum Portion (g) *
               </Text>
               <NumberInput
+                id={sliderMinId}
                 allowDecimals={false}
                 value={formData.sliderMin.toString()}
                 onChange={(e) =>
@@ -287,10 +378,17 @@ export function AIIngredientReviewModal({
             </Box>
 
             <Box>
-              <Text as="label" size="2" weight="medium" mb="1">
+              <Text
+                as="label"
+                htmlFor={sliderMaxId}
+                size="2"
+                weight="medium"
+                mb="1"
+              >
                 Maximum Portion (g) *
               </Text>
               <NumberInput
+                id={sliderMaxId}
                 allowDecimals={false}
                 value={formData.sliderMax.toString()}
                 onChange={(e) =>
@@ -407,12 +505,17 @@ export function AIIngredientReviewModal({
               Cancel
             </Button>
           </Dialog.Close>
-          <Button
-            onClick={handleSave}
-            disabled={isLoading || !formData.name.trim()}
-          >
-            {isLoading ? "Adding..." : "Add to Database"}
-          </Button>
+          <Tooltip content="Add to Database (Cmd/Ctrl+Enter)">
+            <Box display="inline-block">
+              <Button
+                onClick={handleSave}
+                disabled={isLoading || !formData.name.trim()}
+                aria-keyshortcuts="Control+Enter Meta+Enter"
+              >
+                {isLoading ? "Adding..." : "Add to Database"}
+              </Button>
+            </Box>
+          </Tooltip>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>
