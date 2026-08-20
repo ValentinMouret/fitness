@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Text, Tooltip } from "@radix-ui/themes";
+import { Box, Button, Flex, Kbd, Text, Tooltip } from "@radix-ui/themes";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect } from "react";
 import { isEditableTarget } from "~/utils/dom";
@@ -55,6 +55,9 @@ export function Pagination({
             >
               <ChevronLeft size={16} aria-hidden="true" />
               Previous
+              <Box ml="1" display={{ initial: "none", md: "inline-block" }}>
+                <Kbd size="1">←</Kbd>
+              </Box>
             </Button>
           </Box>
         </Tooltip>
@@ -76,6 +79,9 @@ export function Pagination({
               aria-keyshortcuts="ArrowRight"
             >
               Next
+              <Box ml="1" display={{ initial: "none", md: "inline-block" }}>
+                <Kbd size="1">→</Kbd>
+              </Box>
               <ChevronRight size={16} aria-hidden="true" />
             </Button>
           </Box>
