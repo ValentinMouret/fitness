@@ -331,6 +331,7 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
               size="2"
               variant="surface"
               className="set-row__input"
+              aria-label={`Set ${set.set} weight`}
             />
           </updateFetcher.Form>
           <updateFetcher.Form
@@ -351,6 +352,7 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
               size="2"
               variant="surface"
               className="set-row__input"
+              aria-label={`Set ${set.set} reps`}
             />
           </updateFetcher.Form>
           <updateFetcher.Form
@@ -370,6 +372,7 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
               size="2"
               variant="surface"
               className="set-row__input set-row__input--rpe"
+              aria-label={`Set ${set.set} RPE`}
             />
           </updateFetcher.Form>
         </>
