@@ -1,13 +1,4 @@
-import {
-  Box,
-  Button,
-  Container,
-  Flex,
-  Heading,
-  Link as RadixLink,
-  Tabs,
-} from "@radix-ui/themes";
-import { Link } from "react-router";
+import { Box, Container, Flex, Tabs } from "@radix-ui/themes";
 import { zfd } from "zod-form-data";
 import type { ImportConfig } from "~/modules/fitness/domain/strong-import";
 import {
@@ -20,6 +11,13 @@ import {
 } from "~/modules/fitness/presentation/components";
 import { formBoolean, formOptionalText } from "~/utils/form-data";
 import type { Route } from "./+types/import";
+
+export const handle = {
+  header: () => ({
+    title: "Import Workout",
+    backTo: "/workouts",
+  }),
+};
 
 export const action = async ({ request }: Route.ActionArgs) => {
   const formData = await request.formData();
@@ -63,15 +61,6 @@ export default function WorkoutImportPage() {
   return (
     <Container>
       <Flex direction="column" gap="6">
-        <Flex justify="between" align="center">
-          <Heading size="8">Import Workout</Heading>
-          <RadixLink asChild>
-            <Link to="/workouts">
-              <Button variant="ghost">Back to Workouts</Button>
-            </Link>
-          </RadixLink>
-        </Flex>
-
         <Tabs.Root defaultValue="strong">
           <Tabs.List>
             <Tabs.Trigger value="strong">Strong</Tabs.Trigger>
