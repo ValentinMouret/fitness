@@ -1,5 +1,13 @@
-import { Button, Dialog, Flex, TextArea } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
+import {
+  Box,
+  Button,
+  Dialog,
+  Flex,
+  Text,
+  TextArea,
+  Tooltip,
+} from "@radix-ui/themes";
+import { useCallback, useEffect, useId, useState } from "react";
 import { useFetcher } from "react-router";
 
 interface EditMMCModalProps {
@@ -18,9 +26,16 @@ export function EditMMCModal({
   onOpenChange,
 }: EditMMCModalProps) {
   const fetcher = useFetcher();
+  const textareaId = useId();
   const [value, setValue] = useState(mmcInstructions ?? "");
 
   const isBusy = fetcher.state !== "idle";
+
+  useEffect(() => {
+    if (open) {
+      setValue(mmcInstructions ?? "");
+    }
+  }, [open, mmcInstructions]);
 
   useEffect(() => {
     if (fetcher.state === "idle" && fetcher.data && "success" in fetcher.data) {
@@ -28,7 +43,7 @@ export function EditMMCModal({
     }
   }, [fetcher.state, fetcher.data, onOpenChange]);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     fetcher.submit(
       {
         intent: "update-exercise-mmc",
@@ -37,6 +52,15 @@ export function EditMMCModal({
       },
       { method: "post" },
     );
+  }, [fetcher, exerciseId, value]);
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+      event.preventDefault();
+      if (!isBusy) {
+        handleSave();
+      }
+    }
   };
 
   return (
@@ -47,10 +71,15 @@ export function EditMMCModal({
           {exerciseName}
         </Dialog.Description>
 
-        <Flex direction="column" gap="3" mt="4">
+        <Flex direction="column" gap="1" mt="4">
+          <Text as="label" htmlFor={textareaId} size="2" weight="medium">
+            Focus Cues & Instructions
+          </Text>
           <TextArea
+            id={textareaId}
             value={value}
             onChange={(e) => setValue(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Focus cues to engage target muscles, e.g. 'Squeeze at the top', 'Feel the stretch at the bottom'"
             rows={4}
             disabled={isBusy}
@@ -63,9 +92,17 @@ export function EditMMCModal({
               Cancel
             </Button>
           </Dialog.Close>
-          <Button onClick={handleSave} loading={isBusy}>
-            Save
-          </Button>
+          <Tooltip content="Save (Cmd/Ctrl+Enter)">
+            <Box display="inline-block">
+              <Button
+                onClick={handleSave}
+                loading={isBusy}
+                aria-keyshortcuts="Control+Enter Meta+Enter"
+              >
+                Save
+              </Button>
+            </Box>
+          </Tooltip>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>
