@@ -1,0 +1,31 @@
+.animated-suggestion {
+  width: 100%;
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  border: none;
+  border-radius: var(--radius-3);
+  background: var(--brand-surface);
+  color: var(--brand-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.7;
+  text-align: left;
+}
+
+.animated-suggestion__phrase,
+.animated-suggestion__hint {
+  display: block;
+}
+
+.animated-suggestion__hint {
+  margin-top: var(--space-1);
+  color: var(--brand-text-secondary);
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated-suggestion {
+    transition: none;
+  }
+}
