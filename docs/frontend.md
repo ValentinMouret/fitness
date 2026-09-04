@@ -22,6 +22,26 @@ Actions work in a similar way.
 
 Submitting forms create a navigation. Sometimes, it’s desireable. Sometimes, it’s better for UX to use `useFetcher` to submit forms without navigation and have an optimistic UI.
 
+Prefer this order when deciding where UI state and data work belong:
+
+1. A URL path or search parameter for durable view state.
+2. A server `loader` for data needed by that URL.
+3. A `<Form>` and `action` for a navigation-causing write.
+4. A `useFetcher` mutation when a write must not navigate.
+5. React state for ephemeral presentation state.
+
+Type route modules with their generated `Route` namespace and receive loader
+data through `Route.ComponentProps`. Define routes explicitly in
+`app/routes.ts`, keep the file tree aligned with the URL tree, and run
+`bun run tc`
+after changing the route tree. Validate route params, search params, and form
+data with Zod at the loader or action boundary. Do not cast untrusted input.
+
+Keep selected records, filters, tabs, and pagination in the URL. Do not fetch
+route data in `useEffect` when a loader can own it. Use `Form` for writes that
+navigate, `useFetcher` only for non-navigating writes, and show pending state
+when duplicate submissions would be harmful.
+
 ## Component Architecture
 
 ### Component Categories
@@ -32,7 +52,7 @@ Submitting forms create a navigation. Sometimes, it’s desireable. Sometimes, i
    - If a component needs richer domain data, transform it before rendering and pass plain props instead
    - Examples: `Button`, `Modal`, `Chart`, form primitives, small app-wide cards and inputs
 
-2. **Feature Components** (`modules/{feature}/presentation/components/`): Domain-specific UI components
+2. **Feature Components** (`app/modules/{feature}/presentation/components/`): Domain-specific UI components
    - Can import from same module's domain/application layers
    - Use view models for data transformation
    - Encapsulated within feature boundary
@@ -47,10 +67,14 @@ Submitting forms create a navigation. Sometimes, it’s desireable. Sometimes, i
 ### Component Organization Rules
 - UI components should be pure and have as little logic as possible
 - There should be one component per file
-- Feature-specific components belong in `modules/{feature}/presentation/components/`
+- Feature-specific components belong in `app/modules/{feature}/presentation/components/`
 - Generic components belong in `app/components/`
 - Route-specific components can stay next to routes if they're simple orchestration only
 - `app/components/` is allowed to contain app-level components as long as they stay dumb and depend on plain props instead of domain/application types
+- Return JSON-serializable view models from loaders. Do not pass domain entities
+  or non-serializable values into UI component boundaries.
+- Keep database access in loaders, actions, or `*.server.ts` modules. Never
+  query Drizzle from a React component.
 
 ### View Model Pattern
 Route modules and feature services should adapt domain objects into UI-facing props before they reach components:
@@ -83,7 +107,7 @@ Examples:
 
 ### Module Structure
 ```
-modules/{feature}/presentation/
+app/modules/{feature}/presentation/
 ├── components/
 │   ├── {FeatureName}Card/
 │   │   ├── index.tsx
@@ -114,6 +138,13 @@ The style for the component should live next to it: `{FeatureName}Card.css`.
 - ✅ Import CSS file: `import "./Chart.css"`
 - ✅ Use `className` with semantic names
 - ✅ Reference design tokens from `docs/design-system.md` for consistent look
+
+## Accessible interactions
+
+Use semantic HTML before adding ARIA. Links navigate; buttons act. Every form
+control needs a visible or programmatic label, and every button needs an
+explicit `type`. Keep heading levels ordered and ensure the complete flow is
+usable with a keyboard.
 
 
 ## Component Structure Example
