@@ -82,8 +82,7 @@ export async function action({ request }: Route.ActionArgs) {
 
 export const handle = {
   header: () => ({
-    title: "Today",
-    subtitle: new Date().toLocaleDateString("en-US", {
+    title: new Date().toLocaleDateString("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
