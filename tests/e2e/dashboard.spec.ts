@@ -5,11 +5,13 @@ test.describe("Dashboard Page", () => {
     await page.goto("/dashboard");
   });
 
-  test("should display stat banner with calories, protein, and weight", async ({
+  test("should display dated stat banner with calories, protein, and weight", async ({
     page,
   }) => {
     await expect(
-      page.getByRole("heading", { name: "Today", exact: true }),
+      page.getByRole("heading", {
+        name: /^(Sun|Mon|Tue|Wed|Thu|Fri|Sat), (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{1,2}$/,
+      }),
     ).toBeVisible();
 
     await expect(page.getByText("kcal", { exact: true })).toBeVisible();
