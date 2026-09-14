@@ -33,6 +33,7 @@ COPY --from=build --chown=bun:bun /app/build              ./build
 COPY --from=build --chown=bun:bun /app/drizzle            ./drizzle
 COPY --from=build --chown=bun:bun /app/app/db/migrate.ts  ./app/db/migrate.ts
 COPY --from=build --chown=bun:bun /app/app/env.server.ts  ./app/env.server.ts
+COPY --from=build --chown=bun:bun /app/app/modules/auth/domain/oauth.ts ./app/modules/auth/domain/oauth.ts
 COPY --from=build --chown=bun:bun /app/app/logger.server.ts ./app/logger.server.ts
 COPY --chown=bun:bun deploy/preview-entrypoint.sh ./deploy/preview-entrypoint.sh
 

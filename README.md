@@ -1,5 +1,8 @@
 # Fitness
 
+See [authentication setup](docs/auth.md) for browser login, MCP OAuth, and local tests.
+The route authentication pattern is recorded in [ADR 0001](docs/adr/0001-server-auth-middleware.md).
+
 ## Infrastructure & DNS
 - **DNS Provider**: Cloudflare
 

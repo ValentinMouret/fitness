@@ -6,16 +6,27 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
+  route(
+    ".well-known/oauth-authorization-server",
+    "routes/.well-known/oauth-authorization-server.ts",
+  ),
+  route(
+    ".well-known/oauth-protected-resource",
+    "routes/.well-known/oauth-protected-resource.ts",
+  ),
+  route("oauth/authorize", "routes/oauth/authorize.tsx"),
+  route("oauth/token", "routes/oauth/token.ts"),
+  route("oauth/revoke", "routes/oauth/revoke.ts"),
+  route("mcp", "routes/mcp.ts"),
   route("login", "routes/login.tsx"),
   route("logout", "routes/logout.tsx"),
   route("healthz", "routes/healthz.ts"),
 
   route("share/meal/:id", "routes/share/meal.tsx"),
 
-  route("api/quick-actions", "routes/api/quick-actions.ts"),
-  route("api/exercises/history", "routes/api/exercises/history.ts"),
-
   layout("layouts/ProtectedLayout.tsx", [
+    route("api/quick-actions", "routes/api/quick-actions.ts"),
+    route("api/exercises/history", "routes/api/exercises/history.ts"),
     route(
       "api/nutrition/estimate-meal",
       "routes/api/nutrition/estimate-meal.ts",

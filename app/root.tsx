@@ -13,10 +13,9 @@ import type { Route } from "./+types/root";
 import "@radix-ui/themes/styles.css";
 import "./app.css";
 import { Code, Container, Heading, Text, Theme } from "@radix-ui/themes";
-import { AuthProvider } from "./components/AuthProvider";
 
 export const headers: Route.HeadersFunction = () => ({
-  "Cache-Control": "no-cache",
+  "Cache-Control": "no-store",
 });
 
 export const links: Route.LinksFunction = () => [
@@ -73,11 +72,7 @@ export default function App() {
     }
   }, []);
 
-  return (
-    <AuthProvider>
-      <Outlet />
-    </AuthProvider>
-  );
+  return <Outlet />;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

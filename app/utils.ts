@@ -44,6 +44,10 @@ export function isServer(): boolean {
  */
 export function isSafePath(path: string): boolean {
   return (
-    path.startsWith("/") && !path.startsWith("//") && !path.startsWith("/\\")
+    path.startsWith("/") &&
+    !path.startsWith("//") &&
+    !Array.from(path).some(
+      (character) => character === "\\" || character.charCodeAt(0) <= 32,
+    )
   );
 }

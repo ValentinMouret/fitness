@@ -19,6 +19,7 @@ env:
   ANTHROPIC_API_KEY: dummy_key
   AUTH_USERNAME: admin
   AUTH_PASSWORD: password
+  AUTH_SESSION_SECRET: ci-only-session-secret-not-for-production-32-bytes
   NODE_ENV: test
 
 jobs:
@@ -43,12 +44,37 @@ jobs:
     if: github.event_name == 'push' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: fitness
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
 
       - run: bun install --frozen-lockfile
       - run: bun run build
+
+      - name: Build production image
+        run: docker build --tag fitness-ci .
+
+      - name: Smoke test runtime migrations
+        run: |
+          docker run --rm --network host \
+            -e DATABASE_URL -e ANTHROPIC_API_KEY \
+            -e AUTH_USERNAME -e AUTH_PASSWORD -e AUTH_SESSION_SECRET \
+            -e NODE_ENV=production \
+            fitness-ci bun -e 'console.log("Runtime migration smoke check passed")'
 
       - uses: actions/upload-artifact@v4
         with:
@@ -83,6 +109,7 @@ jobs:
       - run: bun run db:dev
       - run: bun run db:seed
       - run: bun run test
+      - run: bun run test:auth:integration
 
   e2e:
     name: E2E Tests
@@ -109,6 +136,12 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/fitness
       PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+      OAUTH_ISSUER_URL: http://127.0.0.1:5175
+      OAUTH_CLIENTS: '[{"name":"ChatGPT","id":"fitness-e2e-chatgpt","secret":"fitness-e2e-chatgpt-secret","redirectUri":"https://chatgpt.example.invalid/callback"},{"name":"Claude","id":"fitness-e2e-claude","secret":"fitness-e2e-claude-secret","redirectUri":"https://claude.example.invalid/callback"}]'
+      E2E_DATABASE_URL: postgresql://postgres:password@postgres:5432/fitness
+      E2E_CONNECTIONS_TABLE: public.oauth_connections
+      E2E_AUTHORIZATION_CODES_TABLE: public.oauth_authorization_codes
+      E2E_TOKENS_TABLE: public.oauth_tokens
 
     steps:
       - uses: actions/checkout@v4

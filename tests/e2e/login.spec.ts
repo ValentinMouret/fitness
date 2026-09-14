@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { credentials } from "./support/auth";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -23,8 +24,12 @@ test.describe("Login Page", () => {
   });
 
   test("should login successfully with valid credentials", async ({ page }) => {
-    await page.getByPlaceholder("Enter your username").fill("testuser");
-    await page.getByPlaceholder("Enter your password").fill("testpassword");
+    await page
+      .getByPlaceholder("Enter your username")
+      .fill(credentials.username);
+    await page
+      .getByPlaceholder("Enter your password")
+      .fill(credentials.password);
     await page.getByRole("button", { name: "Login" }).click();
 
     await expect(page).toHaveURL(/\/dashboard/);

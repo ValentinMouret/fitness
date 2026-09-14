@@ -10,3 +10,8 @@
 .login-submit {
   width: 100%;
 }
+
+.auth-submit {
+  min-height: 44px;
+  min-width: 44px;
+}

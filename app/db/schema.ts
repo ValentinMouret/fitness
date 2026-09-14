@@ -515,3 +515,9 @@ export const daily_note = pgTable("daily_note", {
   content: text().notNull().default(""),
   updated_at: timestamp(),
 });
+
+export {
+  oauthCodes,
+  oauthConnections,
+  oauthTokens,
+} from "~/modules/auth/infra/schema";

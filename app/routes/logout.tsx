@@ -1,10 +1,11 @@
-import { logoutUser } from "~/modules/auth/application/auth.service.server";
+import { redirect } from "react-router";
+import { logoutUser } from "~/modules/auth/infra/session.server";
 import type { Route } from "./+types/logout";
 
-export async function action(_: Route.ActionArgs) {
-  return logoutUser();
+export async function action({ request }: Route.ActionArgs) {
+  return logoutUser(request);
 }
 
-export async function loader() {
-  return logoutUser();
+export function loader() {
+  return redirect("/dashboard");
 }

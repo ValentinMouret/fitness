@@ -36,6 +36,13 @@
       "when": 1780381041427,
       "tag": "0004_open_viper",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789382958352,
+      "tag": "0005_wise_bromley",
+      "breakpoints": true
     }
   ]
 }

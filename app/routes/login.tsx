@@ -12,8 +12,7 @@ import { Form, useNavigation, useSearchParams } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import RequiredStar from "~/components/RequiredStar";
-import { loginWithCredentials } from "~/modules/auth/application/auth.service.server";
-import { syncSessionFromCookie } from "~/modules/auth/application/session-sync";
+import { loginWithCredentials } from "~/modules/auth/infra/session.server";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/login";
 import "./login.css";
@@ -31,15 +30,14 @@ export async function action({ request }: Route.ActionArgs) {
     return { error: "Username and password are required" };
   }
 
-  return loginWithCredentials({
-    username: result.data.username,
-    password: result.data.password,
-    redirectTo: result.data.redirectTo ?? null,
-  });
-}
-
-export async function clientLoader() {
-  return syncSessionFromCookie();
+  return loginWithCredentials(
+    {
+      username: result.data.username,
+      password: result.data.password,
+      redirectTo: result.data.redirectTo ?? null,
+    },
+    request,
+  );
 }
 
 export default function Login({ actionData }: Route.ComponentProps) {
@@ -93,7 +91,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
           <Button
             type="submit"
             size="3"
-            className="login-submit"
+            className="login-submit auth-submit"
             loading={isLoggingIn}
           >
             Login

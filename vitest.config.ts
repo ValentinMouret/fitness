@@ -37,6 +37,7 @@ export default defineConfig({
       ANTHROPIC_API_KEY: "test",
       AUTH_USERNAME: "test",
       AUTH_PASSWORD: "test",
+      AUTH_SESSION_SECRET: "unit-test-session-secret-at-least-32-characters",
       DATABASE_URL: "postgresql://localhost:5432/fitness_test",
     },
     exclude: [
