@@ -2,6 +2,9 @@
 Fitness is an app that centralises nutrition, fitness, and habits.
 This is *solo-ware*: I am the sole user of this app.
 
+Read [README.md](README.md) before changing the application. It is the source
+of truth for the React Router workflow and application boundaries.
+
 ## Stack
 - React Router v7 (framework mode, _à la_ Remix)
 - TypeScript
@@ -25,28 +28,37 @@ This is *solo-ware*: I am the sole user of this app.
 ## Useful commands
 ```shell
 bun i # install dependencies
-bun build # build the project
-bun dev # run the project in watch/dev mode. Don’t run this as the server is already running.
-bun fmt # format
-bun lint # lint
-bun tc # typecheck + generate react-router types
-bun tc:watch # typecheck in watch mode (watches app/ directory)
-bun test # run tests
+bun run build # build the project
+bun run dev # run the project in watch/dev mode. Don’t run this as the server is already running.
+bun run fmt # format
+bun run lint # lint
+bun run tc # typecheck + generate react-router types
+bun run tc:watch # typecheck in watch mode (watches app/ directory)
+bun run test # run tests
+bun run test:e2e # run Playwright end-to-end tests
 
-bun db:dev # updates the database with schema changes (command to run in dev only)
-bun db:generate # once done developing DB changes, creates a migration
-bun db:migrate # run migrations
-bun db:seed
+bun run gate # typecheck, lint, unit tests, and build
+bun run gate:e2e # gate plus Playwright end-to-end tests
+
+bun run db:dev # updates the database with schema changes (command to run in dev only)
+bun run db:generate # once done developing DB changes, creates a migration
+bun run db:migrate # run migrations
+bun run db:seed
 ```
 
 ## React-router v7
 The framework we use here is react-router v7.
 Once a route is defined in `app/routes.ts` and this generates types .
-If you do work related to React-Router, please read: .Codex/react-router.md.
+If you do work related to React Router, read `.claude/react-router-v7.md`.
 
 ## Code style
 - Follow react-router v7 patterns (`loader`, `clientLoader`, `action`)
-  - ALWAYS use `useFetcher` if interactivity is needed WITHOUT navigation.
+  - Prefer URL state, loaders, and forms before React state.
+  - Use `useFetcher` if a mutation needs to happen without navigation.
+  - Type route modules with their generated `Route` namespace and receive data
+    through `Route.ComponentProps`.
+  - Validate route and form inputs with Zod at loaders and actions; do not cast
+    untrusted input.
 - Adopt a functional approach.
   - Unless it would have a significant impact on performance or readability.
 - Use `readonly` types
@@ -61,6 +73,9 @@ Use `neverthrow` to have errors as value.
 Always bubble up domain and application layer errors to the infrastructure layer.
 The infrastructure layer then decides how to handle the errors, potentially by returning an HTTP error.
 Chain with `.map` or `.andThen`.
+
+Keep database access in loaders, actions, or `*.server.ts` modules. Never query
+Drizzle from a React component. Return JSON-serializable view models to the UI.
 
 ## Design
 Design system available in docs/design-system.md.
@@ -82,7 +97,7 @@ Examples:
 
 ## Architecture
 The codebase follows a modular architecture with Domain-Driven Design principles:
-- `modules/` contains feature modules (core, fitness, habits, nutrition)
+- `app/modules/` contains feature modules (core, fitness, habits, nutrition)
 - Each module follows DDD layers: `domain/`, `application/`, `infra/`, `presentation/`
 - Domain layer contains entities and business logic
 - Application layer contains services and use cases
@@ -90,11 +105,11 @@ The codebase follows a modular architecture with Domain-Driven Design principles
 - Presentation layer contains UI components, view models, and hooks
 
 ### Frontend Component Architecture
-Follow the modular frontend architecture defined in `docs/frontend-architecture-migration.md`:
+Follow the modular frontend architecture defined in `docs/frontend.md`:
 
 #### Component Categories
 1. **Shared Components** (`app/components/`): Generic, reusable UI with zero domain knowledge
-2. **Feature Components** (`modules/{feature}/presentation/components/`): Domain-specific UI components
+2. **Feature Components** (`app/modules/{feature}/presentation/components/`): Domain-specific UI components
 3. **Route Components** (`app/routes/`): Orchestration and navigation logic only
 
 #### Dependencies & Data Flow
@@ -111,7 +126,7 @@ Shared Components ← Feature Components (composition)
 
 #### Module Structure
 ```
-modules/{feature}/
+app/modules/{feature}/
 ├── domain/           # Business entities & logic
 ├── application/      # Use cases & services
 ├── infra/           # Data persistence
@@ -151,7 +166,7 @@ String manipulation utilities:
 
 ## Agent
 - An instance of the server is already running in dev mode. NEVER try to boot another instance. ALWAYS ask me to check logs and things like that.
-- Once done with changes, run linting, formatting, and build
+- Once done with changes, run `bun run gate`; use `bun run gate:e2e` for a changed user workflow when Playwright browsers are available. `bun run fmt` and `bun run lint` write changes, so account for a dirty worktree first.
 - Start by the domain modelling, then move on to infrastructure topics.
 - If at any point you need more information, please ask your questions before moving forward.
 - Limit comments to the bear minimum. Like in Go, around data structures and the main functions.

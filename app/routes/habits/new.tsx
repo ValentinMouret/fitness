@@ -1,13 +1,16 @@
 import { Box, Tooltip } from "@radix-ui/themes";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { data, Link, redirect, useNavigate } from "react-router";
+import { data, redirect, useFetcher, useNavigate } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { createHabit } from "~/modules/habits/infra/create-habit.service.server";
+import { IdentityPlaceholderService } from "~/modules/habits/infra/identity-placeholder.service.server";
+import { AnimatedSuggestion } from "~/modules/habits/presentation/components/AnimatedSuggestion";
 import { allDays, type Day, getOrdinalSuffix } from "~/time";
 import { isButtonTarget, isLinkTarget, isTextAreaTarget } from "~/utils/dom";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/new";
+import "./new.css";
 
 const STEPS = [
   { q: "What's the habit?", short: "Name" },
@@ -36,6 +39,7 @@ const COLORS = [
   "#ec4899",
   "#0ea5e9",
 ];
+const IDENTITY_PLACEHOLDER_PREFIX = "I am someone who";
 
 const STYLES = `
   @keyframes slideInFromRight {
@@ -74,6 +78,23 @@ const fieldInput: React.CSSProperties = {
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
+
+  if (formData.get("intent") === "generate-identity-placeholder") {
+    const parsed = zfd
+      .formData({ name: formText(z.string().trim().min(1).max(120)) })
+      .parse(formData);
+    const result = await IdentityPlaceholderService.generate(parsed.name);
+
+    if (result.isErr()) {
+      return data({ error: result.error.message }, { status: 502 });
+    }
+
+    return data({
+      habitName: parsed.name,
+      identityPhrases: result.value.identityPhrases,
+      minimumVersionSuggestions: result.value.minimumVersions,
+    });
+  }
 
   const schema = zfd.formData({
     name: formText(z.string().min(1)),
@@ -122,6 +143,11 @@ export async function action({ request }: Route.ActionArgs) {
 
 export default function NewHabit() {
   const navigate = useNavigate();
+  const identityPlaceholderFetcher = useFetcher<{
+    readonly habitName?: string;
+    readonly identityPhrases?: ReadonlyArray<string>;
+    readonly minimumVersionSuggestions?: ReadonlyArray<string>;
+  }>();
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState<"forward" | "back">("forward");
 
@@ -143,6 +169,11 @@ export default function NewHabit() {
 
   const [name, setName] = useState("");
   const [identityPhrase, setIdentityPhrase] = useState("");
+  const [activeIdentitySuggestion, setActiveIdentitySuggestion] = useState<
+    string | undefined
+  >();
+  const [activeMinimumVersionSuggestion, setActiveMinimumVersionSuggestion] =
+    useState<string | undefined>();
   const [freqMode, setFreqMode] = useState<"daily" | "weekly" | "monthly">(
     "daily",
   );
@@ -155,6 +186,36 @@ export default function NewHabit() {
   const [color, setColor] = useState(COLORS[0]);
 
   const formRef = useRef<HTMLFormElement>(null);
+  const lastRequestedIdentityPlaceholder = useRef<string | null>(null);
+  const trimmedHabitName = name.trim();
+
+  useEffect(() => {
+    if (
+      trimmedHabitName === "" ||
+      lastRequestedIdentityPlaceholder.current === trimmedHabitName
+    ) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      lastRequestedIdentityPlaceholder.current = trimmedHabitName;
+      identityPlaceholderFetcher.submit(
+        { intent: "generate-identity-placeholder", name: trimmedHabitName },
+        { method: "post" },
+      );
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [identityPlaceholderFetcher, trimmedHabitName]);
+
+  const generatedIdentityPlaceholders =
+    identityPlaceholderFetcher.data?.habitName === trimmedHabitName
+      ? identityPlaceholderFetcher.data.identityPhrases
+      : undefined;
+  const minimumVersionSuggestions =
+    identityPlaceholderFetcher.data?.habitName === trimmedHabitName
+      ? identityPlaceholderFetcher.data.minimumVersionSuggestions
+      : undefined;
 
   // Auto-focusing active step inputs
   useEffect(() => {
@@ -215,7 +276,6 @@ export default function NewHabit() {
 
         const isTextarea = isTextAreaTarget(e.target);
 
-        // Require Cmd/Ctrl + Enter in textareas to allow standard line breaks
         if (isTextarea && !e.ctrlKey && !e.metaKey) {
           return;
         }
@@ -272,6 +332,8 @@ export default function NewHabit() {
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Morning Run"
             style={fieldInput}
+            type="text"
+            autoComplete="off"
             required
           />
         </div>
@@ -287,14 +349,35 @@ export default function NewHabit() {
           >
             Identity phrase
           </label>
+          {identityPhrase === "" && generatedIdentityPlaceholders && (
+            <AnimatedSuggestion
+              suggestions={generatedIdentityPlaceholders}
+              prefix={IDENTITY_PLACEHOLDER_PREFIX}
+              ariaLabel={() => "Use this identity suggestion"}
+              onAccept={setIdentityPhrase}
+              onActiveSuggestionChange={setActiveIdentitySuggestion}
+            />
+          )}
           <textarea
             id={identityInputId}
             ref={identityInputRef}
             value={identityPhrase}
             onChange={(e) => setIdentityPhrase(e.target.value)}
-            placeholder='Start with "I am…"'
+            onKeyDown={(event) => {
+              if (
+                event.key === "Enter" &&
+                !event.ctrlKey &&
+                !event.metaKey &&
+                activeIdentitySuggestion
+              ) {
+                event.preventDefault();
+                setIdentityPhrase(activeIdentitySuggestion);
+              }
+            }}
+            placeholder="Or write your own identity phrase"
             rows={4}
-            style={{ ...fieldInput, resize: "none", lineHeight: 1.7 }}
+            style={fieldInput}
+            className="habit-new__textarea"
           />
         </div>
       );
@@ -446,19 +529,39 @@ export default function NewHabit() {
           >
             Minimum version
           </label>
+          {minimalVersion === "" && minimumVersionSuggestions && (
+            <AnimatedSuggestion
+              suggestions={minimumVersionSuggestions}
+              ariaLabel={(suggestion) =>
+                `Use minimum version suggestion: ${suggestion}`
+              }
+              onAccept={setMinimalVersion}
+              onActiveSuggestionChange={setActiveMinimumVersionSuggestion}
+            />
+          )}
           <textarea
             id={minimalVersionInputId}
             ref={minimalVersionInputRef}
             value={minimalVersion}
             onChange={(e) => setMinimalVersion(e.target.value)}
-            placeholder="e.g. Just put on your shoes"
+            onKeyDown={(event) => {
+              if (
+                event.key === "Enter" &&
+                !event.ctrlKey &&
+                !event.metaKey &&
+                activeMinimumVersionSuggestion
+              ) {
+                event.preventDefault();
+                setMinimalVersion(activeMinimumVersionSuggestion);
+              }
+            }}
+            placeholder="Or write your own minimum version"
             rows={3}
             style={{
               ...fieldInput,
-              resize: "none",
-              lineHeight: 1.7,
               marginBottom: 28,
             }}
+            className="habit-new__textarea"
           />
           <button
             type="button"
@@ -690,23 +793,6 @@ export default function NewHabit() {
         >
           {STEPS[step].q}
         </div>
-        <Tooltip content="Cancel and go back (Esc)">
-          <Box display="inline-block">
-            <Link
-              to="/habits"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                fontSize: 12,
-                color: "#6b6560",
-                textDecoration: "none",
-              }}
-            >
-              ← Cancel
-            </Link>
-          </Box>
-        </Tooltip>
       </div>
 
       <div
