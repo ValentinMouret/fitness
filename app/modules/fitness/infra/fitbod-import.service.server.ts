@@ -1,6 +1,7 @@
 import { err, ok, type Result } from "neverthrow";
 import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";
+import type { IWorkoutRepository } from "../application/workout.repository";
 import type {
   FitbodExercise,
   FitbodWorkoutData,
@@ -23,14 +24,11 @@ import {
   ExerciseRepository as DefaultExerciseRepository,
   type IExerciseRepository,
 } from "./repository.server";
-import {
-  WorkoutRepository as DefaultWorkoutRepository,
-  type IWorkoutRepository,
-} from "./workout.repository.server";
+import { WorkoutRepository as DefaultWorkoutRepository } from "./workout.repository.server";
 
 export interface FitbodImportDependencies {
   readonly exerciseRepository: IExerciseRepository;
-  readonly workoutRepository: IWorkoutRepository;
+  readonly workoutRepository: Pick<IWorkoutRepository, "save" | "saveSession">;
 }
 
 const defaultDependencies: FitbodImportDependencies = {

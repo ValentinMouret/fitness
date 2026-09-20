@@ -11,6 +11,7 @@ const runtimeSchema = z.object({
 
 const databaseSchema = z.object({
   DATABASE_URL: z.string(),
+  MCP_DATABASE_URL: z.url().optional(),
 });
 
 const anthropicSchema = z.object({

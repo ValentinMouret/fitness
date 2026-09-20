@@ -1,7 +1,24 @@
-import { and, desc, eq, type InferSelectModel, isNull, sql } from "drizzle-orm";
-import { ResultAsync } from "neverthrow";
+import { isDeepStrictEqual } from "node:util";
+import {
+  and,
+  desc,
+  eq,
+  type InferSelectModel,
+  inArray,
+  isNull,
+  sql,
+} from "drizzle-orm";
+import {
+  err,
+  errAsync,
+  ok,
+  okAsync,
+  type Result,
+  ResultAsync,
+} from "neverthrow";
 import { db } from "~/db";
 import {
+  exerciseMuscleGroups,
   exercises,
   workoutExercises,
   workoutSets,
@@ -10,6 +27,8 @@ import {
 import { logger } from "~/logger.server";
 import type { ErrRepository } from "~/repository";
 import { executeQuery } from "~/repository.server";
+import type { IWorkoutRepository } from "../application/workout.repository";
+import { workoutOperations } from "../application/workout-operations";
 import type {
   Exercise,
   ExerciseHistoryPage,
@@ -19,7 +38,11 @@ import type {
   WorkoutSet,
   WorkoutWithSummary,
 } from "../domain/workout";
-import { ExerciseHistorySession } from "../domain/workout";
+import {
+  ExerciseHistorySession,
+  ExerciseMuscleGroupsAggregate,
+} from "../domain/workout";
+import { failure, type WorkoutError } from "../domain/workout-commands";
 
 type ExerciseHistoryRow = {
   readonly workout_id: string;
@@ -38,29 +61,379 @@ type LastCompletedSetRow = {
   readonly weight: string | null;
 };
 
-export const WorkoutRepository: IWorkoutRepository = {
-  save(
-    workout: Omit<Workout, "id"> | Workout,
-  ): ResultAsync<Workout, ErrRepository> {
-    const values = {
+type Database = typeof db;
+type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
+
+function databaseError(error: unknown): WorkoutError {
+  logger.error({ err: error }, "Workout operation failed");
+  const cause = error instanceof Error && error.cause ? error.cause : error;
+  if (
+    typeof cause === "object" &&
+    cause !== null &&
+    "code" in cause &&
+    cause.code === "23505"
+  )
+    return failure(
+      "conflict",
+      "A record with this identifier or exercise name/type already exists",
+    );
+  return failure("database_error", "Could not save the workout data");
+}
+
+async function catalogue(
+  tx: Transaction,
+  ids: readonly string[],
+  includeArchived = false,
+): Promise<readonly Exercise[]> {
+  if (!ids.length) return [];
+  const rows = await tx
+    .select()
+    .from(exercises)
+    .where(
+      and(
+        inArray(exercises.id, [...ids]),
+        includeArchived ? undefined : isNull(exercises.deleted_at),
+      ),
+    )
+    .for("share");
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    type: row.type,
+    movementPattern: row.movement_pattern,
+    description: row.description ?? undefined,
+    mmcInstructions: row.mmc_instructions ?? undefined,
+  }));
+}
+
+async function loadSession(
+  tx: Transaction,
+  id: string,
+): Promise<WorkoutSession | null> {
+  const [row] = await tx
+    .select()
+    .from(workouts)
+    .where(and(eq(workouts.id, id), isNull(workouts.deleted_at)))
+    .for("update");
+  if (!row) return null;
+  const groups = await tx
+    .select()
+    .from(workoutExercises)
+    .where(
+      and(
+        eq(workoutExercises.workout_id, id),
+        isNull(workoutExercises.deleted_at),
+      ),
+    )
+    .orderBy(workoutExercises.order_index);
+  const entries = await catalogue(
+    tx,
+    groups.map((group) => group.exercise_id),
+    true,
+  );
+  const sets = await tx
+    .select()
+    .from(workoutSets)
+    .where(and(eq(workoutSets.workout, id), isNull(workoutSets.deleted_at)))
+    .orderBy(workoutSets.set);
+  return {
+    workout: {
+      id: row.id,
+      name: row.name,
+      start: row.start ?? row.created_at,
+      stop: row.stop ?? undefined,
+      notes: row.notes ?? undefined,
+      importedFromStrong: row.imported_from_strong,
+      importedFromFitbod: row.imported_from_fitbod,
+      templateId: row.template_id ?? undefined,
+    },
+    exerciseGroups: groups.flatMap((group) => {
+      const exercise = entries.find((entry) => entry.id === group.exercise_id);
+      return exercise
+        ? [
+            {
+              exercise,
+              orderIndex: group.order_index,
+              notes: group.notes ?? undefined,
+              sets: sets
+                .filter((set) => set.exercise === group.exercise_id)
+                .map((set) => ({
+                  workoutId: id,
+                  exerciseId: set.exercise,
+                  set: set.set,
+                  targetReps: set.targetReps ?? undefined,
+                  reps: set.reps ?? undefined,
+                  weight: set.weight ?? undefined,
+                  note: set.note ?? undefined,
+                  rpe: set.rpe ?? undefined,
+                  isCompleted: set.isCompleted,
+                  isWarmup: set.isWarmup,
+                  isFailure: set.isFailure,
+                })),
+            },
+          ]
+        : [];
+    }),
+  };
+}
+
+async function persist(
+  tx: Transaction,
+  session: WorkoutSession,
+  previous?: WorkoutSession,
+) {
+  const { workout, exerciseGroups } = session;
+  const changedAt = new Date();
+  if (!previous) {
+    await tx.insert(workouts).values({
+      id: workout.id,
       name: workout.name,
       start: workout.start,
       stop: workout.stop ?? null,
       notes: workout.notes ?? null,
-      imported_from_strong: workout.importedFromStrong ?? false,
-      imported_from_fitbod: workout.importedFromFitbod ?? false,
-      template_id: workout.templateId ?? null,
-    };
+    });
+  } else if (!isDeepStrictEqual(workout, previous.workout)) {
+    await tx
+      .update(workouts)
+      .set({ stop: workout.stop ?? null, updated_at: changedAt })
+      .where(eq(workouts.id, workout.id));
+  }
+  const oldGroups = new Map(
+    previous?.exerciseGroups.map((group) => [group.exercise.id, group]) ?? [],
+  );
+  const removed = [...oldGroups.keys()].filter(
+    (id) => !exerciseGroups.some((group) => group.exercise.id === id),
+  );
+  const moved = exerciseGroups
+    .filter(
+      (group) =>
+        oldGroups.has(group.exercise.id) &&
+        oldGroups.get(group.exercise.id)?.orderIndex !== group.orderIndex,
+    )
+    .map((group) => group.exercise.id);
+  // Release changed order positions before restoring them in this transaction.
+  if (removed.length || moved.length) {
+    await tx
+      .update(workoutExercises)
+      .set({ deleted_at: changedAt })
+      .where(
+        and(
+          eq(workoutExercises.workout_id, workout.id),
+          inArray(workoutExercises.exercise_id, [...removed, ...moved]),
+        ),
+      );
+  }
+  if (removed.length) {
+    await tx
+      .update(workoutSets)
+      .set({ deleted_at: changedAt })
+      .where(
+        and(
+          eq(workoutSets.workout, workout.id),
+          inArray(workoutSets.exercise, removed),
+          isNull(workoutSets.deleted_at),
+        ),
+      );
+  }
+  for (const group of exerciseGroups) {
+    const before = oldGroups.get(group.exercise.id);
+    if (
+      !before ||
+      before.orderIndex !== group.orderIndex ||
+      before.notes !== group.notes
+    ) {
+      const values = {
+        workout_id: workout.id,
+        exercise_id: group.exercise.id,
+        order_index: group.orderIndex,
+        notes: group.notes ?? null,
+      };
+      await tx
+        .insert(workoutExercises)
+        .values(values)
+        .onConflictDoUpdate({
+          target: [workoutExercises.workout_id, workoutExercises.exercise_id],
+          set: { ...values, deleted_at: null, updated_at: changedAt },
+        });
+    }
+    const oldSets = new Map(before?.sets.map((set) => [set.set, set]) ?? []);
+    const removedSets = [...oldSets.keys()].filter(
+      (number) => !group.sets.some((set) => set.set === number),
+    );
+    if (removedSets.length) {
+      await tx
+        .update(workoutSets)
+        .set({ deleted_at: changedAt })
+        .where(
+          and(
+            eq(workoutSets.workout, workout.id),
+            eq(workoutSets.exercise, group.exercise.id),
+            inArray(workoutSets.set, removedSets),
+          ),
+        );
+    }
+    const changedSets = group.sets.filter(
+      (set) => !isDeepStrictEqual(set, oldSets.get(set.set)),
+    );
+    if (changedSets.length) {
+      const values = changedSets.map((set) => ({
+        workout: workout.id,
+        exercise: group.exercise.id,
+        set: set.set,
+        targetReps: set.targetReps ?? null,
+        reps: set.reps ?? null,
+        weight: set.weight ?? null,
+        note: set.note ?? null,
+        rpe: set.rpe ?? null,
+        isCompleted: set.isCompleted,
+        isWarmup: set.isWarmup,
+        isFailure: set.isFailure,
+      }));
+      await tx
+        .insert(workoutSets)
+        .values(values)
+        .onConflictDoUpdate({
+          target: [workoutSets.workout, workoutSets.exercise, workoutSets.set],
+          set: {
+            targetReps: sql`excluded."targetReps"`,
+            reps: sql`excluded.reps`,
+            weight: sql`excluded.weight`,
+            note: sql`excluded.note`,
+            rpe: sql`excluded.rpe`,
+            isCompleted: sql`excluded."isCompleted"`,
+            isWarmup: sql`excluded."isWarmup"`,
+            isFailure: sql`excluded."isFailure"`,
+            deleted_at: null,
+            updated_at: changedAt,
+          },
+        });
+    }
+  }
+}
 
-    if ("id" in workout) {
-      return ResultAsync.fromPromise(
-        db
+export function createWorkoutRepository(
+  database: Database = db,
+): IWorkoutRepository {
+  function transaction<T>(
+    run: (tx: Transaction) => Promise<Result<T, WorkoutError>>,
+  ): ResultAsync<T, WorkoutError> {
+    return ResultAsync.fromPromise(
+      database.transaction(run),
+      databaseError,
+    ).andThen((result) => result);
+  }
+  const repository: IWorkoutRepository = {
+    createSession: (build, ids) =>
+      transaction(async (tx) => {
+        const result = build(await catalogue(tx, ids));
+        if (result.isErr()) return result;
+        await persist(tx, result.value);
+        return result;
+      }),
+    changeSession: (id, change, ids = []) =>
+      transaction(async (tx) => {
+        const session = await loadSession(tx, id);
+        if (!session)
+          return err(failure("not_found", "Workout does not exist"));
+        const result = change(session, await catalogue(tx, ids));
+        if (result.isErr()) return result;
+        await persist(tx, result.value, session);
+        return result;
+      }),
+    deleteSession: (id) =>
+      transaction(async (tx) => {
+        const session = await loadSession(tx, id);
+        if (!session)
+          return err(failure("not_found", "Workout does not exist"));
+        const deleted_at = new Date();
+        await tx
           .update(workouts)
-          .set({ ...values, updated_at: new Date() })
-          .where(eq(workouts.id, workout.id))
-          .returning(),
+          .set({ deleted_at })
+          .where(eq(workouts.id, id));
+        await tx
+          .update(workoutExercises)
+          .set({ deleted_at })
+          .where(eq(workoutExercises.workout_id, id));
+        await tx
+          .update(workoutSets)
+          .set({ deleted_at })
+          .where(eq(workoutSets.workout, id));
+        return ok({ workoutId: id });
+      }),
+    createExercise: (input) =>
+      transaction(async (tx) => {
+        const exercise = {
+          id: crypto.randomUUID(),
+          name: input.name,
+          type: input.type,
+          movementPattern: input.movementPattern,
+          description: input.description ?? undefined,
+          mmcInstructions: input.mmcInstructions ?? undefined,
+        };
+        const aggregate = ExerciseMuscleGroupsAggregate.create(
+          exercise,
+          input.muscleGroupSplits,
+        );
+        if (aggregate.isErr())
+          return err(failure("invalid_input", aggregate.error));
+        await tx.insert(exercises).values({
+          id: exercise.id,
+          name: exercise.name,
+          type: exercise.type,
+          movement_pattern: exercise.movementPattern,
+          description: exercise.description,
+          mmc_instructions: exercise.mmcInstructions,
+        });
+        await tx.insert(exerciseMuscleGroups).values(
+          input.muscleGroupSplits.map((group) => ({
+            exercise: exercise.id,
+            muscle_group: group.muscleGroup,
+            split: group.split,
+          })),
+        );
+        return ok(aggregate.value);
+      }),
+
+    save(
+      workout: Omit<Workout, "id"> | Workout,
+    ): ResultAsync<Workout, ErrRepository> {
+      const values = {
+        name: workout.name,
+        start: workout.start,
+        stop: workout.stop ?? null,
+        notes: workout.notes ?? null,
+        imported_from_strong: workout.importedFromStrong ?? false,
+        imported_from_fitbod: workout.importedFromFitbod ?? false,
+        template_id: workout.templateId ?? null,
+      };
+
+      if ("id" in workout) {
+        return ResultAsync.fromPromise(
+          database
+            .update(workouts)
+            .set({ ...values, updated_at: new Date() })
+            .where(eq(workouts.id, workout.id))
+            .returning(),
+          (error) => {
+            logger.error({ err: error }, "Error updating workout");
+            return "database_error" as const;
+          },
+        ).andThen((records) =>
+          records.length > 0
+            ? ResultAsync.fromSafePromise(
+                Promise.resolve(workoutRecordToDomain(records[0])),
+              )
+            : ResultAsync.fromPromise(
+                Promise.reject(new Error("No records returned")),
+                () => "database_error" as const,
+              ),
+        );
+      }
+
+      return ResultAsync.fromPromise(
+        database.insert(workouts).values(values).returning(),
         (error) => {
-          logger.error({ err: error }, "Error updating workout");
+          logger.error({ err: error }, "Error creating workout");
           return "database_error" as const;
         },
       ).andThen((records) =>
@@ -73,270 +446,220 @@ export const WorkoutRepository: IWorkoutRepository = {
               () => "database_error" as const,
             ),
       );
-    }
+    },
 
-    return ResultAsync.fromPromise(
-      db.insert(workouts).values(values).returning(),
-      (error) => {
-        logger.error({ err: error }, "Error creating workout");
-        return "database_error" as const;
-      },
-    ).andThen((records) =>
-      records.length > 0
-        ? ResultAsync.fromSafePromise(
-            Promise.resolve(workoutRecordToDomain(records[0])),
-          )
-        : ResultAsync.fromPromise(
-            Promise.reject(new Error("No records returned")),
-            () => "database_error" as const,
+    findById(id: string): ResultAsync<Workout | null, ErrRepository> {
+      const query = database
+        .select()
+        .from(workouts)
+        .where(and(eq(workouts.id, id), isNull(workouts.deleted_at)));
+
+      return executeQuery(query, "findWorkoutById").map((records) => {
+        if (records.length === 0) {
+          return null;
+        }
+
+        return workoutRecordToDomain(records[0]);
+      });
+    },
+
+    findAll(): ResultAsync<Workout[], ErrRepository> {
+      const query = database
+        .select()
+        .from(workouts)
+        .where(isNull(workouts.deleted_at))
+        .orderBy(desc(workouts.start));
+
+      return executeQuery(query, "findAllWorkouts").map((records) =>
+        records.map(workoutRecordToDomain),
+      );
+    },
+
+    findInProgress(): ResultAsync<Workout | null, ErrRepository> {
+      const query = database
+        .select()
+        .from(workouts)
+        .where(
+          and(
+            isNull(workouts.deleted_at),
+            isNull(workouts.stop),
+            eq(workouts.imported_from_fitbod, false),
+            eq(workouts.imported_from_strong, false),
           ),
-    );
-  },
+        )
+        .orderBy(desc(workouts.start))
+        .limit(1);
 
-  findById(id: string): ResultAsync<Workout | null, ErrRepository> {
-    const query = db
-      .select()
-      .from(workouts)
-      .where(and(eq(workouts.id, id), isNull(workouts.deleted_at)));
+      return executeQuery(query, "findInProgressWorkout").map((records) => {
+        if (records.length === 0) {
+          return null;
+        }
+        return workoutRecordToDomain(records[0]);
+      });
+    },
 
-    return executeQuery(query, "findWorkoutById").map((records) => {
-      if (records.length === 0) {
-        return null;
-      }
+    findAllWithPagination(
+      page = 1,
+      limit = 10,
+    ): ResultAsync<{ workouts: Workout[]; totalCount: number }, ErrRepository> {
+      const offset = (page - 1) * limit;
 
-      return workoutRecordToDomain(records[0]);
-    });
-  },
+      const workoutsQuery = database
+        .select()
+        .from(workouts)
+        .where(isNull(workouts.deleted_at))
+        .orderBy(desc(workouts.start))
+        .limit(limit)
+        .offset(offset);
 
-  findAll(): ResultAsync<Workout[], ErrRepository> {
-    const query = db
-      .select()
-      .from(workouts)
-      .where(isNull(workouts.deleted_at))
-      .orderBy(desc(workouts.start));
+      const countQuery = database
+        .select({ count: sql<number>`count(*)` })
+        .from(workouts)
+        .where(isNull(workouts.deleted_at));
 
-    return executeQuery(query, "findAllWorkouts").map((records) =>
-      records.map(workoutRecordToDomain),
-    );
-  },
+      return ResultAsync.combine([
+        executeQuery(workoutsQuery, "findWorkoutsWithPagination"),
+        executeQuery(countQuery, "countWorkouts"),
+      ]).map(([workoutRecords, countRecords]) => ({
+        workouts: workoutRecords.map(workoutRecordToDomain),
+        totalCount: countRecords[0]?.count ?? 0,
+      }));
+    },
 
-  findInProgress(): ResultAsync<Workout | null, ErrRepository> {
-    const query = db
-      .select()
-      .from(workouts)
-      .where(
-        and(
-          isNull(workouts.deleted_at),
-          isNull(workouts.stop),
-          eq(workouts.imported_from_fitbod, false),
-          eq(workouts.imported_from_strong, false),
-        ),
-      )
-      .orderBy(desc(workouts.start))
-      .limit(1);
+    findAllWithSummary(
+      page = 1,
+      limit = 10,
+    ): ResultAsync<
+      { workouts: WorkoutWithSummary[]; totalCount: number },
+      ErrRepository
+    > {
+      const offset = (page - 1) * limit;
 
-    return executeQuery(query, "findInProgressWorkout").map((records) => {
-      if (records.length === 0) {
-        return null;
-      }
-      return workoutRecordToDomain(records[0]);
-    });
-  },
-
-  findAllWithPagination(
-    page = 1,
-    limit = 10,
-  ): ResultAsync<{ workouts: Workout[]; totalCount: number }, ErrRepository> {
-    const offset = (page - 1) * limit;
-
-    const workoutsQuery = db
-      .select()
-      .from(workouts)
-      .where(isNull(workouts.deleted_at))
-      .orderBy(desc(workouts.start))
-      .limit(limit)
-      .offset(offset);
-
-    const countQuery = db
-      .select({ count: sql<number>`count(*)` })
-      .from(workouts)
-      .where(isNull(workouts.deleted_at));
-
-    return ResultAsync.combine([
-      executeQuery(workoutsQuery, "findWorkoutsWithPagination"),
-      executeQuery(countQuery, "countWorkouts"),
-    ]).map(([workoutRecords, countRecords]) => ({
-      workouts: workoutRecords.map(workoutRecordToDomain),
-      totalCount: countRecords[0]?.count ?? 0,
-    }));
-  },
-
-  findAllWithSummary(
-    page = 1,
-    limit = 10,
-  ): ResultAsync<
-    { workouts: WorkoutWithSummary[]; totalCount: number },
-    ErrRepository
-  > {
-    const offset = (page - 1) * limit;
-
-    const summaryQuery = db
-      .select({
-        id: workouts.id,
-        name: workouts.name,
-        start: workouts.start,
-        stop: workouts.stop,
-        notes: workouts.notes,
-        imported_from_strong: workouts.imported_from_strong,
-        imported_from_fitbod: workouts.imported_from_fitbod,
-        template_id: workouts.template_id,
-        exerciseCount:
-          sql<number>`count(distinct ${workoutExercises.exercise_id})`.as(
-            "exercise_count",
+      const summaryQuery = database
+        .select({
+          id: workouts.id,
+          name: workouts.name,
+          start: workouts.start,
+          stop: workouts.stop,
+          notes: workouts.notes,
+          imported_from_strong: workouts.imported_from_strong,
+          imported_from_fitbod: workouts.imported_from_fitbod,
+          template_id: workouts.template_id,
+          exerciseCount:
+            sql<number>`count(distinct ${workoutExercises.exercise_id})`.as(
+              "exercise_count",
+            ),
+          setCount:
+            sql<number>`count(distinct (${workoutSets.exercise}, ${workoutSets.set}))`.as(
+              "set_count",
+            ),
+          totalVolume:
+            sql<number>`coalesce((select sum(s.volume_kg) from fitness_data.sets s where s.workout_id = ${workouts.id}), 0)`.as(
+              "total_volume",
+            ),
+        })
+        .from(workouts)
+        .leftJoin(
+          workoutExercises,
+          and(
+            eq(workouts.id, workoutExercises.workout_id),
+            isNull(workoutExercises.deleted_at),
           ),
-        setCount:
-          sql<number>`count(distinct (${workoutSets.exercise}, ${workoutSets.set}))`.as(
-            "set_count",
+        )
+        .leftJoin(
+          workoutSets,
+          and(
+            eq(workouts.id, workoutSets.workout),
+            eq(workoutExercises.exercise_id, workoutSets.exercise),
+            isNull(workoutSets.deleted_at),
           ),
-        totalVolume:
-          sql<number>`coalesce(sum(case when ${workoutSets.isCompleted} then ${workoutSets.reps} * ${workoutSets.weight} else 0 end), 0)`.as(
-            "total_volume",
-          ),
-      })
-      .from(workouts)
-      .leftJoin(
-        workoutExercises,
-        and(
-          eq(workouts.id, workoutExercises.workout_id),
-          isNull(workoutExercises.deleted_at),
-        ),
-      )
-      .leftJoin(
-        workoutSets,
-        and(
-          eq(workouts.id, workoutSets.workout),
-          isNull(workoutSets.deleted_at),
-        ),
-      )
-      .where(isNull(workouts.deleted_at))
-      .groupBy(workouts.id)
-      .orderBy(desc(workouts.start))
-      .limit(limit)
-      .offset(offset);
+        )
+        .where(isNull(workouts.deleted_at))
+        .groupBy(workouts.id)
+        .orderBy(desc(workouts.start))
+        .limit(limit)
+        .offset(offset);
 
-    const countQuery = db
-      .select({ count: sql<number>`count(*)` })
-      .from(workouts)
-      .where(isNull(workouts.deleted_at));
+      const countQuery = database
+        .select({ count: sql<number>`count(*)` })
+        .from(workouts)
+        .where(isNull(workouts.deleted_at));
 
-    return ResultAsync.combine([
-      executeQuery(summaryQuery, "findWorkoutsWithSummary"),
-      executeQuery(countQuery, "countWorkouts"),
-    ]).map(([records, countRecords]) => ({
-      workouts: records.map((r) => {
-        const start = r.start ?? new Date();
-        const stop = r.stop ?? undefined;
-        const durationMinutes =
-          stop && start
-            ? Math.round((stop.getTime() - start.getTime()) / 60000)
-            : undefined;
-        return {
-          id: r.id,
-          name: r.name,
-          start,
-          stop,
-          notes: r.notes ?? undefined,
-          importedFromStrong: r.imported_from_strong ?? false,
-          importedFromFitbod: r.imported_from_fitbod ?? false,
-          templateId: r.template_id ?? undefined,
-          exerciseCount: Number(r.exerciseCount) || 0,
-          setCount: Number(r.setCount) || 0,
-          durationMinutes,
-          totalVolumeKg: Math.round(Number(r.totalVolume) || 0),
-        };
-      }),
-      totalCount: countRecords[0]?.count ?? 0,
-    }));
-  },
+      return ResultAsync.combine([
+        executeQuery(summaryQuery, "findWorkoutsWithSummary"),
+        executeQuery(countQuery, "countWorkouts"),
+      ]).map(([records, countRecords]) => ({
+        workouts: records.map((r) => {
+          const start = r.start ?? new Date();
+          const stop = r.stop ?? undefined;
+          const durationMinutes =
+            stop && start
+              ? Math.round((stop.getTime() - start.getTime()) / 60000)
+              : undefined;
+          return {
+            id: r.id,
+            name: r.name,
+            start,
+            stop,
+            notes: r.notes ?? undefined,
+            importedFromStrong: r.imported_from_strong ?? false,
+            importedFromFitbod: r.imported_from_fitbod ?? false,
+            templateId: r.template_id ?? undefined,
+            exerciseCount: Number(r.exerciseCount) || 0,
+            setCount: Number(r.setCount) || 0,
+            durationMinutes,
+            totalVolumeKg: Math.round(Number(r.totalVolume) || 0),
+          };
+        }),
+        totalCount: countRecords[0]?.count ?? 0,
+      }));
+    },
 
-  delete(id: string): ResultAsync<void, ErrRepository> {
-    return ResultAsync.fromPromise(
-      db.transaction(async (tx) => {
-        // Soft delete workout sets
-        await tx
-          .update(workoutSets)
-          .set({ deleted_at: new Date() })
-          .where(eq(workoutSets.workout, id));
+    delete(id: string): ResultAsync<void, ErrRepository> {
+      return repository
+        .deleteSession(id)
+        .map(() => undefined)
+        .orElse((error) =>
+          error.code === "not_found"
+            ? okAsync(undefined)
+            : errAsync("database_error" as const),
+        );
+    },
 
-        // Soft delete workout exercises
-        await tx
-          .update(workoutExercises)
-          .set({ deleted_at: new Date() })
-          .where(eq(workoutExercises.workout_id, id));
-
-        // Soft delete workout
-        await tx
-          .update(workouts)
-          .set({ deleted_at: new Date() })
-          .where(eq(workouts.id, id));
-      }),
-      (error) => {
-        logger.error({ err: error }, "Error deleting workout");
-        return "database_error" as const;
-      },
-    );
-  },
-
-  saveSession(
-    workoutSession: WorkoutSession,
-  ): ResultAsync<void, ErrRepository> {
-    return ResultAsync.fromPromise(
-      db.transaction(async (tx) => {
-        for (const group of workoutSession.exerciseGroups) {
-          await tx
-            .insert(workoutExercises)
-            .values({
-              workout_id: workoutSession.workout.id,
-              exercise_id: group.exercise.id,
-              order_index: group.orderIndex,
-              notes: group.notes ?? null,
-            })
-            .onConflictDoUpdate({
-              target: [
-                workoutExercises.workout_id,
-                workoutExercises.exercise_id,
-              ],
-              set: {
+    saveSession(
+      workoutSession: WorkoutSession,
+    ): ResultAsync<void, ErrRepository> {
+      return ResultAsync.fromPromise(
+        database.transaction(async (tx) => {
+          for (const group of workoutSession.exerciseGroups) {
+            await tx
+              .insert(workoutExercises)
+              .values({
+                workout_id: workoutSession.workout.id,
+                exercise_id: group.exercise.id,
                 order_index: group.orderIndex,
                 notes: group.notes ?? null,
-                updated_at: new Date(),
-                deleted_at: null,
-              },
-            });
-
-          for (const set of group.sets) {
-            await tx
-              .insert(workoutSets)
-              .values({
-                workout: set.workoutId,
-                exercise: set.exerciseId,
-                set: set.set,
-                targetReps: set.targetReps ?? null,
-                reps: set.reps ?? null,
-                weight: set.weight ?? null,
-                note: set.note ?? null,
-                isCompleted: set.isCompleted,
-                isFailure: set.isFailure,
-                isWarmup: set.isWarmup,
-                rpe: set.rpe ?? null,
               })
               .onConflictDoUpdate({
                 target: [
-                  workoutSets.workout,
-                  workoutSets.exercise,
-                  workoutSets.set,
+                  workoutExercises.workout_id,
+                  workoutExercises.exercise_id,
                 ],
                 set: {
+                  order_index: group.orderIndex,
+                  notes: group.notes ?? null,
+                  updated_at: new Date(),
+                  deleted_at: null,
+                },
+              });
+
+            for (const set of group.sets) {
+              await tx
+                .insert(workoutSets)
+                .values({
+                  workout: set.workoutId,
+                  exercise: set.exerciseId,
+                  set: set.set,
                   targetReps: set.targetReps ?? null,
                   reps: set.reps ?? null,
                   weight: set.weight ?? null,
@@ -345,42 +668,41 @@ export const WorkoutRepository: IWorkoutRepository = {
                   isFailure: set.isFailure,
                   isWarmup: set.isWarmup,
                   rpe: set.rpe ?? null,
-                  updated_at: new Date(),
-                  deleted_at: null,
-                },
-              });
+                })
+                .onConflictDoUpdate({
+                  target: [
+                    workoutSets.workout,
+                    workoutSets.exercise,
+                    workoutSets.set,
+                  ],
+                  set: {
+                    targetReps: set.targetReps ?? null,
+                    reps: set.reps ?? null,
+                    weight: set.weight ?? null,
+                    note: set.note ?? null,
+                    isCompleted: set.isCompleted,
+                    isFailure: set.isFailure,
+                    isWarmup: set.isWarmup,
+                    rpe: set.rpe ?? null,
+                    updated_at: new Date(),
+                    deleted_at: null,
+                  },
+                });
+            }
           }
-        }
-      }),
-      (error) => {
-        logger.error({ err: error }, "Error saving workout session");
-        return "database_error" as const;
-      },
-    ).map(() => undefined);
-  },
-};
-
-export interface IWorkoutRepository {
-  save(
-    workout: Omit<Workout, "id"> | Workout,
-  ): ResultAsync<Workout, ErrRepository>;
-  saveSession(workoutSession: WorkoutSession): ResultAsync<void, ErrRepository>;
-  findById(id: string): ResultAsync<Workout | null, ErrRepository>;
-  findAll(): ResultAsync<Workout[], ErrRepository>;
-  findAllWithPagination(
-    page?: number,
-    limit?: number,
-  ): ResultAsync<{ workouts: Workout[]; totalCount: number }, ErrRepository>;
-  findAllWithSummary(
-    page?: number,
-    limit?: number,
-  ): ResultAsync<
-    { workouts: WorkoutWithSummary[]; totalCount: number },
-    ErrRepository
-  >;
-  findInProgress(): ResultAsync<Workout | null, ErrRepository>;
-  delete(id: string): ResultAsync<void, ErrRepository>;
+        }),
+        (error) => {
+          logger.error({ err: error }, "Error saving workout session");
+          return "database_error" as const;
+        },
+      ).map(() => undefined);
+    },
+  };
+  return repository;
 }
+
+export const WorkoutRepository = createWorkoutRepository();
+export const workoutCommands = workoutOperations(WorkoutRepository);
 
 export const WorkoutSessionRepository = {
   findById(
@@ -480,142 +802,60 @@ export const WorkoutSessionRepository = {
   addExercise(
     workoutId: string,
     exerciseId: string,
-    orderIndex: number,
     notes?: string,
     defaultSetValues?: { reps?: number; weight?: number },
   ): ResultAsync<void, ErrRepository> {
-    return ResultAsync.fromPromise(
-      db.transaction(async (tx) => {
-        await tx
-          .insert(workoutExercises)
-          .values({
-            workout_id: workoutId,
-            exercise_id: exerciseId,
-            order_index: orderIndex,
-            notes: notes ?? null,
-          })
-          .onConflictDoUpdate({
-            target: [workoutExercises.workout_id, workoutExercises.exercise_id],
-            set: {
-              order_index: orderIndex,
-              notes: notes ?? null,
-              updated_at: new Date(),
-              deleted_at: null,
-            },
-          });
-
-        await tx
-          .insert(workoutSets)
-          .values({
-            workout: workoutId,
-            exercise: exerciseId,
+    return workoutCommands
+      .addExercise({
+        workoutId,
+        exerciseId,
+        notes,
+        sets: [
+          {
             set: 1,
-            targetReps: null,
-            reps: defaultSetValues?.reps ?? null,
-            weight: defaultSetValues?.weight ?? null,
-            note: null,
             isCompleted: false,
-            isFailure: false,
             isWarmup: false,
-          })
-          .onConflictDoUpdate({
-            target: [
-              workoutSets.workout,
-              workoutSets.exercise,
-              workoutSets.set,
-            ],
-            set: {
-              targetReps: null,
-              reps: defaultSetValues?.reps ?? null,
-              weight: defaultSetValues?.weight ?? null,
-              note: null,
-              isCompleted: false,
-              isFailure: false,
-              isWarmup: false,
-              updated_at: new Date(),
-              deleted_at: null,
-            },
-          });
-      }),
-      (error) => {
-        logger.error({ err: error }, "Error adding exercise to workout");
-        return "database_error" as const;
-      },
-    ).map(() => undefined);
+            isFailure: false,
+            reps: defaultSetValues?.reps,
+            weight: defaultSetValues?.weight,
+          },
+        ],
+      })
+      .map(() => undefined)
+      .mapErr(() => "database_error" as const);
   },
 
   removeExercise(
     workoutId: string,
     exerciseId: string,
   ): ResultAsync<void, ErrRepository> {
-    return ResultAsync.fromPromise(
-      db.transaction(async (tx) => {
-        // Soft delete all sets for this exercise in this workout
-        await tx
-          .update(workoutSets)
-          .set({ deleted_at: new Date() })
-          .where(
-            and(
-              eq(workoutSets.workout, workoutId),
-              eq(workoutSets.exercise, exerciseId),
-            ),
-          );
-
-        // Soft delete the workout exercise
-        await tx
-          .update(workoutExercises)
-          .set({ deleted_at: new Date() })
-          .where(
-            and(
-              eq(workoutExercises.workout_id, workoutId),
-              eq(workoutExercises.exercise_id, exerciseId),
-            ),
-          );
-      }),
-      (error) => {
-        logger.error({ err: error }, "Error removing exercise from workout");
-        return "database_error" as const;
-      },
-    ).map(() => undefined);
+    return workoutCommands
+      .removeExercise({ workoutId, exerciseId })
+      .map(() => undefined)
+      .mapErr(() => "database_error" as const);
   },
 
   addSet(workoutSet: WorkoutSet): ResultAsync<void, ErrRepository> {
-    return ResultAsync.fromPromise(
-      db
-        .insert(workoutSets)
-        .values({
-          workout: workoutSet.workoutId,
-          exercise: workoutSet.exerciseId,
-          set: workoutSet.set,
-          targetReps: workoutSet.targetReps ?? null,
-          reps: workoutSet.reps ?? null,
-          weight: workoutSet.weight ?? null,
-          note: workoutSet.note ?? null,
-          isCompleted: workoutSet.isCompleted,
-          isFailure: workoutSet.isFailure,
-          isWarmup: workoutSet.isWarmup,
-          rpe: workoutSet.rpe ?? null,
-        })
-        .onConflictDoUpdate({
-          target: [workoutSets.workout, workoutSets.exercise, workoutSets.set],
-          set: {
-            targetReps: workoutSet.targetReps ?? null,
-            reps: workoutSet.reps ?? null,
-            weight: workoutSet.weight ?? null,
-            note: workoutSet.note ?? null,
+    return workoutCommands
+      .saveSets({
+        workoutId: workoutSet.workoutId,
+        exerciseId: workoutSet.exerciseId,
+        sets: [
+          {
+            set: workoutSet.set,
+            targetReps: workoutSet.targetReps,
+            reps: workoutSet.reps,
+            weight: workoutSet.weight,
+            note: workoutSet.note,
+            rpe: workoutSet.rpe,
             isCompleted: workoutSet.isCompleted,
-            isFailure: workoutSet.isFailure,
             isWarmup: workoutSet.isWarmup,
-            rpe: workoutSet.rpe ?? null,
-            updated_at: new Date(),
-            deleted_at: null, // Restore if it was soft deleted
+            isFailure: workoutSet.isFailure,
           },
-        }),
-      (error) => {
-        logger.error({ err: error }, "Error adding/updating set");
-        return "database_error" as const;
-      },
-    ).map(() => undefined);
+        ],
+      })
+      .map(() => undefined)
+      .mapErr(() => "database_error" as const);
   },
 
   getNextAvailableSetNumber(
@@ -670,33 +910,10 @@ export const WorkoutSessionRepository = {
       >
     >,
   ): ResultAsync<void, ErrRepository> {
-    return ResultAsync.fromPromise(
-      db
-        .update(workoutSets)
-        .set({
-          targetReps: updates.targetReps ?? undefined,
-          reps: updates.reps ?? undefined,
-          weight: updates.weight ?? undefined,
-          note: updates.note ?? undefined,
-          isCompleted: updates.isCompleted ?? undefined,
-          isFailure: updates.isFailure ?? undefined,
-          isWarmup: updates.isWarmup ?? undefined,
-          rpe: updates.rpe ?? undefined,
-          updated_at: new Date(),
-        })
-        .where(
-          and(
-            eq(workoutSets.workout, workoutId),
-            eq(workoutSets.exercise, exerciseId),
-            eq(workoutSets.set, setNumber),
-            isNull(workoutSets.deleted_at),
-          ),
-        ),
-      (error) => {
-        logger.error({ err: error }, "Error updating set");
-        return "database_error" as const;
-      },
-    ).map(() => undefined);
+    return workoutCommands
+      .updateSet({ workoutId, exerciseId, set: setNumber, updates })
+      .map(() => undefined)
+      .mapErr(() => "database_error" as const);
   },
 
   removeSet(
@@ -704,22 +921,10 @@ export const WorkoutSessionRepository = {
     exerciseId: string,
     setNumber: number,
   ): ResultAsync<void, ErrRepository> {
-    return ResultAsync.fromPromise(
-      db
-        .update(workoutSets)
-        .set({ deleted_at: new Date() })
-        .where(
-          and(
-            eq(workoutSets.workout, workoutId),
-            eq(workoutSets.exercise, exerciseId),
-            eq(workoutSets.set, setNumber),
-          ),
-        ),
-      (error) => {
-        logger.error({ err: error }, "Error removing set");
-        return "database_error" as const;
-      },
-    ).map(() => undefined);
+    return workoutCommands
+      .deleteSets({ workoutId, exerciseId, sets: [setNumber] })
+      .map(() => undefined)
+      .mapErr(() => "database_error" as const);
   },
 
   replaceExercise(
@@ -727,109 +932,10 @@ export const WorkoutSessionRepository = {
     oldExerciseId: string,
     newExerciseId: string,
   ): ResultAsync<void, ErrRepository> {
-    return ResultAsync.fromPromise(
-      db.transaction(async (tx) => {
-        // Get the current order_index and notes
-        const existing = await tx
-          .select({
-            order_index: workoutExercises.order_index,
-            notes: workoutExercises.notes,
-          })
-          .from(workoutExercises)
-          .where(
-            and(
-              eq(workoutExercises.workout_id, workoutId),
-              eq(workoutExercises.exercise_id, oldExerciseId),
-              isNull(workoutExercises.deleted_at),
-            ),
-          );
-
-        if (existing.length === 0) {
-          throw new Error("Exercise not found in workout");
-        }
-
-        const { order_index, notes } = existing[0];
-
-        // Soft delete old exercise's sets
-        await tx
-          .update(workoutSets)
-          .set({ deleted_at: new Date() })
-          .where(
-            and(
-              eq(workoutSets.workout, workoutId),
-              eq(workoutSets.exercise, oldExerciseId),
-            ),
-          );
-
-        // Soft delete old workout_exercise
-        await tx
-          .update(workoutExercises)
-          .set({ deleted_at: new Date() })
-          .where(
-            and(
-              eq(workoutExercises.workout_id, workoutId),
-              eq(workoutExercises.exercise_id, oldExerciseId),
-            ),
-          );
-
-        // Insert new workout_exercise at the same position
-        await tx
-          .insert(workoutExercises)
-          .values({
-            workout_id: workoutId,
-            exercise_id: newExerciseId,
-            order_index,
-            notes,
-          })
-          .onConflictDoUpdate({
-            target: [workoutExercises.workout_id, workoutExercises.exercise_id],
-            set: {
-              order_index,
-              notes,
-              updated_at: new Date(),
-              deleted_at: null,
-            },
-          });
-
-        // Add a default first set for the new exercise
-        await tx
-          .insert(workoutSets)
-          .values({
-            workout: workoutId,
-            exercise: newExerciseId,
-            set: 1,
-            targetReps: null,
-            reps: null,
-            weight: null,
-            note: null,
-            isCompleted: false,
-            isFailure: false,
-            isWarmup: false,
-          })
-          .onConflictDoUpdate({
-            target: [
-              workoutSets.workout,
-              workoutSets.exercise,
-              workoutSets.set,
-            ],
-            set: {
-              targetReps: null,
-              reps: null,
-              weight: null,
-              note: null,
-              isCompleted: false,
-              isFailure: false,
-              isWarmup: false,
-              updated_at: new Date(),
-              deleted_at: null,
-            },
-          });
-      }),
-      (error) => {
-        logger.error({ err: error }, "Error replacing exercise in workout");
-        return "database_error" as const;
-      },
-    ).map(() => undefined);
+    return workoutCommands
+      .replaceExercise({ workoutId, oldExerciseId, newExerciseId })
+      .map(() => undefined)
+      .mapErr(() => "database_error" as const);
   },
 
   reorderExercises(

@@ -1,8 +1,7 @@
 import { redirect } from "react-router";
-import { Workout } from "~/modules/fitness/domain/workout";
-import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { getOrdinalSuffix } from "~/time";
 import { handleResultError } from "~/utils/errors";
+import { workoutCommands } from "./workout.repository.server";
 
 export async function createWorkoutFromNow(): Promise<Response> {
   const now = new Date();
@@ -11,13 +10,14 @@ export async function createWorkoutFromNow(): Promise<Response> {
   const ordinalSuffix = getOrdinalSuffix(date);
 
   const workoutName = `${weekday}, ${date}${ordinalSuffix}`;
-  const workout = Workout.create({ name: workoutName });
-
-  const result = await WorkoutRepository.save(workout);
+  const result = await workoutCommands.createWorkout({
+    name: workoutName,
+    exercises: [],
+  });
 
   if (result.isErr()) {
     handleResultError(result, "Failed to create workout");
   }
 
-  return redirect(`/workouts/${result.value.id}`);
+  return redirect(`/workouts/${result.value.workout.id}`);
 }

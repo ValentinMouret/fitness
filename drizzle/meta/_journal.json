@@ -43,6 +43,13 @@
       "when": 1789382958352,
       "tag": "0005_wise_bromley",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789394001284,
+      "tag": "0006_mcp_workout_views",
+      "breakpoints": true
     }
   ]
 }

@@ -92,14 +92,10 @@ export async function generateWorkout(input: {
 
   const savedWorkout = savedWorkoutResult.value;
 
-  for (const [
-    index,
-    exerciseGroup,
-  ] of workoutResult.value.workout.exerciseGroups.entries()) {
+  for (const exerciseGroup of workoutResult.value.workout.exerciseGroups) {
     const addExerciseResult = await WorkoutSessionRepository.addExercise(
       savedWorkout.id,
       exerciseGroup.exercise.id,
-      index,
       exerciseGroup.notes,
     );
     if (addExerciseResult.isErr()) {

@@ -28,6 +28,8 @@
     "test:e2e": "playwright test",
     "test:e2e:auth": "playwright test --config playwright.auth.config.ts",
     "typecheck": "react-router typegen && tsc",
+    "mcp:provision-reader": "bun scripts/provision-mcp-reader.ts",
+    "test:mcp:integration": "vitest run --config vitest.mcp.config.ts",
     "test:auth:integration": "vitest run --config vitest.auth.config.ts"
   },
   "lint-staged": {
@@ -59,6 +61,7 @@
     "lucide-react": "^0.544.0",
     "neverthrow": "^8.2.0",
     "pg": "^8.16.3",
+    "pgsql-parser": "^18.2.6",
     "pino": "^10.1.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

@@ -62,6 +62,11 @@ If you do work related to React Router, read `.claude/react-router-v7.md`.
 - Adopt a functional approach.
   - Unless it would have a significant impact on performance or readability.
 - Use `readonly` types
+- Parse untrusted input with Zod at the boundary (HTML form adapters, routes,
+  MCP handlers, imports, external API adapters). Application operations and
+  repositories must receive explicit typed inputs, never `unknown` or raw
+  request data to parse internally. Keep business invariants in domain and
+  application code. See `docs/domain-driven-design.md`.
 
 ## Style
 - Use Radix components as primary UI library

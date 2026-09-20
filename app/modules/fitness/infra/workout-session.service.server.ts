@@ -1,4 +1,5 @@
 import { redirect } from "react-router";
+import { z } from "zod";
 import { type Workout, WorkoutSet } from "~/modules/fitness/domain/workout";
 import {
   ExerciseMuscleGroupsRepository,
@@ -9,6 +10,17 @@ import {
   WorkoutSessionRepository,
 } from "~/modules/fitness/infra/workout.repository.server";
 import { createNotFoundError, handleResultError } from "~/utils/errors";
+import {
+  addExerciseSchema,
+  deleteSetsSchema,
+  finishWorkoutSchema,
+  patchSetSchema,
+  replaceExerciseSchema,
+  saveSetsSchema,
+  workoutExerciseSchema,
+  workoutIdSchema,
+} from "../domain/workout-commands";
+import { workoutCommands } from "./workout.repository.server";
 
 export async function getWorkoutSessionData(id: string) {
   const workoutSessionResult = await WorkoutSessionRepository.findById(id);
@@ -73,21 +85,19 @@ export async function addExerciseToWorkout(input: {
     return { error: "Exercise ID is required" };
   }
 
+  const parsed = addExerciseSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.message };
+
   const workoutSessionResult = await WorkoutSessionRepository.findById(
-    input.workoutId,
+    parsed.data.workoutId,
   );
   if (workoutSessionResult.isErr() || !workoutSessionResult.value) {
     return { error: "Workout not found" };
   }
 
-  const maxOrderIndex = Math.max(
-    ...workoutSessionResult.value.exerciseGroups.map((g) => g.orderIndex),
-    -1,
-  );
-
   const historicalResult =
     await WorkoutSessionRepository.getLastCompletedSetsForExercise(
-      input.exerciseId,
+      parsed.data.exerciseId,
     );
   const defaultSetValues =
     historicalResult.isOk() && historicalResult.value.length > 0
@@ -98,10 +108,9 @@ export async function addExerciseToWorkout(input: {
       : undefined;
 
   const result = await WorkoutSessionRepository.addExercise(
-    input.workoutId,
-    input.exerciseId,
-    maxOrderIndex + 1,
-    input.notes,
+    parsed.data.workoutId,
+    parsed.data.exerciseId,
+    parsed.data.notes ?? undefined,
     defaultSetValues,
   );
 
@@ -120,20 +129,21 @@ export async function addExercisesToWorkout(input: {
     return { error: "At least one exercise ID is required" };
   }
 
+  const parsed = workoutIdSchema
+    .extend({
+      exerciseIds: z.array(z.uuid()).min(1).max(100),
+    })
+    .safeParse(input);
+  if (!parsed.success) return { error: parsed.error.message };
+
   const workoutSessionResult = await WorkoutSessionRepository.findById(
-    input.workoutId,
+    parsed.data.workoutId,
   );
   if (workoutSessionResult.isErr() || !workoutSessionResult.value) {
     return { error: "Workout not found" };
   }
 
-  let orderIndex =
-    Math.max(
-      ...workoutSessionResult.value.exerciseGroups.map((g) => g.orderIndex),
-      -1,
-    ) + 1;
-
-  for (const exerciseId of input.exerciseIds) {
+  for (const exerciseId of parsed.data.exerciseIds) {
     const historicalResult =
       await WorkoutSessionRepository.getLastCompletedSetsForExercise(
         exerciseId,
@@ -147,9 +157,8 @@ export async function addExercisesToWorkout(input: {
         : undefined;
 
     const result = await WorkoutSessionRepository.addExercise(
-      input.workoutId,
+      parsed.data.workoutId,
       exerciseId,
-      orderIndex,
       undefined,
       defaultSetValues,
     );
@@ -157,8 +166,6 @@ export async function addExercisesToWorkout(input: {
     if (result.isErr()) {
       return { error: "Failed to add exercises" };
     }
-
-    orderIndex++;
   }
 
   return { success: true };
@@ -190,10 +197,9 @@ export async function removeExerciseFromWorkout(input: {
     return { error: "Exercise ID is required" };
   }
 
-  const result = await WorkoutSessionRepository.removeExercise(
-    input.workoutId,
-    input.exerciseId,
-  );
+  const parsed = workoutExerciseSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.message };
+  const result = await workoutCommands.removeExercise(parsed.data);
 
   if (result.isErr()) {
     return { error: "Failed to remove exercise" };
@@ -212,6 +218,12 @@ export async function addSetToWorkout(input: {
   if (!input.exerciseId) {
     return { error: "Exercise ID is required" };
   }
+
+  const identifiers = workoutExerciseSchema.safeParse({
+    workoutId: input.workoutId,
+    exerciseId: input.exerciseId,
+  });
+  if (!identifiers.success) return { error: identifiers.error.message };
 
   const workoutSessionResult = await WorkoutSessionRepository.findById(
     input.workoutId,
@@ -237,10 +249,8 @@ export async function addSetToWorkout(input: {
   }
   const setNumber = setNumberResult.value;
 
-  const reps = input.repsStr ? Number.parseInt(input.repsStr, 10) : undefined;
-  const weight = input.weightStr
-    ? Number.parseFloat(input.weightStr)
-    : undefined;
+  const reps = input.repsStr ? Number(input.repsStr) : undefined;
+  const weight = input.weightStr ? Number(input.weightStr) : undefined;
 
   if (
     input.repsStr &&
@@ -271,7 +281,20 @@ export async function addSetToWorkout(input: {
     return { error: "Invalid set data" };
   }
 
-  const result = await WorkoutSessionRepository.addSet(workoutSetResult.value);
+  const parsed = saveSetsSchema.safeParse({
+    workoutId: input.workoutId,
+    exerciseId: input.exerciseId,
+    sets: [
+      {
+        set: setNumber,
+        reps,
+        weight,
+        note: input.note,
+      },
+    ],
+  });
+  if (!parsed.success) return { error: parsed.error.message };
+  const result = await workoutCommands.saveSets(parsed.data);
 
   if (result.isErr()) {
     return { error: "Failed to add set" };
@@ -304,7 +327,7 @@ export async function updateSetInWorkout(input: {
     return { error: "Exercise ID and set number are required" };
   }
 
-  const setNumber = Number.parseInt(input.setNumberStr, 10);
+  const setNumber = Number(input.setNumberStr);
   if (Number.isNaN(setNumber) || setNumber <= 0) {
     return { error: "Set number must be a positive integer" };
   }
@@ -312,7 +335,7 @@ export async function updateSetInWorkout(input: {
   const updateData: SetUpdate = {};
 
   if (input.repsStr !== undefined) {
-    const reps = Number.parseInt(input.repsStr, 10);
+    const reps = Number(input.repsStr);
     if (input.repsStr === "" || reps === 0) {
       // Leave undefined to avoid updating the field.
     } else if (Number.isNaN(reps) || reps < 0) {
@@ -323,7 +346,7 @@ export async function updateSetInWorkout(input: {
   }
 
   if (input.weightStr !== undefined) {
-    const weight = Number.parseFloat(input.weightStr);
+    const weight = Number(input.weightStr);
     if (input.weightStr === "" || weight === 0) {
       // Leave undefined to avoid updating the field.
     } else if (Number.isNaN(weight) || weight < 0) {
@@ -334,7 +357,7 @@ export async function updateSetInWorkout(input: {
   }
 
   if (input.rpeStr !== undefined) {
-    const rpe = Number.parseFloat(input.rpeStr);
+    const rpe = Number(input.rpeStr);
     if (input.rpeStr === "") {
       // Leave undefined to avoid updating the field.
     } else if (Number.isNaN(rpe) || rpe < 6 || rpe > 10) {
@@ -349,19 +372,25 @@ export async function updateSetInWorkout(input: {
   }
 
   if (input.isCompletedStr !== undefined) {
-    updateData.isCompleted = input.isCompletedStr === "true";
+    const parsed = z.enum(["true", "false"]).safeParse(input.isCompletedStr);
+    if (!parsed.success) return { error: "Invalid completion value" };
+    updateData.isCompleted = parsed.data === "true";
   }
 
   if (input.isWarmupStr !== undefined) {
-    updateData.isWarmup = input.isWarmupStr === "true";
+    const parsed = z.enum(["true", "false"]).safeParse(input.isWarmupStr);
+    if (!parsed.success) return { error: "Invalid warm-up value" };
+    updateData.isWarmup = parsed.data === "true";
   }
 
-  const result = await WorkoutSessionRepository.updateSet(
-    input.workoutId,
-    input.exerciseId,
-    setNumber,
-    updateData,
-  );
+  const parsed = patchSetSchema.safeParse({
+    workoutId: input.workoutId,
+    exerciseId: input.exerciseId,
+    set: setNumber,
+    updates: updateData,
+  });
+  if (!parsed.success) return { error: parsed.error.message };
+  const result = await workoutCommands.updateSet(parsed.data);
 
   if (result.isErr()) {
     return { error: "Failed to update set" };
@@ -379,14 +408,12 @@ export async function replaceExerciseInWorkout(input: {
     return { error: "Both old and new exercise IDs are required" };
   }
 
-  const result = await WorkoutSessionRepository.replaceExercise(
-    input.workoutId,
-    input.oldExerciseId,
-    input.newExerciseId,
-  );
+  const parsed = replaceExerciseSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.message };
+  const result = await workoutCommands.replaceExercise(parsed.data);
 
   if (result.isErr()) {
-    return { error: "Failed to replace exercise" };
+    return { error: result.error.message };
   }
 
   return { success: true };
@@ -421,16 +448,18 @@ export async function removeSetFromWorkout(input: {
     return { error: "Exercise ID and set number are required" };
   }
 
-  const setNumber = Number.parseInt(input.setNumberStr, 10);
+  const setNumber = Number(input.setNumberStr);
   if (Number.isNaN(setNumber) || setNumber <= 0) {
     return { error: "Set number must be a positive integer" };
   }
 
-  const result = await WorkoutSessionRepository.removeSet(
-    input.workoutId,
-    input.exerciseId,
-    setNumber,
-  );
+  const parsed = deleteSetsSchema.safeParse({
+    workoutId: input.workoutId,
+    exerciseId: input.exerciseId,
+    sets: [setNumber],
+  });
+  if (!parsed.success) return { error: parsed.error.message };
+  const result = await workoutCommands.deleteSets(parsed.data);
 
   if (result.isErr()) {
     return { error: "Failed to remove set" };
@@ -442,20 +471,10 @@ export async function removeSetFromWorkout(input: {
 export async function completeWorkout(input: {
   readonly workoutId: string;
 }): Promise<WorkoutActionResult> {
-  const workoutResult = await WorkoutRepository.findById(input.workoutId);
-  if (workoutResult.isErr() || !workoutResult.value) {
-    return { error: "Workout not found" };
-  }
-
-  const completedWorkout: Workout = {
-    ...workoutResult.value,
-    stop: new Date(),
-  };
-  const result = await WorkoutRepository.save(completedWorkout);
-
-  if (result.isErr()) {
-    return { error: "Failed to complete workout" };
-  }
+  const parsed = finishWorkoutSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.message };
+  const result = await workoutCommands.finishWorkout(parsed.data);
+  if (result.isErr()) return { error: result.error.message };
 
   return redirect("/dashboard");
 }
@@ -463,11 +482,10 @@ export async function completeWorkout(input: {
 export async function destroyWorkout(input: {
   readonly workoutId: string;
 }): Promise<WorkoutActionResult> {
-  const result = await WorkoutRepository.delete(input.workoutId);
-
-  if (result.isErr()) {
-    return { error: "Failed to delete workout" };
-  }
+  const parsed = workoutIdSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.message };
+  const result = await workoutCommands.deleteWorkout(parsed.data);
+  if (result.isErr()) return { error: result.error.message };
 
   return redirect("/workouts");
 }

@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { registerFitnessTools } from "~/modules/mcp/infra/tools.server";
 import { findAccess } from "./oauth.repository.server";
 import { oauthConfig } from "./oauth-config.server";
 import { oauthError, privateHeaders } from "./oauth-http.server";
@@ -36,6 +37,7 @@ export async function handleMcp(request: Request) {
     sessionIdGenerator: undefined,
     enableJsonResponse: true,
   });
+  registerFitnessTools(server);
   try {
     await server.connect(transport);
     const response = await transport.handleRequest(request);

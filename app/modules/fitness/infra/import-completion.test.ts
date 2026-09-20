@@ -1,6 +1,7 @@
 import { ResultAsync } from "neverthrow";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { ErrRepository } from "~/repository";
+import type { IWorkoutRepository } from "../application/workout.repository";
 import type {
   Exercise,
   Workout,
@@ -10,9 +11,10 @@ import type {
 import { importFitbodCSV } from "./fitbod-import.service.server";
 import type { IExerciseRepository } from "./repository.server";
 import { importWorkout as importStrongWorkout } from "./strong-import.service.server";
-import type { IWorkoutRepository } from "./workout.repository.server";
 
-class InMemoryWorkoutRepository implements IWorkoutRepository {
+class InMemoryWorkoutRepository
+  implements Pick<IWorkoutRepository, "save" | "saveSession">
+{
   workouts: Workout[] = [];
   savedSessions: WorkoutSession[] = [];
 

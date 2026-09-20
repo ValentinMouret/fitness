@@ -1,6 +1,6 @@
 # Configure Fitness authentication
 
-Fitness uses one owner login. Browser sessions use a signed, expiring HttpOnly cookie. Remote Model Context Protocol (MCP) clients use OAuth authorization code exchange with PKCE and one `fitness` scope for reads and writes. The MCP endpoint currently supports protocol initialization and an empty tool list; fitness tools are a separate task.
+Fitness uses one owner login. Browser sessions use a signed, expiring HttpOnly cookie. Remote Model Context Protocol (MCP) clients use OAuth authorization code exchange with PKCE and one `fitness` scope for reads and writes. The MCP endpoint exposes workout tools and generic SQL reads over documented views. See [MCP tools and reader setup](mcp.md).
 
 Session-protected pages and API routes inherit server authentication middleware from `ProtectedLayout`. See [ADR 0001](adr/0001-server-auth-middleware.md) for route placement, client navigation, and the separate OAuth/MCP boundaries.
 

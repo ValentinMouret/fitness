@@ -6,7 +6,8 @@ This README is the source of truth for the application's architecture and
 development workflow. It does not describe deployment or external integrations
 in detail.
 
-See [authentication setup](docs/auth.md) for browser login, MCP OAuth, and local tests.
+See [authentication setup](docs/auth.md) for browser login and MCP OAuth, and
+[MCP tools](docs/mcp.md) for the API, SQL reader setup, and integration tests.
 The route authentication pattern is recorded in [ADR 0001](docs/adr/0001-server-auth-middleware.md).
 
 ## Start with the right context
@@ -89,6 +90,12 @@ only UI-shaped props.
 Domain and application layers return errors as values with `neverthrow`.
 Infrastructure and route boundaries translate those errors into HTTP responses
 or safe UI data. Do not hide domain failures in components.
+
+Parse untrusted input at its boundary: forms, routes, MCP handlers, imports, and
+external API adapters. Application operations and repositories receive explicit
+typed values, never `unknown` or raw request data to parse internally. Keep
+business invariants in domain/application code; see the
+[boundary parsing rule](docs/domain-driven-design.md#parse-at-boundaries).
 
 Keep database access in a `loader`, an `action`, or a `*.server.ts` module.
 Never query Drizzle from a React component. Server-only code must use the
