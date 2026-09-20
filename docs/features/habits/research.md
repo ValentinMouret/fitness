@@ -1,6 +1,12 @@
 # Atomic Habits — Theory & App Design
 
-Reference: *Atomic Habits* by James Clear.
+Status: Research and draft product ideas, not a delivery plan. Original P0/P1/P2
+labels capture the priorities of these notes, not current implementation status.
+See the [habit overview](README.md) for the implemented model and entry points.
+
+Reference: *Atomic Habits* by James Clear. Behavioural and quantitative claims
+below are research notes, not independently verified evidence for the app. Check
+primary sources before relying on them to justify a product decision.
 
 ## The Habit Loop
 

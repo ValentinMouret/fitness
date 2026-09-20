@@ -50,7 +50,7 @@ The protected layout no longer returns unused user data. If a child later needs 
 
 The auth acceptance suite exercises missing and forged sessions through document requests, individual loader requests, direct resource requests, and actions. Mutation tests verify rejection before writes. Browser tests cover login persistence and client navigation to a loaderless page after the session is removed. OAuth tests ensure the separate protocol endpoints remain reachable and enforce their own checks.
 
-Run against the existing test server with the credentials and fixtures described in [authentication setup](../auth.md):
+Run against the existing test server with the credentials and fixtures described in [authentication setup](../operations/authentication.md):
 
 ```sh
 bun run test:e2e:auth browser-session protected-routes mutation-boundary oauth.spec.ts

@@ -1,14 +1,14 @@
 # React Router v7
 
 Use this guide when adding or changing Fitness routes. Read the
-[README](../README.md) first for application boundaries and verification commands.
+[project README](../../README.md) first for application boundaries and verification commands.
 This guide covers framework-mode route APIs and project conventions, not a
 migration from Remix or a general React tutorial. See [frontend.md](frontend.md)
 for component architecture and styling.
 
 Fitness uses React Router v7 in framework mode with server-side rendering.
 `react-router.config.ts` enables `v8_middleware`; authentication follows
-[ADR 0001](adr/0001-server-auth-middleware.md).
+[ADR 0001](../adr/0001-server-auth-middleware.md).
 
 ## Define routes and generate types
 

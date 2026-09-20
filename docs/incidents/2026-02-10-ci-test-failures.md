@@ -10,6 +10,12 @@ pr: https://github.com/ValentinMouret/fitness/pull/33
 
 # CI Test Suite Failures: Eager Env Validation & Stale E2E Selectors
 
+> Historical incident record, not current setup instructions. The examples below
+> describe the fix recorded for PR #33. In particular, direct `process.env` access
+> in application modules and `db:dev` in the local Playwright startup command are
+> not current guidance. Use the [testing guide](../engineering/testing.md) and
+> [architecture guide](../engineering/architecture.md) for new changes.
+
 ## Symptoms
 
 - All 12 unit test suites crash with `ZodError` before any test runs
@@ -97,9 +103,7 @@ Updated `dashboard.spec.ts`, `nutrition.spec.ts`, and `workouts.spec.ts` to matc
 
 ## Prevention
 
-See [CI Test Prevention Strategies](../../ci-test-prevention-strategies.md) for detailed prevention patterns covering:
-
-1. Eager environment validation — lazy init patterns
-2. Test infrastructure decoupling — no setup-level infra imports
-3. E2E selector durability — semantic selectors with `getByRole()`
-4. Schema synchronization — deterministic E2E setup with `db:dev`
+The lasting lessons are to keep pure tests independent of infrastructure setup,
+provision test schemas deliberately, and use accessible selectors. Current
+procedures live in [testing](../engineering/testing.md); the former prevention
+document was removed because it mixed speculative remedies with project rules.

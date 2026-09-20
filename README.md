@@ -1,30 +1,34 @@
 # Fitness
 
-Fitness centralises nutrition, workouts, measurements, and habits for one
-person. It is a server-rendered React Router v7 application in framework mode.
-This README is the source of truth for the application's architecture and
-development workflow. It does not describe deployment or external integrations
-in detail.
+Fitness is a mobile Progressive Web App (PWA) that centralises nutrition, workouts, and habits.
 
-See [authentication setup](docs/auth.md) for browser login, MCP OAuth, and local tests.
-The route authentication pattern is recorded in [ADR 0001](docs/adr/0001-server-auth-middleware.md).
+As a mobile app, we *never* have to think about the desktop UI.
+
+## Architecture
+The web app is a server-rendered React Router v7 application in framework mode.
+You can find more in `app/README.md`.
+
+The database is PostgreSQL.
+See [database conventions](docs/engineering/database.md) for modelling and migrations.
+
+Architecture Decision Records (ADR) can be found in `docs/adr/`. You can list them with `ls -l docs/adr`.
 
 ## Start with the right context
 
-Read the documentation that applies to the change before editing code:
+Use the [documentation index](docs/README.md) to find guidance for your task:
 
-- [domain-driven-design.md](docs/domain-driven-design.md) for feature work.
-- [database.md](docs/database.md) for data modelling or persistence changes.
-- [frontend.md](docs/frontend.md) and
-  [design-system.md](docs/design-system.md) for UI work.
-- [features/README.md](docs/features/README.md) for product behaviour.
-- [react-router-v7.md](docs/react-router-v7.md) for React Router
-  framework patterns.
+- [Architecture](docs/engineering/architecture.md) and
+  [features](docs/features/README.md) for feature work.
+- [Database](docs/engineering/database.md) for modelling and persistence.
+- [Frontend](docs/engineering/frontend.md) and
+  [design system](docs/design/design-system.md) for UI work.
+- [React Router](docs/engineering/react-router.md) for routes and request handling.
+- [Testing](docs/engineering/testing.md) for test boundaries and environments.
+- [Authentication](docs/operations/authentication.md) for login and OAuth setup.
 
 ## Run and verify the app
 
-Install dependencies once with `bun i`. A development server is already running
-for this workspace; do not start another one.
+Install dependencies once with `bun i`.
 
 Use the smallest relevant check while iterating:
 
@@ -50,59 +54,8 @@ bun run db:migrate
 bun run db:seed
 ```
 
-## Build routes around the web platform
+Detailed conventions live in the guides above rather than being repeated here.
+For production setup, see the [deployment guide](deploy/README.md).
 
-Prefer addressable URLs for durable view state, server loaders for reads,
-and forms and actions for writes. Reserve React state for ephemeral
-presentation state, rather than duplicating route data or fetching it in effects.
-
-See [React Router v7](docs/react-router-v7.md) for route configuration, generated
-types, validation, submissions, and error handling.
-
-## Keep boundaries explicit
-
-Route modules orchestrate navigation, loaders, and actions. They do not contain
-business rules. Feature components render view models; shared components accept
-only UI-shaped props.
-
-Domain and application layers return errors as values with `neverthrow`.
-Infrastructure and route boundaries translate those errors into HTTP responses
-or safe UI data. Do not hide domain failures in components.
-
-Keep database access in a `loader`, an `action`, or a `*.server.ts` module.
-Never query Drizzle from a React component. Server-only code must use the
-`*.server.ts` suffix. Return JSON-serializable view models from loaders rather
-than domain entities or non-serializable values.
-
-Use `env` from [app/env.server.ts](app/env.server.ts), never `process.env`, and
-use [logger.server.ts](app/logger.server.ts) for server logging.
-
-## Structure the UI
-
-The application uses Radix UI and Tailwind utilities, with component CSS kept
-next to the component. Reuse existing primitives before creating a new one.
-Keep static styles out of JSX; use an inline `style` only for a data-driven
-value that CSS cannot express.
-
-Use semantic HTML, ordered heading levels, labelled controls, and keyboard
-operable interactions. Accessibility linting is a baseline, not a substitute
-for testing the flow.
-
-Put generic components in `app/components/`, feature components in
-`app/modules/<feature>/presentation/components/`, and route orchestration in
-`app/routes/`. Use view models between domain data and UI components. See
-[frontend.md](docs/frontend.md) for the full component conventions.
-
-Test pure helpers, parsers, and view-model mappers directly. Use Playwright to
-exercise changed user workflows against the existing development server.
-
-## Data model principles
-
-Fitness has no `user_id`: it is solo-ware. Model concepts for people first,
-then for the database. Names should be meaningful and history should remain
-queryable.
-
-The model must support linked records (for example, logging a weight habit can
-create a measurement), incomplete historical data, imported records, backfill,
-and a clear latest value without losing previous values. Keep integrations and
-automation narrow until the base model is reliable.
+## References
+- Linear: https://linear.app/valentin-mouret/project/fitness-22f97be13373/issues
