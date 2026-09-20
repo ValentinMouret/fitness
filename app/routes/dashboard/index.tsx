@@ -29,6 +29,8 @@ import {
   logWeight,
   toggleHabitCompletion,
 } from "~/modules/dashboard/infra/dashboard.service.server";
+import { DashboardStats } from "~/modules/dashboard/presentation/components/DashboardStats/DashboardStats";
+import { createDashboardStatsViewModel } from "~/modules/dashboard/presentation/view-models/dashboard-stats.view-model";
 import { formatStartedAgo } from "~/time";
 import { isEditableTarget } from "~/utils/dom";
 import { createValidationError } from "~/utils/errors";
@@ -94,6 +96,7 @@ export default function DashboardPage({
   loaderData: {
     weight,
     lastWeight,
+    weightTarget,
     weightData,
     loggedToday,
     streak,
@@ -182,11 +185,12 @@ export default function DashboardPage({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [goToDailyNote, noteParam]);
 
-  const calPct = Math.min(nutrition.calories / nutrition.calorieTarget, 1);
-  const remaining = Math.max(
-    0,
-    Math.round(nutrition.calorieTarget - nutrition.calories),
-  );
+  const stats = createDashboardStatsViewModel({
+    ...nutrition,
+    weight: lastWeight?.value,
+    weightTarget,
+    weightUnit: weight.unit,
+  });
 
   return (
     <Box className="dashboard">
@@ -212,59 +216,7 @@ export default function DashboardPage({
         </Link>
       )}
 
-      {/* Stat banner */}
-      <Box>
-        <Flex className="dashboard__stat-banner">
-          <Box className="dashboard__stat-cell">
-            <Text as="div" className="dashboard__stat-value">
-              {Math.round(nutrition.calories)}
-            </Text>
-            <Text as="div" className="dashboard__stat-label">
-              kcal
-            </Text>
-            <Box
-              className="dashboard__stat-progress"
-              role="progressbar"
-              aria-valuenow={Math.round(calPct * 100)}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label="Daily calorie progress"
-            >
-              <Box
-                className="dashboard__stat-progress-fill"
-                style={{ width: `${calPct * 100}%` }}
-              />
-            </Box>
-          </Box>
-
-          <Box className="dashboard__stat-divider" />
-
-          <Box className="dashboard__stat-cell">
-            <Text as="div" className="dashboard__stat-value">
-              {Math.round(nutrition.protein)}
-            </Text>
-            <Text as="div" className="dashboard__stat-label">
-              protein g
-            </Text>
-          </Box>
-
-          <Box className="dashboard__stat-divider" />
-
-          <Box className="dashboard__stat-cell">
-            <Text as="div" className="dashboard__stat-value">
-              {lastWeight ? lastWeight.value : "—"}
-            </Text>
-            <Text as="div" className="dashboard__stat-label">
-              {weight.unit}
-            </Text>
-          </Box>
-        </Flex>
-
-        <Flex className="dashboard__stat-subtitle">
-          <Text size="1">{remaining} kcal remaining</Text>
-          <Text size="1">{Math.round(calPct * 100)}% of daily goal</Text>
-        </Flex>
-      </Box>
+      <DashboardStats stats={stats} />
 
       {/* Daily note */}
       <DailyNoteCard note={dailyNote} />

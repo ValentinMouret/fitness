@@ -18,8 +18,23 @@ test.describe("Dashboard Page", () => {
     await expect(page.getByText("protein g", { exact: true })).toBeVisible();
     // Use .first() because "kg" now also appears in the weight input slot
     await expect(page.getByText("kg", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("kcal remaining")).toBeVisible();
-    await expect(page.getByText("of daily goal")).toBeVisible();
+    const stats = page.getByRole("region", {
+      name: "Daily stats",
+      exact: true,
+    });
+    for (const name of ["Calories", "Protein"]) {
+      const stat = stats.getByLabel(name, { exact: true });
+      await expect(stat.getByText(/^\/ [\d,]+$/)).toBeVisible();
+      await expect(stat.getByText(/^\d+% of goal$/)).toBeVisible();
+      await expect(stat.getByRole("progressbar")).toBeVisible();
+    }
+    const weight = stats.getByLabel("Weight", { exact: true });
+    await expect(weight.getByText(/^\/ (?:[\d,.]+|—)$/)).toBeVisible();
+    await expect(
+      weight.getByText(
+        /^(?:[\d,.]+ kg to goal|At goal|No goal set|No weight logged)$/,
+      ),
+    ).toBeVisible();
   });
 
   test("should display weight trend section", async ({ page }) => {

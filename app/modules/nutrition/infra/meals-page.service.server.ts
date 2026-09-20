@@ -1,5 +1,6 @@
 import { baseMeasurements } from "~/modules/core/domain/measurements";
 import { TargetService } from "~/modules/core/infra/measurement-service";
+import { dailyTargetsFromCalories } from "~/modules/nutrition/domain/daily-targets";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import { NutritionService } from "~/modules/nutrition/infra/service";
 import { handleResultError } from "~/utils/errors";
@@ -23,12 +24,7 @@ export async function getMealsPageData(date: Date) {
       (t) => t.measurement === baseMeasurements.dailyCalorieIntake.name,
     );
     if (dailyCalorieTarget) {
-      targets = {
-        calories: dailyCalorieTarget.value,
-        protein: Math.round((dailyCalorieTarget.value * 0.3) / 4),
-        carbs: Math.round((dailyCalorieTarget.value * 0.4) / 4),
-        fat: Math.round((dailyCalorieTarget.value * 0.3) / 9),
-      };
+      targets = dailyTargetsFromCalories(dailyCalorieTarget.value);
     }
   }
 

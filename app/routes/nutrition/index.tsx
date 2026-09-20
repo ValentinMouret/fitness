@@ -38,6 +38,7 @@ import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { Celebration, SuccessPulse } from "~/components/Celebration";
 import RequiredStar from "~/components/RequiredStar";
+import { defaultDailyTargets } from "~/modules/nutrition/domain/daily-targets";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import {
@@ -166,20 +167,6 @@ const mealConfig: Record<string, { label: string; icon: string }> = {
   snack: { label: "Snacks", icon: "🍎" },
 };
 
-interface DailyTargets {
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-}
-
-const defaultTargets: DailyTargets = {
-  calories: 2100,
-  protein: 140,
-  carbs: 220,
-  fat: 85,
-};
-
 function CalorieRing({ current, target }: { current: number; target: number }) {
   const progress = Math.min(current / target, 1);
   const r = 58;
@@ -301,7 +288,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
 
   const parsedCurrentDate = new Date(currentDate);
   const dailyTotals = dailySummary.dailyTotals;
-  const dailyTargets = targets ?? defaultTargets;
+  const dailyTargets = targets ?? defaultDailyTargets;
 
   const navigateToDate = useCallback(
     (newDate: Date) => {

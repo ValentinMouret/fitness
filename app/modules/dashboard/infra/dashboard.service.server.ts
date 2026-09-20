@@ -19,6 +19,10 @@ import {
   HabitCompletionRepository,
   HabitRepository,
 } from "~/modules/habits/infra/repository.server";
+import {
+  dailyTargetsFromCalories,
+  defaultDailyTargets,
+} from "~/modules/nutrition/domain/daily-targets";
 import { NutritionService } from "~/modules/nutrition/infra/service";
 import { isSameDay, today } from "~/time";
 import { createServerError } from "~/utils/errors";
@@ -26,6 +30,7 @@ import { createServerError } from "~/utils/errors";
 export type DashboardData = {
   readonly weight: Measurement;
   readonly lastWeight: MeasureRecord | undefined;
+  readonly weightTarget: number | undefined;
   readonly weightData: MeasureRecord[];
   readonly loggedToday: boolean;
   readonly streak: number;
@@ -38,6 +43,7 @@ export type DashboardData = {
     readonly calories: number;
     readonly calorieTarget: number;
     readonly protein: number;
+    readonly proteinTarget: number;
   };
   readonly dailyNote: DailyNote | undefined;
 };
@@ -112,13 +118,12 @@ export async function getDashboardData(): Promise<DashboardData> {
     completionMap.get(h.id),
   ).length;
 
-  let calorieTarget = 2100;
   const dailyCalorieTarget = targetsResult.find(
     (t) => t.measurement === baseMeasurements.dailyCalorieIntake.name,
   );
-  if (dailyCalorieTarget) {
-    calorieTarget = dailyCalorieTarget.value;
-  }
+  const nutritionTargets = dailyCalorieTarget
+    ? dailyTargetsFromCalories(dailyCalorieTarget.value)
+    : defaultDailyTargets;
 
   const dailySummary = dailySummaryResult.dailyTotals;
 
@@ -126,6 +131,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     weight,
     streak,
     lastWeight: weights?.[0],
+    weightTarget: targetsResult.find(
+      (target) => target.measurement === weight.name,
+    )?.value,
     weightData,
     loggedToday: Boolean(weights?.[0] && isSameDay(weights[0].t, now)),
     todayHabits,
@@ -135,8 +143,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     inProgressWorkout,
     nutrition: {
       calories: dailySummary.calories,
-      calorieTarget,
+      calorieTarget: nutritionTargets.calories,
       protein: dailySummary.protein,
+      proteinTarget: nutritionTargets.protein,
     },
     dailyNote,
   };

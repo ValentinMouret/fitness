@@ -47,67 +47,6 @@
   white-space: nowrap;
 }
 
-/* ----- Stat Banner ----- */
-
-.dashboard__stat-banner {
-  display: flex;
-  justify-content: space-between;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--gray-4);
-}
-
-.dashboard__stat-cell {
-  flex: 1;
-  text-align: center;
-}
-
-.dashboard__stat-divider {
-  width: 1px;
-  background: var(--gray-4);
-  margin: 4px 0;
-}
-
-.dashboard__stat-value {
-  font-family: var(--font-display);
-  font-size: 2.25rem;
-  font-weight: 400;
-  line-height: 1;
-  color: var(--brand-text);
-}
-
-.dashboard__stat-label {
-  font-size: 0.5625rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--brand-text-secondary);
-  margin-top: 4px;
-}
-
-.dashboard__stat-progress {
-  width: 48px;
-  height: 3px;
-  background: var(--gray-4);
-  border-radius: 2px;
-  margin: 8px auto 0;
-  overflow: hidden;
-}
-
-.dashboard__stat-progress-fill {
-  height: 100%;
-  background: var(--brand-coral);
-  border-radius: 2px;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.dashboard__stat-subtitle {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  font-size: 0.75rem;
-  color: var(--brand-text-secondary);
-}
-
 /* ----- Card ----- */
 
 .dashboard__card {
@@ -202,12 +141,4 @@
 
 .dashboard__weight-input {
   width: 90px;
-}
-
-/* ----- Mobile ----- */
-
-@media (max-width: 640px) {
-  .dashboard__stat-value {
-    font-size: 1.75rem;
-  }
 }
