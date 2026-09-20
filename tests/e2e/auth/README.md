@@ -64,7 +64,7 @@ Run each profile after configuring the existing test server with the correspondi
 | `--grep @access-expiry` | Access lifetime at most `E2E_EXPIRY_SECONDS`; refresh lifetime remains long |
 | `--grep @refresh-expiry` | Refresh lifetime at most `E2E_EXPIRY_SECONDS` |
 
-Prefix each suffix with `bun run test:e2e:auth`. Run ordinary tests with normal lifetimes. A single unfiltered run cannot exercise both long-refresh and short-refresh profiles correctly. Server-side lifetime controls are documented in [auth setup](../../../docs/auth.md); these tests do not add production clock-control endpoints.
+Prefix each suffix with `bun run test:e2e:auth`. Run ordinary tests with normal lifetimes. A single unfiltered run cannot exercise both long-refresh and short-refresh profiles correctly. Server-side lifetime controls are documented in [auth setup](../../../docs/operations/authentication.md); these tests do not add production clock-control endpoints.
 
 ## Inspect PostgreSQL storage
 

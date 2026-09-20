@@ -2,7 +2,7 @@
 
 Fitness uses one owner login. Browser sessions use a signed, expiring HttpOnly cookie. Remote Model Context Protocol (MCP) clients use OAuth authorization code exchange with PKCE and one `fitness` scope for reads and writes. The MCP endpoint exposes workout tools and generic SQL reads over documented views. See [MCP tools and reader setup](mcp.md).
 
-Session-protected pages and API routes inherit server authentication middleware from `ProtectedLayout`. See [ADR 0001](adr/0001-server-auth-middleware.md) for route placement, client navigation, and the separate OAuth/MCP boundaries.
+Session-protected pages and API routes inherit server authentication middleware from `ProtectedLayout`. See [ADR 0001](../adr/0001-server-auth-middleware.md) for route placement, client navigation, and the separate OAuth/MCP boundaries.
 
 ## Configure browser login
 
@@ -10,7 +10,7 @@ Set `AUTH_USERNAME`, `AUTH_PASSWORD`, and `AUTH_SESSION_SECRET` in the server en
 
 The migration from unsigned cookies requires signing in again. Use HTTPS in production; production sessions always set Secure. The reverse proxy must preserve the public Host header. Production origin checks expect HTTPS for that host, even when TLS terminates at Caddy and the internal request uses HTTP. OAuth redirects use the configured public issuer.
 
-For the existing local server, `PORT=5175 bun dev` sets the Vite port. Vite and the server launcher own `PORT`; Playwright owns `TEST_PORT`, validated in `tests/e2e/support/auth.ts`. Neither belongs to the application environment schema. Set test-only options on the test command. Restart the existing server after changing `.env`. Use `NODE_ENV=development` for local HTTP.
+The existing local server uses Vite's `PORT` setting (for example, `5175`). Do not start a second server in an agent session. Vite and the server launcher own `PORT`; Playwright owns `TEST_PORT`, validated in `tests/e2e/support/auth.ts`. Neither belongs to the application environment schema. Set test-only options on the test command. Restart the existing server after changing `.env`. Use `NODE_ENV=development` for local HTTP.
 
 ## Enable OAuth
 
@@ -35,23 +35,22 @@ Authorization codes and access/refresh tokens are random and persisted only as S
 
 Run the server against a local test database. The auth test commands never start another server. Set `E2E_BASE_URL=http://localhost:5175` if Vite listens on localhost rather than 127.0.0.1. Set `E2E_AUTH_USERNAME` and `E2E_AUTH_PASSWORD` to match the server.
 
-Run checks in this order:
+Use the standard checks in the [project README](../../README.md), plus these
+auth-specific suites against the configured test environment:
 
 ```sh
-bun run typecheck
-bun run test
 bun run test:auth:integration
 bun run test:e2e:auth browser-session protected-routes mutation-boundary oauth.spec.ts
-bun run lint
-bun run fmt
-bun run build
 ```
+
+See [testing](../engineering/testing.md) for environment isolation and the
+difference between local and CI server setup.
 
 CI runs the ordinary auth contract and storage check alongside product E2E tests. HTTPS and short-lifetime browser profiles remain explicit.
 
 The integration suite uses `DATABASE_URL` from `.env`, creates uniquely identified OAuth connections, and deletes only its own records. It checks persisted expiry and rollback after injected token-write failures.
 
-OAuth browser tests use the two fixture clients documented in [the auth acceptance guide](../tests/e2e/auth/README.md). Configure those fixtures only on the test server. The guide also describes storage inspection and short-lifetime expiry profiles. Do not run all expiry profiles together with ordinary lifetime settings.
+OAuth browser tests use the two fixture clients documented in [the auth acceptance guide](../../tests/e2e/auth/README.md). Configure those fixtures only on the test server. The guide also describes storage inspection and short-lifetime expiry profiles. Do not run all expiry profiles together with ordinary lifetime settings.
 
 Server lifetime controls, in seconds:
 

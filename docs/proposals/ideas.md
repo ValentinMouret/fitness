@@ -1,4 +1,9 @@
 # Ideas
+
+Status: Draft. This is an exploratory inbox, not committed scope or a description
+of implemented features. See the [feature index](../features/README.md) for current
+feature documentation.
+
 - Inbox (for things to read, watch, write)
   - The agent should help me **learn**. Like, it should ask me questions about what I understood, how it fits in the overall picture... Have clear input/outputs to the content in the inbox: why is it here? what’s the learning? should we get more or less of these in the future?
   - The agent should recommend we pieces of writing based on what I read, liked, topics that interest me, sources I enjoy...

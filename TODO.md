@@ -15,7 +15,7 @@ Keep the existing solo-user model and username/password login. Implement auth in
 
 - [ ] Verify the Secure cookie on HTTPS and complete linking from actual ChatGPT and Claude clients after configuring a public deployment. Local tests use fixture clients.
 
-Setup and verification commands: [docs/auth.md](docs/auth.md).
+Setup and verification commands: [authentication setup](docs/operations/authentication.md).
 
 Delivery order: secure browser login, then OAuth storage and integration. Fitness tools remain a separate product task below.
 

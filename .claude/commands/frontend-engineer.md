@@ -127,4 +127,5 @@ Design interfaces that efficiently support:
 
 ## References
 - Read `.claude/typescript-guidelines.md` before coding in TypeScript
-- Read `.claude/react-router-v7.md` before coding React Router pages/components
+- Read `docs/engineering/react-router.md` before coding React Router pages/components
+- Current component boundaries and styling rules are defined in `docs/engineering/frontend.md`; that guide takes precedence over older examples in this prompt

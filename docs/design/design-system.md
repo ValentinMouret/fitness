@@ -1,6 +1,9 @@
 # Design System
 
-The Fitness app design system provides a cohesive foundation for building consistent, accessible, and maintainable user interfaces. Built on top of Radix UI, it extends the base component library with fitness-specific patterns and design tokens.
+Use this guide for shared visual and interaction rules in Fitness's mobile UI.
+It extends Radix UI with project tokens and patterns. For component boundaries
+and CSS organisation, see [frontend conventions](../engineering/frontend.md).
+Feature wireframes may illustrate these rules but must not redefine them.
 
 ## Design Principles
 
@@ -88,7 +91,6 @@ slow:   0.35s  /* Complex state changes, page transitions */
 | In-progress | `orange` | Active workout, warmup |
 | Error | `red` | Destructive actions |
 | Info | `blue` | Informational content |
-```
 
 ## Component Patterns
 
@@ -180,31 +182,6 @@ Page-level headers use warm surface with shadow:
 - Loading states during async operations
 - Confirmation dialogs for destructive actions
 - Badge system for categorization
-
-## Component Architecture
-
-### Three-Tier System
-
-**Foundation Components**
-Direct extensions of Radix UI components with design system tokens applied.
-
-**Composite Components**
-Reusable patterns combining multiple foundation components.
-
-**Feature Components**
-Domain-specific components built on composite patterns.
-
-### Current Component Inventory
-
-**Foundation:**
-- `ExerciseTypeBadge` - semantic color mapping for exercise categorization
-- Form controls with consistent styling
-- Card layouts with standardized spacing
-
-**Feature:**
-- `ExerciseCard` - expandable exercise information display
-- `WorkoutExerciseCard` - interactive workout tracking interface
-- `WeightChart` - data visualization with custom styling
 
 ## Usage Guidelines
 

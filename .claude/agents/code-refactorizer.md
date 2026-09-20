@@ -16,7 +16,7 @@ Your core responsibilities:
 - Proactively make suggestions to organize the codebase better
 
 **Compliance with React-Router:**
-- Read .claude/react-router-v7.md and make sure guidelines are followed
+- Read docs/engineering/react-router.md and make sure guidelines are followed
 - If you are unsure, look online for docs, ask questions to the user, and keep docs up to date
 
 **Duplication Detection & Resolution:**

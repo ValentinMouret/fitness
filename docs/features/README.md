@@ -1,20 +1,29 @@
-# Product Specifications
+# Features
 
-Feature documentation for the Fitness app. Each document captures requirements, data model decisions, and implementation guidance for a feature area.
+These pages describe Fitness's product behaviour and domain rules. Each feature
+separates code-backed behaviour from proposed extensions. Implementation summaries
+are based on repository inspection, not a claim of browser acceptance testing.
+For implementation conventions, start with [architecture](../engineering/architecture.md).
 
-## Feature Index
+## Habits
 
-### Workouts
-- [Workouts](workouts.md) -- workout creation, exercise logging, sets/reps tracking, muscle stats, templates
-- [AI Workout Generation](ai-workout-generation.md) -- LLM-driven workout generation with training context, inline refinement chat, progressive overload, and memory system
+- [Overview](habits/README.md): scheduling, identity, and completion tracking.
+- [Research](habits/research.md): Atomic Habits concepts and exploratory directions.
 
-### Nutrition
-- [Nutrition](nutrition.md) -- nutrition overview
-- [Meal Builder](nutrition/meal-builder.md) -- objective-based meal composition with macro targets, ingredient sliders, satiety estimation
-- [Meal Logger](nutrition/meal-logger.md) -- daily meal tracking across breakfast/lunch/dinner/snacks, template-based logging, progress against targets
+## Nutrition
 
-### Habits
-- [Habits](habits.md) -- habit creation, frequency tracking, streaks, notes
+- [Overview](nutrition/README.md): ingredients, templates, logs, and targets.
+- [Meal builder](nutrition/meal-builder.md): compose meals and save or log them.
+- [Meal logger](nutrition/meal-logger.md): record daily intake and compare targets.
+- Design proposals: [builder wireframes](nutrition/meal-builder-wireframes.md)
+  and [logger wireframes](nutrition/meal-logger-wireframes.md).
 
-### Ideas
-- [Ideas](ideas.md) -- inbox, agent-assisted learning, LLM-centric product framing
+## Workouts
+
+- [Overview](workouts/README.md): sessions, exercises, sets, and history.
+- [AI generation](workouts/ai-generation.md): training context and refinement.
+- [Adaptive generation](workouts/adaptive-generation.md): retained rule-based implementation.
+
+## Ideas
+
+[Exploratory ideas](../proposals/ideas.md) are not committed requirements.
