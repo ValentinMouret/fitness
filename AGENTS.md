@@ -49,7 +49,7 @@ bun run db:seed
 ## React-router v7
 The framework we use here is react-router v7.
 Once a route is defined in `app/routes.ts` and this generates types .
-If you do work related to React Router, read `.claude/react-router-v7.md`.
+If you do work related to React Router, read `docs/react-router-v7.md`.
 
 ## Code style
 - Follow react-router v7 patterns (`loader`, `clientLoader`, `action`)

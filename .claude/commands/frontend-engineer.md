@@ -127,4 +127,4 @@ Design interfaces that efficiently support:
 
 ## References
 - Read `.claude/typescript-guidelines.md` before coding in TypeScript
-- Read `.claude/react-router-v7.md` before coding React Router pages/components
+- Read `docs/react-router-v7.md` before coding React Router pages/components

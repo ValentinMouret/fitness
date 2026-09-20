@@ -18,7 +18,7 @@ Read the documentation that applies to the change before editing code:
 - [frontend.md](docs/frontend.md) and
   [design-system.md](docs/design-system.md) for UI work.
 - [features/README.md](docs/features/README.md) for product behaviour.
-- [.claude/react-router-v7.md](.claude/react-router-v7.md) for React Router
+- [react-router-v7.md](docs/react-router-v7.md) for React Router
   framework patterns.
 
 ## Run and verify the app
@@ -52,33 +52,12 @@ bun run db:seed
 
 ## Build routes around the web platform
 
-React Router is a thin layer over browser and server primitives. Prefer the
-first option that fits the behaviour:
+Prefer addressable URLs for durable view state, server loaders for reads,
+and forms and actions for writes. Reserve React state for ephemeral
+presentation state, rather than duplicating route data or fetching it in effects.
 
-1. A URL path or search parameter for durable, addressable view state.
-2. A server `loader` to read data for that URL.
-3. A `<Form>` and `action` to perform a navigation-causing write.
-4. A `useFetcher` mutation when a write must not navigate.
-5. React state for ephemeral presentation state only.
-
-Define every route explicitly in [app/routes.ts](app/routes.ts). Keep the
-route file tree aligned with the URL tree. Give each screen an addressable URL
-that can be reloaded, bookmarked, and shared.
-
-Type route modules with their generated `Route` namespace and receive data
-through `Route.ComponentProps`. After adding, moving, or renaming a route, run
-`bun run tc` so generated route types match the route tree. Never edit generated
-route types.
-
-Keep durable selections, filters, tabs, and pagination in URL search
-parameters. Validate route parameters, search parameters, and form data with
-Zod at the loader or action boundary. Do not cast untrusted input.
-
-Use links for navigation and buttons inside forms for actions. Give every input
-a `name`: it is the contract between a form and its action. Redirect after a
-successful navigation-causing write. Render expected validation failures as
-safe user-facing data with an appropriate 4xx response. Use an `ErrorBoundary`
-when the surrounding UI should survive an unexpected route failure.
+See [React Router v7](docs/react-router-v7.md) for route configuration, generated
+types, validation, submissions, and error handling.
 
 ## Keep boundaries explicit
 

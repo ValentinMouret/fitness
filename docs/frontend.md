@@ -1,6 +1,7 @@
 # Frontend
 ## React Router patterns
-In React Router v7, data loading is done with `loaderData` or `clientLoaderData`:
+Follow [React Router v7](react-router-v7.md) for route APIs and conventions.
+Both `loader` and `clientLoader` results are exposed through `loaderData`:
 ```tsx
 import { type Route } from "./+types/index" // if fileis index.ts
 
