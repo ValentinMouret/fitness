@@ -5,6 +5,7 @@
 .macros-chart__canvas {
   flex: 1;
   min-width: 0;
+  align-self: stretch;
 }
 
 .macros-chart__legend {
