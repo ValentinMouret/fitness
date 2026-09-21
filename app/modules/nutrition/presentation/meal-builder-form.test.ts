@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
+import type { NotEmpty } from "~/utils/types";
+import type { MealIngredientInput } from "../domain/meal-composition";
 import { mealBuilderQuerySchema, mealLogFormSchema } from "./meal-builder-form";
 
 const id = "a82e42a6-67ec-4ec4-a763-4e9a1bfc5ff9";
@@ -32,7 +34,11 @@ describe("meal log form boundary", () => {
     ).toMatchObject({ mealId: id, date: null, mealCategory: null });
   });
   it("parses explicit updates without create-only fields", () => {
-    expect(mealLogFormSchema.parse(form())).toMatchObject({
+    const parsed = mealLogFormSchema.parse(form());
+    expectTypeOf(parsed.ingredients).toEqualTypeOf<
+      Readonly<NotEmpty<MealIngredientInput>>
+    >();
+    expect(parsed).toMatchObject({
       mode: "update",
       mealId: id,
       ingredients: [{ id, quantity: 100 }],

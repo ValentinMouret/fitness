@@ -1,4 +1,5 @@
 import { err, ok } from "neverthrow";
+import type { NotEmpty } from "~/utils/types";
 
 export type MealIngredientInput = {
   readonly id: string;
@@ -6,10 +7,9 @@ export type MealIngredientInput = {
 };
 
 export function validateMealComposition(
-  ingredients: readonly MealIngredientInput[],
+  ingredients: Readonly<NotEmpty<MealIngredientInput>>,
 ) {
-  return ingredients.length > 0 &&
-    new Set(ingredients.map(({ id }) => id)).size === ingredients.length &&
+  return new Set(ingredients.map(({ id }) => id)).size === ingredients.length &&
     ingredients.every(
       ({ quantity }) => Number.isFinite(quantity) && quantity > 0,
     )

@@ -4,15 +4,16 @@ import { formOptionalText, formText } from "~/utils/form-data";
 import { validateMealComposition } from "../domain/meal-composition";
 import { mealCategories } from "../domain/meal-template";
 
+const ingredientSchema = z
+  .object({
+    id: z.uuid(),
+    quantity: z.number().positive(),
+  })
+  .readonly();
+
 const compositionSchema = z
-  .array(
-    z
-      .object({
-        id: z.uuid(),
-        quantity: z.number().positive(),
-      })
-      .readonly(),
-  )
+  .tuple([ingredientSchema])
+  .rest(ingredientSchema)
   .readonly()
   .refine(
     (items) => validateMealComposition(items).isOk(),
