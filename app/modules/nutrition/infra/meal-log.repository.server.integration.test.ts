@@ -160,7 +160,7 @@ describe("updating meal ingredients", () => {
         { id: foods[0].id, quantity: 100 },
         { id: foods[0].id, quantity: 150 },
       ],
-    ]) {
+    ] as const) {
       const result = await saveMealLog({
         mode: "update",
         mealId,

@@ -8,6 +8,7 @@ import type {
 import { NutritionService } from "~/modules/nutrition/infra/service";
 import { fromDateString, toDateString } from "~/time";
 import { isSafePath } from "~/utils";
+import type { NotEmpty } from "~/utils/types";
 import {
   type MealIngredientInput,
   validateMealComposition,
@@ -113,7 +114,7 @@ export async function saveMealTemplate(input: {
 }
 
 export type SaveMealLogInput = {
-  readonly ingredients: readonly MealIngredientInput[];
+  readonly ingredients: Readonly<NotEmpty<MealIngredientInput>>;
   readonly returnTo?: string;
 } & (
   | { readonly mode: "update"; readonly mealId: string }
