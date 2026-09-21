@@ -1,11 +1,17 @@
-import { redirect } from "react-router";
+import { ResultAsync } from "neverthrow";
+import { data, redirect } from "react-router";
 import type { CreateAIIngredientInput } from "~/modules/nutrition/domain/ingredient";
 import type {
   CreateMealTemplateInput,
   MealCategory,
 } from "~/modules/nutrition/domain/meal-template";
 import { NutritionService } from "~/modules/nutrition/infra/service";
+import { fromDateString, toDateString } from "~/time";
 import { isSafePath } from "~/utils";
+import {
+  type MealIngredientInput,
+  validateMealComposition,
+} from "../domain/meal-composition";
 
 export async function getMealBuilderData(input: {
   readonly searchTerm?: string;
@@ -35,6 +41,15 @@ export async function getMealBuilderData(input: {
     );
     if (mealResult.isOk()) {
       existingMeal = mealResult.value;
+    } else {
+      throw new Response(
+        mealResult.error === "not_found"
+          ? "Meal not found"
+          : "Failed to load meal",
+        {
+          status: mealResult.error === "not_found" ? 404 : 500,
+        },
+      );
     }
   }
 
@@ -42,10 +57,13 @@ export async function getMealBuilderData(input: {
     ingredients: ingredientsResult.value,
     mealTemplates: templatesResult.value,
     mealLoggingMode: {
-      isEnabled: Boolean(input.mealCategory && input.date && input.returnTo),
-      mealCategory: input.mealCategory,
-      date: input.date,
-      returnTo: input.returnTo,
+      isEnabled: Boolean(existingMeal || (input.mealCategory && input.date)),
+      mealCategory: existingMeal?.mealCategory ?? input.mealCategory,
+      date: existingMeal ? toDateString(existingMeal.loggedDate) : input.date,
+      returnTo:
+        input.returnTo && isSafePath(input.returnTo)
+          ? input.returnTo
+          : "/nutrition",
       existingMeal,
     },
   };
@@ -94,65 +112,71 @@ export async function saveMealTemplate(input: {
   }
 }
 
-export async function saveMealLog(input: {
-  readonly mealCategory: MealCategory;
-  readonly loggedDate: string;
-  readonly ingredientsJson: string;
+export type SaveMealLogInput = {
+  readonly ingredients: readonly MealIngredientInput[];
   readonly returnTo?: string;
-  readonly mealId?: string;
-  readonly notes?: string;
-}) {
-  try {
-    const ingredientsData = JSON.parse(input.ingredientsJson);
-    const parsedDate = new Date(input.loggedDate);
+} & (
+  | { readonly mode: "update"; readonly mealId: string }
+  | {
+      readonly mode: "create";
+      readonly mealCategory: MealCategory;
+      readonly loggedDate: string;
+    }
+);
 
-    const ingredients = await Promise.all(
-      ingredientsData.map(async (item: { id: string; quantity: number }) => {
-        const ingredientResult = await NutritionService.getIngredientById(
-          item.id,
-        );
-        if (ingredientResult.isErr()) {
-          throw new Error(`Failed to find ingredient: ${item.id}`);
-        }
-        return {
-          ingredient: ingredientResult.value,
-          quantityGrams: item.quantity,
-        };
-      }),
+export async function saveMealLog(input: SaveMealLogInput) {
+  if (validateMealComposition(input.ingredients).isErr()) {
+    return data(
+      {
+        saveError:
+          "Choose at least one ingredient with a positive quantity, without duplicates.",
+      },
+      { status: 400 },
     );
-
-    let result: Awaited<
-      ReturnType<
-        | typeof NutritionService.createMealLog
-        | typeof NutritionService.updateMealLog
-      >
-    >;
-    if (input.mealId) {
-      result = await NutritionService.updateMealLog(input.mealId, {
-        ingredients,
-        notes: input.notes,
-      });
-    } else {
-      result = await NutritionService.createMealLog({
-        mealCategory: input.mealCategory,
-        loggedDate: parsedDate,
-        ingredients,
-        notes: input.notes,
-      });
-    }
-
-    if (result.isErr()) {
-      throw new Error("Failed to save meal");
-    }
-
-    const safeReturnTo =
-      input.returnTo && isSafePath(input.returnTo)
-        ? input.returnTo
-        : "/nutrition";
-    return redirect(safeReturnTo);
-  } catch (_error) {
-    throw new Error("Invalid meal data");
   }
+  const ingredientsResult = await ResultAsync.combine(
+    input.ingredients.map((item) =>
+      NutritionService.getIngredientById(item.id).map((ingredient) => ({
+        ingredient,
+        quantityGrams: item.quantity,
+      })),
+    ),
+  );
+  if (ingredientsResult.isErr()) {
+    return data(
+      {
+        saveError:
+          "An ingredient could not be loaded. Your changes have not been saved. Please try again.",
+      },
+      { status: ingredientsResult.error === "not_found" ? 400 : 500 },
+    );
+  }
+  const ingredients = ingredientsResult.value;
+  const result =
+    input.mode === "update"
+      ? await NutritionService.updateMealLog(input.mealId, { ingredients })
+      : await NutritionService.createMealLog({
+          mealCategory: input.mealCategory,
+          loggedDate: fromDateString(input.loggedDate),
+          ingredients,
+        });
+
+  if (result.isErr()) {
+    return data(
+      {
+        saveError:
+          result.error === "not_found"
+            ? "This meal no longer exists. Your changes have not been saved."
+            : "Could not save the meal. Your changes are still here; please try again.",
+      },
+      { status: result.error === "not_found" ? 404 : 500 },
+    );
+  }
+  return redirect(
+    input.returnTo && isSafePath(input.returnTo)
+      ? input.returnTo
+      : "/nutrition",
+  );
 }
 
 export async function searchAiIngredient(input: { readonly query: string }) {

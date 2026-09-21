@@ -1,5 +1,5 @@
-import { and, eq, gte, isNull, lte, sql } from "drizzle-orm";
-import { ok, Result, ResultAsync } from "neverthrow";
+import { and, eq, gte, isNull, lte, notInArray, sql } from "drizzle-orm";
+import { err, ok, Result, ResultAsync } from "neverthrow";
 import { db } from "~/db/index";
 import {
   ingredients,
@@ -282,16 +282,26 @@ export const MealLogRepository = {
           .returning();
 
         if (!updatedLog) {
-          throw new Error("Meal log not found");
+          return null;
         }
 
         // Update ingredients if provided
         if (updates.ingredients !== undefined) {
-          // Delete existing ingredients
+          const retainedIds = updates.ingredients.map(
+            ({ ingredient }) => ingredient.id,
+          );
           await trx
             .update(mealLogIngredients)
-            .set({ deleted_at: new Date() })
-            .where(eq(mealLogIngredients.meal_log_id, id));
+            .set({ deleted_at: new Date(), updated_at: new Date() })
+            .where(
+              and(
+                eq(mealLogIngredients.meal_log_id, id),
+                isNull(mealLogIngredients.deleted_at),
+                retainedIds.length > 0
+                  ? notInArray(mealLogIngredients.ingredient_id, retainedIds)
+                  : undefined,
+              ),
+            );
 
           // Insert new ingredients
           if (updates.ingredients.length > 0) {
@@ -303,7 +313,20 @@ export const MealLogRepository = {
               }),
             );
 
-            await trx.insert(mealLogIngredients).values(ingredientValues);
+            await trx
+              .insert(mealLogIngredients)
+              .values(ingredientValues)
+              .onConflictDoUpdate({
+                target: [
+                  mealLogIngredients.meal_log_id,
+                  mealLogIngredients.ingredient_id,
+                ],
+                set: {
+                  quantity_grams: sql`excluded.quantity_grams`,
+                  deleted_at: null,
+                  updated_at: new Date(),
+                },
+              });
           }
         }
 
@@ -313,7 +336,9 @@ export const MealLogRepository = {
         logger.error({ err: error }, "Failed to update meal log");
         return "database_error" as const;
       },
-    ).andThen((record) => recordToMealLog(record));
+    ).andThen((record) =>
+      record ? recordToMealLog(record) : err("not_found" as const),
+    );
   },
 
   addIngredient(
@@ -322,11 +347,25 @@ export const MealLogRepository = {
     tx?: Transaction,
   ): ResultAsync<void, ErrRepository> {
     return ResultAsync.fromPromise(
-      (tx ?? db).insert(mealLogIngredients).values({
-        meal_log_id: logId,
-        ingredient_id: ingredient.ingredient.id,
-        quantity_grams: ingredient.quantityGrams,
-      }),
+      (tx ?? db)
+        .insert(mealLogIngredients)
+        .values({
+          meal_log_id: logId,
+          ingredient_id: ingredient.ingredient.id,
+          quantity_grams: ingredient.quantityGrams,
+        })
+        .onConflictDoUpdate({
+          target: [
+            mealLogIngredients.meal_log_id,
+            mealLogIngredients.ingredient_id,
+          ],
+          set: {
+            quantity_grams: ingredient.quantityGrams,
+            deleted_at: null,
+            updated_at: new Date(),
+          },
+          setWhere: sql`${mealLogIngredients.deleted_at} is not null`,
+        }),
       (error) => {
         logger.error({ err: error }, "Failed to add ingredient");
         return "database_error" as const;

@@ -109,6 +109,9 @@ jobs:
       - run: bun run db:migrate
       - run: bun run db:seed
       - run: bun run test
+      - run: bun run test:nutrition:integration
+        env:
+          NUTRITION_TEST_DATABASE_URL: postgresql://postgres:password@localhost:5432/fitness
       - run: bun run test:auth:integration
       - run: bun run test:mcp:integration
         env:

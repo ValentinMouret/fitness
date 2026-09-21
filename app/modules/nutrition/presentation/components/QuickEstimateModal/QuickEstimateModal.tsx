@@ -117,15 +117,19 @@ export function QuickEstimateModal({
     if ("ingredients" in data) {
       const dateStr = toDateString(currentDate);
       const returnTo = `/nutrition?date=${dateStr}`;
+      const estimateId = crypto.randomUUID();
       sessionStorage.setItem(
         "quickEstimate",
         JSON.stringify({
           ingredients: data.ingredients,
+          estimateId,
+          date: dateStr,
+          mealCategory: data.mealCategory,
         }),
       );
       onClose();
       navigate(
-        `/nutrition/meal-builder?meal=${data.mealCategory}&date=${dateStr}&returnTo=${encodeURIComponent(returnTo)}`,
+        `/nutrition/meal-builder?meal=${data.mealCategory}&date=${dateStr}&returnTo=${encodeURIComponent(returnTo)}&estimate=${estimateId}`,
       );
       setIsResolving(false);
     }
