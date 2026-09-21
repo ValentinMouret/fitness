@@ -24,11 +24,7 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
-  useFetcher,
-} from "react-router";
+import { data, useFetcher } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { PageHeader } from "~/components/PageHeader";
@@ -59,49 +55,30 @@ import {
   ObjectivesPanel,
   type SelectedIngredient,
 } from "~/modules/nutrition/presentation";
+import {
+  mealBuilderQuerySchema,
+  mealLogFormSchema,
+} from "~/modules/nutrition/presentation/meal-builder-form";
+import { parseQuickEstimate } from "~/modules/nutrition/presentation/quick-estimate";
 import { humanFormatting } from "~/strings";
 import { isEditableTarget } from "~/utils/dom";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/meal-builder";
 import "./meal-builder.css";
 
-const quickEstimateSchema = z.object({
-  ingredients: z.array(
-    z.object({
-      ingredientId: z.string(),
-      quantity: z.number(),
-    }),
-  ),
-});
-
-export async function loader({ request }: LoaderFunctionArgs) {
-  const url = new URL(request.url);
-  const searchTerm = url.searchParams.get("search") || undefined;
-  const category = url.searchParams.get("category") || undefined;
-
-  // Meal logging mode parameters
-  const mealCategoryParam = url.searchParams.get("meal");
-  const mealCategoryParse = z
-    .enum(["breakfast", "lunch", "dinner", "snack"])
-    .safeParse(mealCategoryParam);
-  const mealCategory = mealCategoryParse.success
-    ? mealCategoryParse.data
-    : null;
-  const dateParam = url.searchParams.get("date");
-  const mealId = url.searchParams.get("mealId");
-  const returnTo = url.searchParams.get("returnTo");
-
-  return getMealBuilderData({
-    searchTerm,
-    category,
-    mealCategory,
-    date: dateParam,
-    returnTo,
-    mealId,
-  });
+export async function loader({ request }: Route.LoaderArgs) {
+  const parsed = mealBuilderQuerySchema.safeParse(
+    Object.fromEntries(new URL(request.url).searchParams),
+  );
+  if (!parsed.success)
+    throw new Response("Invalid meal details", { status: 400 });
+  return {
+    ...(await getMealBuilderData(parsed.data)),
+    estimateId: parsed.data.estimateId,
+  };
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intentSchema = zfd.formData({
     intent: formOptionalText(),
@@ -127,24 +104,17 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   if (intent === "save-meal") {
-    const schema = zfd.formData({
-      mealCategory: formText(z.enum(["breakfast", "lunch", "dinner", "snack"])),
-      loggedDate: formText(z.string().min(1)),
-      ingredients: formText(z.string().min(1)),
-      returnTo: formOptionalText(),
-      mealId: formOptionalText(),
-      notes: formOptionalText(),
-    });
-    const parsed = schema.parse(formData);
-
-    return saveMealLog({
-      mealCategory: parsed.mealCategory,
-      loggedDate: parsed.loggedDate,
-      ingredientsJson: parsed.ingredients,
-      returnTo: parsed.returnTo ?? undefined,
-      mealId: parsed.mealId ?? undefined,
-      notes: parsed.notes ?? undefined,
-    });
+    const parsed = mealLogFormSchema.safeParse(formData);
+    if (!parsed.success) {
+      return data(
+        {
+          saveError:
+            "Check the meal details and ingredient quantities, then try again.",
+        },
+        { status: 400 },
+      );
+    }
+    return saveMealLog(parsed.data);
   }
 
   if (intent === "search-ai-ingredient") {
@@ -168,10 +138,25 @@ export async function action({ request }: ActionFunctionArgs) {
   throw new Error("Invalid intent");
 }
 
-export default function MealBuilder({
-  loaderData: { ingredients, mealLoggingMode },
-}: Route.ComponentProps) {
+export default function MealBuilder({ loaderData }: Route.ComponentProps) {
+  const mode = loaderData.mealLoggingMode;
+  const editorKey =
+    mode.existingMeal?.id ??
+    `create:${mode.mealCategory}:${mode.date}:${loaderData.estimateId}`;
+  return <MealBuilderEditor key={editorKey} loaderData={loaderData} />;
+}
+
+function MealBuilderEditor({
+  loaderData: { ingredients, mealLoggingMode, estimateId },
+}: {
+  readonly loaderData: Route.ComponentProps["loaderData"];
+}) {
   const fetcher = useFetcher();
+  const saveFetcher = useFetcher<typeof action>();
+  const saveError =
+    saveFetcher.data && "saveError" in saveFetcher.data
+      ? saveFetcher.data.saveError
+      : null;
 
   const [objectives, setObjectives] = useState<Objectives>({
     calories: null,
@@ -183,7 +168,17 @@ export default function MealBuilder({
 
   const [selectedIngredients, setSelectedIngredients] = useState<
     SelectedIngredient[]
-  >([]);
+  >(
+    () =>
+      mealLoggingMode.existingMeal?.ingredients.map(
+        ({ ingredient, quantityGrams }) => ({
+          ...ingredient,
+          quantity: quantityGrams,
+          defaultRange: [ingredient.sliderMin, ingredient.sliderMax] as const,
+          unit: "g",
+        }),
+      ) ?? [],
+  );
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -214,59 +209,50 @@ export default function MealBuilder({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [showSaveDialog, isAIReviewModalOpen, isAddModalOpen]);
 
-  // Pre-populate ingredients when editing an existing meal
-  useEffect(() => {
-    if (mealLoggingMode.existingMeal?.ingredients) {
-      const convertedIngredients: SelectedIngredient[] =
-        mealLoggingMode.existingMeal.ingredients.map(
-          (item: { ingredient: Ingredient; quantityGrams: number }) => ({
-            ...item.ingredient,
-            quantity: item.quantityGrams,
-            defaultRange: [
-              item.ingredient.sliderMin,
-              item.ingredient.sliderMax,
-            ] as const,
-            unit: "g",
-          }),
-        );
-      setSelectedIngredients(convertedIngredients);
-    }
-  }, [mealLoggingMode.existingMeal]);
-
-  // Pre-populate from Quick Estimate (run once on mount)
   const estimateHydrated = useRef(false);
   useEffect(() => {
-    if (estimateHydrated.current) return;
-    const stored = sessionStorage.getItem("quickEstimate");
-    if (!stored) return;
+    if (estimateHydrated.current || mealLoggingMode.existingMeal || !estimateId)
+      return;
     estimateHydrated.current = true;
-    sessionStorage.removeItem("quickEstimate");
-
     try {
-      const estimate = quickEstimateSchema.safeParse(JSON.parse(stored));
-      if (!estimate.success) return;
-      const estimated = estimate.data.ingredients;
-
-      const converted: SelectedIngredient[] = estimated
-        .map((item) => {
-          const ing = ingredients.find((i) => i.id === item.ingredientId);
-          if (!ing) return null;
-          return {
-            ...ing,
-            quantity: item.quantity,
-            defaultRange: [ing.sliderMin, ing.sliderMax] as const,
-            unit: "g",
-          };
-        })
-        .filter((x): x is SelectedIngredient => x !== null);
-
-      if (converted.length > 0) {
-        setSelectedIngredients(converted);
-      }
+      const stored = sessionStorage.getItem("quickEstimate");
+      if (!stored) return;
+      const estimated = parseQuickEstimate(stored, {
+        estimateId,
+        date: mealLoggingMode.date,
+        mealCategory: mealLoggingMode.mealCategory,
+      });
+      if (!estimated) return;
+      sessionStorage.removeItem("quickEstimate");
+      const converted = estimated.flatMap((item) => {
+        const ingredient = ingredients.find(
+          (candidate) => candidate.id === item.ingredientId,
+        );
+        return ingredient
+          ? [
+              {
+                ...ingredient,
+                quantity: item.quantity,
+                defaultRange: [
+                  ingredient.sliderMin,
+                  ingredient.sliderMax,
+                ] as const,
+                unit: "g",
+              },
+            ]
+          : [];
+      });
+      if (converted.length > 0) setSelectedIngredients(converted);
     } catch {
-      // Ignore malformed sessionStorage data
+      // Storage can be unavailable in private browsing.
     }
-  }, [ingredients]);
+  }, [
+    ingredients,
+    mealLoggingMode.existingMeal,
+    mealLoggingMode.date,
+    mealLoggingMode.mealCategory,
+    estimateId,
+  ]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -303,7 +289,11 @@ export default function MealBuilder({
       .includes(searchQuery.toLowerCase());
     const matchesCategory =
       selectedCategory === "all" || ing.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    return (
+      matchesSearch &&
+      matchesCategory &&
+      !selectedIngredients.some((selected) => selected.id === ing.id)
+    );
   });
 
   // AI Suggestions logic
@@ -346,15 +336,19 @@ export default function MealBuilder({
 
   const handleAddIngredient = useCallback((ingredient: Ingredient) => {
     const midpoint = (ingredient.sliderMin + ingredient.sliderMax) / 2;
-    setSelectedIngredients((prev) => [
-      ...prev,
-      {
-        ...ingredient,
-        quantity: midpoint,
-        defaultRange: [ingredient.sliderMin, ingredient.sliderMax],
-        unit: "g",
-      },
-    ]);
+    setSelectedIngredients((prev) =>
+      prev.some((selected) => selected.id === ingredient.id)
+        ? prev
+        : [
+            ...prev,
+            {
+              ...ingredient,
+              quantity: midpoint,
+              defaultRange: [ingredient.sliderMin, ingredient.sliderMax],
+              unit: "g",
+            },
+          ],
+    );
     setIsAddModalOpen(false);
   }, []);
 
@@ -465,7 +459,7 @@ export default function MealBuilder({
         </Flex>
       </Box>
 
-      <Flex gap="3" mb="6">
+      <Flex gap="3" mb="6" wrap="wrap">
         <Dialog.Root open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <Dialog.Trigger>
             <Button
@@ -504,6 +498,7 @@ export default function MealBuilder({
 
         {mealLoggingMode.isEnabled ? (
           <Button
+            type="button"
             onClick={() => {
               // Submit save-meal form
               const ingredientsData = selectedIngredients.map((ing) => ({
@@ -511,21 +506,23 @@ export default function MealBuilder({
                 quantity: ing.quantity,
               }));
 
-              fetcher.submit(
+              saveFetcher.submit(
                 {
                   intent: "save-meal",
+                  mode: mealLoggingMode.existingMeal ? "update" : "create",
                   mealCategory: mealLoggingMode.mealCategory ?? "",
                   loggedDate: mealLoggingMode.date ?? "",
                   returnTo: mealLoggingMode.returnTo ?? "",
                   mealId: mealLoggingMode.existingMeal?.id || "",
                   ingredients: JSON.stringify(ingredientsData),
-                  notes: "", // TODO: Add notes field if needed
                 },
                 { method: "post" },
               );
             }}
-            disabled={selectedIngredients.length === 0}
-            loading={fetcher.state !== "idle"}
+            disabled={
+              selectedIngredients.length === 0 || saveFetcher.state !== "idle"
+            }
+            loading={saveFetcher.state !== "idle"}
           >
             <DownloadIcon width="16" height="16" />
             {mealLoggingMode.existingMeal ? "Update Meal" : "Save Meal"}
@@ -549,6 +546,12 @@ export default function MealBuilder({
           </AlertDialog.Root>
         )}
       </Flex>
+
+      {saveError && (
+        <Text as="p" role="alert" color="red" mb="4">
+          {saveError}
+        </Text>
+      )}
 
       {showAISuggestions && (
         <AISuggestionsPanel

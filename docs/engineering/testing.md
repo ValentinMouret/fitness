@@ -29,8 +29,13 @@ or running write tests; do not use production data.
 The auth integration suite has a separate command, `bun run test:auth:integration`,
 and [configuration](../../vitest.auth.config.ts). See
 [authentication setup](../operations/authentication.md) for its environment and
-cleanup behaviour. Other excluded integration tests need an explicit runner
-configuration; the ordinary unit command does not execute them.
+cleanup behaviour. Meal update regressions use `bun run test:nutrition:integration` with
+`NUTRITION_TEST_DATABASE_URL` explicitly pointing to a migrated, dedicated test
+database. The suite creates and cleans up its own fixtures and never calls AI.
+Meal-update browser tests likewise require `E2E_DATABASE_URL` for fixture setup;
+use the same dedicated database as the running test server. Other excluded
+integration tests need an explicit runner configuration; the ordinary unit
+command does not execute them.
 
 ## Exercise user workflows with Playwright
 

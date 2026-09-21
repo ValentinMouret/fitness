@@ -30,7 +30,8 @@
     "typecheck": "react-router typegen && tsc",
     "mcp:provision-reader": "bun scripts/provision-mcp-reader.ts",
     "test:mcp:integration": "vitest run --config vitest.mcp.config.ts",
-    "test:auth:integration": "vitest run --config vitest.auth.config.ts"
+    "test:auth:integration": "vitest run --config vitest.auth.config.ts",
+    "test:nutrition:integration": "vitest run --config vitest.nutrition.config.ts"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
