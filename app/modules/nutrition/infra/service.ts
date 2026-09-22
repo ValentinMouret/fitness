@@ -48,7 +48,7 @@ export const NutritionService = {
 
   createIngredient(
     input: CreateIngredientInput,
-  ): ResultAsync<Ingredient, ErrRepository> {
+  ): ResultAsync<Ingredient, ErrRepository | "conflict"> {
     return IngredientRepository.save(input);
   },
 
@@ -171,7 +171,7 @@ export const NutritionService = {
 
   createMealLog(
     input: CreateMealLogInput,
-  ): ResultAsync<MealLogWithIngredients, ErrRepository> {
+  ): ResultAsync<MealLogWithIngredients, ErrRepository | "conflict"> {
     return MealLogRepository.save(input);
   },
 
@@ -180,7 +180,7 @@ export const NutritionService = {
     mealCategory: MealCategory,
     loggedDate: Date,
     notes?: string,
-  ): ResultAsync<MealLogWithIngredients, ErrRepository> {
+  ): ResultAsync<MealLogWithIngredients, ErrRepository | "conflict"> {
     return MealTemplateRepository.fetchWithIngredients(templateId).andThen(
       (template) => {
         const input: CreateMealLogInput = {

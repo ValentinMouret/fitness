@@ -3,12 +3,20 @@ import {
   movementPatterns,
   muscleGroups,
 } from "~/modules/fitness/domain/workout";
+import {
+  ingredientCategories,
+  textureCategories,
+} from "~/modules/nutrition/domain/ingredient";
+import { mealCategories } from "~/modules/nutrition/domain/meal-template";
 import { allowedFunctions, queryLimits } from "../domain/query-policy";
 
 export const schemaDescription = {
   schema: "fitness_data",
   dialect: "PostgreSQL",
   conventions: [
+    "Nutrition: ingredient calories are kcal per 100 g; protein, carbs, fat and fiber are grams per 100 g. Quantities and slider limits are grams, energy_density is kcal/g, water_percentage is 0–100.",
+    "Meal logged_date is a calendar date (YYYY-MM-DD), not a timestamp. One active meal per date/category. All logs count toward intake regardless of is_completed, which is a separate checklist flag.",
+    "Meal nutrition uses current catalogue values × quantity_grams / 100, matching the app; values are not historical snapshots. Template total_* values are stored totals. A deleted template does not hide a consumed meal; its meal_template_id becomes null.",
     "Only the listed views are exposed. All views exclude soft-deleted records and their deleted parents.",
     "Identifiers are UUIDs. Exercises are catalogue entries; workout_exercises links one catalogue exercise to one workout. An exercise can occur once per workout.",
     "Timestamps represent UTC instants. Use ISO dates and explicit timezone conversion when grouping by local day. A null stop means the workout is ongoing.",
@@ -21,6 +29,69 @@ export const schemaDescription = {
     "Results contain rows, rowCount, and truncated. If truncated is true, narrow the query or use aggregates; an empty result may still be truncated if its first row exceeds the byte limit.",
   ],
   views: {
+    ingredients: {
+      primaryKey: ["id"],
+      columns: {
+        id: "uuid",
+        name: "text",
+        category: "text",
+        calories: "number; kcal per 100 g",
+        protein: "number; g per 100 g",
+        carbs: "number; g per 100 g",
+        fat: "number; g per 100 g",
+        fiber: "number; g per 100 g",
+        water_percentage: "number; 0–100",
+        energy_density: "number; kcal/g",
+        texture: "text",
+        is_vegetarian: "boolean",
+        is_vegan: "boolean",
+        slider_min: "integer; grams",
+        slider_max: "integer; grams",
+      },
+    },
+    meal_templates: {
+      primaryKey: ["id"],
+      columns: {
+        id: "uuid",
+        name: "text",
+        category: "text",
+        notes: "text nullable",
+        total_calories: "number; kcal",
+        total_protein: "number; g",
+        total_carbs: "number; g",
+        total_fat: "number; g",
+        total_fiber: "number; g",
+        satiety_score: "number",
+        usage_count: "integer",
+      },
+    },
+    meal_template_ingredients: {
+      primaryKey: ["meal_template_id", "ingredient_id"],
+      columns: {
+        meal_template_id: "uuid → meal_templates.id",
+        ingredient_id: "uuid → ingredients.id",
+        quantity_grams: "positive number",
+      },
+    },
+    meal_logs: {
+      primaryKey: ["id"],
+      columns: {
+        id: "uuid",
+        meal_category: "text",
+        logged_date: "date",
+        is_completed: "boolean",
+        notes: "text nullable",
+        meal_template_id: "uuid nullable → meal_templates.id",
+      },
+    },
+    meal_log_ingredients: {
+      primaryKey: ["meal_log_id", "ingredient_id"],
+      columns: {
+        meal_log_id: "uuid → meal_logs.id",
+        ingredient_id: "uuid → ingredients.id",
+        quantity_grams: "positive number",
+      },
+    },
     workouts: {
       primaryKey: ["id"],
       columns: {
@@ -90,10 +161,19 @@ export const schemaDescription = {
       },
     },
   },
-  enums: { exerciseTypes, movementPatterns, muscleGroups },
+  enums: {
+    exerciseTypes,
+    movementPatterns,
+    muscleGroups,
+    ingredientCategories,
+    textureCategories,
+    mealCategories,
+  },
   limits: queryLimits,
   allowedFunctions,
   examples: [
+    "select id, name, calories, protein from fitness_data.ingredients where name ilike '%yogurt%' order by name",
+    "select m.logged_date, round(sum(i.calories * mi.quantity_grams / 100)::numeric, 2) as calories, round(sum(i.protein * mi.quantity_grams / 100)::numeric, 2) as protein from fitness_data.meal_logs m join fitness_data.meal_log_ingredients mi on mi.meal_log_id = m.id join fitness_data.ingredients i on i.id = mi.ingredient_id where m.logged_date >= '2025-01-01' and m.logged_date < '2025-02-01' group by m.logged_date order by m.logged_date",
     "select id, name, type from fitness_data.exercises where name ilike '%press%' order by name",
     "select * from fitness_data.workouts where stop is null order by start desc",
     "select date_trunc('week', start) as week, muscle_group, sum(weighted_sets) as sets, sum(volume_kg) as volume_kg from fitness_data.muscle_volume where start >= now() - interval '12 weeks' group by 1, 2 order by 1, 2",

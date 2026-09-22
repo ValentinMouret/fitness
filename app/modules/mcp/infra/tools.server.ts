@@ -15,6 +15,13 @@ import {
   workoutIdSchema,
 } from "~/modules/fitness/domain/workout-commands";
 import { workoutCommands } from "~/modules/fitness/infra/workout.repository.server";
+import {
+  createIngredientSchema,
+  logMealSchema,
+  mealLogIdSchema,
+  updateMealLogSchema,
+} from "~/modules/nutrition/domain/nutrition-commands";
+import { nutritionCommands } from "~/modules/nutrition/infra/nutrition-commands.server";
 import { queryInputSchema, runQuery } from "./query.server";
 import { schemaDescription } from "./schema-description";
 
@@ -30,6 +37,7 @@ export function registerFitnessTools(
   server: McpServer,
   commands = workoutCommands,
   query = runQuery,
+  nutrition = nutritionCommands,
 ) {
   server.registerTool(
     "describe_schema",
@@ -154,6 +162,34 @@ export function registerFitnessTools(
     "Delete the explicitly numbered sets from a workout exercise. All specified sets must exist; otherwise nothing is deleted.",
     deleteSetsSchema,
     commands.deleteSets,
+    true,
+  );
+  write(
+    "create_ingredient",
+    "Create a food catalogue entry. Search ingredients with query first. Calories are kcal per 100 g; protein, carbs, fat and fiber are grams per 100 g. Water is a percentage; energyDensity is kcal/g. Slider limits are integer grams. Returns the saved ingredient.",
+    createIngredientSchema,
+    nutrition.createIngredient,
+  );
+  write(
+    "log_meal",
+    "Log ingredients and gram quantities on an explicit YYYY-MM-DD date in breakfast, lunch, dinner or snack. One meal per date/category: an existing meal is a conflict, never appended or overwritten. isCompleted starts false, matching the app; all logged meals count toward intake. Returns the saved meal. Query before retrying uncertain creation.",
+    logMealSchema,
+    nutrition.logMeal,
+  );
+  write(
+    "update_meal_log",
+    "Replace the complete ingredient composition of an existing meal by ID. Quantities are grams; omitted ingredients are removed. Date/category stay unchanged. Omitted notes and isCompleted are preserved; an empty notes string clears notes. Returns the saved meal metadata. Query first to preserve ingredients you still want.",
+    updateMealLogSchema,
+    nutrition.updateMealLog,
+    true,
+    true,
+  );
+  write(
+    "delete_meal_log",
+    "Soft-delete a meal and its ingredient entries. Returns its ID; repeating deletion succeeds.",
+    mealLogIdSchema,
+    nutrition.deleteMealLog,
+    true,
     true,
   );
 }

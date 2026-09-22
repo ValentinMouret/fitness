@@ -14,196 +14,202 @@ import type {
   Ingredient,
   UpdateIngredientInput,
 } from "../domain/ingredient";
+import { isUniqueViolation } from "./nutrition-errors.server";
 import { recordToIngredient } from "./record-mappers";
 
-let ingredientsCache: Ingredient[] | null = null;
+export function createIngredientRepository(database = db) {
+  let ingredientsCache: Ingredient[] | null = null;
+  return {
+    listAll(): ResultAsync<readonly Ingredient[], ErrRepository> {
+      if (ingredientsCache) {
+        return ResultAsync.fromSafePromise(Promise.resolve(ingredientsCache));
+      }
 
-export const IngredientRepository = {
-  listAll(): ResultAsync<readonly Ingredient[], ErrRepository> {
-    if (ingredientsCache) {
-      return ResultAsync.fromSafePromise(Promise.resolve(ingredientsCache));
-    }
+      const query = database
+        .select()
+        .from(ingredients)
+        .where(isNull(ingredients.deleted_at));
 
-    const query = db
-      .select()
-      .from(ingredients)
-      .where(isNull(ingredients.deleted_at));
+      return executeQuery(query, "listAll")
+        .andThen((records) => {
+          const results = records.map(recordToIngredient);
+          return Result.combine(results);
+        })
+        .map((allIngredients) => {
+          ingredientsCache = allIngredients;
+          return allIngredients;
+        });
+    },
 
-    return executeQuery(query, "listAll")
-      .andThen((records) => {
-        const results = records.map(recordToIngredient);
-        return Result.combine(results);
-      })
-      .map((allIngredients) => {
-        ingredientsCache = allIngredients;
-        return allIngredients;
-      });
-  },
-
-  searchByName(
-    searchTerm: string,
-  ): ResultAsync<readonly Ingredient[], ErrRepository> {
-    return this.listAll().map((ingredients) =>
-      ingredients.filter((ingredient) =>
-        ingredient.name.toLowerCase().includes(searchTerm.toLowerCase()),
-      ),
-    );
-  },
-
-  filterByCategory(
-    category: string,
-  ): ResultAsync<readonly Ingredient[], ErrRepository> {
-    return this.listAll().map((ingredients) =>
-      ingredients.filter((ingredient) => ingredient.category === category),
-    );
-  },
-
-  searchAndFilter(
-    searchTerm?: string,
-    category?: string,
-  ): ResultAsync<readonly Ingredient[], ErrRepository> {
-    return this.listAll().map((ingredients) => {
-      let filtered = ingredients;
-
-      if (searchTerm) {
-        filtered = filtered.filter((ingredient) =>
+    searchByName(
+      searchTerm: string,
+    ): ResultAsync<readonly Ingredient[], ErrRepository> {
+      return this.listAll().map((ingredients) =>
+        ingredients.filter((ingredient) =>
           ingredient.name.toLowerCase().includes(searchTerm.toLowerCase()),
-        );
-      }
+        ),
+      );
+    },
 
-      if (category && category !== "all") {
-        filtered = filtered.filter(
-          (ingredient) => ingredient.category === category,
-        );
-      }
+    filterByCategory(
+      category: string,
+    ): ResultAsync<readonly Ingredient[], ErrRepository> {
+      return this.listAll().map((ingredients) =>
+        ingredients.filter((ingredient) => ingredient.category === category),
+      );
+    },
 
-      return filtered;
-    });
-  },
+    searchAndFilter(
+      searchTerm?: string,
+      category?: string,
+    ): ResultAsync<readonly Ingredient[], ErrRepository> {
+      return this.listAll().map((ingredients) => {
+        let filtered = ingredients;
 
-  fetchById(id: string): ResultAsync<Ingredient, ErrRepository> {
-    const query = db
-      .select()
-      .from(ingredients)
-      .where(and(eq(ingredients.id, id), isNull(ingredients.deleted_at)))
-      .limit(1);
-
-    return executeQuery(query, "fetchById")
-      .andThen(fetchSingleRecord)
-      .andThen((record) => recordToIngredient(record));
-  },
-
-  save(
-    ingredient: CreateIngredientInput,
-    tx?: Transaction,
-  ): ResultAsync<Ingredient, ErrRepository> {
-    const values = {
-      name: ingredient.name,
-      category: ingredient.category,
-      calories: ingredient.calories,
-      protein: ingredient.protein,
-      carbs: ingredient.carbs,
-      fat: ingredient.fat,
-      fiber: ingredient.fiber,
-      water_percentage: ingredient.waterPercentage,
-      energy_density: ingredient.energyDensity,
-      texture: ingredient.texture,
-      is_vegetarian: ingredient.isVegetarian,
-      is_vegan: ingredient.isVegan,
-      slider_min: ingredient.sliderMin,
-      slider_max: ingredient.sliderMax,
-    };
-
-    return ResultAsync.fromPromise(
-      (tx ?? db).insert(ingredients).values(values).returning(),
-      (error) => {
-        logger.error({ err: error }, "Failed to save ingredient");
-        return "database_error" as const;
-      },
-    )
-      .andThen((records) => recordToIngredient(records[0]))
-      .map((newIngredient) => {
-        // Invalidate cache when new ingredient is added
-        ingredientsCache = null;
-        return newIngredient;
-      });
-  },
-
-  update(
-    id: string,
-    updates: UpdateIngredientInput,
-    tx?: Transaction,
-  ): ResultAsync<Ingredient, ErrRepository> {
-    const updateValues: Record<string, unknown> = {};
-
-    if (updates.name !== undefined) updateValues.name = updates.name;
-    if (updates.category !== undefined)
-      updateValues.category = updates.category;
-    if (updates.calories !== undefined)
-      updateValues.calories = updates.calories;
-    if (updates.protein !== undefined) updateValues.protein = updates.protein;
-    if (updates.carbs !== undefined) updateValues.carbs = updates.carbs;
-    if (updates.fat !== undefined) updateValues.fat = updates.fat;
-    if (updates.fiber !== undefined) updateValues.fiber = updates.fiber;
-    if (updates.waterPercentage !== undefined)
-      updateValues.water_percentage = updates.waterPercentage;
-    if (updates.energyDensity !== undefined)
-      updateValues.energy_density = updates.energyDensity;
-    if (updates.texture !== undefined) updateValues.texture = updates.texture;
-    if (updates.isVegetarian !== undefined)
-      updateValues.is_vegetarian = updates.isVegetarian;
-    if (updates.isVegan !== undefined) updateValues.is_vegan = updates.isVegan;
-    if (updates.sliderMin !== undefined)
-      updateValues.slider_min = updates.sliderMin;
-    if (updates.sliderMax !== undefined)
-      updateValues.slider_max = updates.sliderMax;
-
-    updateValues.updated_at = new Date();
-
-    return ResultAsync.fromPromise(
-      (tx ?? db)
-        .update(ingredients)
-        .set(updateValues)
-        .where(and(eq(ingredients.id, id), isNull(ingredients.deleted_at)))
-        .returning(),
-      (error) => {
-        logger.error({ err: error }, "Failed to update ingredient");
-        return "database_error" as const;
-      },
-    )
-      .andThen((records) => {
-        if (records.length === 0) {
-          return ResultAsync.fromSafePromise(
-            Promise.reject("not_found" as const),
+        if (searchTerm) {
+          filtered = filtered.filter((ingredient) =>
+            ingredient.name.toLowerCase().includes(searchTerm.toLowerCase()),
           );
         }
-        return recordToIngredient(records[0]);
-      })
-      .map((updatedIngredient) => {
-        // Invalidate cache when ingredient is updated
-        ingredientsCache = null;
-        return updatedIngredient;
+
+        if (category && category !== "all") {
+          filtered = filtered.filter(
+            (ingredient) => ingredient.category === category,
+          );
+        }
+
+        return filtered;
       });
-  },
+    },
 
-  delete(id: string, tx?: Transaction): ResultAsync<void, ErrRepository> {
-    return ResultAsync.fromPromise(
-      (tx ?? db)
-        .update(ingredients)
-        .set({ deleted_at: new Date() })
-        .where(and(eq(ingredients.id, id), isNull(ingredients.deleted_at))),
-      (error) => {
-        logger.error({ err: error }, "Failed to delete ingredient");
-        return "database_error" as const;
-      },
-    ).map(() => {
-      // Invalidate cache when ingredient is deleted
+    fetchById(id: string): ResultAsync<Ingredient, ErrRepository> {
+      const query = database
+        .select()
+        .from(ingredients)
+        .where(and(eq(ingredients.id, id), isNull(ingredients.deleted_at)))
+        .limit(1);
+
+      return executeQuery(query, "fetchById")
+        .andThen(fetchSingleRecord)
+        .andThen((record) => recordToIngredient(record));
+    },
+
+    save(
+      ingredient: CreateIngredientInput,
+      tx?: Transaction,
+    ): ResultAsync<Ingredient, ErrRepository | "conflict"> {
+      const values = {
+        name: ingredient.name,
+        category: ingredient.category,
+        calories: ingredient.calories,
+        protein: ingredient.protein,
+        carbs: ingredient.carbs,
+        fat: ingredient.fat,
+        fiber: ingredient.fiber,
+        water_percentage: ingredient.waterPercentage,
+        energy_density: ingredient.energyDensity,
+        texture: ingredient.texture,
+        is_vegetarian: ingredient.isVegetarian,
+        is_vegan: ingredient.isVegan,
+        slider_min: ingredient.sliderMin,
+        slider_max: ingredient.sliderMax,
+      };
+
+      return ResultAsync.fromPromise(
+        (tx ?? database).insert(ingredients).values(values).returning(),
+        (error) => {
+          if (isUniqueViolation(error)) return "conflict" as const;
+          logger.error({ err: error }, "Failed to save ingredient");
+          return "database_error" as const;
+        },
+      )
+        .andThen((records) => recordToIngredient(records[0]))
+        .map((newIngredient) => {
+          // Invalidate cache when new ingredient is added
+          ingredientsCache = null;
+          return newIngredient;
+        });
+    },
+
+    update(
+      id: string,
+      updates: UpdateIngredientInput,
+      tx?: Transaction,
+    ): ResultAsync<Ingredient, ErrRepository> {
+      const updateValues: Record<string, unknown> = {};
+
+      if (updates.name !== undefined) updateValues.name = updates.name;
+      if (updates.category !== undefined)
+        updateValues.category = updates.category;
+      if (updates.calories !== undefined)
+        updateValues.calories = updates.calories;
+      if (updates.protein !== undefined) updateValues.protein = updates.protein;
+      if (updates.carbs !== undefined) updateValues.carbs = updates.carbs;
+      if (updates.fat !== undefined) updateValues.fat = updates.fat;
+      if (updates.fiber !== undefined) updateValues.fiber = updates.fiber;
+      if (updates.waterPercentage !== undefined)
+        updateValues.water_percentage = updates.waterPercentage;
+      if (updates.energyDensity !== undefined)
+        updateValues.energy_density = updates.energyDensity;
+      if (updates.texture !== undefined) updateValues.texture = updates.texture;
+      if (updates.isVegetarian !== undefined)
+        updateValues.is_vegetarian = updates.isVegetarian;
+      if (updates.isVegan !== undefined)
+        updateValues.is_vegan = updates.isVegan;
+      if (updates.sliderMin !== undefined)
+        updateValues.slider_min = updates.sliderMin;
+      if (updates.sliderMax !== undefined)
+        updateValues.slider_max = updates.sliderMax;
+
+      updateValues.updated_at = new Date();
+
+      return ResultAsync.fromPromise(
+        (tx ?? database)
+          .update(ingredients)
+          .set(updateValues)
+          .where(and(eq(ingredients.id, id), isNull(ingredients.deleted_at)))
+          .returning(),
+        (error) => {
+          logger.error({ err: error }, "Failed to update ingredient");
+          return "database_error" as const;
+        },
+      )
+        .andThen((records) => {
+          if (records.length === 0) {
+            return ResultAsync.fromSafePromise(
+              Promise.reject("not_found" as const),
+            );
+          }
+          return recordToIngredient(records[0]);
+        })
+        .map((updatedIngredient) => {
+          // Invalidate cache when ingredient is updated
+          ingredientsCache = null;
+          return updatedIngredient;
+        });
+    },
+
+    delete(id: string, tx?: Transaction): ResultAsync<void, ErrRepository> {
+      return ResultAsync.fromPromise(
+        (tx ?? database)
+          .update(ingredients)
+          .set({ deleted_at: new Date() })
+          .where(and(eq(ingredients.id, id), isNull(ingredients.deleted_at))),
+        (error) => {
+          logger.error({ err: error }, "Failed to delete ingredient");
+          return "database_error" as const;
+        },
+      ).map(() => {
+        // Invalidate cache when ingredient is deleted
+        ingredientsCache = null;
+        return undefined;
+      });
+    },
+
+    clearCache(): void {
       ingredientsCache = null;
-      return undefined;
-    });
-  },
+    },
+  };
+}
 
-  clearCache(): void {
-    ingredientsCache = null;
-  },
-};
+export const IngredientRepository = createIngredientRepository();

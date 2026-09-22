@@ -1,4 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { Client as McpClient } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Client, Pool } from "pg";
@@ -10,9 +13,14 @@ import {
   saveSetsSchema,
 } from "~/modules/fitness/domain/workout-commands";
 import { createWorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
+import { nutritionOperations } from "~/modules/nutrition/application/nutrition-operations";
+import { logMealSchema } from "~/modules/nutrition/domain/nutrition-commands";
+import { createIngredientRepository } from "~/modules/nutrition/infra/ingredient.repository.server";
+import { createMealLogRepository } from "~/modules/nutrition/infra/meal-log.repository.server";
 import { provisionReader } from "./provision-reader.server";
 import { createQueryRunner } from "./query.server";
 import { schemaDescription } from "./schema-description";
+import { registerFitnessTools } from "./tools.server";
 
 const settings = z
   .object({
@@ -41,6 +49,10 @@ const reader = new Pool({
 const database = drizzle(writer);
 const repository = createWorkoutRepository(database);
 const operations = workoutOperations(repository);
+const nutrition = nutritionOperations(
+  createIngredientRepository(database),
+  createMealLogRepository(database),
+);
 const query = createQueryRunner(() => reader.connect(), readerRole);
 let createdDatabase = false;
 let createdRole = false;
@@ -50,6 +62,7 @@ beforeAll(async () => {
   await admin.query(`create database ${admin.escapeIdentifier(databaseName)}`);
   createdDatabase = true;
   await migrate(database, { migrationsFolder: "./drizzle" });
+  await writer.query("revoke create on schema public from public");
   await provisionReader(
     databaseUrl.toString(),
     readerUrl.toString(),
@@ -462,5 +475,278 @@ describe("workout operations and restricted SQL", () => {
       )._unsafeUnwrapErr(),
     ).toContain("time limit");
     expect((await query({ sql: "select 1 as healthy" })).isOk()).toBe(true);
+  });
+});
+
+describe("nutrition MCP", () => {
+  it("creates, queries, corrects and deletes meals through the SDK with boundary validation", async () => {
+    const server = new McpServer({ name: "nutrition test", version: "1" });
+    registerFitnessTools(server, operations, query, nutrition);
+    const client = new McpClient({ name: "nutrition client", version: "1" });
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    await server.connect(serverTransport);
+    await client.connect(clientTransport);
+    const call = (name: string, args: Record<string, unknown>) =>
+      client.callTool({ name, arguments: args });
+    try {
+      const food = {
+        name: `Food ${randomUUID()}`,
+        category: "proteins",
+        calories: 200,
+        protein: 20,
+        carbs: 10,
+        fat: 8,
+        fiber: 2,
+        waterPercentage: 60,
+        energyDensity: 2,
+        texture: "firm_solid",
+        isVegetarian: true,
+        isVegan: true,
+      };
+      const created = await call("create_ingredient", food);
+      expect(created.isError).toBe(false);
+      const { ingredient } = z
+        .object({ ingredient: z.object({ id: z.uuid() }) })
+        .parse(created.structuredContent);
+      expect(
+        (await call("create_ingredient", food)).structuredContent,
+      ).toMatchObject({ error: { code: "conflict" } });
+      for (const invalid of [
+        { ...food, protein: -1 },
+        { ...food, sliderMin: 10, sliderMax: 5 },
+      ])
+        expect((await call("create_ingredient", invalid)).isError).toBe(true);
+      const input = {
+        loggedDate: "2025-03-01",
+        mealCategory: "lunch",
+        notes: "Keep notes",
+        ingredients: [{ id: ingredient.id, quantity: 150 }],
+      };
+      for (const invalid of [
+        { ...input, loggedDate: "2025-02-30" },
+        { ...input, ingredients: [] },
+        { ...input, ingredients: [input.ingredients[0], input.ingredients[0]] },
+        { ...input, ingredients: [{ id: ingredient.id, quantity: -1 }] },
+      ])
+        expect((await call("log_meal", invalid)).isError).toBe(true);
+      const logged = await call("log_meal", input);
+      expect(logged.isError).toBe(false);
+      const { meal } = z
+        .object({ meal: z.object({ id: z.uuid(), isCompleted: z.boolean() }) })
+        .parse(logged.structuredContent);
+      expect(meal.isCompleted).toBe(false);
+      expect((await call("log_meal", input)).structuredContent).toMatchObject({
+        error: { code: "conflict" },
+      });
+      const totalsSql = `select sum(i.calories * mi.quantity_grams / 100) as calories from fitness_data.meal_log_ingredients mi join fitness_data.ingredients i on i.id = mi.ingredient_id where mi.meal_log_id = '${meal.id}'`;
+      expect(
+        (await call("query", { sql: totalsSql })).structuredContent,
+      ).toMatchObject({ rows: [{ calories: 300 }] });
+      expect(
+        (
+          await call("update_meal_log", {
+            mealId: meal.id,
+            ingredients: [{ id: randomUUID(), quantity: 10 }],
+          })
+        ).structuredContent,
+      ).toMatchObject({ error: { code: "not_found" } });
+      expect((await query({ sql: totalsSql }))._unsafeUnwrap().rows).toEqual([
+        { calories: 300 },
+      ]);
+      const update = {
+        mealId: meal.id,
+        ingredients: [{ id: ingredient.id, quantity: 200 }],
+        isCompleted: true,
+      };
+      for (let i = 0; i < 2; i++) {
+        expect(
+          (await call("update_meal_log", update)).structuredContent,
+        ).toMatchObject({ meal: { notes: "Keep notes", isCompleted: true } });
+      }
+      expect((await query({ sql: totalsSql }))._unsafeUnwrap().rows).toEqual([
+        { calories: 400 },
+      ]);
+      expect(
+        (await call("update_meal_log", { ...update, mealId: randomUUID() }))
+          .structuredContent,
+      ).toMatchObject({ error: { code: "not_found" } });
+      for (let i = 0; i < 2; i++)
+        expect(
+          (await call("delete_meal_log", { mealId: meal.id })).isError,
+        ).toBe(false);
+      expect(
+        (
+          await query({
+            sql: `select * from fitness_data.meal_logs where id = '${meal.id}'`,
+          })
+        )._unsafeUnwrap().rows,
+      ).toEqual([]);
+      expect(
+        (
+          await query({
+            sql: `select * from fitness_data.meal_log_ingredients where meal_log_id = '${meal.id}'`,
+          })
+        )._unsafeUnwrap().rows,
+      ).toEqual([]);
+      expect((await call("update_meal_log", update)).isError).toBe(true);
+      expect((await call("log_meal", input)).isError).toBe(false);
+      await expect(
+        reader.query("select * from public.ingredients"),
+      ).rejects.toMatchObject({ code: "42501" });
+      await expect(
+        reader.query("delete from fitness_data.meal_logs"),
+      ).rejects.toBeDefined();
+    } finally {
+      await client.close();
+      await server.close();
+    }
+  });
+
+  it("exposes templates and compositions while filtering deleted rows and parents", async () => {
+    const food = (
+      await nutrition.createIngredient({
+        name: `Template food ${randomUUID()}`,
+        category: "other",
+        calories: 100,
+        protein: 1,
+        carbs: 1,
+        fat: 1,
+        fiber: 1,
+        waterPercentage: 50,
+        energyDensity: 1,
+        texture: "soft_solid",
+        isVegetarian: true,
+        isVegan: true,
+        sliderMin: 5,
+        sliderMax: 500,
+      })
+    )._unsafeUnwrap().ingredient;
+    const templateId = randomUUID();
+    await writer.query(
+      `insert into meal_templates (id, name, category, total_calories, total_protein, total_carbs, total_fat, total_fiber, satiety_score) values ($1, 'Template', 'breakfast', 100, 1, 1, 1, 1, 1)`,
+      [templateId],
+    );
+    await writer.query(
+      `insert into meal_template_ingredients (meal_template_id, ingredient_id, quantity_grams) values ($1, $2, 100)`,
+      [templateId, food.id],
+    );
+    const meal = (
+      await createMealLogRepository(database).save({
+        mealCategory: "breakfast",
+        loggedDate: new Date("2025-04-01T00:00:00Z"),
+        mealTemplateId: templateId,
+        ingredients: [{ ingredient: food, quantityGrams: 100 }],
+      })
+    )._unsafeUnwrap();
+    const compositionSql = `select ingredient_id, quantity_grams from fitness_data.meal_template_ingredients where meal_template_id = '${templateId}'`;
+    expect((await query({ sql: compositionSql }))._unsafeUnwrap().rows).toEqual(
+      [{ ingredient_id: food.id, quantity_grams: 100 }],
+    );
+    await writer.query(
+      "update meal_template_ingredients set deleted_at = now() where meal_template_id = $1",
+      [templateId],
+    );
+    expect((await query({ sql: compositionSql }))._unsafeUnwrap().rows).toEqual(
+      [],
+    );
+    await writer.query(
+      "update meal_template_ingredients set deleted_at = null where meal_template_id = $1",
+      [templateId],
+    );
+    await writer.query(
+      "update meal_templates set deleted_at = now() where id = $1",
+      [templateId],
+    );
+    expect((await query({ sql: compositionSql }))._unsafeUnwrap().rows).toEqual(
+      [],
+    );
+    expect(
+      (
+        await query({
+          sql: `select * from fitness_data.meal_templates where id = '${templateId}'`,
+        })
+      )._unsafeUnwrap().rows,
+    ).toEqual([]);
+    expect(
+      (
+        await query({
+          sql: `select meal_template_id from fitness_data.meal_logs where id = '${meal.id}'`,
+        })
+      )._unsafeUnwrap().rows,
+    ).toEqual([{ meal_template_id: null }]);
+    expect(
+      (
+        await query({
+          sql: `select ingredient_id from fitness_data.meal_log_ingredients where meal_log_id = '${meal.id}'`,
+        })
+      )._unsafeUnwrap().rows,
+    ).toEqual([{ ingredient_id: food.id }]);
+  });
+
+  it("allows only one concurrent log per date/category and rolls back failed composition updates", async () => {
+    const ingredient = (
+      await nutrition.createIngredient({
+        name: `Concurrent ${randomUUID()}`,
+        category: "other",
+        calories: 100,
+        protein: 1,
+        carbs: 1,
+        fat: 1,
+        fiber: 1,
+        waterPercentage: 50,
+        energyDensity: 1,
+        texture: "soft_solid",
+        isVegetarian: true,
+        isVegan: true,
+        sliderMin: 5,
+        sliderMax: 500,
+      })
+    )._unsafeUnwrap().ingredient;
+    const input = logMealSchema.parse({
+      loggedDate: "2025-03-02",
+      mealCategory: "dinner",
+      ingredients: [{ id: ingredient.id, quantity: 100 }],
+    });
+    const results = await Promise.all([
+      nutrition.logMeal(input),
+      nutrition.logMeal(input),
+    ]);
+    expect(results.filter((result) => result.isOk())).toHaveLength(1);
+    expect(
+      results
+        .filter((result) => result.isErr())
+        .map((result) => result._unsafeUnwrapErr().code),
+    ).toEqual(["conflict"]);
+    const saved = results.find((result) => result.isOk());
+    if (!saved) throw new Error("Expected one saved meal");
+    const mealId = saved._unsafeUnwrap().meal.id;
+    // A real database failure after the metadata update must roll back the transaction.
+    const failed = await createMealLogRepository(database).update(mealId, {
+      notes: "Should roll back",
+      ingredients: [{ ingredient, quantityGrams: -1 }],
+    });
+    expect(failed.isErr()).toBe(true);
+    const persisted = (
+      await createMealLogRepository(database).fetchWithIngredients(mealId)
+    )._unsafeUnwrap();
+    expect(persisted.notes).toBeNull();
+    expect(persisted.ingredients[0].quantityGrams).toBe(100);
+    await writer.query(
+      "update ingredients set deleted_at = now() where id = $1",
+      [ingredient.id],
+    );
+    expect(
+      (
+        await query({
+          sql: `select * from fitness_data.meal_log_ingredients where meal_log_id = '${mealId}'`,
+        })
+      )._unsafeUnwrap().rows,
+    ).toEqual([]);
+    expect(
+      (
+        await nutrition.logMeal({ ...input, loggedDate: "2025-03-03" })
+      )._unsafeUnwrapErr().code,
+    ).toBe("not_found");
   });
 });

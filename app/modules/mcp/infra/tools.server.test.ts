@@ -15,7 +15,7 @@ vi.mock("./query.server", () => ({
 }));
 
 describe("MCP tool registration", () => {
-  it("advertises all 11 tools and returns structured success and domain errors through the SDK", async () => {
+  it("advertises all 15 tools and returns structured success and domain errors through the SDK", async () => {
     const server = new McpServer({ name: "Fitness test", version: "1" });
     const saved = {
       workout: {
@@ -78,6 +78,10 @@ describe("MCP tool registration", () => {
         "replace_exercise_in_workout",
         "save_workout_sets",
         "delete_workout_sets",
+        "create_ingredient",
+        "log_meal",
+        "update_meal_log",
+        "delete_meal_log",
       ]);
       expect(
         (await client.callTool({ name: "describe_schema", arguments: {} }))
