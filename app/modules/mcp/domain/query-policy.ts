@@ -7,6 +7,11 @@ export const exposedViews = [
   "exercises",
   "exercise_muscles",
   "muscle_volume",
+  "ingredients",
+  "meal_templates",
+  "meal_template_ingredients",
+  "meal_logs",
+  "meal_log_ingredients",
 ] as const;
 export const queryLimits = {
   sqlBytes: 20000,

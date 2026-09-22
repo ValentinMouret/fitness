@@ -1,12 +1,12 @@
 # Use Fitness through MCP
 
-Fitness exposes 11 tools through its existing authenticated `/mcp` endpoint. The first version reads and writes workouts and creates exercise catalogue entries. The external agent chooses the conversation and recommendations; Fitness validates and saves the records.
+Fitness exposes 15 tools through its existing authenticated `/mcp` endpoint. Agents can read workouts and nutrition, manage workouts and meal logs, and create exercise and ingredient catalogue entries. The external agent chooses the conversation and recommendations; Fitness validates and saves the records.
 
 Configure [OAuth](auth.md) first. This guide covers the tool contract and the separate database login required for SQL reads.
 
 ## Configure SQL reads
 
-1. Run `bun run db:migrate`. Migration `0006_mcp_workout_views.sql` adds the `fitness_data` schema and six views. It leaves the underlying tables unchanged.
+1. Run `bun run db:migrate`. Migration `0006_mcp_workout_views.sql` adds the `fitness_data` schema and six workout views; `0007_mcp_nutrition_views.sql` adds five nutrition views. It leaves the underlying tables unchanged.
 2. Set `MCP_DATABASE_URL` in the server environment to a connection URL for `fitness_mcp_reader`, with a randomly generated password. It must point to the same database as `DATABASE_URL`. URL-encode the password when necessary. Never use the application login for this connection.
 3. Run `bun run mcp:provision-reader` with a `DATABASE_URL` login that owns the views and can manage roles. This creates or updates the reader login and grants SELECT on only the exposed views. It fails if role memberships, inherited schema/database creation rights, table/column privileges, or callable non-system functions would broaden access. Resolve the reported grants and rerun it; provisioning rolls back on failure.
 4. Restart the existing app process to load the environment change, then connect a client and call `describe_schema` and `query`.
@@ -19,7 +19,7 @@ The query executor additionally validates PostgreSQL syntax, permits one SELECT,
 
 Call `describe_schema` for columns, identifiers, units, enums, supported functions, and examples. The generic `query` tool operates over all exposed views. Adding other Fitness features later extends this schema without changing the query interface.
 
-Initial views: `fitness_data.workouts`, `exercises`, `workout_exercises`, `sets`, `exercise_muscles`, and `muscle_volume`.
+Workout views: `fitness_data.workouts`, `exercises`, `workout_exercises`, `sets`, `exercise_muscles`, and `muscle_volume`.
 
 ```sql
 select id
@@ -33,6 +33,37 @@ select id
 Views exclude soft-deleted records and deleted parents. Timestamps are UTC instants; null `stop` means an ongoing workout. Set identity is `(workout_id, exercise_id, set_number)`. Weight is kilograms. Missing values remain null rather than being inferred as zero or bodyweight.
 
 Completed, non-warm-up sets count as working sets, including those in ongoing workouts. Their volume is recorded reps × kilograms; missing performance contributes zero to this metric. `muscle_volume` attributes each working set using current catalogue muscle percentages: `weighted_sets = contribution_percent / 100`, and `volume_kg` is attributed by the same percentage. The app's muscle-volume history uses these same views. Date ranges use an inclusive start and exclusive end.
+
+## Read and write nutrition
+
+Nutrition views are `fitness_data.ingredients`, `meal_templates`,
+`meal_template_ingredients`, `meal_logs`, and `meal_log_ingredients`. Use the
+existing `query` and `describe_schema` tools to search ingredients, inspect
+reusable templates, and read meal history. After deploying the migration, rerun
+`bun run mcp:provision-reader` to grant access to the new views, then refresh the
+client's tool discovery.
+
+Ingredient calories are kcal per 100 g; protein, carbs, fat and fibre are grams
+per 100 g. Meal quantities are grams. Multiply catalogue values by
+`quantity_grams / 100` for meal nutrition. Values reflect the current catalogue,
+as in the app; they are not historical snapshots. Template totals are stored
+values. Deleted meals, templates, ingredients and composition rows are excluded
+from their respective views. A deleted template does not hide a logged meal;
+its exposed template reference becomes null.
+
+| Tool | Contract |
+| --- | --- |
+| `create_ingredient` | Create an ingredient using catalogue nutrition and texture fields. Search first. Slider limits default to 5–500 grams. Duplicate names return `conflict`. |
+| `log_meal` | Accept `loggedDate` (`YYYY-MM-DD`), `mealCategory`, optional `notes`, and nonempty `ingredients: [{ id, quantity }]`. IDs must exist; quantities are positive grams without duplicate IDs. An existing active meal on the same date/category returns `conflict`; nothing is appended or overwritten. |
+| `update_meal_log` | Accept `mealId` and a complete ingredient composition, plus optional `notes` and `isCompleted`. Replace ingredients atomically; omitted ingredients are removed. Omitted notes/completion are preserved. An empty notes string clears notes. Date and category remain unchanged. |
+| `delete_meal_log` | Soft-delete the meal and its composition. Repeating deletion succeeds. |
+
+New meal logs start with `isCompleted: false`, matching the web app. This flag
+is a checklist state: all logged meals count toward daily intake. Logging returns
+the saved meal and its ingredients; updating returns meal metadata. Query the
+composition after an update if needed. On an uncertain create response, query
+before retrying; explicit composition updates can be repeated without adding
+quantities. Template editing and target changes are not exposed yet.
 
 ## Write workouts
 

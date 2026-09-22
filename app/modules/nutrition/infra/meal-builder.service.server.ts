@@ -1,4 +1,3 @@
-import { ResultAsync } from "neverthrow";
 import { data, redirect } from "react-router";
 import type { CreateAIIngredientInput } from "~/modules/nutrition/domain/ingredient";
 import type {
@@ -9,6 +8,7 @@ import { NutritionService } from "~/modules/nutrition/infra/service";
 import { fromDateString, toDateString } from "~/time";
 import { isSafePath } from "~/utils";
 import type { NotEmpty } from "~/utils/types";
+import { resolveMealIngredients } from "../application/nutrition-operations";
 import {
   type MealIngredientInput,
   validateMealComposition,
@@ -135,13 +135,9 @@ export async function saveMealLog(input: SaveMealLogInput) {
       { status: 400 },
     );
   }
-  const ingredientsResult = await ResultAsync.combine(
-    input.ingredients.map((item) =>
-      NutritionService.getIngredientById(item.id).map((ingredient) => ({
-        ingredient,
-        quantityGrams: item.quantity,
-      })),
-    ),
+  const ingredientsResult = await resolveMealIngredients(
+    input.ingredients,
+    NutritionService.getIngredientById,
   );
   if (ingredientsResult.isErr()) {
     return data(
