@@ -68,6 +68,10 @@ fi
 
 bun app/db/migrate.ts
 
+if [ "${PREVIEW_APP:-}" != "true" ] && [ -n "${MCP_DATABASE_URL:-}" ]; then
+  bun scripts/provision-mcp-reader.ts
+fi
+
 if [ "${REVIEW_DATABASE_RUN_SEED:-true}" = "true" ]; then
   if [ "${PREVIEW_APP:-}" = "true" ]; then
     psql "$DATABASE_URL" --set ON_ERROR_STOP=1 <<'SQL'
