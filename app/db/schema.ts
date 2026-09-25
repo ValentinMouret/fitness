@@ -346,9 +346,6 @@ export const workoutSets = pgTable(
     isFailure: boolean().notNull().default(false),
     isWarmup: boolean().notNull().default(false),
     rpe: doublePrecision(),
-    targetRirMin: integer("target_rir_min"),
-    targetRirMax: integer("target_rir_max"),
-    targetRirSource: text("target_rir_source", { enum: ["coach", "plan"] }),
     reportedRir: text("reported_rir", {
       enum: ["0", "1", "2", "3", "4+", "unsure"],
     }),
@@ -372,10 +369,6 @@ export const workoutSets = pgTable(
     check(
       "rpe_range",
       sql`${table.rpe} is null or (${table.rpe} >= 6 and ${table.rpe} <= 10)`,
-    ),
-    check(
-      "target_rir_valid",
-      sql`(${table.targetRirMin} is null and ${table.targetRirMax} is null and ${table.targetRirSource} is null) or (${table.targetRirMin} is not null and ${table.targetRirMax} is not null and ${table.targetRirSource} is not null and ${table.targetRirMin} between 0 and 4 and ${table.targetRirMax} between ${table.targetRirMin} and 4 and ${table.targetRirSource} in ('coach', 'plan'))`,
     ),
     check(
       "reported_rir_valid",

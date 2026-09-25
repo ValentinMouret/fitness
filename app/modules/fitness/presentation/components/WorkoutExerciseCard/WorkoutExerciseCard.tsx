@@ -38,6 +38,8 @@ interface WorkoutExerciseCardProps {
   readonly onCompleteSet?: () => void;
   readonly onExerciseNameClick?: (exerciseId: string) => void;
   readonly onMMCClick?: (exerciseId: string) => void;
+  readonly openReportSetKey?: string;
+  readonly onReportPromptChange?: (key: string, open: boolean) => void;
   readonly dragHandleListeners?: SyntheticListenerMap;
   readonly dragHandleAttributes?: DraggableAttributes;
   readonly dragHandleRef?: (element: HTMLElement | null) => void;
@@ -51,6 +53,8 @@ export function WorkoutExerciseCard({
   onCompleteSet,
   onExerciseNameClick,
   onMMCClick,
+  openReportSetKey,
+  onReportPromptChange,
   dragHandleListeners,
   dragHandleAttributes,
   dragHandleRef,
@@ -193,7 +197,7 @@ export function WorkoutExerciseCard({
             Reps
           </span>
           <span className="set-table-header__label set-table-header__label--right">
-            Reported
+            RIR
           </span>
           <span className="set-table-header__label set-table-header__label--center" />
         </div>
@@ -205,6 +209,8 @@ export function WorkoutExerciseCard({
             exerciseId={viewModel.exerciseId}
             canEdit={viewModel.canAddSets}
             onCompleteSet={onCompleteSet}
+            openReportSetKey={openReportSetKey}
+            onReportPromptChange={onReportPromptChange}
           />
         ))}
       </div>
@@ -230,12 +236,22 @@ interface SetRowProps {
   readonly exerciseId: string;
   readonly canEdit: boolean;
   readonly onCompleteSet?: () => void;
+  readonly openReportSetKey?: string;
+  readonly onReportPromptChange?: (key: string, open: boolean) => void;
 }
 
-function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
+function SetRow({
+  set,
+  exerciseId,
+  canEdit,
+  onCompleteSet,
+  openReportSetKey,
+  onReportPromptChange,
+}: SetRowProps) {
   const [localReps, setLocalReps] = useState(set.reps?.toString() ?? "");
   const [localWeight, setLocalWeight] = useState(set.weight?.toString() ?? "");
-  const [showReportPrompt, setShowReportPrompt] = useState(false);
+  const reportSetKey = `${exerciseId}:${set.set}`;
+  const showReportPrompt = openReportSetKey === reportSetKey;
   const [editingCompleted, setEditingCompleted] = useState(false);
   const [editingSubmitted, setEditingSubmitted] = useState(false);
   const [completionSubmitted, setCompletionSubmitted] = useState(false);
@@ -278,7 +294,7 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
         completionNotified.current = true;
         onCompleteSet?.();
       }
-      if (!set.isWarmup) setShowReportPrompt(true);
+      if (!set.isWarmup) onReportPromptChange?.(reportSetKey, true);
       setCompletionSubmitted(false);
     }
   }, [
@@ -288,13 +304,20 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
     set.isCompleted,
     set.isWarmup,
     onCompleteSet,
+    onReportPromptChange,
+    reportSetKey,
   ]);
 
   useEffect(() => {
     if (reportFetcher.state === "idle" && reportFetcher.data?.success) {
-      setShowReportPrompt(false);
+      onReportPromptChange?.(reportSetKey, false);
     }
-  }, [reportFetcher.state, reportFetcher.data]);
+  }, [
+    reportFetcher.state,
+    reportFetcher.data,
+    onReportPromptChange,
+    reportSetKey,
+  ]);
 
   useEffect(() => {
     if (!editingSubmitted || editFetcher.state !== "idle") return;
@@ -357,7 +380,7 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
             {canEdit && !set.isWarmup ? (
               <button
                 type="button"
-                onClick={() => setShowReportPrompt(true)}
+                onClick={() => onReportPromptChange?.(reportSetKey, true)}
                 aria-label={`${set.reportedRir ? "Edit" : "Add"} set ${set.set} reported effort`}
               >
                 {set.reportedRir === "unsure"
@@ -556,27 +579,9 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
         </Text>
       )}
 
-      {!set.isWarmup &&
-        set.targetRirMin !== undefined &&
-        set.targetRirMax !== undefined && (
-          <div className="set-row__target">
-            <strong>
-              Target · {set.targetRirSource === "coach" ? "Coach" : "Plan"}
-            </strong>
-            <span>
-              Aim for {set.targetRirMin}
-              {set.targetRirMax !== set.targetRirMin
-                ? `–${set.targetRirMax}`
-                : ""}{" "}
-              good reps left
-            </span>
-          </div>
-        )}
-
       {canEdit && set.isCompleted && !set.isWarmup && showReportPrompt && (
         <div className="set-row__report-prompt">
           <span>How many more good reps could you have done?</span>
-          <small>Same range of motion and form.</small>
           <div className="set-row__report-options">
             {(["0", "1", "2", "3", "4+", "unsure"] as const).map((value) => (
               <button
@@ -599,7 +604,10 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
                 {value === "unsure" ? "Unsure" : value}
               </button>
             ))}
-            <button type="button" onClick={() => setShowReportPrompt(false)}>
+            <button
+              type="button"
+              onClick={() => onReportPromptChange?.(reportSetKey, false)}
+            >
               Skip
             </button>
           </div>

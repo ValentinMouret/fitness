@@ -26,7 +26,7 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useFetcher } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -285,6 +285,12 @@ function scrollToExercise(exerciseId: string): void {
 }
 
 export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
+  const [openReportSetKey, setOpenReportSetKey] = useState<string>();
+  const onReportPromptChange = useCallback((key: string, open: boolean) => {
+    setOpenReportSetKey((current) =>
+      open ? key : current === key ? undefined : current,
+    );
+  }, []);
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
   const [replaceExerciseId, setReplaceExerciseId] = useState<string>();
   const [showCompletionModal, setShowCompletionModal] = useState(false);
@@ -620,6 +626,8 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                 <SortableExerciseCard
                   key={group.exercise.id}
                   group={group}
+                  openReportSetKey={openReportSetKey}
+                  onReportPromptChange={onReportPromptChange}
                   onCompleteSet={() => {
                     restTimer.start();
                     const incompleteSets = group.sets.filter(
@@ -671,6 +679,8 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
               <div key={group.exercise.id} className="active-workout-exercise">
                 <WorkoutExerciseCard
                   viewModel={viewModel}
+                  openReportSetKey={openReportSetKey}
+                  onReportPromptChange={onReportPromptChange}
                   onExerciseNameClick={() =>
                     setHistoryExercise({
                       id: group.exercise.id,
@@ -778,12 +788,16 @@ function SortableExerciseCard({
   onReplaceExercise,
   onExerciseNameClick,
   onMMCClick,
+  openReportSetKey,
+  onReportPromptChange,
 }: {
   readonly group: WorkoutExerciseGroup;
   readonly onCompleteSet?: () => void;
   readonly onReplaceExercise?: (exerciseId: string) => void;
   readonly onExerciseNameClick?: (exerciseId: string) => void;
   readonly onMMCClick?: (exerciseId: string) => void;
+  readonly openReportSetKey?: string;
+  readonly onReportPromptChange?: (key: string, open: boolean) => void;
 }) {
   const {
     attributes,
@@ -810,6 +824,8 @@ function SortableExerciseCard({
     >
       <WorkoutExerciseCard
         viewModel={viewModel}
+        openReportSetKey={openReportSetKey}
+        onReportPromptChange={onReportPromptChange}
         onCompleteSet={onCompleteSet}
         onReplaceExercise={onReplaceExercise}
         onExerciseNameClick={onExerciseNameClick}

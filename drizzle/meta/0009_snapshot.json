@@ -2186,24 +2186,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "target_rir_min": {
-          "name": "target_rir_min",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "target_rir_max": {
-          "name": "target_rir_max",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "target_rir_source": {
-          "name": "target_rir_source",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "reported_rir": {
           "name": "reported_rir",
           "type": "text",
@@ -2291,10 +2273,6 @@
         "rpe_range": {
           "name": "rpe_range",
           "value": "\"workout_sets\".\"rpe\" is null or (\"workout_sets\".\"rpe\" >= 6 and \"workout_sets\".\"rpe\" <= 10)"
-        },
-        "target_rir_valid": {
-          "name": "target_rir_valid",
-          "value": "(\"workout_sets\".\"target_rir_min\" is null and \"workout_sets\".\"target_rir_max\" is null and \"workout_sets\".\"target_rir_source\" is null) or (\"workout_sets\".\"target_rir_min\" is not null and \"workout_sets\".\"target_rir_max\" is not null and \"workout_sets\".\"target_rir_source\" is not null and \"workout_sets\".\"target_rir_min\" between 0 and 4 and \"workout_sets\".\"target_rir_max\" between \"workout_sets\".\"target_rir_min\" and 4 and \"workout_sets\".\"target_rir_source\" in ('coach', 'plan'))"
         },
         "reported_rir_valid": {
           "name": "reported_rir_valid",
