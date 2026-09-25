@@ -285,12 +285,26 @@ function scrollToExercise(exerciseId: string): void {
 }
 
 export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
-  const [openReportSetKey, setOpenReportSetKey] = useState<string>();
-  const onReportPromptChange = useCallback((key: string, open: boolean) => {
-    setOpenReportSetKey((current) =>
-      open ? key : current === key ? undefined : current,
-    );
-  }, []);
+  const { workoutSession, exercises } = loaderData;
+  const workoutId = workoutSession.workout.id;
+  const [openReport, setOpenReport] = useState<{
+    readonly workoutId: string;
+    readonly key: string;
+  }>();
+  const openReportSetKey =
+    openReport?.workoutId === workoutId ? openReport.key : undefined;
+  const onReportPromptChange = useCallback(
+    (key: string, open: boolean) => {
+      setOpenReport((current) =>
+        open
+          ? { workoutId, key }
+          : current?.workoutId === workoutId && current.key === key
+            ? undefined
+            : current,
+      );
+    },
+    [workoutId],
+  );
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
   const [replaceExerciseId, setReplaceExerciseId] = useState<string>();
   const [showCompletionModal, setShowCompletionModal] = useState(false);
@@ -320,7 +334,6 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     }),
   );
 
-  const { workoutSession, exercises } = loaderData;
   const isComplete = !!workoutSession.workout.stop;
 
   const { startedAgo, formattedDuration } = useLiveDuration({
