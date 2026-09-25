@@ -35,7 +35,7 @@ Keep the small layout loader. Server middleware only runs when a request reaches
 
 ## Route placement
 
-- Register every session-protected page and resource route beneath `ProtectedLayout` in `app/routes.ts`. This includes `/api/quick-actions`, `/api/exercises/history`, and `/api/nutrition/estimate-meal`. A pathless layout does not change their URLs.
+- Register every session-protected page and resource route beneath `ProtectedLayout` in `app/routes.ts`. This includes `/api/exercises/history` and `/api/nutrition/estimate-meal`. A pathless layout does not change their URLs.
 - Child loaders and actions contain their application work without repeated `requireAuth` calls. A route that does not otherwise need a loader does not add one just for authentication.
 - Keep login, logout, health checks, and the public read-only share endpoint outside this layout. Login and logout retain their own same-origin checks.
 - Keep OAuth and MCP outside it. Authorization validates the client and callback before checking the browser session in the consent service. Token exchange and revocation authenticate the OAuth client; MCP authenticates its bearer token on each request. A browser session does not replace those protocol checks.

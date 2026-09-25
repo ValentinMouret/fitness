@@ -427,37 +427,6 @@ button.rt-Card:hover,
 }
 
 /* =================================
-   Quick Action FAB (Mobile Only)
-   ================================= */
-.quick-action-fab {
-  display: none;
-}
-
-@media (max-width: 767px) {
-  .quick-action-fab {
-    display: flex;
-  }
-}
-
-/* =================================
-   Quick Action Sheet Animation
-   ================================= */
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.quick-action-sheet {
-  animation: slideUp 0.2s ease-out;
-}
-
-/* =================================
    Signal C — Shared Layout Utilities
    ================================= */
 

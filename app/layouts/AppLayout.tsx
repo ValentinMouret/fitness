@@ -22,19 +22,10 @@ import {
 import type React from "react";
 import "./AppLayout.css";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Form,
-  NavLink,
-  Outlet,
-  useLocation,
-  useMatches,
-  useNavigate,
-} from "react-router";
+import { Form, NavLink, Outlet, useMatches, useNavigate } from "react-router";
 import { z } from "zod";
 import { PageHeader, type PageHeaderProps } from "~/components/PageHeader";
 import { PageTransition } from "~/components/PageTransition";
-import { QuickActionFAB } from "~/components/QuickActionFAB";
-import { QuickActionSheet } from "~/components/QuickActionSheet";
 import { isEditableTarget } from "~/utils/dom";
 
 const navItems = [
@@ -68,7 +59,6 @@ const HeaderHandleSchema = z.object({
 });
 
 const AppLayout: React.FC = () => {
-  const location = useLocation();
   const matches = useMatches();
 
   const headerConfig = matches
@@ -89,7 +79,6 @@ const AppLayout: React.FC = () => {
     return false;
   });
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [quickSheetOpen, setQuickSheetOpen] = useState(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
 
@@ -100,9 +89,7 @@ const AppLayout: React.FC = () => {
       if (isEditableTarget(e.target)) return;
 
       const key = e.key.toLowerCase();
-      if (key === "q") {
-        setQuickSheetOpen((prev) => !prev);
-      } else if (
+      if (
         headerConfig?.primaryAction?.shortcut &&
         key === headerConfig.primaryAction.shortcut.toLowerCase()
       ) {
@@ -118,13 +105,6 @@ const AppLayout: React.FC = () => {
     window.addEventListener("keydown", handleGlobalKeyDown);
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
   }, [headerConfig, navigate]);
-
-  const isActiveWorkout =
-    location.pathname.startsWith("/workouts/") &&
-    !location.pathname.includes("/exercises") &&
-    !location.pathname.includes("/import") &&
-    !location.pathname.includes("/generate") &&
-    location.pathname !== "/workouts/create";
 
   const toggleCollapsed = useCallback(() => {
     const newValue = !isCollapsed;
@@ -300,16 +280,6 @@ const AppLayout: React.FC = () => {
       </Box>
 
       <BottomTabBar />
-
-      {!isActiveWorkout && (
-        <>
-          <QuickActionFAB onClick={() => setQuickSheetOpen(true)} />
-          <QuickActionSheet
-            open={quickSheetOpen}
-            onOpenChange={setQuickSheetOpen}
-          />
-        </>
-      )}
     </Flex>
   );
 };

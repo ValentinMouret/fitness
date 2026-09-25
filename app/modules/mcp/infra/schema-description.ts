@@ -17,6 +17,8 @@ export const schemaDescription = {
     "Nutrition: ingredient calories are kcal per 100 g; protein, carbs, fat and fiber are grams per 100 g. Quantities and slider limits are grams, energy_density is kcal/g, water_percentage is 0–100.",
     "Meal logged_date is a calendar date (YYYY-MM-DD), not a timestamp. One active meal per date/category. All logs count toward intake regardless of is_completed, which is a separate checklist flag.",
     "Meal nutrition uses current catalogue values × quantity_grams / 100, matching the app; values are not historical snapshots. Template total_* values are stored totals. A deleted template does not hide a consumed meal; its meal_template_id becomes null.",
+    "Habits lists active, non-deleted definitions. frequency_config is JSON: weekly days_of_week uses 0=Sunday through 6=Saturday; custom interval_days and monthly day_of_month are supported by the app. start_date and end_date bound the schedule.",
+    "Habit completions are dated records for active habits. A false completed value is an explicit uncompleted record, not an absent record. A minimum version counts as completion; the record does not distinguish minimum from full actions.",
     "Only the listed views are exposed. All views exclude soft-deleted records and their deleted parents.",
     "Identifiers are UUIDs. Exercises are catalogue entries; workout_exercises links one catalogue exercise to one workout. An exercise can occur once per workout.",
     "Timestamps represent UTC instants. Use ISO dates and explicit timezone conversion when grouping by local day. A null stop means the workout is ongoing.",
@@ -29,6 +31,33 @@ export const schemaDescription = {
     "Results contain rows, rowCount, and truncated. If truncated is true, narrow the query or use aggregates; an empty result may still be truncated if its first row exceeds the byte limit.",
   ],
   views: {
+    habits: {
+      primaryKey: ["id"],
+      columns: {
+        id: "uuid",
+        name: "text",
+        description: "text nullable",
+        identity_phrase: "text",
+        time_of_day: "text; local HH:MM or empty",
+        location: "text",
+        is_keystone: "boolean",
+        minimal_version: "text",
+        frequency_type: "daily | weekly | monthly | custom",
+        frequency_config: "jsonb; schedule configuration",
+        target_count: "positive integer",
+        start_date: "date",
+        end_date: "date nullable",
+      },
+    },
+    habit_completions: {
+      primaryKey: ["habit_id", "completion_date"],
+      columns: {
+        habit_id: "uuid → habits.id",
+        completion_date: "date",
+        completed: "boolean",
+        notes: "text nullable",
+      },
+    },
     ingredients: {
       primaryKey: ["id"],
       columns: {
@@ -172,6 +201,8 @@ export const schemaDescription = {
   limits: queryLimits,
   allowedFunctions,
   examples: [
+    "select id, name, identity_phrase, minimal_version, frequency_type, frequency_config from fitness_data.habits order by name",
+    "select h.name, c.completion_date, c.completed from fitness_data.habit_completions c join fitness_data.habits h on h.id = c.habit_id where c.completion_date >= current_date - interval '30 days' order by c.completion_date desc, h.name",
     "select id, name, calories, protein from fitness_data.ingredients where name ilike '%yogurt%' order by name",
     "select m.logged_date, round(sum(i.calories * mi.quantity_grams / 100)::numeric, 2) as calories, round(sum(i.protein * mi.quantity_grams / 100)::numeric, 2) as protein from fitness_data.meal_logs m join fitness_data.meal_log_ingredients mi on mi.meal_log_id = m.id join fitness_data.ingredients i on i.id = mi.ingredient_id where m.logged_date >= '2025-01-01' and m.logged_date < '2025-02-01' group by m.logged_date order by m.logged_date",
     "select id, name, type from fitness_data.exercises where name ilike '%press%' order by name",
