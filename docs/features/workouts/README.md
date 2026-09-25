@@ -11,11 +11,12 @@ muscle-group volume, and recovery.
 - An **exercise** has an identity, equipment type, movement pattern, and
   muscle-group contributions. Similar exercises remain distinct records.
 - A **set** records planned and performed work, including reps, weight,
-  completion, warm-up/failure flags, and optional rating of perceived exertion
-  (RPE). Planned work is not evidence of completed training.
-- A working set may have a supplied target range for good reps left (`coach` or
-  `plan`) and a separate optional post-set report (`0`–`3`, `4+`, or `unsure`).
-  Legacy RPE remains separate; unanswered reports stay empty.
+  completion, and warm-up/failure flags. Planned work is not evidence of
+  completed training.
+- A completed working set can have an optional post-set report of good reps left
+  (`0`–`3`, `4+`, or `unsure`). Unanswered reports stay empty. Historical RPE
+  remains stored separately for older workouts and generation context; the
+  active workout flow does not ask for a new RPE.
 - A **template** is reusable workout structure, not a completed session.
 
 ## Implemented entry points

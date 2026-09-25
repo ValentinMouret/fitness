@@ -1,6 +1,11 @@
 import { redirect } from "react-router";
 import { z } from "zod";
-import { type Workout, WorkoutSet } from "~/modules/fitness/domain/workout";
+import {
+  type ReportedRir,
+  reportedRirValues,
+  type Workout,
+  WorkoutSet,
+} from "~/modules/fitness/domain/workout";
 import {
   ExerciseMuscleGroupsRepository,
   ExerciseRepository,
@@ -308,7 +313,7 @@ type SetUpdate = {
   weight?: number;
   note?: string;
   rpe?: number;
-  reportedRir?: "0" | "1" | "2" | "3" | "4+" | "unsure" | null;
+  reportedRir?: ReportedRir | null;
   isCompleted?: boolean;
   isWarmup?: boolean;
 };
@@ -373,9 +378,7 @@ export async function updateSetInWorkout(input: {
     if (input.reportedRirStr === "clear") {
       updateData.reportedRir = null;
     } else {
-      const parsed = z
-        .enum(["0", "1", "2", "3", "4+", "unsure"])
-        .safeParse(input.reportedRirStr);
+      const parsed = z.enum(reportedRirValues).safeParse(input.reportedRirStr);
       if (!parsed.success) return { error: "Invalid reported effort" };
       updateData.reportedRir = parsed.data;
     }
