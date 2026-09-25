@@ -300,7 +300,7 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
         </span>
       )}
 
-      {set.isCompleted || !canEdit ? (
+      {!canEdit ? (
         <>
           <Text size="2" className="set-row__value">
             {set.weight ? `${set.weight}` : "—"}
