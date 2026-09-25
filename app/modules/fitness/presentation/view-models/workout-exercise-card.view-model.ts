@@ -1,5 +1,6 @@
 import type {
   ExerciseType,
+  ReportedRir,
   WorkoutExerciseGroup,
   WorkoutSet,
 } from "~/modules/fitness/domain/workout";
@@ -10,7 +11,7 @@ export interface WorkoutSetViewModel {
   readonly weight?: number;
   readonly note?: string;
   readonly rpe?: number;
-  readonly reportedRir?: "0" | "1" | "2" | "3" | "4+" | "unsure";
+  readonly reportedRir?: ReportedRir;
   readonly isCompleted: boolean;
   readonly isFailure: boolean;
   readonly isWarmup: boolean;

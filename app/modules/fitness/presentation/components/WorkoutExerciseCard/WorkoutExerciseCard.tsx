@@ -21,6 +21,7 @@ import { Brain } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 import { NumberInput } from "~/components/NumberInput";
+import { reportedRirValues } from "~/modules/fitness/domain/workout";
 import type {
   WorkoutExerciseCardViewModel,
   WorkoutSetViewModel,
@@ -546,12 +547,11 @@ function SetRow({
               aria-label={`Set ${set.set} reported effort`}
             >
               <option value="clear">No report</option>
-              <option value="0">0 left</option>
-              <option value="1">1 left</option>
-              <option value="2">2 left</option>
-              <option value="3">3 left</option>
-              <option value="4+">4+ left</option>
-              <option value="unsure">Unsure</option>
+              {reportedRirValues.map((value) => (
+                <option key={value} value={value}>
+                  {value === "unsure" ? "Unsure" : `${value} left`}
+                </option>
+              ))}
             </select>
           )}
           <Button type="submit" size="2" loading={editFetcher.state !== "idle"}>
@@ -583,7 +583,7 @@ function SetRow({
         <div className="set-row__report-prompt">
           <span>How many more good reps could you have done?</span>
           <div className="set-row__report-options">
-            {(["0", "1", "2", "3", "4+", "unsure"] as const).map((value) => (
+            {reportedRirValues.map((value) => (
               <button
                 key={value}
                 type="button"

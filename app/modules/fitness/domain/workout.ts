@@ -18,6 +18,9 @@ export const muscleGroups = [
 ] as const;
 export type MuscleGroup = (typeof muscleGroups)[number];
 
+export const reportedRirValues = ["0", "1", "2", "3", "4+", "unsure"] as const;
+export type ReportedRir = (typeof reportedRirValues)[number];
+
 function isIncluded<T extends string>(
   values: ReadonlyArray<T>,
   value: string,
@@ -181,7 +184,7 @@ export interface WorkoutSet {
   readonly isFailure: boolean;
   readonly isWarmup: boolean;
   readonly rpe?: number;
-  readonly reportedRir?: "0" | "1" | "2" | "3" | "4+" | "unsure";
+  readonly reportedRir?: ReportedRir;
 }
 
 interface WorkoutSetCreateInput {
@@ -196,7 +199,7 @@ interface WorkoutSetCreateInput {
   readonly isFailure?: boolean;
   readonly isWarmup?: boolean;
   readonly rpe?: number;
-  readonly reportedRir?: "0" | "1" | "2" | "3" | "4+" | "unsure";
+  readonly reportedRir?: ReportedRir;
 }
 
 type ErrInvalidSet = "Invalid set";

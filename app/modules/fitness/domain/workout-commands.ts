@@ -5,6 +5,7 @@ import {
   exerciseTypes,
   movementPatterns,
   muscleGroups,
+  reportedRirValues,
   type WorkoutSession,
   WorkoutSet,
 } from "./workout";
@@ -38,10 +39,7 @@ export const setSchema = z
     isWarmup: z.boolean().default(false),
     isFailure: z.boolean().default(false),
     rpe: z.number().min(6).max(10).nullable().optional(),
-    reportedRir: z
-      .enum(["0", "1", "2", "3", "4+", "unsure"])
-      .nullable()
-      .optional(),
+    reportedRir: z.enum(reportedRirValues).nullable().optional(),
   })
   .strict();
 export const setsSchema = z

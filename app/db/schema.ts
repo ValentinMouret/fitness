@@ -18,6 +18,7 @@ import {
   exerciseTypes,
   movementPatterns,
   muscleGroups,
+  reportedRirValues,
 } from "~/modules/fitness/domain/workout";
 import {
   ingredientCategories,
@@ -347,7 +348,7 @@ export const workoutSets = pgTable(
     isWarmup: boolean().notNull().default(false),
     rpe: doublePrecision(),
     reportedRir: text("reported_rir", {
-      enum: ["0", "1", "2", "3", "4+", "unsure"],
+      enum: reportedRirValues,
     }),
     ...timestampColumns(),
   },
@@ -370,6 +371,7 @@ export const workoutSets = pgTable(
       "rpe_range",
       sql`${table.rpe} is null or (${table.rpe} >= 6 and ${table.rpe} <= 10)`,
     ),
+    // Changing reportedRirValues also requires a database constraint migration.
     check(
       "reported_rir_valid",
       sql`${table.reportedRir} is null or (${table.reportedRir} in ('0', '1', '2', '3', '4+', 'unsure') and ${table.isCompleted} and not ${table.isWarmup})`,
