@@ -183,6 +183,39 @@ test.describe("Workout Session - Set Management", () => {
     await expect(page.getByText("elapsed")).toBeVisible();
     await expect(page.getByText("done")).toBeVisible();
   });
+
+  test("should correct a completed set without completing it again", async ({
+    page,
+  }) => {
+    await page.getByRole("button", { name: "Add Set" }).click();
+    await page.getByRole("textbox", { name: "Set 1 weight" }).fill("80");
+    await page.getByRole("textbox", { name: "Set 1 reps" }).fill("8");
+    await page.getByRole("button", { name: "Complete set 1" }).click();
+
+    const completedRow = page.locator(".set-row--completed");
+    await expect(completedRow).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Complete set 1" }),
+    ).toHaveCount(0);
+
+    await page.getByRole("textbox", { name: "Set 1 weight" }).fill("82.5");
+    await page.getByRole("textbox", { name: "Set 1 reps" }).fill("9");
+    await page.getByRole("textbox", { name: "Set 1 RPE" }).fill("8");
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator(".set-row--completed")).toBeVisible();
+
+    await page.reload();
+    await expect(page.locator(".set-row--completed")).toBeVisible();
+    await expect(
+      page.getByRole("textbox", { name: "Set 1 weight" }),
+    ).toHaveValue("82.5");
+    await expect(page.getByRole("textbox", { name: "Set 1 reps" })).toHaveValue(
+      "9",
+    );
+    await expect(page.getByRole("textbox", { name: "Set 1 RPE" })).toHaveValue(
+      "8",
+    );
+  });
 });
 
 test.describe("Workout Completion Flow", () => {
