@@ -478,6 +478,94 @@ describe("workout operations and restricted SQL", () => {
   });
 });
 
+describe("habit MCP reads", () => {
+  it("exposes active definitions and dated history without underlying table access", async () => {
+    const activeId = randomUUID();
+    const inactiveId = randomUUID();
+    try {
+      await writer.query(
+        `insert into habits (id, name, identity_phrase, minimal_version, frequency_type, frequency_config, target_count, start_date, is_active)
+         values ($1, 'Read', 'I keep learning', 'Read one page', 'weekly', '{"days_of_week":[1,3]}', 1, '2025-01-01', true),
+                ($2, 'Archived', '', '', 'daily', '{}', 1, '2025-01-01', false)`,
+        [activeId, inactiveId],
+      );
+      await writer.query(
+        `insert into habit_completions (habit_id, completion_date, completed, notes)
+         values ($1, '2025-01-06', true, 'one page'),
+                ($1, '2025-01-08', false, null),
+                ($2, '2025-01-06', true, null)`,
+        [activeId, inactiveId],
+      );
+      await writer.query(
+        `insert into habit_completions (habit_id, completion_date, completed, deleted_at)
+         values ($1, '2025-01-10', true, now())`,
+        [activeId],
+      );
+      const definitions = (
+        await query({
+          sql: `select id, identity_phrase, minimal_version, frequency_type, frequency_config from fitness_data.habits where id in ('${activeId}', '${inactiveId}')`,
+        })
+      )._unsafeUnwrap().rows;
+      expect(definitions).toEqual([
+        {
+          id: activeId,
+          identity_phrase: "I keep learning",
+          minimal_version: "Read one page",
+          frequency_type: "weekly",
+          frequency_config: { days_of_week: [1, 3] },
+        },
+      ]);
+      expect(
+        (
+          await query({
+            sql: `select habit_id, completion_date, completed, notes from fitness_data.habit_completions where habit_id in ('${activeId}', '${inactiveId}') order by completion_date`,
+          })
+        )._unsafeUnwrap().rows,
+      ).toEqual([
+        {
+          habit_id: activeId,
+          completion_date: "2025-01-06",
+          completed: true,
+          notes: "one page",
+        },
+        {
+          habit_id: activeId,
+          completion_date: "2025-01-08",
+          completed: false,
+          notes: null,
+        },
+      ]);
+      await expect(
+        reader.query("select * from public.habits"),
+      ).rejects.toMatchObject({
+        code: "42501",
+      });
+      await expect(
+        reader.query("select * from public.habit_completions"),
+      ).rejects.toMatchObject({ code: "42501" });
+      await writer.query("update habits set deleted_at = now() where id = $1", [
+        activeId,
+      ]);
+      expect(
+        (
+          await query({
+            sql: `select * from fitness_data.habit_completions where habit_id = '${activeId}'`,
+          })
+        )._unsafeUnwrap().rows,
+      ).toEqual([]);
+    } finally {
+      await writer.query(
+        "delete from habit_completions where habit_id in ($1, $2)",
+        [activeId, inactiveId],
+      );
+      await writer.query("delete from habits where id in ($1, $2)", [
+        activeId,
+        inactiveId,
+      ]);
+    }
+  });
+});
+
 describe("nutrition MCP", () => {
   it("creates, queries, corrects and deletes meals through the SDK with boundary validation", async () => {
     const server = new McpServer({ name: "nutrition test", version: "1" });

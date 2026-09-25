@@ -22,6 +22,9 @@ streak and total-completion feedback, and logging a minimum version. The
 [weekly page](../../../app/routes/habits/week.tsx) provides a calendar-oriented
 view. Creation and editing have separate routes.
 
+The [MCP API](../../mcp.md#read-habits) exposes active habit definitions and
+dated completion history as read-only views for connected agents.
+
 ## Product direction
 
 Reduce the effort of logging and recovering after a missed day. Minimum versions

@@ -1,6 +1,6 @@
 # Use Fitness through MCP
 
-Fitness exposes 15 tools through its existing authenticated `/mcp` endpoint. Agents can read workouts and nutrition, manage workouts and meal logs, and create exercise and ingredient catalogue entries. The external agent chooses the conversation and recommendations; Fitness validates and saves the records.
+Fitness exposes 15 tools through its existing authenticated `/mcp` endpoint. Agents can read workouts, nutrition, and habits; manage workouts and meal logs; and create exercise and ingredient catalogue entries. The external agent chooses the conversation and recommendations; Fitness validates and saves the records.
 
 Configure [OAuth](auth.md) first. This guide covers the tool contract and the separate database login required for SQL reads.
 
@@ -64,6 +64,19 @@ the saved meal and its ingredients; updating returns meal metadata. Query the
 composition after an update if needed. On an uncertain create response, query
 before retrying; explicit composition updates can be repeated without adding
 quantities. Template editing and target changes are not exposed yet.
+
+## Read habits
+
+Habit views are `fitness_data.habits` and `habit_completions`. The first lists
+active, non-deleted habit definitions with identity phrase, minimum version,
+schedule configuration, and start/end dates. The second lists dated completion
+records for those habits, including explicit `completed = false` records and
+notes. Missing dates have no completion record. A minimum action counts as a
+completion; the stored record does not distinguish it from the full action.
+
+Use `query` to inspect the active set or a bounded date range of history. The
+reader receives SELECT on these two views after migration and production reader
+provisioning. Habit completion writes are not exposed through MCP yet.
 
 ## Write workouts
 

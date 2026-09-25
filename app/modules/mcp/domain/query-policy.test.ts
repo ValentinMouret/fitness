@@ -5,6 +5,8 @@ import { validateQueryAst } from "./query-policy";
 describe("SQL access policy", () => {
   it.each([
     "select * from fitness_data.sets",
+    "select * from fitness_data.habits",
+    "select * from fitness_data.habit_completions",
     "with x as (select * from workouts), y as (select * from x) select * from y",
     "with x as (select * from workouts) select * from (select * from x) nested",
     "with recursive x(n) as (select 1 union all select n + 1 from x where n < 3) select * from x",
