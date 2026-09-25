@@ -23,7 +23,8 @@ export const schemaDescription = {
     "Identifiers are UUIDs. Exercises are catalogue entries; workout_exercises links one catalogue exercise to one workout. An exercise can occur once per workout.",
     "Timestamps represent UTC instants. Use ISO dates and explicit timezone conversion when grouping by local day. A null stop means the workout is ongoing.",
     "Weights are kilograms. Null performance means unknown/unrecorded, not zero. Uncompleted sets may contain suggested values; only is_completed records performed sets.",
-    "Sets are identified by (workout_id, exercise_id, set_number). target_reps is planned; reps is recorded/suggested according to is_completed. RPE ranges from 6 to 10.",
+    "Sets are identified by (workout_id, exercise_id, set_number). target_reps is planned; reps is recorded/suggested according to is_completed. Historic RPE (6–10) is separate from reported RIR and must not be converted. Target RIR is supplied guidance, never inferred from a report.",
+    "Target RIR is an inclusive 0–4 range of good reps left with source coach or plan. reported_rir is the lifter's approximate post-set choice: 0, 1, 2, 3, 4+, unsure, or null when unanswered. Reports apply only to completed working sets.",
     "Muscle contribution_percent is 1–100, totalling 100 per exercise. Splits reflect the current catalogue, not a historical snapshot.",
     "Working sets are completed, non-warm-up sets. volume_kg is reps × weight for working sets with known performance, otherwise zero. Bodyweight is not imputed.",
     "muscle_volume has one row per working set and muscle contribution. weighted_sets = contribution_percent / 100; volume_kg = set volume × contribution_percent / 100. Includes completed sets in ongoing workouts.",
@@ -165,6 +166,13 @@ export const schemaDescription = {
         is_warmup: "boolean",
         is_failure: "boolean",
         rpe: "number nullable",
+        target_rir_min:
+          "integer nullable; inclusive supplied target lower bound, 0–4",
+        target_rir_max:
+          "integer nullable; inclusive supplied target upper bound, 0–4",
+        target_rir_source: "coach | plan nullable",
+        reported_rir:
+          "0 | 1 | 2 | 3 | 4+ | unsure nullable; lifter's approximate report",
         is_working_set: "boolean; completed and not warm-up",
         volume_kg: "number; working-set reps × weight_kg, zero when missing",
       },

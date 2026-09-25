@@ -5,6 +5,7 @@ import {
   DotsVerticalIcon,
   DragHandleDots2Icon,
   LoopIcon,
+  Pencil1Icon,
   PlusIcon,
   TrashIcon,
 } from "@radix-ui/react-icons";
@@ -17,7 +18,7 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import { Brain } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 import { NumberInput } from "~/components/NumberInput";
 import type {
@@ -192,7 +193,7 @@ export function WorkoutExerciseCard({
             Reps
           </span>
           <span className="set-table-header__label set-table-header__label--right">
-            RPE
+            Reported
           </span>
           <span className="set-table-header__label set-table-header__label--center" />
         </div>
@@ -234,15 +235,20 @@ interface SetRowProps {
 function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
   const [localReps, setLocalReps] = useState(set.reps?.toString() ?? "");
   const [localWeight, setLocalWeight] = useState(set.weight?.toString() ?? "");
-  const [localRpe, setLocalRpe] = useState(set.rpe?.toString() ?? "");
+  const [showReportPrompt, setShowReportPrompt] = useState(false);
+  const [editingCompleted, setEditingCompleted] = useState(false);
+  const [editingSubmitted, setEditingSubmitted] = useState(false);
+  const [completionSubmitted, setCompletionSubmitted] = useState(false);
+  const completionNotified = useRef(false);
   const updateFetcher = useFetcher();
   const actionFetcher = useFetcher();
+  const reportFetcher = useFetcher();
+  const editFetcher = useFetcher();
 
   const isCompleting =
     actionFetcher.state !== "idle" &&
     actionFetcher.formData?.get("intent") === "update-set" &&
-    actionFetcher.formData?.get("isCompleted") === "true" &&
-    actionFetcher.formData?.get("setNumber") === set.set.toString();
+    actionFetcher.formData?.get("isCompleted") === "true";
 
   const isRemoving =
     actionFetcher.state !== "idle" &&
@@ -254,8 +260,47 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
   useEffect(() => {
     setLocalReps(set.reps?.toString() ?? "");
     setLocalWeight(set.weight?.toString() ?? "");
-    setLocalRpe(set.rpe?.toString() ?? "");
-  }, [set.reps, set.weight, set.rpe]);
+  }, [set.reps, set.weight]);
+
+  useEffect(() => {
+    if (isCompleting) {
+      completionNotified.current = false;
+      setCompletionSubmitted(true);
+    }
+  }, [isCompleting]);
+
+  useEffect(() => {
+    if (!completionSubmitted || actionFetcher.state !== "idle") return;
+    if (actionFetcher.data?.error) {
+      setCompletionSubmitted(false);
+    } else if (actionFetcher.data?.success && set.isCompleted) {
+      if (!completionNotified.current) {
+        completionNotified.current = true;
+        onCompleteSet?.();
+      }
+      if (!set.isWarmup) setShowReportPrompt(true);
+      setCompletionSubmitted(false);
+    }
+  }, [
+    actionFetcher.data,
+    actionFetcher.state,
+    completionSubmitted,
+    set.isCompleted,
+    set.isWarmup,
+    onCompleteSet,
+  ]);
+
+  useEffect(() => {
+    if (reportFetcher.state === "idle" && reportFetcher.data?.success) {
+      setShowReportPrompt(false);
+    }
+  }, [reportFetcher.state, reportFetcher.data]);
+
+  useEffect(() => {
+    if (!editingSubmitted || editFetcher.state !== "idle") return;
+    if (editFetcher.data?.success) setEditingCompleted(false);
+    setEditingSubmitted(false);
+  }, [editFetcher.data, editFetcher.state, editingSubmitted]);
 
   const rowClassName = [
     "set-row",
@@ -300,7 +345,7 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
         </span>
       )}
 
-      {!canEdit ? (
+      {!canEdit || set.isCompleted ? (
         <>
           <Text size="2" className="set-row__value">
             {set.weight ? `${set.weight}` : "—"}
@@ -308,9 +353,30 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
           <Text size="2" className="set-row__value">
             {set.reps ?? "—"}
           </Text>
-          <Text size="2" className="set-row__value">
-            {set.rpe ?? "—"}
-          </Text>
+          <div className="set-row__report-value">
+            {canEdit && !set.isWarmup ? (
+              <button
+                type="button"
+                onClick={() => setShowReportPrompt(true)}
+                aria-label={`${set.reportedRir ? "Edit" : "Add"} set ${set.set} reported effort`}
+              >
+                {set.reportedRir === "unsure"
+                  ? "Unsure"
+                  : set.reportedRir
+                    ? `~${set.reportedRir} left`
+                    : "Add"}
+              </button>
+            ) : (
+              <span>
+                {set.reportedRir === "unsure"
+                  ? "Unsure"
+                  : set.reportedRir
+                    ? `~${set.reportedRir} left`
+                    : "—"}
+              </span>
+            )}
+            {set.rpe !== undefined && <small>RPE {set.rpe} (legacy)</small>}
+          </div>
         </>
       ) : (
         <>
@@ -355,30 +421,27 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
               aria-label={`Set ${set.set} reps`}
             />
           </updateFetcher.Form>
-          <updateFetcher.Form
-            method="post"
-            onChange={(e) => e.currentTarget.requestSubmit()}
-          >
-            <input type="hidden" name="intent" value="update-set" />
-            <input type="hidden" name="exerciseId" value={exerciseId} />
-            <input type="hidden" name="setNumber" value={set.set} />
-            <NumberInput
-              name="rpe"
-              value={localRpe}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setLocalRpe(e.target.value);
-              }}
-              placeholder="RPE"
-              size="2"
-              variant="surface"
-              className="set-row__input set-row__input--rpe"
-              aria-label={`Set ${set.set} RPE`}
-            />
-          </updateFetcher.Form>
+          <div className="set-row__report-value">
+            <span>—</span>
+            {set.rpe !== undefined && <small>RPE {set.rpe} (legacy)</small>}
+          </div>
         </>
       )}
 
       <div className="set-row__actions">
+        {canEdit && set.isCompleted && (
+          <Tooltip content={`Edit set ${set.set}`}>
+            <IconButton
+              type="button"
+              size="2"
+              variant="ghost"
+              aria-label={`Edit set ${set.set}`}
+              onClick={() => setEditingCompleted(true)}
+            >
+              <Pencil1Icon />
+            </IconButton>
+          </Tooltip>
+        )}
         {canEdit && !set.isCompleted && (
           <actionFetcher.Form method="post">
             <input type="hidden" name="intent" value="update-set" />
@@ -394,7 +457,6 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
                 loading={isCompleting}
                 disabled={isBusy && !isCompleting}
                 aria-label={`Complete set ${set.set}`}
-                onClick={onCompleteSet}
               >
                 <CheckIcon />
               </IconButton>
@@ -423,6 +485,131 @@ function SetRow({ set, exerciseId, canEdit, onCompleteSet }: SetRowProps) {
           </actionFetcher.Form>
         )}
       </div>
+
+      {canEdit && set.isCompleted && editingCompleted && (
+        <editFetcher.Form
+          method="post"
+          className="set-row__edit-form"
+          onSubmit={() => setEditingSubmitted(true)}
+        >
+          <input type="hidden" name="intent" value="update-set" />
+          <input type="hidden" name="exerciseId" value={exerciseId} />
+          <input type="hidden" name="setNumber" value={set.set} />
+          <NumberInput
+            name="weight"
+            defaultValue={set.weight?.toString() ?? ""}
+            placeholder="kg"
+            aria-label={`Set ${set.set} weight`}
+          />
+          <NumberInput
+            name="reps"
+            allowDecimals={false}
+            defaultValue={set.reps?.toString() ?? ""}
+            placeholder="reps"
+            aria-label={`Set ${set.set} reps`}
+          />
+          {set.rpe !== undefined && (
+            <NumberInput
+              name="rpe"
+              defaultValue={set.rpe.toString()}
+              placeholder="Legacy RPE"
+              aria-label={`Set ${set.set} legacy RPE`}
+            />
+          )}
+          {!set.isWarmup && (
+            <select
+              name="reportedRir"
+              defaultValue={set.reportedRir ?? "clear"}
+              aria-label={`Set ${set.set} reported effort`}
+            >
+              <option value="clear">No report</option>
+              <option value="0">0 left</option>
+              <option value="1">1 left</option>
+              <option value="2">2 left</option>
+              <option value="3">3 left</option>
+              <option value="4+">4+ left</option>
+              <option value="unsure">Unsure</option>
+            </select>
+          )}
+          <Button type="submit" size="2" loading={editFetcher.state !== "idle"}>
+            Save
+          </Button>
+          <Button
+            type="button"
+            size="2"
+            variant="soft"
+            onClick={() => setEditingCompleted(false)}
+          >
+            Cancel
+          </Button>
+          {editFetcher.data?.error && (
+            <Text color="red" size="1">
+              {editFetcher.data.error}
+            </Text>
+          )}
+        </editFetcher.Form>
+      )}
+
+      {canEdit && actionFetcher.data?.error && (
+        <Text color="red" size="1" className="set-row__action-error">
+          {actionFetcher.data.error}
+        </Text>
+      )}
+
+      {!set.isWarmup &&
+        set.targetRirMin !== undefined &&
+        set.targetRirMax !== undefined && (
+          <div className="set-row__target">
+            <strong>
+              Target · {set.targetRirSource === "coach" ? "Coach" : "Plan"}
+            </strong>
+            <span>
+              Aim for {set.targetRirMin}
+              {set.targetRirMax !== set.targetRirMin
+                ? `–${set.targetRirMax}`
+                : ""}{" "}
+              good reps left
+            </span>
+          </div>
+        )}
+
+      {canEdit && set.isCompleted && !set.isWarmup && showReportPrompt && (
+        <div className="set-row__report-prompt">
+          <span>How many more good reps could you have done?</span>
+          <small>Same range of motion and form.</small>
+          <div className="set-row__report-options">
+            {(["0", "1", "2", "3", "4+", "unsure"] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                disabled={reportFetcher.state !== "idle"}
+                aria-label={`Report ${value} good reps left for set ${set.set}`}
+                onClick={() =>
+                  reportFetcher.submit(
+                    {
+                      intent: "update-set",
+                      exerciseId,
+                      setNumber: set.set.toString(),
+                      reportedRir: value,
+                    },
+                    { method: "post" },
+                  )
+                }
+              >
+                {value === "unsure" ? "Unsure" : value}
+              </button>
+            ))}
+            <button type="button" onClick={() => setShowReportPrompt(false)}>
+              Skip
+            </button>
+          </div>
+          {reportFetcher.data?.error && (
+            <Text color="red" size="1">
+              {reportFetcher.data.error}
+            </Text>
+          )}
+        </div>
+      )}
     </div>
   );
 }

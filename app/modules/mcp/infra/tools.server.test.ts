@@ -15,7 +15,7 @@ vi.mock("./query.server", () => ({
 }));
 
 describe("MCP tool registration", () => {
-  it("advertises all 15 tools and returns structured success and domain errors through the SDK", async () => {
+  it("advertises all 16 tools and returns structured success and domain errors through the SDK", async () => {
     const server = new McpServer({ name: "Fitness test", version: "1" });
     const saved = {
       workout: {
@@ -77,6 +77,7 @@ describe("MCP tool registration", () => {
         "remove_exercise_from_workout",
         "replace_exercise_in_workout",
         "save_workout_sets",
+        "update_workout_set",
         "delete_workout_sets",
         "create_ingredient",
         "log_meal",
@@ -153,6 +154,42 @@ describe("MCP tool registration", () => {
         sets: [
           { set: 1, isCompleted: false, isWarmup: false, isFailure: false },
         ],
+      });
+      expect(
+        (
+          await client.callTool({
+            name: "update_workout_set",
+            arguments: {
+              workoutId: saved.workout.id,
+              exerciseId: saved.workout.id,
+              set: 1,
+              updates: { reportedRir: "5" },
+            },
+          })
+        ).isError,
+      ).toBe(true);
+      await client.callTool({
+        name: "update_workout_set",
+        arguments: {
+          workoutId: saved.workout.id,
+          exerciseId: saved.workout.id,
+          set: 1,
+          updates: {
+            targetRirMin: 1,
+            targetRirMax: 3,
+            targetRirSource: "coach",
+          },
+        },
+      });
+      expect(success).toHaveBeenLastCalledWith({
+        workoutId: saved.workout.id,
+        exerciseId: saved.workout.id,
+        set: 1,
+        updates: {
+          targetRirMin: 1,
+          targetRirMax: 3,
+          targetRirSource: "coach",
+        },
       });
     } finally {
       await client.close();

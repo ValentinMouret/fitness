@@ -181,6 +181,10 @@ export interface WorkoutSet {
   readonly isFailure: boolean;
   readonly isWarmup: boolean;
   readonly rpe?: number;
+  readonly targetRirMin?: number;
+  readonly targetRirMax?: number;
+  readonly targetRirSource?: "coach" | "plan";
+  readonly reportedRir?: "0" | "1" | "2" | "3" | "4+" | "unsure";
 }
 
 interface WorkoutSetCreateInput {
@@ -195,17 +199,23 @@ interface WorkoutSetCreateInput {
   readonly isFailure?: boolean;
   readonly isWarmup?: boolean;
   readonly rpe?: number;
+  readonly targetRirMin?: number;
+  readonly targetRirMax?: number;
+  readonly targetRirSource?: "coach" | "plan";
+  readonly reportedRir?: "0" | "1" | "2" | "3" | "4+" | "unsure";
 }
 
 type ErrInvalidSet = "Invalid set";
 type ErrInvalidTargetReps = "Invalid target reps";
 type ErrInvalidReps = "Invalid reps";
 type ErrInvalidWeight = "Invalid weight";
+type ErrInvalidEffort = "Invalid effort";
 type ErrInvalidWorkoutSet =
   | ErrInvalidSet
   | ErrInvalidTargetReps
   | ErrInvalidReps
-  | ErrInvalidWeight;
+  | ErrInvalidWeight
+  | ErrInvalidEffort;
 
 export const WorkoutSet = {
   create(
@@ -233,6 +243,23 @@ export const WorkoutSet = {
       return err("Invalid weight");
     }
 
+    const hasTarget = input.targetRirMin !== undefined;
+    const targetIsInvalid =
+      input.targetRirMin !== undefined &&
+      input.targetRirMax !== undefined &&
+      (input.targetRirMin < 0 ||
+        input.targetRirMax > 4 ||
+        input.targetRirMin > input.targetRirMax);
+    if (
+      hasTarget !== (input.targetRirMax !== undefined) ||
+      hasTarget !== (input.targetRirSource !== undefined) ||
+      targetIsInvalid ||
+      (input.reportedRir !== undefined &&
+        (!input.isCompleted || input.isWarmup))
+    ) {
+      return err("Invalid effort");
+    }
+
     return ok({
       workoutId,
       exerciseId,
@@ -245,6 +272,10 @@ export const WorkoutSet = {
       isFailure: input.isFailure ?? false,
       isWarmup: input.isWarmup ?? false,
       rpe: input.rpe,
+      targetRirMin: input.targetRirMin,
+      targetRirMax: input.targetRirMax,
+      targetRirSource: input.targetRirSource,
+      reportedRir: input.reportedRir,
     });
   },
 };

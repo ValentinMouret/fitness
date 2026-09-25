@@ -56,6 +56,7 @@ describe("workout form boundary", () => {
     { weightStr: "Infinity" },
     { setNumberStr: "1.5" },
     { isCompletedStr: "maybe" },
+    { reportedRirStr: "5" },
     { exerciseId: "invalid-id" },
   ])(
     "rejects malformed input before application operations: %j",

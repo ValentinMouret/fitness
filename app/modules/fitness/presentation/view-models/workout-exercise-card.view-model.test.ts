@@ -59,6 +59,28 @@ describe("WorkoutExerciseCardViewModel", () => {
   };
 
   describe("createWorkoutExerciseCardViewModel", () => {
+    it("keeps supplied target and reported effort distinct", () => {
+      const viewModel = createWorkoutExerciseCardViewModel({
+        ...mockExerciseGroup,
+        sets: [
+          {
+            ...mockSets[1],
+            targetRirMin: 1,
+            targetRirMax: 3,
+            targetRirSource: "coach",
+            reportedRir: "2",
+            rpe: 8,
+          },
+        ],
+      });
+      expect(viewModel.sets[0]).toMatchObject({
+        targetRirMin: 1,
+        targetRirMax: 3,
+        targetRirSource: "coach",
+        reportedRir: "2",
+        rpe: 8,
+      });
+    });
     it("should create view model with correct basic properties", () => {
       const viewModel = createWorkoutExerciseCardViewModel(
         mockExerciseGroup,

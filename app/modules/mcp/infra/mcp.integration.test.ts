@@ -10,6 +10,7 @@ import { z } from "zod";
 import { workoutOperations } from "~/modules/fitness/application/workout-operations";
 import {
   createWorkoutSchema,
+  patchSetSchema,
   saveSetsSchema,
 } from "~/modules/fitness/domain/workout-commands";
 import { createWorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
@@ -95,6 +96,81 @@ const exercise = async (name: string) =>
   )._unsafeUnwrap().exercise;
 
 describe("workout operations and restricted SQL", () => {
+  it("stores supplied effort targets and distinct post-set reports in the restricted view", async () => {
+    const entry = await exercise("Effort");
+    const created = (
+      await operations.createWorkout(
+        createWorkoutSchema.parse({
+          name: "Effort flow",
+          exercises: [
+            {
+              exerciseId: entry.id,
+              sets: [
+                {
+                  set: 1,
+                  targetReps: 8,
+                  targetRirMin: 1,
+                  targetRirMax: 3,
+                  targetRirSource: "coach",
+                  rpe: 8,
+                },
+              ],
+            },
+          ],
+        }),
+      )
+    )._unsafeUnwrap();
+    const workoutId = created.workout.id;
+    const before = (
+      await query({
+        sql: `select target_rir_min, target_rir_max, target_rir_source, reported_rir, rpe from fitness_data.sets where workout_id = '${workoutId}'`,
+      })
+    )._unsafeUnwrap().rows;
+    expect(before).toEqual([
+      {
+        target_rir_min: 1,
+        target_rir_max: 3,
+        target_rir_source: "coach",
+        reported_rir: null,
+        rpe: 8,
+      },
+    ]);
+    await operations.updateSet(
+      patchSetSchema.parse({
+        workoutId,
+        exerciseId: entry.id,
+        set: 1,
+        updates: { reps: 8, weight: 80, isCompleted: true, reportedRir: "4+" },
+      }),
+    );
+    expect(
+      (
+        await query({
+          sql: `select is_completed, target_rir_min, reported_rir, rpe from fitness_data.sets where workout_id = '${workoutId}'`,
+        })
+      )._unsafeUnwrap().rows,
+    ).toEqual([
+      {
+        is_completed: true,
+        target_rir_min: 1,
+        reported_rir: "4+",
+        rpe: 8,
+      },
+    ]);
+    expect(
+      (
+        await operations.updateSet(
+          patchSetSchema.parse({
+            workoutId,
+            exerciseId: entry.id,
+            set: 1,
+            updates: { isWarmup: true },
+          }),
+        )
+      )._unsafeUnwrapErr().code,
+    ).toBe("invalid_input");
+    await operations.deleteWorkout({ workoutId });
+  });
   it("refuses inherited schema creation and custom function privileges", async () => {
     await writer.query(
       `grant create on database ${admin.escapeIdentifier(databaseName)} to ${admin.escapeIdentifier(readerRole)}`,
