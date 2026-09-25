@@ -13,6 +13,9 @@ muscle-group volume, and recovery.
 - A **set** records planned and performed work, including reps, weight,
   completion, warm-up/failure flags, and optional rating of perceived exertion
   (RPE). Planned work is not evidence of completed training.
+- A working set may have a supplied target range for good reps left (`coach` or
+  `plan`) and a separate optional post-set report (`0`–`3`, `4+`, or `unsure`).
+  Legacy RPE remains separate; unanswered reports stay empty.
 - A **template** is reusable workout structure, not a completed session.
 
 ## Implemented entry points

@@ -205,6 +205,7 @@ export async function action({ request, params }: Route.ActionArgs) {
           weight: formOptionalText(),
           note: formOptionalText(),
           rpe: formOptionalText(),
+          reportedRir: formOptionalText(),
           isCompleted: formOptionalText(),
           isWarmup: formOptionalText(),
         });
@@ -217,6 +218,7 @@ export async function action({ request, params }: Route.ActionArgs) {
           weightStr: parsed.weight ?? undefined,
           note: parsed.note ?? undefined,
           rpeStr: parsed.rpe ?? undefined,
+          reportedRirStr: parsed.reportedRir ?? undefined,
           isCompletedStr: parsed.isCompleted ?? undefined,
           isWarmupStr: parsed.isWarmup ?? undefined,
         });

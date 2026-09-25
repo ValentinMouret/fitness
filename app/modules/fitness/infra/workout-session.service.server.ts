@@ -308,6 +308,7 @@ type SetUpdate = {
   weight?: number;
   note?: string;
   rpe?: number;
+  reportedRir?: "0" | "1" | "2" | "3" | "4+" | "unsure" | null;
   isCompleted?: boolean;
   isWarmup?: boolean;
 };
@@ -320,6 +321,7 @@ export async function updateSetInWorkout(input: {
   readonly weightStr?: string;
   readonly note?: string;
   readonly rpeStr?: string;
+  readonly reportedRirStr?: string;
   readonly isCompletedStr?: string;
   readonly isWarmupStr?: string;
 }): Promise<WorkoutActionResult> {
@@ -364,6 +366,18 @@ export async function updateSetInWorkout(input: {
       return { error: "RPE must be between 6 and 10" };
     } else {
       updateData.rpe = rpe;
+    }
+  }
+
+  if (input.reportedRirStr !== undefined) {
+    if (input.reportedRirStr === "clear") {
+      updateData.reportedRir = null;
+    } else {
+      const parsed = z
+        .enum(["0", "1", "2", "3", "4+", "unsure"])
+        .safeParse(input.reportedRirStr);
+      if (!parsed.success) return { error: "Invalid reported effort" };
+      updateData.reportedRir = parsed.data;
     }
   }
 

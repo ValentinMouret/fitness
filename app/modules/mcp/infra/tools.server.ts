@@ -8,6 +8,7 @@ import {
   createWorkoutSchema,
   deleteSetsSchema,
   finishWorkoutSchema,
+  patchSetSchema,
   replaceExerciseSchema,
   saveSetsSchema,
   type WorkoutError,
@@ -155,6 +156,14 @@ export function registerFitnessTools(
     saveSetsSchema,
     commands.saveSets,
     true,
+    true,
+  );
+  write(
+    "update_workout_set",
+    "Patch one existing set. Use updates.targetRirMin, targetRirMax and targetRirSource together for supplied guidance (0–4 good reps left; source coach or plan). updates.reportedRir is the lifter's post-set estimate: 0, 1, 2, 3, 4+, unsure, or null to clear. A report requires a completed working set. Omitted fields remain unchanged; historic RPE is separate and is never converted to RIR.",
+    patchSetSchema,
+    commands.updateSet,
+    false,
     true,
   );
   write(

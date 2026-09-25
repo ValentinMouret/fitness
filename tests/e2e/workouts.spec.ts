@@ -150,7 +150,7 @@ test.describe("Workout Session - Set Management", () => {
     await page.getByRole("button", { name: "Add Set" }).click();
     await expect(page.getByText("Weight").first()).toBeVisible();
     await expect(page.getByText("Reps").first()).toBeVisible();
-    await expect(page.getByText("RPE").first()).toBeVisible();
+    await expect(page.getByText("Reported").first()).toBeVisible();
   });
 
   test("should add a set with input fields", async ({ page }) => {
@@ -198,23 +198,94 @@ test.describe("Workout Session - Set Management", () => {
       page.getByRole("button", { name: "Complete set 1" }),
     ).toHaveCount(0);
 
+    await page.getByRole("button", { name: "Edit set 1", exact: true }).click();
     await page.getByRole("textbox", { name: "Set 1 weight" }).fill("82.5");
     await page.getByRole("textbox", { name: "Set 1 reps" }).fill("9");
-    await page.getByRole("textbox", { name: "Set 1 RPE" }).fill("8");
-    await page.waitForLoadState("networkidle");
+    await completedRow.getByRole("button", { name: "Save" }).click();
+    await expect(completedRow.getByText("82.5")).toBeVisible();
+    await expect(completedRow.getByText("9", { exact: true })).toBeVisible();
     await expect(page.locator(".set-row--completed")).toBeVisible();
 
     await page.reload();
     await expect(page.locator(".set-row--completed")).toBeVisible();
     await expect(
-      page.getByRole("textbox", { name: "Set 1 weight" }),
-    ).toHaveValue("82.5");
-    await expect(page.getByRole("textbox", { name: "Set 1 reps" })).toHaveValue(
-      "9",
-    );
-    await expect(page.getByRole("textbox", { name: "Set 1 RPE" })).toHaveValue(
-      "8",
-    );
+      page.locator(".set-row--completed").getByText("82.5"),
+    ).toBeVisible();
+    await expect(
+      page.locator(".set-row--completed").getByText("9", { exact: true }),
+    ).toBeVisible();
+  });
+
+  test("offers an optional reported effort after saving a working set", async ({
+    page,
+  }) => {
+    await page.getByRole("button", { name: "Add Set" }).click();
+    await page.getByRole("button", { name: "Complete set 1" }).click();
+
+    await expect(
+      page.getByText("How many more good reps could you have done?"),
+    ).toBeVisible();
+    await expect(page.locator(".rest-timer")).toBeVisible();
+    await page
+      .getByRole("button", { name: "Report 2 good reps left for set 1" })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Edit set 1 reported effort" }),
+    ).toHaveText("~2 left");
+    await expect(
+      page.getByText("How many more good reps could you have done?"),
+    ).toHaveCount(0);
+
+    await page
+      .getByRole("button", { name: "Edit set 1 reported effort" })
+      .click();
+    await page
+      .getByRole("button", { name: "Report unsure good reps left for set 1" })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Edit set 1 reported effort" }),
+    ).toHaveText("Unsure");
+
+    await page.getByRole("button", { name: "Edit set 1", exact: true }).click();
+    await page
+      .getByRole("combobox", { name: "Set 1 reported effort" })
+      .selectOption("clear");
+    await page
+      .locator(".set-row--completed")
+      .getByRole("button", { name: "Save" })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Add set 1 reported effort" }),
+    ).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByRole("button", { name: "Add set 1 reported effort" }),
+    ).toBeVisible();
+    await expect(page.locator(".set-row--completed")).toBeVisible();
+  });
+
+  test("does not start rest or offer a report when completing a set fails", async ({
+    page,
+  }) => {
+    await page.getByRole("button", { name: "Add Set" }).click();
+    await page.waitForLoadState("networkidle");
+    const completeButton = page.getByRole("button", { name: "Complete set 1" });
+    await completeButton.evaluate((button: HTMLButtonElement) => {
+      const form = button.closest("form");
+      const setNumber = form?.querySelector<HTMLInputElement>(
+        'input[name="setNumber"]',
+      );
+      if (!form || !setNumber) throw new Error("Completion form is missing");
+      setNumber.value = "999";
+      form.requestSubmit(button);
+    });
+
+    await expect(page.getByText("Failed to update set")).toBeVisible();
+    await expect(page.locator(".rest-timer")).toHaveCount(0);
+    await expect(
+      page.getByText("How many more good reps could you have done?"),
+    ).toHaveCount(0);
+    await expect(page.locator(".set-row--pending").first()).toBeVisible();
   });
 });
 

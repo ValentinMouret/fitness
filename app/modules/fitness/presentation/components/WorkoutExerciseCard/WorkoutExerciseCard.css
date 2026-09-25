@@ -200,3 +200,89 @@
   align-items: center;
   gap: var(--space-1);
 }
+
+.set-row__report-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: var(--font-size-2);
+}
+
+.set-row__report-value button {
+  border: 0;
+  background: transparent;
+  color: var(--brand-coral, var(--tomato-9));
+  font: inherit;
+  padding: var(--space-1);
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+}
+
+.set-row__report-value small {
+  color: var(--gray-9);
+  font-size: var(--font-size-1);
+}
+
+.set-row__target,
+.set-row__report-prompt {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2);
+  border-radius: var(--radius-2);
+  font-size: var(--font-size-1);
+}
+
+.set-row__target {
+  background: var(--blue-2);
+  color: var(--blue-11);
+}
+
+.set-row__report-prompt {
+  background: var(--gray-2);
+}
+
+.set-row__report-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.set-row__report-options button {
+  min-height: 44px;
+  min-width: 44px;
+  border: 1px solid var(--gray-6);
+  border-radius: var(--radius-2);
+  background: var(--color-panel-solid);
+  color: var(--gray-12);
+  cursor: pointer;
+}
+
+.set-row__action-error {
+  grid-column: 1 / -1;
+}
+
+.set-row__edit-form {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--gray-2);
+  border-radius: var(--radius-2);
+}
+
+.set-row__edit-form select {
+  min-height: 44px;
+  grid-column: 1 / -1;
+  border: 1px solid var(--gray-6);
+  border-radius: var(--radius-2);
+  background: var(--color-panel-solid);
+  color: var(--gray-12);
+  padding: 0 var(--space-2);
+}
