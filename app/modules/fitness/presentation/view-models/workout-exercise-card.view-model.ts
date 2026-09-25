@@ -10,9 +10,6 @@ export interface WorkoutSetViewModel {
   readonly weight?: number;
   readonly note?: string;
   readonly rpe?: number;
-  readonly targetRirMin?: number;
-  readonly targetRirMax?: number;
-  readonly targetRirSource?: "coach" | "plan";
   readonly reportedRir?: "0" | "1" | "2" | "3" | "4+" | "unsure";
   readonly isCompleted: boolean;
   readonly isFailure: boolean;
@@ -43,9 +40,6 @@ function createWorkoutSetViewModel(set: WorkoutSet): WorkoutSetViewModel {
     weight: set.weight,
     note: set.note,
     rpe: set.rpe,
-    targetRirMin: set.targetRirMin,
-    targetRirMax: set.targetRirMax,
-    targetRirSource: set.targetRirSource,
     reportedRir: set.reportedRir,
     isCompleted: set.isCompleted,
     isFailure: set.isFailure,

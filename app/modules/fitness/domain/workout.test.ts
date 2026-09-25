@@ -99,32 +99,23 @@ describe("WorkoutSet.create", () => {
     }
   });
 
-  it("keeps supplied targets and reported effort separate from legacy RPE", () => {
+  it("keeps reported effort separate from legacy RPE", () => {
     const result = WorkoutSet.create({
       ...baseInput,
       isCompleted: true,
-      targetRirMin: 1,
-      targetRirMax: 3,
-      targetRirSource: "coach",
       reportedRir: "4+",
       rpe: 8,
     });
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
       expect(result.value).toMatchObject({
-        targetRirMin: 1,
-        targetRirMax: 3,
-        targetRirSource: "coach",
         reportedRir: "4+",
         rpe: 8,
       });
     }
   });
 
-  it("rejects incomplete targets and reports on pending or warm-up sets", () => {
-    expect(
-      WorkoutSet.create({ ...baseInput, targetRirMin: 1 })._unsafeUnwrapErr(),
-    ).toBe("Invalid effort");
+  it("rejects reports on pending or warm-up sets", () => {
     expect(
       WorkoutSet.create({ ...baseInput, reportedRir: "2" })._unsafeUnwrapErr(),
     ).toBe("Invalid effort");

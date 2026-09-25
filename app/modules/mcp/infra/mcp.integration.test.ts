@@ -96,7 +96,7 @@ const exercise = async (name: string) =>
   )._unsafeUnwrap().exercise;
 
 describe("workout operations and restricted SQL", () => {
-  it("stores supplied effort targets and distinct post-set reports in the restricted view", async () => {
+  it("stores post-set reports distinctly from legacy RPE in the restricted view", async () => {
     const entry = await exercise("Effort");
     const created = (
       await operations.createWorkout(
@@ -109,9 +109,6 @@ describe("workout operations and restricted SQL", () => {
                 {
                   set: 1,
                   targetReps: 8,
-                  targetRirMin: 1,
-                  targetRirMax: 3,
-                  targetRirSource: "coach",
                   rpe: 8,
                 },
               ],
@@ -123,14 +120,11 @@ describe("workout operations and restricted SQL", () => {
     const workoutId = created.workout.id;
     const before = (
       await query({
-        sql: `select target_rir_min, target_rir_max, target_rir_source, reported_rir, rpe from fitness_data.sets where workout_id = '${workoutId}'`,
+        sql: `select reported_rir, rpe from fitness_data.sets where workout_id = '${workoutId}'`,
       })
     )._unsafeUnwrap().rows;
     expect(before).toEqual([
       {
-        target_rir_min: 1,
-        target_rir_max: 3,
-        target_rir_source: "coach",
         reported_rir: null,
         rpe: 8,
       },
@@ -146,13 +140,12 @@ describe("workout operations and restricted SQL", () => {
     expect(
       (
         await query({
-          sql: `select is_completed, target_rir_min, reported_rir, rpe from fitness_data.sets where workout_id = '${workoutId}'`,
+          sql: `select is_completed, reported_rir, rpe from fitness_data.sets where workout_id = '${workoutId}'`,
         })
       )._unsafeUnwrap().rows,
     ).toEqual([
       {
         is_completed: true,
-        target_rir_min: 1,
         reported_rir: "4+",
         rpe: 8,
       },

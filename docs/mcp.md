@@ -32,11 +32,7 @@ select id
 
 Views exclude soft-deleted records and deleted parents. Timestamps are UTC instants; null `stop` means an ongoing workout. Set identity is `(workout_id, exercise_id, set_number)`. Weight is kilograms. Missing values remain null rather than being inferred as zero or bodyweight.
 
-Set target effort is stored as `target_rir_min`, `target_rir_max`, and
-`target_rir_source` (`coach` or `plan`). It is supplied guidance for how many
-good reps to leave; no target is inferred when those columns are null. An agent
-can supply or correct it with `save_workout_sets` or patch an existing set with
-`update_workout_set`. `reported_rir` is the lifter's approximate post-set answer:
+`reported_rir` is the lifter's approximate post-set answer:
 `0`, `1`, `2`, `3`, `4+`, `unsure`, or null if unanswered. Historic `rpe` remains
 separate and is never converted to RIR. A reported answer requires a completed
 working set; corrections preserve the completion flag unless explicitly changed.

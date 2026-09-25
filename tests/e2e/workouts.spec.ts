@@ -150,7 +150,7 @@ test.describe("Workout Session - Set Management", () => {
     await page.getByRole("button", { name: "Add Set" }).click();
     await expect(page.getByText("Weight").first()).toBeVisible();
     await expect(page.getByText("Reps").first()).toBeVisible();
-    await expect(page.getByText("Reported").first()).toBeVisible();
+    await expect(page.getByText("RIR", { exact: true }).first()).toBeVisible();
   });
 
   test("should add a set with input fields", async ({ page }) => {
@@ -286,6 +286,27 @@ test.describe("Workout Session - Set Management", () => {
       page.getByText("How many more good reps could you have done?"),
     ).toHaveCount(0);
     await expect(page.locator(".set-row--pending").first()).toBeVisible();
+  });
+
+  test("keeps only the latest set's effort prompt open", async ({ page }) => {
+    await page.getByRole("button", { name: "Add Set" }).click();
+    await page.getByRole("button", { name: "Add Set" }).click();
+
+    await page.getByRole("button", { name: "Complete set 1" }).click();
+    await expect(page.locator(".set-row__report-prompt")).toHaveCount(1);
+    await page.getByRole("button", { name: "Complete set 2" }).click();
+    await expect(page.locator(".set-row__report-prompt")).toHaveCount(1);
+    await expect(
+      page.locator(".set-row").nth(1).locator(".set-row__report-prompt"),
+    ).toBeVisible();
+
+    await page
+      .getByRole("button", { name: "Add set 1 reported effort" })
+      .click();
+    await expect(page.locator(".set-row__report-prompt")).toHaveCount(1);
+    await expect(
+      page.locator(".set-row").first().locator(".set-row__report-prompt"),
+    ).toBeVisible();
   });
 });
 

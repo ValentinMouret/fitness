@@ -181,9 +181,6 @@ export interface WorkoutSet {
   readonly isFailure: boolean;
   readonly isWarmup: boolean;
   readonly rpe?: number;
-  readonly targetRirMin?: number;
-  readonly targetRirMax?: number;
-  readonly targetRirSource?: "coach" | "plan";
   readonly reportedRir?: "0" | "1" | "2" | "3" | "4+" | "unsure";
 }
 
@@ -199,9 +196,6 @@ interface WorkoutSetCreateInput {
   readonly isFailure?: boolean;
   readonly isWarmup?: boolean;
   readonly rpe?: number;
-  readonly targetRirMin?: number;
-  readonly targetRirMax?: number;
-  readonly targetRirSource?: "coach" | "plan";
   readonly reportedRir?: "0" | "1" | "2" | "3" | "4+" | "unsure";
 }
 
@@ -243,19 +237,9 @@ export const WorkoutSet = {
       return err("Invalid weight");
     }
 
-    const hasTarget = input.targetRirMin !== undefined;
-    const targetIsInvalid =
-      input.targetRirMin !== undefined &&
-      input.targetRirMax !== undefined &&
-      (input.targetRirMin < 0 ||
-        input.targetRirMax > 4 ||
-        input.targetRirMin > input.targetRirMax);
     if (
-      hasTarget !== (input.targetRirMax !== undefined) ||
-      hasTarget !== (input.targetRirSource !== undefined) ||
-      targetIsInvalid ||
-      (input.reportedRir !== undefined &&
-        (!input.isCompleted || input.isWarmup))
+      input.reportedRir !== undefined &&
+      (!input.isCompleted || input.isWarmup)
     ) {
       return err("Invalid effort");
     }
@@ -272,9 +256,6 @@ export const WorkoutSet = {
       isFailure: input.isFailure ?? false,
       isWarmup: input.isWarmup ?? false,
       rpe: input.rpe,
-      targetRirMin: input.targetRirMin,
-      targetRirMax: input.targetRirMax,
-      targetRirSource: input.targetRirSource,
       reportedRir: input.reportedRir,
     });
   },

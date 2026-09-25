@@ -166,11 +166,6 @@ export const schemaDescription = {
         is_warmup: "boolean",
         is_failure: "boolean",
         rpe: "number nullable",
-        target_rir_min:
-          "integer nullable; inclusive supplied target lower bound, 0–4",
-        target_rir_max:
-          "integer nullable; inclusive supplied target upper bound, 0–4",
-        target_rir_source: "coach | plan nullable",
         reported_rir:
           "0 | 1 | 2 | 3 | 4+ | unsure nullable; lifter's approximate report",
         is_working_set: "boolean; completed and not warm-up",

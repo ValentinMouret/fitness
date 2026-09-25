@@ -38,9 +38,6 @@ export const setSchema = z
     isWarmup: z.boolean().default(false),
     isFailure: z.boolean().default(false),
     rpe: z.number().min(6).max(10).nullable().optional(),
-    targetRirMin: z.number().int().min(0).max(4).nullable().optional(),
-    targetRirMax: z.number().int().min(0).max(4).nullable().optional(),
-    targetRirSource: z.enum(["coach", "plan"]).nullable().optional(),
     reportedRir: z
       .enum(["0", "1", "2", "3", "4+", "unsure"])
       .nullable()
@@ -179,9 +176,6 @@ export function makeSet(
     weight: input.weight ?? undefined,
     note: input.note ?? undefined,
     rpe: input.rpe ?? undefined,
-    targetRirMin: input.targetRirMin ?? undefined,
-    targetRirMax: input.targetRirMax ?? undefined,
-    targetRirSource: input.targetRirSource ?? undefined,
     reportedRir: input.reportedRir ?? undefined,
   }).mapErr((message) => failure("invalid_input", message));
 }

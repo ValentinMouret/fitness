@@ -168,29 +168,23 @@ describe("MCP tool registration", () => {
           })
         ).isError,
       ).toBe(true);
-      await client.callTool({
-        name: "update_workout_set",
-        arguments: {
-          workoutId: saved.workout.id,
-          exerciseId: saved.workout.id,
-          set: 1,
-          updates: {
-            targetRirMin: 1,
-            targetRirMax: 3,
-            targetRirSource: "coach",
-          },
-        },
-      });
-      expect(success).toHaveBeenLastCalledWith({
-        workoutId: saved.workout.id,
-        exerciseId: saved.workout.id,
-        set: 1,
-        updates: {
-          targetRirMin: 1,
-          targetRirMax: 3,
-          targetRirSource: "coach",
-        },
-      });
+      expect(
+        (
+          await client.callTool({
+            name: "update_workout_set",
+            arguments: {
+              workoutId: saved.workout.id,
+              exerciseId: saved.workout.id,
+              set: 1,
+              updates: {
+                targetRirMin: 1,
+                targetRirMax: 3,
+                targetRirSource: "coach",
+              },
+            },
+          })
+        ).isError,
+      ).toBe(true);
     } finally {
       await client.close();
       await server.close();
