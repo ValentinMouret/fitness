@@ -643,10 +643,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                   onReportPromptChange={onReportPromptChange}
                   onCompleteSet={() => {
                     restTimer.start();
-                    const incompleteSets = group.sets.filter(
-                      (s) => !s.isCompleted,
-                    ).length;
-                    if (incompleteSets <= 1) {
+                    if (group.sets.every((set) => set.isCompleted)) {
                       const nextId = findNextIncompleteExerciseId(
                         workoutSession.exerciseGroups,
                         index,
