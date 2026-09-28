@@ -188,8 +188,18 @@ test.describe("Workout Session - Set Management", () => {
     page,
   }) => {
     test.setTimeout(30_000);
+    const exerciseName = `Scroll target ${crypto.randomUUID()}`;
+    const response = await page.request.post("/workouts/exercises/create", {
+      form: {
+        name: exerciseName,
+        type: "barbell",
+        movementPattern: "push",
+      },
+    });
+    expect(response.ok()).toBeTruthy();
+    await page.reload();
     await page.getByRole("button", { name: "Add Exercise" }).click();
-    await page.locator(".exercise-selector__item").nth(1).click();
+    await page.locator(".exercise-selector__item", { hasText: exerciseName }).click();
     await page.getByRole("button", { name: /Add \(1\)/ }).click();
 
     const exercises = page.locator(".active-workout-exercise");
