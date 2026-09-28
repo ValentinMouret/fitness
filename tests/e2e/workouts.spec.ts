@@ -213,8 +213,11 @@ test.describe("Workout Session - Set Management", () => {
     if (!secondExerciseId) throw new Error("Second exercise ID is missing");
 
     await firstExercise.getByRole("button", { name: "Add Set" }).click();
+    await expect(firstExercise.locator(".set-row--pending")).toHaveCount(1);
     await firstExercise.getByRole("button", { name: "Add Set" }).click();
+    await expect(firstExercise.locator(".set-row--pending")).toHaveCount(2);
     await exercises.nth(1).getByRole("button", { name: "Add Set" }).click();
+    await expect(exercises.nth(1).locator(".set-row--pending")).toHaveCount(1);
 
     await page.evaluate(() => {
       const scrolls: string[] = [];
