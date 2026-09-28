@@ -1,11 +1,9 @@
 /* ================================================================
-   Rest Timer — Sticky bar below active workout header
+   Rest Timer
    ================================================================ */
 
 .rest-timer {
-  position: sticky;
-  top: var(--header-height, 48px);
-  z-index: 9;
+  position: relative;
   background: var(--brand-surface);
   border-bottom: 1px solid var(--gray-4);
   overflow: hidden;
