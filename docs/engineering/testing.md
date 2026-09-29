@@ -37,6 +37,13 @@ use the same dedicated database as the running test server. Other excluded
 integration tests need an explicit runner configuration; the ordinary unit
 command does not execute them.
 
+## Exercise components without a server
+
+`bun run test:browser` bundles the real meal picker into a Chromium page without
+starting the app or using a database. It checks touch, focus, Escape and selection
+at phone width, and runs as part of `bun run gate`. Full persistence workflows
+still use the E2E suite against the existing test server or isolated CI server.
+
 ## Exercise user workflows with Playwright
 
 Prefer `getByRole()` and `getByLabel()` selectors. Use test IDs when there is no

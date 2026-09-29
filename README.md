@@ -35,11 +35,13 @@ Use the smallest relevant check while iterating:
 ```shell
 bun run tc       # React Router type generation and TypeScript
 bun run test     # unit tests
+bun run test:browser # component browser tests; no app server or database
 bun run build    # production build
 bun run test:e2e # Playwright end-to-end tests
 ```
 
-Before hand-off, run `bun run gate` (typecheck, lint, unit tests, and build).
+Before hand-off, run `bun run gate` (typecheck, lint, unit tests, build, and
+component browser tests).
 Run `bun run gate:e2e` when the change affects a user workflow and the Playwright
 browsers are available. `bun run fmt` and `bun run lint` write changes, so
 review their output before running them in a dirty worktree.
