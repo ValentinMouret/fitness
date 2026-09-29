@@ -20,13 +20,10 @@ flow. The values below illustrate layout, not a nutritionally calculated meal.
 │ Protein      [ 30] g          │
 │ Carbs        [  ] optional    │
 │ Fat          [  ] optional    │
-│ Desired satiety  [1–5]        │
 ├──────────────────────────────┤
 │ Current totals               │
 │ Calories  ███████░ 650 / 700  │
 │ Protein   ██████░░  25 / 30   │
-│ Satiety estimate   ●●●●○     │
-│ [How is this estimated?]     │
 ├──────────────────────────────┤
 │ Ingredients                  │
 │ Chicken breast           [⋯] │
@@ -62,12 +59,6 @@ template is the primary persistence action.
 Open a searchable ingredient picker with category filtering. Show nutrition per
 100 g so entries can be compared consistently. Keep AI ingredient lookup and its
 review step distinguishable from selecting an existing library entry.
-
-## Explain satiety without overstating precision
-
-An expandable explanation can show which inputs affect the score. Label both the
-score and any fullness duration as estimates. Calculation constants and thresholds
-belong in the domain implementation, not this wireframe.
 
 ## Feedback states
 

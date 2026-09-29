@@ -1,4 +1,4 @@
-import { Box, Card, Flex, Heading, RadioGroup, Text } from "@radix-ui/themes";
+import { Box, Card, Flex, Heading, Text } from "@radix-ui/themes";
 import { NumberInput } from "~/components/NumberInput";
 
 export interface Objectives {
@@ -6,7 +6,6 @@ export interface Objectives {
   readonly protein: number | null;
   readonly carbs: number | null;
   readonly fats: number | null;
-  readonly satiety: number;
 }
 
 interface ObjectivesPanelProps {
@@ -103,40 +102,6 @@ export function ObjectivesPanel({
             />
             <Text size="2">g</Text>
           </Flex>
-        </Box>
-
-        <Box>
-          <Text as="label" size="2" weight="medium" mb="2">
-            Desired Satiety (1-5)
-          </Text>
-          <RadioGroup.Root
-            value={objectives.satiety.toString()}
-            onValueChange={(value) =>
-              setObjectives({ ...objectives, satiety: Number(value) })
-            }
-          >
-            <Flex direction="column" gap="2">
-              <Flex gap="3" align="center" justify="center">
-                {[1, 2, 3, 4, 5].map((level) => (
-                  <Flex key={level} direction="column" align="center" gap="1">
-                    <RadioGroup.Item value={level.toString()} />
-                    <Text size="1">{level}</Text>
-                  </Flex>
-                ))}
-              </Flex>
-              <Flex justify="between" px="2">
-                <Text size="1" color="gray">
-                  Light
-                </Text>
-                <Text size="1" color="gray">
-                  Moderate
-                </Text>
-                <Text size="1" color="gray">
-                  Very Full
-                </Text>
-              </Flex>
-            </Flex>
-          </RadioGroup.Root>
         </Box>
       </Flex>
     </Card>

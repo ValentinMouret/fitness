@@ -21,11 +21,3 @@
     width 0.3s ease,
     background-color 0.3s ease;
 }
-
-.current-totals-panel__satiety-dot {
-  color: var(--gray-6);
-}
-
-.current-totals-panel__satiety-dot--active {
-  color: var(--green-9);
-}

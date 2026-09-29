@@ -15,8 +15,6 @@ export interface NutritionTotals {
 interface CurrentTotalsPanelProps {
   readonly objectives: Objectives;
   readonly totals: NutritionTotals;
-  readonly satietyScore: number;
-  readonly satietyDuration: string;
 }
 
 const getProgress = (current: number, target: number | null) => {
@@ -114,8 +112,6 @@ const MacroProgressBar = ({
 export function CurrentTotalsPanel({
   objectives,
   totals,
-  satietyScore,
-  satietyDuration,
 }: CurrentTotalsPanelProps) {
   return (
     <Card size="3">
@@ -156,41 +152,6 @@ export function CurrentTotalsPanel({
         <Box>
           <Text size="2">Fiber: {Math.round(totals.fiber * 10) / 10}g</Text>
         </Box>
-
-        <Card size="2" mt="2">
-          <Heading size="3" mb="2">
-            Satiety Prediction
-          </Heading>
-          <Flex align="center" gap="2" mb="1">
-            <Flex gap="1" aria-hidden="true">
-              {[1, 2, 3, 4, 5].map((level) => (
-                <Text
-                  key={level}
-                  size="4"
-                  className={
-                    level <= satietyScore
-                      ? "current-totals-panel__satiety-dot current-totals-panel__satiety-dot--active"
-                      : "current-totals-panel__satiety-dot"
-                  }
-                >
-                  ●
-                </Text>
-              ))}
-            </Flex>
-            <Text size="3" weight="medium">
-              {
-                ["", "Low", "Light", "Moderate", "High", "Very High"][
-                  satietyScore
-                ]
-              }{" "}
-              ({satietyScore}/5)
-            </Text>
-          </Flex>
-          <Text size="2">{satietyDuration} fullness</Text>
-          <Text size="2" color="gray">
-            Volume: ~{Math.round(totals.volume)}ml
-          </Text>
-        </Card>
       </Flex>
     </Card>
   );
