@@ -70,18 +70,16 @@ export function TemplateSelectionModal({
           <Dialog.Title>
             Choose Template for {viewModel.mealDisplayName}
           </Dialog.Title>
-          <Tooltip content="Close (Esc)">
-            <Dialog.Close>
-              <IconButton
-                type="button"
-                variant="ghost"
-                aria-label="Close (Esc)"
-                className="template-selection-modal__close"
-              >
-                <Cross2Icon />
-              </IconButton>
-            </Dialog.Close>
-          </Tooltip>
+          <Dialog.Close>
+            <IconButton
+              type="button"
+              variant="ghost"
+              aria-label="Close (Esc)"
+              className="template-selection-modal__close"
+            >
+              <Cross2Icon />
+            </IconButton>
+          </Dialog.Close>
         </Flex>
 
         <Flex direction="column" gap="3">
