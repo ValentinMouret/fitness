@@ -10,11 +10,9 @@ these concepts and the [draft wireframes](meal-builder-wireframes.md) for UX int
 
 ## Current workflow
 
-1. Set calorie, protein, and optional carbohydrate/fat objectives, plus a desired
-   satiety level.
+1. Set calorie, protein, and optional carbohydrate/fat objectives.
 2. Search the ingredient library and choose ingredients.
-3. Adjust quantities and review calculated calories, macros, fibre, volume, and
-   satiety feedback.
+3. Adjust quantities and review calculated calories, macros, and fibre.
 4. Save a named, categorised template, or save the composition as a meal log when
    opened with a meal category, date, and return destination.
 
@@ -22,29 +20,23 @@ Existing meal logs can be loaded for editing. AI ingredient search and review
 can create an ingredient in the library, so the older restriction to predefined
 raw ingredients no longer describes the application.
 
-## Nutrition and satiety
+## Nutrition totals
 
 Nutritional totals derive from ingredient values and quantities. Ingredient
 quantity ranges and direct entry should support precise adjustment without
 making common portions tedious to enter.
 
-Satiety is a heuristic based on protein, fibre, volume relative to calories, and
-quantity-weighted texture modifiers. The UI presents a five-level result and an
-estimated fullness duration. The calculation and thresholds belong in
-[meal-template.ts](../../../app/modules/nutrition/domain/meal-template.ts), with
-quantity calculations in [ingredient.ts](../../../app/modules/nutrition/domain/ingredient.ts).
-
-These estimates are not evidence of individually validated fullness predictions.
-The former specification's claim of expert validation had no supporting source;
-do not use it as justification for the formula or duration estimates.
+The builder does not show AI meal suggestions or satiety predictions. Stored
+satiety values and the calculation used by shared meals remain available for
+existing contracts and history.
 
 ## Boundaries
 
 Saving a template does not record consumption. Logging requires a date and meal
 category. A modified logged meal should not silently rewrite a reusable template.
 
-The builder provides local suggestions based on objectives and totals. AI
-ingredient lookup is a separate capability from a general AI meal optimiser.
+AI ingredient lookup is a separate capability from meal estimation and external
+agent meal recommendations.
 Shared colours, controls, and motion follow the
 [design system](../../design/design-system.md), not feature-local tokens.
 

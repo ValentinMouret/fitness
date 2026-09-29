@@ -13,7 +13,6 @@ import {
   Dialog,
   Flex,
   Grid,
-  Heading,
   IconButton,
   Kbd,
   RadioGroup,
@@ -38,7 +37,6 @@ import {
   Ingredient as IngredientDomain,
   ingredientCategories,
 } from "~/modules/nutrition/domain/ingredient";
-import { calculateSatietyScore } from "~/modules/nutrition/domain/meal-template";
 import {
   getMealBuilderData,
   saveAiIngredient,
@@ -163,7 +161,6 @@ function MealBuilderEditor({
     protein: null,
     carbs: null,
     fats: null,
-    satiety: 3,
   });
 
   const [selectedIngredients, setSelectedIngredients] = useState<
@@ -180,7 +177,6 @@ function MealBuilderEditor({
       ) ?? [],
   );
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [showAISuggestions, setShowAISuggestions] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
 
   // AI search state
@@ -267,21 +263,6 @@ function MealBuilderEditor({
     return IngredientDomain.calculateTotalNutrition(ingredientsWithQuantity);
   }, [selectedIngredients]);
 
-  // Calculate satiety using domain method
-  const satietyCalculation = useMemo(() => {
-    const ingredientsWithQuantity = selectedIngredients.map(
-      (ing: SelectedIngredient) => ({
-        ingredient: ing,
-        quantityGrams: ing.quantity,
-      }),
-    );
-    return calculateSatietyScore(ingredientsWithQuantity, totals);
-  }, [selectedIngredients, totals]);
-
-  const satietyScore = satietyCalculation.level;
-
-  const satietyDuration = `~${satietyCalculation.estimatedSatisfactionHours.min}-${satietyCalculation.estimatedSatisfactionHours.max} hours`;
-
   // Filter ingredients for modal
   const filteredIngredients = ingredients.filter((ing) => {
     const matchesSearch = ing.name
@@ -295,44 +276,6 @@ function MealBuilderEditor({
       !selectedIngredients.some((selected) => selected.id === ing.id)
     );
   });
-
-  // AI Suggestions logic
-  const aiSuggestions = useMemo(() => {
-    const suggestions = [];
-
-    if (objectives.protein && totals.protein < objectives.protein) {
-      const deficit = objectives.protein - totals.protein;
-      const greekYogurt = ingredients.find(
-        (i: Ingredient) => i.name === "Greek Yogurt",
-      );
-      if (greekYogurt) {
-        const quantity = Math.round((deficit / greekYogurt.protein) * 100);
-        suggestions.push({
-          type: "add",
-          ingredient: greekYogurt,
-          quantity,
-          reason: `Add ${quantity}g Greek Yogurt for +${Math.round((greekYogurt.protein * quantity) / 100)}g protein`,
-        });
-      }
-    }
-
-    if (objectives.calories && totals.calories < objectives.calories * 0.8) {
-      suggestions.push({
-        type: "increase",
-        reason: "Consider adding more calorie-dense foods like nuts or oils",
-      });
-    }
-
-    if (satietyScore < objectives.satiety) {
-      suggestions.push({
-        type: "satiety",
-        reason:
-          "Add high-fiber vegetables or increase protein for better satiety",
-      });
-    }
-
-    return suggestions;
-  }, [objectives, totals, satietyScore, ingredients]);
 
   const handleAddIngredient = useCallback((ingredient: Ingredient) => {
     const midpoint = (ingredient.sliderMin + ingredient.sliderMax) / 2;
@@ -435,12 +378,7 @@ function MealBuilderEditor({
           objectives={objectives}
           setObjectives={setObjectives}
         />
-        <CurrentTotalsPanel
-          objectives={objectives}
-          totals={totals}
-          satietyScore={satietyScore}
-          satietyDuration={satietyDuration}
-        />
+        <CurrentTotalsPanel objectives={objectives} totals={totals} />
       </Grid>
 
       <Box mb="6">
@@ -487,14 +425,6 @@ function MealBuilderEditor({
             aiSearchError={aiSearchError}
           />
         </Dialog.Root>
-
-        <Button
-          variant="outline"
-          onClick={() => setShowAISuggestions(!showAISuggestions)}
-        >
-          <MagicWandIcon width="16" height="16" />
-          AI Suggest
-        </Button>
 
         {mealLoggingMode.isEnabled ? (
           <Button
@@ -551,13 +481,6 @@ function MealBuilderEditor({
         <Text as="p" role="alert" color="red" mb="4">
           {saveError}
         </Text>
-      )}
-
-      {showAISuggestions && (
-        <AISuggestionsPanel
-          suggestions={aiSuggestions}
-          onClose={() => setShowAISuggestions(false)}
-        />
       )}
 
       {aiIngredientData && (
@@ -756,39 +679,6 @@ function AddIngredientModal({
         </Box>
       </Flex>
     </Dialog.Content>
-  );
-}
-
-function AISuggestionsPanel({
-  suggestions,
-  onClose,
-}: {
-  suggestions: Array<{ type: string; reason: string }>;
-  onClose: () => void;
-}) {
-  return (
-    <Card size="3" mb="4">
-      <Flex justify="between" align="center" mb="3">
-        <Heading size="4">AI Suggestions</Heading>
-        <Tooltip content="Close">
-          <IconButton variant="ghost" onClick={onClose} aria-label="Close">
-            <Cross2Icon />
-          </IconButton>
-        </Tooltip>
-      </Flex>
-
-      <Flex direction="column" gap="3">
-        {suggestions.map((suggestion) => (
-          <Card
-            key={suggestion.reason}
-            size="2"
-            className="meal-builder__suggestion-card"
-          >
-            <Text>{suggestion.reason}</Text>
-          </Card>
-        ))}
-      </Flex>
-    </Card>
   );
 }
 
