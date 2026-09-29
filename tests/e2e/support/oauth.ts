@@ -173,19 +173,22 @@ export async function decide(
       body: "OAuth test callback",
     }),
   );
-  const callback = page.waitForRequest((request) => {
-    const url = new URL(request.url());
-    const registered = new URL(client.callback);
-    return (
-      url.origin === registered.origin && url.pathname === registered.pathname
-    );
-  });
+  const callback = page.waitForURL(
+    (url) => {
+      const registered = new URL(client.callback);
+      return (
+        url.origin === registered.origin && url.pathname === registered.pathname
+      );
+    },
+    { waitUntil: "load" },
+  );
   await page
     .getByRole("button", {
       name: allow ? /^allow( access)?$/i : /^(deny|cancel)$/i,
     })
     .click();
-  return new URL((await callback).url());
+  await callback;
+  return new URL(page.url());
 }
 
 export async function authorize(
