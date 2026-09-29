@@ -15,9 +15,10 @@ muscle-group volume, and recovery.
   completed training.
 - A completed working set can have an optional post-set report of good reps left
   (`0`–`3`, `4+`, or `unsure`). Unanswered reports stay empty. Historical RPE
-  remains stored separately for older workouts and generation context; the
+  remains stored separately for older workouts; the
   active workout flow does not ask for a new RPE.
-- A **template** is reusable workout structure, not a completed session.
+- Historical templates and import provenance remain stored for older sessions.
+  New sessions start directly without a template picker.
 
 ## Implemented entry points
 
@@ -26,13 +27,11 @@ The [route configuration](../../../app/routes.ts) includes:
 | Route | Purpose |
 | --- | --- |
 | `/workouts` | Browse workouts |
-| `/workouts/create` | Create a workout |
+| `/workouts/create` | Start an empty workout with one action |
 | `/workouts/:id` | View a session and log exercises and sets |
-| `/workouts/templates` | Reuse workout templates |
-| `/workouts/import` | Import training history |
+| `/workouts/import` | Import Fitbod training history |
 | `/workouts/exercises` | Manage the exercise catalogue |
 | `/workouts/recovery` | View recovery information |
-| `/workouts/generate` | Generate and refine a workout with AI |
 | `/workouts/:id/substitute/:exercise-id` | Substitute an exercise |
 
 Session persistence and operations live in the
@@ -41,12 +40,15 @@ The [domain model](../../../app/modules/fitness/domain/workout.ts) owns workout
 calculations and types; the [database schema](../../../app/db/schema.ts) owns
 storage definitions.
 
-## Generation
+## Retired entry points
 
-[AI generation](ai-generation.md) is the current generation-page flow. The
-[adaptive generator](adaptive-generation.md) remains in the repository, but is
-not offered as a fallback by that page. Do not assume the older equipment-selection
-flow is still the generation UI.
+Workout templates, Generate Workout, and Strong import are retired. Their stored
+history remains intact; this removal does not migrate or delete past sessions.
+Fitbod import and [exercise substitution](adaptive-generation.md) remain available.
+
+Coaches can create a current or past session through MCP and read history and
+muscle volume. Future weekly planning is not implemented by this change; see
+[MCP tools](../../mcp.md) for the current contract.
 
 ## Open domain questions
 

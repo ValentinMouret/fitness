@@ -13,7 +13,7 @@ test.describe("Workouts Page", () => {
 
   test("should show navigation links", async ({ page }) => {
     await expect(
-      page.getByRole("link", { name: "Import from Strong" }),
+      page.getByRole("link", { name: "Import from Fitbod" }),
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Manage Exercises" }),
@@ -21,7 +21,15 @@ test.describe("Workouts Page", () => {
     await expect(
       page.getByRole("link", { name: "Recovery Map" }),
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: "Templates" })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Templates", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Generate Workout" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Import from Strong" }),
+    ).toHaveCount(0);
   });
 
   test("should navigate to exercises page", async ({ page }) => {
@@ -37,36 +45,79 @@ test.describe("Workouts Page", () => {
     await expect(page).toHaveURL(/\/workouts\/recovery/);
   });
 
-  test("should navigate to templates page", async ({ page }) => {
-    await page.getByRole("link", { name: "Templates" }).click();
-    await expect(page).toHaveURL(/\/workouts\/templates/);
+  test("keeps Fitbod import available", async ({ page }) => {
+    await page.getByRole("link", { name: "Import from Fitbod" }).click();
+    await expect(page).toHaveURL(/\/workouts\/import/);
+    await expect(
+      page.getByRole("heading", { name: "Import from Fitbod", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("tab", { name: "Strong", exact: true }),
+    ).toHaveCount(0);
+    const response = await page.request.post("/workouts/import", {
+      form: { importSource: "strong", strongText: "retired import" },
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("retired workout routes reject reads and writes", async ({ page }) => {
+    for (const path of ["/workouts/templates", "/workouts/generate"]) {
+      expect((await page.request.get(path)).status()).toBe(404);
+      expect(
+        (
+          await page.request.post(path, { form: { intent: "generate" } })
+        ).status(),
+      ).toBe(404);
+    }
   });
 });
 
-test.describe("Start Workout Dialog", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/workouts");
+test.describe("Direct workout start", () => {
+  test.use({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
   });
 
-  test("should open dialog when clicking Start Workout", async ({ page }) => {
-    await page.getByRole("button", { name: "Start Workout" }).click();
-    await expect(page.getByText("Start Fresh")).toBeVisible();
-    await expect(page.getByText("Begin with an empty workout")).toBeVisible();
-  });
-
-  test("should close dialog with Cancel button", async ({ page }) => {
-    await page.getByRole("button", { name: "Start Workout" }).click();
-    await expect(page.getByText("Start Fresh")).toBeVisible();
-    await page.getByRole("button", { name: "Cancel" }).click();
-    await expect(page.getByText("Start Fresh")).not.toBeVisible();
-  });
-
-  test("should start a fresh workout and navigate to workout session", async ({
+  test("starts an empty usable session with one touch", async ({
     page,
-  }) => {
-    await page.getByRole("button", { name: "Start Workout" }).click();
-    await page.getByText("Start Fresh").click();
+  }, testInfo) => {
+    await page.goto("/workouts");
+    await page.getByRole("button", { name: "Start Workout" }).tap();
     await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
+    await expect(page.getByText("No exercises yet")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Add Exercise" }),
+    ).toBeVisible();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await testInfo.attach("mobile-fresh-workout", {
+      body: await page.screenshot(),
+      contentType: "image/png",
+    });
+  });
+
+  test("does not start a workout while a dialog is open", async ({ page }) => {
+    await page.goto("/workouts");
+    await page.evaluate(() => {
+      const dialog = document.createElement("div");
+      dialog.setAttribute("role", "dialog");
+      document.body.append(dialog);
+    });
+    await page.keyboard.press("s");
+    await page.waitForTimeout(300);
+    await expect(page).toHaveURL("/workouts");
+    await page.evaluate(() =>
+      document.querySelector('[role="dialog"]')?.remove(),
+    );
+    await page.keyboard.press("s");
+    await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
+  });
+
+  test("keeps the start shortcut", async ({ page }) => {
+    await page.goto("/workouts");
+    await page.keyboard.press("s");
+    await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
+    await expect(page.getByText("No exercises yet")).toBeVisible();
   });
 });
 
@@ -74,7 +125,6 @@ test.describe("Active Workout Session", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/workouts");
     await page.getByRole("button", { name: "Start Workout" }).click();
-    await page.getByText("Start Fresh").click();
     await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
   });
 
@@ -108,7 +158,6 @@ test.describe("Workout Session - Exercise Management", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/workouts");
     await page.getByRole("button", { name: "Start Workout" }).click();
-    await page.getByText("Start Fresh").click();
     await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
   });
 
@@ -136,7 +185,6 @@ test.describe("Workout Session - Set Management", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/workouts");
     await page.getByRole("button", { name: "Start Workout" }).click();
-    await page.getByText("Start Fresh").click();
     await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
 
     // Add an exercise
@@ -374,7 +422,6 @@ test.describe("Workout Completion Flow", () => {
     await page.goto("/workouts");
 
     await page.getByRole("button", { name: "Start Workout" }).click();
-    await page.getByText("Start Fresh").click();
     await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
 
     // Add an exercise and a set
@@ -393,7 +440,7 @@ test.describe("Workout Completion Flow", () => {
       page.getByRole("heading", { name: "Complete Workout" }),
     ).toBeVisible();
     await expect(page.getByText("Duration")).toBeVisible();
-    await expect(page.getByText("Save as template")).toBeVisible();
+    await expect(page.getByText("Save as template")).toHaveCount(0);
 
     await page.getByRole("button", { name: "Finish" }).click();
     await expect(page).toHaveURL(/\/dashboard/);
@@ -403,7 +450,6 @@ test.describe("Workout Completion Flow", () => {
     await page.goto("/workouts");
 
     await page.getByRole("button", { name: "Start Workout" }).click();
-    await page.getByText("Start Fresh").click();
     await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
     const workoutPath = new URL(page.url()).pathname;
 
@@ -421,7 +467,6 @@ test.describe("Workout Completion Flow", () => {
     await page.goto("/workouts");
 
     await page.getByRole("button", { name: "Start Workout" }).click();
-    await page.getByText("Start Fresh").click();
     await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
 
     await page.getByRole("button", { name: "Complete", exact: true }).click();
@@ -441,7 +486,6 @@ test.describe("Workout Cancel Flow", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/workouts");
     await page.getByRole("button", { name: "Start Workout" }).click();
-    await page.getByText("Start Fresh").click();
     await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
   });
 

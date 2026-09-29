@@ -10,7 +10,6 @@ import type {
 } from "../domain/workout";
 import { importFitbodCSV } from "./fitbod-import.service.server";
 import type { IExerciseRepository } from "./repository.server";
-import { importWorkout as importStrongWorkout } from "./strong-import.service.server";
 
 class InMemoryWorkoutRepository
   implements Pick<IWorkoutRepository, "save" | "saveSession">
@@ -163,31 +162,6 @@ describe("Import Completion with InMemory Repositories", () => {
 
       const result = await importFitbodCSV(
         csvContent,
-        { createMissingExercises: true, skipUnmappedExercises: false },
-        { workoutRepository: workoutRepo, exerciseRepository: exerciseRepo },
-      );
-
-      expect(result.isOk()).toBe(true);
-      expect(workoutRepo.workouts.length).toBe(1);
-      const savedWorkout = workoutRepo.workouts[0];
-      expect(savedWorkout.start.getTime()).toBe(startTime.getTime());
-      expect(savedWorkout.stop?.getTime()).toBe(expectedStopTime.getTime());
-    });
-  });
-
-  describe("Strong Import", () => {
-    it("should set stop date to 45 minutes after start date", async () => {
-      const strongText = `Afternoon Workout
-Wednesday 13 August 2025 at 07:32
-
-Bench Press (Barbell)
-Set 1: 60 kg × 10`;
-
-      const startTime = new Date(2025, 7, 13, 7, 32);
-      const expectedStopTime = new Date(startTime.getTime() + 45 * 60 * 1000);
-
-      const result = await importStrongWorkout(
-        strongText,
         { createMissingExercises: true, skipUnmappedExercises: false },
         { workoutRepository: workoutRepo, exerciseRepository: exerciseRepo },
       );

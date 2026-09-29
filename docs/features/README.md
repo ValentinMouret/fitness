@@ -21,8 +21,7 @@ For implementation conventions, start with [architecture](../engineering/archite
 ## Workouts
 
 - [Overview](workouts/README.md): sessions, exercises, sets, and history.
-- [AI generation](workouts/ai-generation.md): training context and refinement.
-- [Adaptive generation](workouts/adaptive-generation.md): retained rule-based implementation.
+- [Equipment and exercise substitution](workouts/adaptive-generation.md): retained substitution flow.
 
 ## Ideas
 

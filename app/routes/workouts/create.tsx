@@ -1,15 +1,5 @@
 import { createWorkoutFromNow } from "~/modules/fitness/infra/create-workout.service.server";
-import { createWorkoutFromTemplate } from "~/modules/fitness/infra/workout-template.service.server";
-import type { Route } from "./+types/create";
-
-export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData();
-  const templateId = formData.get("templateId")?.toString();
-
-  if (templateId) {
-    return createWorkoutFromTemplate(templateId);
-  }
-
+export async function action() {
   return createWorkoutFromNow();
 }
 

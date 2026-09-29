@@ -1,20 +1,16 @@
-import { Box, Container, Flex, Tabs } from "@radix-ui/themes";
+import { Container } from "@radix-ui/themes";
+import { data } from "react-router";
+import { z } from "zod";
 import { zfd } from "zod-form-data";
-import type { ImportConfig } from "~/modules/fitness/domain/strong-import";
-import {
-  importFromFitbod,
-  importFromStrong,
-} from "~/modules/fitness/infra/import-workout.service.server";
-import {
-  FitbodImportForm,
-  StrongImportForm,
-} from "~/modules/fitness/presentation/components";
-import { formBoolean, formOptionalText } from "~/utils/form-data";
+import type { ImportConfig } from "~/modules/fitness/domain/fitbod-import";
+import { importFromFitbod } from "~/modules/fitness/infra/import-workout.service.server";
+import { FitbodImportForm } from "~/modules/fitness/presentation/components";
+import { formBoolean, formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/import";
 
 export const handle = {
   header: () => ({
-    title: "Import Workout",
+    title: "Import from Fitbod",
     backTo: "/workouts",
   }),
 };
@@ -22,15 +18,19 @@ export const handle = {
 export const action = async ({ request }: Route.ActionArgs) => {
   const formData = await request.formData();
   const schema = zfd.formData({
-    importSource: formOptionalText(),
+    importSource: formText(z.literal("fitbod")),
     createMissingExercises: formBoolean(),
     skipUnmappedExercises: formBoolean(),
     customImportTime: formOptionalText(),
-    strongText: formOptionalText(),
     csvContent: formOptionalText(),
   });
-  const parsed = schema.parse(formData);
-  const importSource = parsed.importSource ?? "strong";
+  const result = schema.safeParse(formData);
+  if (!result.success)
+    return data(
+      { success: false, error: "Provide a Fitbod CSV import" },
+      { status: 400 },
+    );
+  const parsed = result.data;
 
   const config: ImportConfig = {
     createMissingExercises: parsed.createMissingExercises,
@@ -40,16 +40,8 @@ export const action = async ({ request }: Route.ActionArgs) => {
       : undefined,
   };
 
-  if (importSource === "fitbod") {
-    return importFromFitbod({
-      csvContent: parsed.csvContent ?? "",
-      config,
-      skipUnmappedExercises: parsed.skipUnmappedExercises,
-    });
-  }
-
-  return importFromStrong({
-    strongText: parsed.strongText ?? "",
+  return importFromFitbod({
+    csvContent: parsed.csvContent ?? "",
     config,
     skipUnmappedExercises: parsed.skipUnmappedExercises,
   });
@@ -60,22 +52,7 @@ export default function WorkoutImportPage() {
 
   return (
     <Container>
-      <Flex direction="column" gap="6">
-        <Tabs.Root defaultValue="strong">
-          <Tabs.List>
-            <Tabs.Trigger value="strong">Strong</Tabs.Trigger>
-            <Tabs.Trigger value="fitbod">Fitbod</Tabs.Trigger>
-          </Tabs.List>
-          <Box pt="4">
-            <Tabs.Content value="strong">
-              <StrongImportForm onImportSuccess={handleImportSuccess} />
-            </Tabs.Content>
-            <Tabs.Content value="fitbod">
-              <FitbodImportForm onImportSuccess={handleImportSuccess} />
-            </Tabs.Content>
-          </Box>
-        </Tabs.Root>
-      </Flex>
+      <FitbodImportForm onImportSuccess={handleImportSuccess} />
     </Container>
   );
 }
