@@ -1,16 +1,15 @@
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import pg from "pg";
+import {
+  canWriteFixtureDatabase,
+  verifyFixtureServerDatabase,
+} from "./support/fixture-database";
 
 const databaseUrl = process.env.E2E_DATABASE_URL;
-const isolatedCi =
-  process.env.CI === "true" &&
-  !!databaseUrl &&
-  databaseUrl === process.env.DATABASE_URL &&
-  new URL(databaseUrl).hostname === "postgres";
 test.skip(
-  !isolatedCi,
-  "Requires matching isolated CI server and fixture database",
+  !canWriteFixtureDatabase(databaseUrl),
+  "Requires isolated CI DB or explicit local E2E_ALLOW_FIXTURE_WRITES with matching test DB/server",
 );
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -29,6 +28,7 @@ test("meal composition, templates and logged edits survive retired suggestions",
   let templateId: string | undefined;
   let mealId: string | undefined;
   try {
+    await verifyFixtureServerDatabase(request, pool);
     const created = await request.post("/nutrition/meal-builder", {
       form: {
         intent: "save-ai-ingredient",
@@ -69,7 +69,7 @@ test("meal composition, templates and logged edits survive retired suggestions",
       .getByRole("textbox", { name: "Search ingredients" })
       .fill(ingredientName);
     await picker
-      .getByRole("button", { name: new RegExp(ingredientName) })
+      .getByRole("button", { name: new RegExp(`^${ingredientName}( |$)`) })
       .click();
     await expect(
       page.getByRole("progressbar", { name: "Protein progress" }),
@@ -121,7 +121,7 @@ test("meal composition, templates and logged edits survive retired suggestions",
     await page.getByRole("button", { name: "Use template for Lunch" }).click();
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: new RegExp(templateName) })
+      .getByRole("button", { name: new RegExp(`^${templateName}( |$)`) })
       .click();
     await expect(page.getByRole("link", { name: "Edit Lunch" })).toBeVisible();
     mealId = (
