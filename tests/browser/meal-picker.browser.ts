@@ -41,6 +41,11 @@ test.beforeAll(async () => {
 });
 
 test.beforeEach(async ({ page }, testInfo) => {
+  const pageErrors: string[] = [];
+  page.on("pageerror", (error) => {
+    pageErrors.push(error.message);
+    console.error(error);
+  });
   await page.setContent('<html><body><div id="root"></div></body></html>');
   if (testInfo.tags.includes("@workout")) {
     await page.evaluate(() => {
@@ -49,6 +54,10 @@ test.beforeEach(async ({ page }, testInfo) => {
   }
   await page.addStyleTag({ content: styles });
   await page.addScriptTag({ content: script });
+  expect(
+    pageErrors,
+    "Component fixture must render without runtime errors",
+  ).toEqual([]);
   if (!testInfo.tags.includes("@workout")) {
     await page.getByRole("button", { name: "Use template for Lunch" }).tap();
     await expect(page.getByRole("dialog")).toBeVisible();
