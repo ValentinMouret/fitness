@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   addOneDay,
   allDays,
@@ -130,15 +130,17 @@ describe("time module", () => {
   });
 
   describe("today", () => {
-    it("should return today's date with time reset to midnight UTC", () => {
-      const result = today();
-      const now = new Date();
-
-      expect(result.getUTCHours()).toBe(0);
-      expect(result.getUTCMinutes()).toBe(0);
-      expect(result.getUTCSeconds()).toBe(0);
-      expect(result.getUTCMilliseconds()).toBe(0);
-      expect(isSameDay(result, now)).toBe(true);
+    it.each([
+      ["2026-09-29T22:04:36.789Z", "2026-09-29T00:00:00.000Z"],
+      ["2026-09-30T00:04:36.789Z", "2026-09-30T00:00:00.000Z"],
+    ])("returns UTC midnight for %s", (now, expected) => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      try {
+        vi.setSystemTime(new Date(now));
+        expect(today().toISOString()).toBe(expected);
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 
