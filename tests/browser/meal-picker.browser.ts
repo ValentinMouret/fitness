@@ -127,5 +127,15 @@ test(
     await expect(
       page.locator(".set-row").nth(1).locator(".set-row__report-prompt"),
     ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Add set 1 reported effort", exact: true })
+      .tap();
+    await expect(page.locator(".set-row__report-prompt")).toHaveCount(1);
+    await expect(
+      page.locator(".set-row").first().locator(".set-row__report-prompt"),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Completed callbacks: 2", { exact: true }),
+    ).toBeVisible();
   },
 );
