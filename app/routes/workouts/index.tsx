@@ -1,7 +1,14 @@
 import { PlusIcon } from "@radix-ui/react-icons";
 import { Box, Button, Flex, Text, Tooltip } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
-import { Link, useFetcher, useSearchParams } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import {
+  Form,
+  Link,
+  useFetcher,
+  useNavigation,
+  useSearchParams,
+  useSubmit,
+} from "react-router";
 import { zfd } from "zod-form-data";
 import { EmptyState } from "~/components/EmptyState";
 import { Pagination } from "~/components/Pagination";
@@ -11,11 +18,8 @@ import {
   getAiFeedback,
   getWorkoutsPageData,
 } from "~/modules/fitness/infra/workouts-page.service.server";
-import {
-  AIFeedbackModal,
-  StartWorkoutDialog,
-} from "~/modules/fitness/presentation/components";
-import { createWorkoutTemplateCardViewModel } from "~/modules/fitness/presentation/view-models/workout-template-card.view-model";
+import { AIFeedbackModal } from "~/modules/fitness/presentation/components";
+import { isEditableTarget } from "~/utils/dom";
 import { formOptionalText } from "~/utils/form-data";
 import type { Route } from "./+types/index";
 import "./index.css";
@@ -32,17 +36,51 @@ export const handle = {
   header: () => ({
     title: "Workouts",
     subtitle: "Training log",
-    primaryAction: {
-      label: "Start Workout",
-      type: "button" as const,
-      icon: <PlusIcon />,
-      shortcut: "s",
-      onClick: () => {
-        window.dispatchEvent(new CustomEvent("open-start-workout-dialog"));
-      },
-    },
+    customRight: <StartWorkoutButton />,
   }),
 };
+
+function StartWorkoutButton() {
+  const navigation = useNavigation();
+  const formRef = useRef<HTMLFormElement>(null);
+  const isBusy = navigation.state !== "idle";
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        document.querySelector('[role="dialog"], [role="alertdialog"]') !==
+          null ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        isEditableTarget(event.target)
+      )
+        return;
+      if (event.key.toLowerCase() === "s" && !isBusy) {
+        event.preventDefault();
+        formRef.current?.requestSubmit();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isBusy]);
+
+  return (
+    <Form ref={formRef} method="post" action="/workouts/create">
+      <Button
+        type="submit"
+        size="3"
+        variant="soft"
+        disabled={isBusy}
+        loading={isBusy}
+        aria-keyshortcuts="s"
+      >
+        <PlusIcon /> Start Workout
+      </Button>
+    </Form>
+  );
+}
 
 export const action = async ({ request }: Route.ActionArgs) => {
   const formData = await request.formData();
@@ -84,21 +122,15 @@ function formatVolume(kg: number): string {
 }
 
 export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
-  const { workouts, templates, pagination } = loaderData;
+  const { workouts, pagination } = loaderData;
   const [_searchParams, setSearchParams] = useSearchParams();
   const [showAIModal, setShowAIModal] = useState(false);
-  const [showStartDialog, setShowStartDialog] = useState(false);
+  const submit = useSubmit();
+  const navigation = useNavigation();
   const aiFetcher = useFetcher<{
     aiFeedback?: AIFitnessCoachResult;
     error?: string;
   }>();
-
-  useEffect(() => {
-    const handler = () => setShowStartDialog(true);
-    window.addEventListener("open-start-workout-dialog", handler);
-    return () =>
-      window.removeEventListener("open-start-workout-dialog", handler);
-  }, []);
 
   const handlePageChange = (page: number) => {
     setSearchParams({ page: page.toString() });
@@ -109,8 +141,6 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
     aiFetcher.submit({ intent: "get-ai-feedback" }, { method: "POST" });
   };
 
-  const templateViewModels = templates.map(createWorkoutTemplateCardViewModel);
-
   return (
     <>
       <Box>
@@ -120,7 +150,10 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
             title="No workouts yet"
             description="Ready to crush it? Let's get moving."
             actionLabel="Get Started"
-            onAction={() => setShowStartDialog(true)}
+            onAction={() => {
+              if (navigation.state === "idle")
+                submit({}, { method: "post", action: "/workouts/create" });
+            }}
           />
         ) : (
           workouts.map((workout: WorkoutWithSummary, i: number) => {
@@ -217,24 +250,12 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
           <Link to="/workouts/recovery">Recovery Map</Link>
         </Button>
         <Button variant="outline" size="2" asChild>
-          <Link to="/workouts/templates">Templates</Link>
-        </Button>
-        <Button variant="outline" size="2" asChild>
-          <Link to="/workouts/generate">Generate Workout</Link>
-        </Button>
-        <Button variant="outline" size="2" asChild>
-          <Link to="/workouts/import">Import from Strong</Link>
+          <Link to="/workouts/import">Import from Fitbod</Link>
         </Button>
         <Button variant="outline" size="2" asChild>
           <Link to="/workouts/exercises">Manage Exercises</Link>
         </Button>
       </Flex>
-
-      <StartWorkoutDialog
-        open={showStartDialog}
-        onOpenChange={setShowStartDialog}
-        templates={templateViewModels}
-      />
 
       <AIFeedbackModal
         open={showAIModal}

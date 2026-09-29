@@ -1,17 +1,6 @@
-import {
-  Box,
-  Button,
-  Checkbox,
-  Dialog,
-  Flex,
-  Heading,
-  Text,
-  TextField,
-  Tooltip,
-} from "@radix-ui/themes";
-import { useEffect, useId, useRef, useState } from "react";
+import { Box, Button, Dialog, Flex, Text, Tooltip } from "@radix-ui/themes";
+import { useEffect, useRef } from "react";
 import { Form, useNavigation } from "react-router";
-import RequiredStar from "~/components/RequiredStar";
 import { useLiveDuration } from "./useLiveDuration";
 import "./CompletionModal.css";
 
@@ -36,32 +25,19 @@ interface CompletionModalProps {
   readonly workoutSession: CompletionWorkoutSession;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
-  readonly fromTemplate?: boolean;
 }
 
 export function CompletionModal({
   workoutSession,
   open,
   onOpenChange,
-  fromTemplate,
 }: CompletionModalProps) {
   const navigation = useNavigation();
   const isCompleting =
     navigation.state === "submitting" &&
     navigation.formData?.get("intent") === "complete-workout";
   const isBusy = navigation.state !== "idle";
-  const [saveAsTemplate, setSaveAsTemplate] = useState(false);
-  const templateNameId = useId();
-  const templateNameInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-
-  useEffect(() => {
-    if (saveAsTemplate) {
-      setTimeout(() => {
-        templateNameInputRef.current?.focus();
-      }, 0);
-    }
-  }, [saveAsTemplate]);
 
   useEffect(() => {
     if (!open) return;
@@ -99,13 +75,9 @@ export function CompletionModal({
       <Dialog.Content className="completion-modal">
         <Form ref={formRef} method="post">
           <input type="hidden" name="intent" value="complete-workout" />
-          {saveAsTemplate && (
-            <input type="hidden" name="saveAsTemplate" value="true" />
-          )}
-
-          <Heading size="4" mb="4">
+          <Dialog.Title size="4" mb="4">
             Complete Workout
-          </Heading>
+          </Dialog.Title>
 
           <Box py="4" className="completion-modal__section">
             <Flex direction="column" gap="3">
@@ -133,46 +105,6 @@ export function CompletionModal({
               </Flex>
             </Flex>
           </Box>
-
-          {!fromTemplate && (
-            <Box py="3" className="completion-modal__section">
-              <Text as="label" size="2" weight="medium">
-                <Flex align="center" gap="2">
-                  <Checkbox
-                    checked={saveAsTemplate}
-                    onCheckedChange={(checked) =>
-                      setSaveAsTemplate(checked === true)
-                    }
-                  />
-                  Save as template
-                </Flex>
-              </Text>
-
-              {saveAsTemplate && (
-                <Box mt="3">
-                  <Text
-                    as="label"
-                    htmlFor={templateNameId}
-                    size="2"
-                    weight="medium"
-                    mb="1"
-                    style={{ display: "block" }}
-                  >
-                    Template Name <RequiredStar />
-                  </Text>
-                  <TextField.Root
-                    ref={templateNameInputRef}
-                    id={templateNameId}
-                    name="templateName"
-                    placeholder="Template name"
-                    defaultValue={workoutSession.workout.name}
-                    size="2"
-                    required
-                  />
-                </Box>
-              )}
-            </Box>
-          )}
 
           <Flex gap="3" mt="4" justify="end">
             <Button

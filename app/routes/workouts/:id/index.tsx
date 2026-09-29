@@ -55,7 +55,6 @@ import {
   updateSetInWorkout,
   updateWorkoutName,
 } from "~/modules/fitness/infra/workout-session.service.server";
-import { createTemplateFromWorkout } from "~/modules/fitness/infra/workout-template.service.server";
 import {
   createWorkoutExerciseCardViewModel,
   EditMMCModal,
@@ -69,12 +68,12 @@ import type { Route } from "./+types/index";
 import "./active-workout.css";
 
 export async function loader({ params }: Route.LoaderArgs) {
-  const { id } = params;
+  const id = parseWorkoutId(params.id);
   return getWorkoutSessionData(id);
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
-  const { id } = params;
+  const id = parseWorkoutId(params.id);
   const formData = await request.formData();
   const intentSchema = zfd.formData({
     intent: formText(z.string().min(1)),
@@ -238,13 +237,6 @@ export async function action({ request, params }: Route.ActionArgs) {
       }
 
       case "complete-workout": {
-        const saveAsTemplate = formData.get("saveAsTemplate")?.toString();
-        const templateName = formData.get("templateName")?.toString();
-
-        if (saveAsTemplate === "true" && templateName) {
-          await createTemplateFromWorkout(id, templateName);
-        }
-
         return completeWorkout({ workoutId: id });
       }
 
@@ -264,6 +256,12 @@ export async function action({ request, params }: Route.ActionArgs) {
     logger.error({ err: error }, "Workout action error");
     return { error: "Internal server error" };
   }
+}
+
+function parseWorkoutId(id: string): string {
+  const parsed = z.uuid().safeParse(id);
+  if (!parsed.success) throw new Response("Workout not found", { status: 404 });
+  return parsed.data;
 }
 
 function findNextIncompleteExerciseId(
@@ -749,7 +747,6 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
         workoutSession={workoutSession}
         open={showCompletionModal}
         onOpenChange={setShowCompletionModal}
-        fromTemplate={!!workoutSession.workout.templateId}
       />
 
       <CancelConfirmationDialog

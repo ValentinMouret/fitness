@@ -15,4 +15,15 @@ export interface FitbodWorkoutData {
   readonly exercises: ReadonlyArray<FitbodExercise>;
 }
 
-export type { ImportConfig, ImportResult } from "./strong-import";
+export interface ImportConfig {
+  readonly overrideImportTime?: Date;
+  readonly createMissingExercises: boolean;
+  readonly skipUnmappedExercises: boolean;
+}
+
+export interface ImportResult {
+  readonly workoutId: string;
+  readonly exercisesCreated: ReadonlyArray<string>;
+  readonly unmappedExercises: ReadonlyArray<string>;
+  readonly warnings: ReadonlyArray<string>;
+}
