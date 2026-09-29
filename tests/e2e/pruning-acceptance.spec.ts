@@ -162,6 +162,17 @@ test("a current session created by MCP operations remains editable and loggable"
     await page.getByRole("textbox", { name: "Set 1 reps" }).fill("9");
     await page.getByRole("button", { name: "Complete set 1" }).click();
     await expect(page.locator(".set-row--completed")).toBeVisible();
+    await expect
+      .poll(
+        async () =>
+          (
+            await pool.query(
+              'select reps, weight, "isCompleted" from workout_sets where workout = $1',
+              [workoutId],
+            )
+          ).rows,
+      )
+      .toEqual([{ reps: 9, weight: 62.5, isCompleted: true }]);
     await page.reload();
     await expect(
       page.locator(".set-row--completed").getByText("62.5", { exact: true }),
@@ -172,6 +183,17 @@ test("a current session created by MCP operations remains editable and loggable"
       .locator(".set-row--completed")
       .getByRole("button", { name: "Save", exact: true })
       .click();
+    await expect
+      .poll(
+        async () =>
+          (
+            await pool.query(
+              'select reps, weight, "isCompleted" from workout_sets where workout = $1',
+              [workoutId],
+            )
+          ).rows,
+      )
+      .toEqual([{ reps: 10, weight: 62.5, isCompleted: true }]);
     await page.reload();
     await expect(
       page.locator(".set-row--completed").getByText("10", { exact: true }),
