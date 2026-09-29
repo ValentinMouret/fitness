@@ -1,5 +1,5 @@
 import { Theme } from "@radix-ui/themes";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   createMemoryRouter,
@@ -10,6 +10,17 @@ import { WorkoutExerciseCard } from "~/modules/fitness/presentation/components/W
 import type { WorkoutSetViewModel } from "~/modules/fitness/presentation/view-models/workout-exercise-card.view-model";
 
 export function mountWorkoutCompletionFixture(root: HTMLElement) {
+  let submitted: FormData | undefined;
+  // Capture the real form synchronously so the action can finish in one render.
+  root.addEventListener(
+    "submit",
+    (event) => {
+      if (event.target instanceof HTMLFormElement) {
+        submitted = new FormData(event.target);
+      }
+    },
+    true,
+  );
   let sets: ReadonlyArray<WorkoutSetViewModel> = [1, 2].map((set) => ({
     set,
     reps: 8,
@@ -27,6 +38,15 @@ export function mountWorkoutCompletionFixture(root: HTMLElement) {
     }>();
     const [open, setOpen] = useState<string>();
     const [completed, setCompleted] = useState(0);
+    const onReportPromptChange = useCallback((key: string, isOpen: boolean) => {
+      setOpen((current) =>
+        isOpen ? key : current === key ? undefined : current,
+      );
+    }, []);
+    const onCompleteSet = useCallback(
+      () => setCompleted((value) => value + 1),
+      [],
+    );
     return (
       <Theme>
         <output>Completed callbacks: {completed}</output>
@@ -42,12 +62,8 @@ export function mountWorkoutCompletionFixture(root: HTMLElement) {
             totalVolumeDisplay: "",
           }}
           openReportSetKey={open}
-          onReportPromptChange={(key, isOpen) =>
-            setOpen((current) =>
-              isOpen ? key : current === key ? undefined : current,
-            )
-          }
-          onCompleteSet={() => setCompleted((value) => value + 1)}
+          onReportPromptChange={onReportPromptChange}
+          onCompleteSet={onCompleteSet}
         />
       </Theme>
     );
@@ -59,7 +75,19 @@ export function mountWorkoutCompletionFixture(root: HTMLElement) {
         loader: () => ({ sets }),
         Component: Fixture,
         action: () => {
-          const number = sets.find((set) => !set.isCompleted)?.set;
+          const form = submitted;
+          submitted = undefined;
+          if (
+            form?.get("intent") !== "update-set" ||
+            form.get("exerciseId") !== "exercise" ||
+            form.get("isCompleted") !== "true"
+          ) {
+            return { error: "Unexpected completion form" };
+          }
+          const number = Number(form.get("setNumber"));
+          if (!sets.some((set) => set.set === number && !set.isCompleted)) {
+            return { error: "Unknown or already completed set" };
+          }
           sets = sets.map((set) =>
             set.set === number ? { ...set, isCompleted: true } : set,
           );
