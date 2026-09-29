@@ -1,3 +1,8 @@
+.template-selection-modal__close {
+  min-width: 44px;
+  min-height: 44px;
+}
+
 .template-selection-modal__list {
   height: 400px;
   overflow: auto;
