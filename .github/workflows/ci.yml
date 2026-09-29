@@ -167,6 +167,7 @@ jobs:
       - run: bun run db:migrate
       - run: bun run db:seed
 
+      - run: bun run test:browser
       - run: bun run test:e2e
         env:
           AUTH_USERNAME: testuser

@@ -47,11 +47,11 @@ Locally, use the existing development server. Set `E2E_BASE_URL` and test
 credentials to match it, and confirm it is using an appropriate database before
 running write tests. Do not start another server in an agent session.
 
-[playwright.config.ts](../../playwright.config.ts) reuses a reachable local
-server. If none is reachable, its local fallback builds, migrates, seeds, and
-starts a server; verify the URL first rather than accidentally invoking that
-fallback. Auth-only browser tests use a separate configuration and never start
-a server. Their fixtures and lifetime profiles are described in the
+[playwright.config.ts](../../playwright.config.ts) requires a reachable existing
+server locally and fails before browser tests when `/login` is unavailable.
+It never builds, migrates, seeds, or starts a local server. CI retains its isolated
+server startup. Auth-only browser tests use a separate configuration and also
+require an existing server. Their fixtures and lifetime profiles are described in the
 [auth acceptance guide](../../tests/e2e/auth/README.md).
 
 ## Understand CI setup
