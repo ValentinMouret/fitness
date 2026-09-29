@@ -18,9 +18,9 @@ test.describe("Workouts Page", () => {
     await expect(
       page.getByRole("link", { name: "Manage Exercises" }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "Recovery Map" }),
-    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "Recovery Map" })).toHaveCount(
+      0,
+    );
     await expect(
       page.getByRole("link", { name: "Templates", exact: true }),
     ).toHaveCount(0);
@@ -40,9 +40,21 @@ test.describe("Workouts Page", () => {
     ).toBeVisible();
   });
 
-  test("should navigate to recovery page", async ({ page }) => {
-    await page.getByRole("link", { name: "Recovery Map" }).click();
-    await expect(page).toHaveURL(/\/workouts\/recovery/);
+  test("retired feedback and recovery cannot run", async ({ page }) => {
+    await expect(page.getByRole("button", { name: "AI Feedback" })).toHaveCount(
+      0,
+    );
+    expect((await page.request.get("/workouts/recovery")).status()).toBe(404);
+    expect(
+      (await page.request.post("/workouts/recovery", { form: {} })).status(),
+    ).toBe(404);
+    expect(
+      (
+        await page.request.post("/workouts", {
+          form: { intent: "get-ai-feedback" },
+        })
+      ).status(),
+    ).toBe(400);
   });
 
   test("keeps Fitbod import available", async ({ page }) => {

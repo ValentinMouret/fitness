@@ -2,7 +2,7 @@
 
 Fitness records training sessions and uses their history to help choose the next
 workout. The goal is hypertrophy, with visibility into exercise progression,
-muscle-group volume, and recovery.
+muscle-group volume.
 
 ## Core concepts
 
@@ -31,7 +31,6 @@ The [route configuration](../../../app/routes.ts) includes:
 | `/workouts/:id` | View a session and log exercises and sets |
 | `/workouts/import` | Import Fitbod training history |
 | `/workouts/exercises` | Manage the exercise catalogue |
-| `/workouts/recovery` | View recovery information |
 | `/workouts/:id/substitute/:exercise-id` | Substitute an exercise |
 
 Session persistence and operations live in the
@@ -42,7 +41,8 @@ storage definitions.
 
 ## Retired entry points
 
-Workout templates, Generate Workout, and Strong import are retired. Their stored
+Workout templates, Generate Workout, Strong import, AI Feedback, and Recovery Map
+are retired. Their stored
 history remains intact; this removal does not migrate or delete past sessions.
 Fitbod import and [exercise substitution](adaptive-generation.md) remain available.
 

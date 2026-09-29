@@ -1,26 +1,18 @@
 import { PlusIcon } from "@radix-ui/react-icons";
-import { Box, Button, Flex, Text, Tooltip } from "@radix-ui/themes";
-import { useEffect, useRef, useState } from "react";
+import { Box, Button, Flex, Text } from "@radix-ui/themes";
+import { useEffect, useRef } from "react";
 import {
   Form,
   Link,
-  useFetcher,
   useNavigation,
   useSearchParams,
   useSubmit,
 } from "react-router";
-import { zfd } from "zod-form-data";
 import { EmptyState } from "~/components/EmptyState";
 import { Pagination } from "~/components/Pagination";
 import type { WorkoutWithSummary } from "~/modules/fitness/domain/workout";
-import type { AIFitnessCoachResult } from "~/modules/fitness/infra/ai-fitness-coach.service";
-import {
-  getAiFeedback,
-  getWorkoutsPageData,
-} from "~/modules/fitness/infra/workouts-page.service.server";
-import { AIFeedbackModal } from "~/modules/fitness/presentation/components";
+import { getWorkoutsPageData } from "~/modules/fitness/infra/workouts-page.service.server";
 import { isEditableTarget } from "~/utils/dom";
-import { formOptionalText } from "~/utils/form-data";
 import type { Route } from "./+types/index";
 import "./index.css";
 
@@ -84,19 +76,8 @@ function StartWorkoutButton() {
   );
 }
 
-export const action = async ({ request }: Route.ActionArgs) => {
-  const formData = await request.formData();
-  const intentSchema = zfd.formData({
-    intent: formOptionalText(),
-  });
-  const intentParsed = intentSchema.parse(formData);
-  const intent = intentParsed.intent;
-
-  if (intent === "get-ai-feedback") {
-    return getAiFeedback();
-  }
-
-  return { error: "Invalid action" };
+export const action = () => {
+  return new Response("Invalid action", { status: 400 });
 };
 
 function formatWorkoutDate(date: Date): string {
@@ -126,21 +107,10 @@ function formatVolume(kg: number): string {
 export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
   const { workouts, pagination } = loaderData;
   const [_searchParams, setSearchParams] = useSearchParams();
-  const [showAIModal, setShowAIModal] = useState(false);
   const submit = useSubmit();
   const navigation = useNavigation();
-  const aiFetcher = useFetcher<{
-    aiFeedback?: AIFitnessCoachResult;
-    error?: string;
-  }>();
-
   const handlePageChange = (page: number) => {
     setSearchParams({ page: page.toString() });
-  };
-
-  const handleAIFeedback = () => {
-    setShowAIModal(true);
-    aiFetcher.submit({ intent: "get-ai-feedback" }, { method: "POST" });
   };
 
   return (
@@ -229,28 +199,6 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
       />
 
       <Flex gap="3" wrap="wrap" mt="6">
-        <Tooltip
-          content={
-            workouts.length < 5
-              ? "Requires at least 5 workouts for meaningful feedback"
-              : "Get AI feedback on your training"
-          }
-        >
-          <Box display="inline-block">
-            <Button
-              variant="outline"
-              size="2"
-              onClick={handleAIFeedback}
-              loading={aiFetcher.state === "submitting"}
-              disabled={workouts.length < 5}
-            >
-              AI Feedback
-            </Button>
-          </Box>
-        </Tooltip>
-        <Button variant="outline" size="2" asChild>
-          <Link to="/workouts/recovery">Recovery Map</Link>
-        </Button>
         <Button variant="outline" size="2" asChild>
           <Link to="/workouts/import">Import from Fitbod</Link>
         </Button>
@@ -258,14 +206,6 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
           <Link to="/workouts/exercises">Manage Exercises</Link>
         </Button>
       </Flex>
-
-      <AIFeedbackModal
-        open={showAIModal}
-        onClose={() => setShowAIModal(false)}
-        feedback={aiFetcher.data?.aiFeedback || null}
-        loading={aiFetcher.state === "submitting"}
-        error={aiFetcher.data?.error}
-      />
     </>
   );
 }
