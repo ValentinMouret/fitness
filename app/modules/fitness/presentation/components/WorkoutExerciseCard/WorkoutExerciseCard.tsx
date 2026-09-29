@@ -280,13 +280,6 @@ function SetRow({
   }, [set.reps, set.weight]);
 
   useEffect(() => {
-    if (isCompleting) {
-      completionNotified.current = false;
-      setCompletionSubmitted(true);
-    }
-  }, [isCompleting]);
-
-  useEffect(() => {
     if (!completionSubmitted || actionFetcher.state !== "idle") return;
     if (actionFetcher.data?.error) {
       setCompletionSubmitted(false);
@@ -467,7 +460,13 @@ function SetRow({
           </Tooltip>
         )}
         {canEdit && !set.isCompleted && (
-          <actionFetcher.Form method="post">
+          <actionFetcher.Form
+            method="post"
+            onSubmit={() => {
+              completionNotified.current = false;
+              setCompletionSubmitted(true);
+            }}
+          >
             <input type="hidden" name="intent" value="update-set" />
             <input type="hidden" name="exerciseId" value={exerciseId} />
             <input type="hidden" name="setNumber" value={set.set} />
