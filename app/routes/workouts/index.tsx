@@ -44,6 +44,7 @@ function StartWorkoutButton() {
   const navigation = useNavigation();
   const formRef = useRef<HTMLFormElement>(null);
   const isBusy = navigation.state !== "idle";
+  const [isShortcutReady, setIsShortcutReady] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -63,6 +64,7 @@ function StartWorkoutButton() {
       }
     };
     window.addEventListener("keydown", handleKeyDown);
+    setIsShortcutReady(true);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isBusy]);
 
@@ -74,7 +76,7 @@ function StartWorkoutButton() {
         variant="soft"
         disabled={isBusy}
         loading={isBusy}
-        aria-keyshortcuts="s"
+        aria-keyshortcuts={isShortcutReady ? "s" : undefined}
       >
         <PlusIcon /> Start Workout
       </Button>
