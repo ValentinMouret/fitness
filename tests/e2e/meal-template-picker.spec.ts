@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import pg from "pg";
 
 const databaseUrl = process.env.E2E_DATABASE_URL;
-const pool = new pg.Pool({ connectionString: databaseUrl });
+let pool: pg.Pool;
 test.skip(!databaseUrl, "Set E2E_DATABASE_URL to a dedicated test database");
 test.use({
   viewport: { width: 390, height: 844 },
@@ -12,10 +12,41 @@ test.use({
 });
 let templateId: string;
 let templateName: string;
+let ingredientId: string;
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, request }) => {
+  pool = new pg.Pool({ connectionString: databaseUrl });
   templateId = randomUUID();
+  ingredientId = "";
   templateName = `Picker test ${templateId}`;
+  const ingredientName = `Picker ingredient ${templateId}`;
+  const created = await request.post("/nutrition/meal-builder", {
+    form: {
+      intent: "save-ai-ingredient",
+      ingredientData: JSON.stringify({
+        name: ingredientName,
+        category: "proteins",
+        texture: "firm_solid",
+        calories: 100,
+        protein: 20,
+        carbs: 5,
+        fat: 2,
+        fiber: 1,
+        waterPercentage: 70,
+        energyDensity: 1,
+        sliderMin: 5,
+        sliderMax: 500,
+        isVegetarian: false,
+        isVegan: false,
+      }),
+    },
+  });
+  expect(created.ok()).toBe(true);
+  const ingredient = await pool.query<{ id: string }>(
+    "select id from ingredients where name = $1",
+    [ingredientName],
+  );
+  ingredientId = ingredient.rows[0].id;
   await pool.query(
     `insert into meal_templates
       (id, name, category, total_calories, total_protein, total_carbs, total_fat, total_fiber, satiety_score)
@@ -24,8 +55,8 @@ test.beforeEach(async ({ page }) => {
   );
   await pool.query(
     `insert into meal_template_ingredients (meal_template_id, ingredient_id, quantity_grams)
-      select $1, id, 100 from ingredients where deleted_at is null limit 1`,
-    [templateId],
+      values ($1, $2, 100)`,
+    [templateId, ingredientId],
   );
   await page.goto("/nutrition?date=1901-03-01");
   await page.getByRole("button", { name: "Use template for Lunch" }).tap();
@@ -33,21 +64,25 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.afterEach(async () => {
-  await pool.query(
-    "delete from meal_log_ingredients where meal_log_id in (select id from meal_logs where meal_template_id = $1)",
-    [templateId],
-  );
-  await pool.query("delete from meal_logs where meal_template_id = $1", [
-    templateId,
-  ]);
-  await pool.query(
-    "delete from meal_template_ingredients where meal_template_id = $1",
-    [templateId],
-  );
-  await pool.query("delete from meal_templates where id = $1", [templateId]);
-});
-test.afterAll(async () => {
-  await pool.end();
+  try {
+    await pool.query(
+      "delete from meal_log_ingredients where meal_log_id in (select id from meal_logs where meal_template_id = $1)",
+      [templateId],
+    );
+    await pool.query("delete from meal_logs where meal_template_id = $1", [
+      templateId,
+    ]);
+    await pool.query(
+      "delete from meal_template_ingredients where meal_template_id = $1",
+      [templateId],
+    );
+    await pool.query("delete from meal_templates where id = $1", [templateId]);
+    if (ingredientId) {
+      await pool.query("delete from ingredients where id = $1", [ingredientId]);
+    }
+  } finally {
+    await pool.end();
+  }
 });
 
 test("the visible close button dismisses the meal picker on its first touch", async ({
@@ -82,6 +117,9 @@ test("outside touch and Escape dismiss the picker", async ({ page }) => {
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "Use template for Lunch" }).tap();
   await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Close (Esc)", exact: true }),
+  ).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "Use template for Lunch" }).tap();
