@@ -83,6 +83,9 @@ test.describe("Direct workout start", () => {
     page,
   }, testInfo) => {
     await page.goto("/workouts");
+    await expect(
+      page.getByRole("button", { name: "Start Workout" }),
+    ).toHaveAttribute("aria-keyshortcuts", "s");
     await page.getByRole("button", { name: "Start Workout" }).tap();
     await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
     await expect(page.getByText("No exercises yet")).toBeVisible();
@@ -98,6 +101,9 @@ test.describe("Direct workout start", () => {
 
   test("does not start a workout while a dialog is open", async ({ page }) => {
     await page.goto("/workouts");
+    await expect(
+      page.getByRole("button", { name: "Start Workout" }),
+    ).toHaveAttribute("aria-keyshortcuts", "s");
     await page.evaluate(() => {
       const dialog = document.createElement("div");
       dialog.setAttribute("role", "dialog");
@@ -115,6 +121,9 @@ test.describe("Direct workout start", () => {
 
   test("keeps the start shortcut", async ({ page }) => {
     await page.goto("/workouts");
+    await expect(
+      page.getByRole("button", { name: "Start Workout" }),
+    ).toHaveAttribute("aria-keyshortcuts", "s");
     await page.keyboard.press("s");
     await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
     await expect(page.getByText("No exercises yet")).toBeVisible();

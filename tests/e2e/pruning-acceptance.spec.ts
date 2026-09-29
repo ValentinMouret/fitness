@@ -1,18 +1,17 @@
 import { randomUUID } from "node:crypto";
 import { test as base, expect } from "@playwright/test";
 import pg from "pg";
+import {
+  canWriteFixtureDatabase,
+  verifyFixtureServerDatabase,
+} from "./support/fixture-database";
 
 const databaseUrl = process.env.E2E_DATABASE_URL;
-const isolatedCi =
-  process.env.CI === "true" &&
-  !!databaseUrl &&
-  databaseUrl === process.env.DATABASE_URL &&
-  new URL(databaseUrl).hostname === "postgres";
 const test = base.extend<{ readonly pool: pg.Pool }>({
-  // biome-ignore lint/correctness/noEmptyPattern: Playwright requires destructured fixture dependencies.
-  pool: async ({}, use) => {
+  pool: async ({ request }, use) => {
     const pool = new pg.Pool({ connectionString: databaseUrl });
     try {
+      await verifyFixtureServerDatabase(request, pool);
       await use(pool);
     } finally {
       await pool.end();
@@ -20,8 +19,8 @@ const test = base.extend<{ readonly pool: pg.Pool }>({
   },
 });
 test.skip(
-  !isolatedCi,
-  "Requires matching isolated CI server and fixture database",
+  !canWriteFixtureDatabase(databaseUrl),
+  "Requires isolated CI DB or explicit local E2E_ALLOW_FIXTURE_WRITES with matching test DB/server",
 );
 test.use({ viewport: { width: 390, height: 844 } });
 
