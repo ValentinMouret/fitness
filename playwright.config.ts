@@ -5,6 +5,7 @@ const authFile = "playwright/.auth/user.json";
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  globalSetup: process.env.CI ? undefined : "./tests/e2e/auth/global-setup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   timeout: 15_000,
@@ -44,20 +45,20 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: process.env.CI
-      ? "bun run start"
-      : "bun run build && bun run db:migrate && bun run db:seed && bun run start",
-    url: authTestEnv.E2E_BASE_URL,
-    reuseExistingServer: !process.env.CI,
-    env: {
-      AUTH_USERNAME: credentials.username,
-      AUTH_PASSWORD: credentials.password,
-      HOST: "127.0.0.1",
-      PORT: String(authTestEnv.TEST_PORT),
-      DATABASE_URL:
-        process.env.DATABASE_URL || "postgresql://localhost/fitness",
-      ANTHROPIC_API_KEY: "test-key",
-    },
-  },
+  webServer: process.env.CI
+    ? {
+        command: "bun run start",
+        url: authTestEnv.E2E_BASE_URL,
+        reuseExistingServer: false,
+        env: {
+          AUTH_USERNAME: credentials.username,
+          AUTH_PASSWORD: credentials.password,
+          HOST: "127.0.0.1",
+          PORT: String(authTestEnv.TEST_PORT),
+          DATABASE_URL:
+            process.env.DATABASE_URL || "postgresql://localhost/fitness",
+          ANTHROPIC_API_KEY: "test-key",
+        },
+      }
+    : undefined,
 });
