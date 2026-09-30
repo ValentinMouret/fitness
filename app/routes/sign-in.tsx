@@ -37,10 +37,20 @@ export async function action({ request }: Route.ActionArgs) {
       { status: 400 },
     );
   try {
-    await runtime.auth.api.signInMagicLink({
+    const response = await runtime.requestSignInLink({
       headers: request.headers,
-      body: { email: email.data, callbackURL: "/sign-in" },
+      email: email.data,
     });
+    if (response.status === 429)
+      return data(
+        { sent: false, error: "Too many requests. Try again later." },
+        { status: 429 },
+      );
+    if (!response.ok)
+      return data(
+        { sent: false, error: "Could not send a sign-in email. Try again." },
+        { status: 500 },
+      );
     return { sent: true, error: null };
   } catch {
     return data(

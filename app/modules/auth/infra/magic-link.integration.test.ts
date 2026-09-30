@@ -22,6 +22,19 @@ let folder = "";
 let created = false;
 let inbox = "";
 let runtime: ReturnType<typeof createMagicLinkAuth>;
+const fixtureIps = new Map<string, string>();
+
+function fixtureIp(body?: object) {
+  const email =
+    body && "email" in body && typeof body.email === "string"
+      ? body.email.toLowerCase()
+      : "general";
+  const existing = fixtureIps.get(email);
+  if (existing) return existing;
+  const ip = `192.0.2.${fixtureIps.size + 1}`;
+  fixtureIps.set(email, ip);
+  return ip;
+}
 
 const request = (
   path: string,
@@ -32,6 +45,7 @@ const request = (
   new Request(`${origin}/api/auth${path}`, {
     method: body ? "POST" : "GET",
     headers: {
+      "X-Forwarded-For": fixtureIp(body),
       ...(body
         ? { "Content-Type": "application/json", Origin: requestOrigin }
         : {}),
@@ -148,6 +162,103 @@ describe.skipIf(!adminUrl)(
         ).rows,
       ).toHaveLength(0);
     });
+
+    it("throttles sign-in requests through the supported HTTP handler", async () => {
+      const before = await sentMessages();
+      const headers = new Headers({
+        Origin: origin,
+        "X-Forwarded-For": "192.0.2.200",
+      });
+      for (let attempt = 0; attempt < 10; attempt++) {
+        expect(
+          (
+            await runtime.requestSignInLink({
+              headers,
+              email: "throttled-unknown@example.invalid",
+            })
+          ).status,
+        ).toBe(200);
+      }
+      const response = await runtime.requestSignInLink({
+        headers,
+        email: "throttled-unknown@example.invalid",
+      });
+      expect(response.status).toBe(429);
+      expect(Number(response.headers.get("X-Retry-After"))).toBeGreaterThan(0);
+      expect(await sentMessages()).toEqual(before);
+    });
+
+    for (const change of ["revocation", "expiry"] as const) {
+      it(`removes a raw session when ${change} wins after admission but before insertion`, async () => {
+        const { user } = await invite(`race-${change}@example.invalid`);
+        await pool.query(
+          "update auth_users set email_verified=true where id=$1",
+          [user.id],
+        );
+        const message = await signIn(user.email);
+        const blocker = await pool.connect();
+        let pending: ReturnType<typeof redeem> | undefined;
+        try {
+          await blocker.query("begin");
+          await blocker.query(
+            "select id from auth_users where id=$1 for update",
+            [user.id],
+          );
+          pending = redeem(message.url);
+          await expect
+            .poll(
+              async () =>
+                (
+                  await pool.query(
+                    "select pid from pg_stat_activity where datname=current_database() and wait_event_type='Lock' and query like '%auth_sessions%'",
+                  )
+                ).rowCount,
+              { timeout: 5000, interval: 20 },
+            )
+            .toBeGreaterThan(0);
+          if (change === "revocation") {
+            expect(
+              (
+                await runtime.invitations.revoke({
+                  actorUserId: ownerId,
+                  userId: user.id,
+                  now: new Date(),
+                })
+              ).isOk(),
+            ).toBe(true);
+          } else {
+            await pool.query(
+              "update auth_invitations set expires_at=now()-interval '1 second' where user_id=$1",
+              [user.id],
+            );
+          }
+          await blocker.query("commit");
+          const result = await pending;
+          expect(
+            (
+              await pool.query(
+                "select id from auth_sessions where user_id=$1",
+                [user.id],
+              )
+            ).rows,
+          ).toHaveLength(0);
+          expect(
+            await runtime.auth.api.getSession({
+              headers: new Headers({ Cookie: result.cookie }),
+            }),
+          ).toBeNull();
+          expect(
+            await runtime.getAdmittedSession(
+              new Headers({ Cookie: result.cookie }),
+            ),
+          ).toBeNull();
+        } finally {
+          await blocker.query("rollback");
+          blocker.release();
+          await pending;
+        }
+      });
+    }
 
     it("delivers local email, stores a hash, consumes once and identifies the invited session", async () => {
       const email = "first@example.invalid";
