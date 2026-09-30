@@ -126,6 +126,12 @@ beforeAll(async () => {
   await fixture.create();
   await fixture.migrateBefore(13);
   await fixture.pool.query(
+    "alter table workouts rename constraint workouts_template_id_workout_templates_id_fk to workouts_template_id_fkey",
+  );
+  await fixture.pool.query(
+    "insert into habits (name,description,start_date,frequency_type,target_count,deleted_at) values ('Restored private habit','Retained legacy note','1900-01-01','daily',1,'1900-01-02')",
+  );
+  await fixture.pool.query(
     "insert into oauth_connections (id,client_id,resource,scope) values ($1,$2,$3,'fitness')",
     [connection, clientId, `${origin}/mcp`],
   );
@@ -247,6 +253,16 @@ beforeAll(async () => {
   expect((await fixture.pool.query("select * from oauth_tokens")).rows).toEqual(
     before,
   );
+  expect(
+    (await fixture.pool.query("select user_id,name,description from habits"))
+      .rows,
+  ).toEqual([
+    {
+      user_id: owner,
+      name: "Restored private habit",
+      description: "Retained legacy note",
+    },
+  ]);
   expect(
     (
       await fixture.pool.query(

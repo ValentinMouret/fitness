@@ -379,6 +379,15 @@ journal through0012; a partially migrated or differently versioned copy stops
 for review. The owner UUID/email must be explicitly supplied and reviewed;
 conflicting or ambiguous identities stop the command.
 
+The September29 archive and live database use the historical
+`workouts_template_id_fkey` name. Migration0016 accepts that name or the
+schema-generated `workouts_template_id_workout_templates_id_fk` only after
+verifying exactly one FK from `workouts.template_id` to `workout_templates.id`.
+Unexpected, duplicate or wrong-target constraints fail for review. The final
+unmodified migration must pass a fresh archive rehearsal; an in-memory
+diagnostic constraint-name replacement is not acceptance evidence. That archive
+predates current owner history and cannot serve as a current rollback point.
+
 Use PostgreSQL tools matching the backup/server major version. Restore the
 controlled owner-history dump into a fresh isolated database. Set `PGHOST`,
 `PGPORT`, `PGUSER` and any password through the operator's local environment;
@@ -449,6 +458,12 @@ existing restricted SQL integration suite proves independent A/B queries and
 pooled identity cleanup. **B runtime access remains deliberately closed**: these
 tests do not prove native multi-account admission, the actual owner's stored
 ChatGPT/Claude connection, production email delivery or live proxy behavior.
+
+The fixture also uses the historical FK name and includes a nonempty archived
+habit before0013. Its read-only preflight leaves auth users empty; apply succeeds
+only because `bootstrapAuthOwner` runs **before** the ownership migrations.
+`auth:seed-local` migrates first and cannot bootstrap a nonempty restored source;
+use the reviewed isolated rehearsal ordering, not a bypass of the local seeder.
 
 Code audit at the held stack identifies the following admission gates:
 
