@@ -1,0 +1,19 @@
+.daily-habits-section + .daily-habits-section {
+  margin-top: var(--space-5);
+}
+
+.daily-habits-section__heading {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--font-size-1);
+  font-weight: 700;
+  color: var(--brand-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.daily-habits-section__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}

@@ -1,6 +1,7 @@
 import { isSameDay, today } from "~/time";
 import { handleResultError } from "~/utils/errors";
 import { HabitService } from "../application/service";
+import { groupDailyHabits } from "../domain/daily-habit-order";
 import { HabitCompletion } from "../domain/entity";
 import {
   HabitCompletionRepository,
@@ -88,6 +89,7 @@ export async function getHabitsPageData() {
   return {
     habits,
     todayHabits,
+    todayHabitGroups: groupDailyHabits(todayHabits),
     completionMap,
     habitStreaks,
     todayHabitsCount: todayHabits.length,

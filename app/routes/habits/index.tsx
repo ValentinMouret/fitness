@@ -12,6 +12,7 @@ import {
 import { isEditableTarget } from "~/utils/dom";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/index";
+import "./index.css";
 
 const STYLES = `
   @keyframes checkPop {
@@ -77,11 +78,6 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   return null;
-}
-
-function isMorning(timeOfDay: string): boolean {
-  if (!timeOfDay) return true;
-  return parseInt(timeOfDay.split(":")[0], 10) < 12;
 }
 
 function getGreeting(): string {
@@ -553,6 +549,7 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
   }, [navigate]);
   const {
     todayHabits,
+    todayHabitGroups,
     completionMap,
     completionCounts,
     completedTodayCount,
@@ -577,8 +574,12 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
     optimisticCompletionMap,
   ).filter(Boolean).length;
 
-  const morningHabits = todayHabits.filter((h) => isMorning(h.timeOfDay));
-  const eveningHabits = todayHabits.filter((h) => !isMorning(h.timeOfDay));
+  const { morning: morningHabits, laterToday: laterHabits } = todayHabitGroups;
+  const sections = [
+    { id: "morning", title: "Morning", habits: morningHabits },
+    { id: "later-today", title: "Later today", habits: laterHabits },
+    { id: "anytime", title: "Anytime", habits: todayHabitGroups.anytime },
+  ];
 
   const allMorningDone =
     morningHabits.length > 0 &&
@@ -609,7 +610,7 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
   const circumference = 2 * Math.PI * 52;
   const ringColor = allMorningDone ? "#22c55e" : "#e15a46";
 
-  const firstUncompleteEvening = eveningHabits.find(
+  const firstIncompleteLater = laterHabits.find(
     (h) => !optimisticCompletionMap[h.id],
   );
 
@@ -668,13 +669,13 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
                   ? "Morning done. You showed up."
                   : getGreeting()}
             </div>
-            {allMorningDone && !allDone && firstUncompleteEvening && (
+            {allMorningDone && !allDone && firstIncompleteLater && (
               <div
                 className="sub-in"
                 style={{ fontSize: 13, color: "#a8a29e", marginTop: 5 }}
               >
-                {firstUncompleteEvening.name} is up tonight at{" "}
-                {firstUncompleteEvening.timeOfDay}.
+                {firstIncompleteLater.name} is up later today at{" "}
+                {firstIncompleteLater.timeOfDay}.
               </div>
             )}
           </div>
@@ -814,74 +815,35 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
           </div>
         ) : (
           <>
-            {morningHabits.length > 0 && (
-              <>
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "#b5b0a8",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    marginBottom: 10,
-                  }}
+            {sections
+              .filter((section) => section.habits.length > 0)
+              .map((section) => (
+                <section
+                  key={section.id}
+                  aria-labelledby={`habits-${section.id}`}
+                  className="daily-habits-section"
                 >
-                  Morning
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
-                    marginBottom: 24,
-                  }}
-                >
-                  {morningHabits.map((habit) => (
-                    <HabitCard
-                      key={habit.id}
-                      habit={habit}
-                      isCompleted={completionMap[habit.id] ?? false}
-                      completionCount={completionCounts[habit.id] ?? 0}
-                      currentStreak={habitStreaks[habit.id] ?? 0}
-                      recentHistory={recentHistoryMap[habit.id] ?? []}
-                      missedTwice={missedTwiceMap[habit.id] ?? false}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-
-            {eveningHabits.length > 0 && (
-              <>
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "#c4bfba",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    marginBottom: 10,
-                  }}
-                >
-                  Tonight
-                </div>
-                <div
-                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                >
-                  {eveningHabits.map((habit) => (
-                    <HabitCard
-                      key={habit.id}
-                      habit={habit}
-                      isCompleted={completionMap[habit.id] ?? false}
-                      completionCount={completionCounts[habit.id] ?? 0}
-                      currentStreak={habitStreaks[habit.id] ?? 0}
-                      recentHistory={recentHistoryMap[habit.id] ?? []}
-                      missedTwice={missedTwiceMap[habit.id] ?? false}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+                  <h2
+                    id={`habits-${section.id}`}
+                    className="daily-habits-section__heading"
+                  >
+                    {section.title}
+                  </h2>
+                  <div className="daily-habits-section__list">
+                    {section.habits.map((habit) => (
+                      <HabitCard
+                        key={habit.id}
+                        habit={habit}
+                        isCompleted={completionMap[habit.id] ?? false}
+                        completionCount={completionCounts[habit.id] ?? 0}
+                        currentStreak={habitStreaks[habit.id] ?? 0}
+                        recentHistory={recentHistoryMap[habit.id] ?? []}
+                        missedTwice={missedTwiceMap[habit.id] ?? false}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
           </>
         )}
       </div>
