@@ -21,6 +21,7 @@ import { Celebration, SuccessPulse } from "~/components/Celebration";
 import HabitCheckbox from "~/components/HabitCheckbox";
 import MeasurementChart from "~/components/MeasurementChart";
 import { NumberInput } from "~/components/NumberInput";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { saveDailyNote } from "~/modules/daily-note/infra/daily-note.service.server";
 import { DailyNoteCard } from "~/modules/daily-note/presentation/components/DailyNoteCard/DailyNoteCard";
 import { DailyNoteModal } from "~/modules/daily-note/presentation/components/DailyNoteModal/DailyNoteModal";
@@ -38,11 +39,11 @@ import { formBoolean, formNumber, formText } from "~/utils/form-data";
 import type { Route } from "./+types/index";
 import "./index.css";
 
-export async function loader() {
-  return getDashboardData();
+export async function loader({ context }: Route.LoaderArgs) {
+  return getDashboardData(context.get(authenticatedUserContext).id);
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const form = await request.formData();
   const intent = form.get("intent");
 
@@ -53,7 +54,7 @@ export async function action({ request }: Route.ActionArgs) {
     });
     const parsed = schema.parse(form);
 
-    await toggleHabitCompletion({
+    await toggleHabitCompletion(context.get(authenticatedUserContext).id, {
       habitId: parsed.habitId,
       completed: parsed.completed,
     });

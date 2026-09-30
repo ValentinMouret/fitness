@@ -115,6 +115,9 @@ jobs:
       - run: bun run test:auth:integration
         env:
           AUTH_TEST_ADMIN_URL: postgresql://postgres:password@localhost:5432/postgres
+      - run: bun run test:tenant:integration
+        env:
+          TENANT_TEST_ADMIN_URL: postgresql://postgres:password@localhost:5432/postgres
       - run: bun run test:mcp:integration
         env:
           MCP_TEST_ADMIN_URL: postgresql://postgres:password@localhost:5432/postgres
@@ -172,6 +175,9 @@ jobs:
           path: build
 
       - run: bun run db:migrate
+      - run: bun run auth:seed-local
+        env:
+          AUTH_LOCAL_DATABASE_URL: postgresql://postgres:password@postgres:5432/fitness
       - run: bun run db:seed
 
       - run: bun run test:browser

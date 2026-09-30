@@ -1,9 +1,14 @@
+import type { UserId } from "~/modules/auth/domain/user";
 import { handleResultError } from "~/utils/errors";
 import type { Habit } from "../domain/entity";
-import { HabitRepository } from "./repository.server";
+import { createHabitRepositories } from "./repository.server";
 
-export async function getHabitForEdit(id: string): Promise<Habit> {
-  const result = await HabitRepository.fetchById(id);
+export async function getHabitForEdit(
+  userId: UserId,
+  id: string,
+): Promise<Habit> {
+  const repositories = createHabitRepositories(userId);
+  const result = await repositories.habits.fetchById(id);
 
   if (result.isErr()) {
     handleResultError(result, "Habit not found", 404);
@@ -16,19 +21,23 @@ export type UpdateHabitResult =
   | { readonly ok: true; readonly habit: Habit }
   | { readonly ok: false; readonly error: string; readonly status: number };
 
-export async function updateHabit(input: {
-  readonly id: string;
-  readonly name: string;
-  readonly identityPhrase: string;
-  readonly timeOfDay: string;
-  readonly location: string;
-  readonly isKeystone: boolean;
-  readonly minimalVersion: string;
-  readonly color: string;
-  readonly frequencyType: Habit["frequencyType"];
-  readonly frequencyConfig: Habit["frequencyConfig"];
-}): Promise<UpdateHabitResult> {
-  const existingHabit = await HabitRepository.fetchById(input.id);
+export async function updateHabit(
+  userId: UserId,
+  input: {
+    readonly id: string;
+    readonly name: string;
+    readonly identityPhrase: string;
+    readonly timeOfDay: string;
+    readonly location: string;
+    readonly isKeystone: boolean;
+    readonly minimalVersion: string;
+    readonly color: string;
+    readonly frequencyType: Habit["frequencyType"];
+    readonly frequencyConfig: Habit["frequencyConfig"];
+  },
+): Promise<UpdateHabitResult> {
+  const repositories = createHabitRepositories(userId);
+  const existingHabit = await repositories.habits.fetchById(input.id);
   if (existingHabit.isErr()) {
     return { ok: false, error: "Habit not found", status: 404 };
   }
@@ -46,7 +55,7 @@ export async function updateHabit(input: {
     frequencyConfig: input.frequencyConfig,
   };
 
-  const result = await HabitRepository.save(updatedHabit);
+  const result = await repositories.habits.save(updatedHabit);
 
   if (result.isErr()) {
     return { ok: false, error: "Failed to update habit", status: 500 };

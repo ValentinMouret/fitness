@@ -1,17 +1,16 @@
+import type { UserId } from "~/modules/auth/domain/user";
 import { isSameDay, today } from "~/time";
 import { handleResultError } from "~/utils/errors";
 import { HabitService } from "../application/service";
 import { groupDailyHabits } from "../domain/daily-habit-order";
 import { HabitCompletion } from "../domain/entity";
-import {
-  HabitCompletionRepository,
-  HabitRepository,
-} from "./repository.server";
+import { createHabitRepositories } from "./repository.server";
 
 const STREAK_MILESTONES = [7, 30, 90, 365];
 
-export async function getHabitsPageData() {
-  const habitsResult = await HabitRepository.fetchActive();
+export async function getHabitsPageData(userId: UserId) {
+  const repositories = createHabitRepositories(userId);
+  const habitsResult = await repositories.habits.fetchActive();
   if (habitsResult.isErr()) {
     handleResultError(habitsResult, "Failed to load habits");
   }
@@ -24,7 +23,7 @@ export async function getHabitsPageData() {
     todayDate,
   );
 
-  const completionsResult = await HabitCompletionRepository.fetchByDateRange(
+  const completionsResult = await repositories.completions.fetchByDateRange(
     earliestDate,
     todayDate,
   );
@@ -104,11 +103,15 @@ export type ToggleCompletionResult =
   | { readonly ok: true; readonly hitMilestone: number | null }
   | { readonly ok: false; readonly error: string; readonly status: number };
 
-export async function toggleHabitCompletion(input: {
-  readonly habitId: string;
-  readonly completed: boolean;
-  readonly notes?: string;
-}): Promise<ToggleCompletionResult> {
+export async function toggleHabitCompletion(
+  userId: UserId,
+  input: {
+    readonly habitId: string;
+    readonly completed: boolean;
+    readonly notes?: string;
+  },
+): Promise<ToggleCompletionResult> {
+  const repositories = createHabitRepositories(userId);
   const completion = HabitCompletion.create(
     input.habitId,
     today(),
@@ -116,17 +119,24 @@ export async function toggleHabitCompletion(input: {
     input.notes,
   );
 
-  const result = await HabitCompletionRepository.save(completion);
+  const result = await repositories.completions.save(completion);
 
   if (result.isErr()) {
-    return { ok: false, error: "Failed to save completion", status: 500 };
+    return {
+      ok: false,
+      error:
+        result.error === "not_found"
+          ? "Habit not found"
+          : "Failed to save completion",
+      status: result.error === "not_found" ? 404 : 500,
+    };
   }
 
   let hitMilestone: number | null = null;
   if (!input.completed) {
-    const habit = await HabitRepository.fetchById(input.habitId);
+    const habit = await repositories.habits.fetchById(input.habitId);
     if (habit.isOk() && habit.value) {
-      const completions = await HabitCompletionRepository.fetchByHabitBetween(
+      const completions = await repositories.completions.fetchByHabitBetween(
         input.habitId,
         new Date(habit.value.startDate),
         today(),

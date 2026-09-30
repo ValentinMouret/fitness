@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { data, Link, useFetcher, useNavigate } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { getScheduledDays, type Habit } from "~/modules/habits/domain/entity";
 import { deleteHabit } from "~/modules/habits/infra/delete-habit.service.server";
 import {
@@ -39,11 +40,11 @@ const STYLES = `
 const WEEK_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const HABIT_GRID_COLUMNS = "96px repeat(7, minmax(0, 1fr)) 32px";
 
-export async function loader() {
-  return getHabitsWeekData();
+export async function loader({ context }: Route.LoaderArgs) {
+  return getHabitsWeekData(context.get(authenticatedUserContext).id);
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const formData = await request.formData();
   const intentParsed = zfd
     .formData({ intent: formOptionalText() })
@@ -58,11 +59,14 @@ export async function action({ request }: Route.ActionArgs) {
     const parsed = schema.parse(formData);
     const targetDate = parsed.date ? new Date(parsed.date) : undefined;
 
-    const result = await toggleWeekHabitCompletion({
-      habitId: parsed.habitId,
-      completed: parsed.completed === "true",
-      date: targetDate,
-    });
+    const result = await toggleWeekHabitCompletion(
+      context.get(authenticatedUserContext).id,
+      {
+        habitId: parsed.habitId,
+        completed: parsed.completed === "true",
+        date: targetDate,
+      },
+    );
 
     if (!result.ok) {
       return data({ error: result.error }, { status: result.status });
@@ -76,7 +80,10 @@ export async function action({ request }: Route.ActionArgs) {
     });
     const parsed = schema.parse(formData);
 
-    const result = await deleteHabit(parsed.habitId);
+    const result = await deleteHabit(
+      context.get(authenticatedUserContext).id,
+      parsed.habitId,
+    );
 
     if (!result.ok) {
       return data({ error: result.error }, { status: result.status });

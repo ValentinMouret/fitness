@@ -7,11 +7,13 @@ import {
   between,
   desc,
   eq,
+  getTableColumns,
   type InferSelectModel,
   lte,
 } from "drizzle-orm";
 import { err, ok, Result, ResultAsync } from "neverthrow";
 import { z } from "zod";
+import type { UserId } from "~/modules/auth/domain/user";
 import { db } from "../../../db";
 import { habit_completions, habits } from "../../../db/schema";
 import { logger } from "../../../logger.server";
@@ -63,100 +65,6 @@ function recordToHabit(
   });
 }
 
-export const HabitRepository = {
-  save(habit: Omit<Habit, "id"> | Habit) {
-    const values = {
-      name: habit.name,
-      identity_phrase: habit.identityPhrase,
-      time_of_day: habit.timeOfDay,
-      location: habit.location,
-      is_keystone: habit.isKeystone,
-      minimal_version: habit.minimalVersion,
-      color: habit.color,
-      frequency_type: habit.frequencyType,
-      frequency_config: habit.frequencyConfig,
-      target_count: habit.targetCount,
-      start_date: habit.startDate.toISOString().split("T")[0],
-      end_date: habit.endDate?.toISOString().split("T")[0],
-      is_active: habit.isActive,
-    };
-
-    if ("id" in habit) {
-      return ResultAsync.fromPromise(
-        db
-          .update(habits)
-          .set({ ...values, updated_at: new Date() })
-          .where(eq(habits.id, habit.id)),
-        (error) => {
-          logger.error({ err: error }, "Failed to update habit");
-          return "database_error" as const;
-        },
-      );
-    }
-
-    return ResultAsync.fromPromise(
-      db.insert(habits).values(values).returning(),
-      (error) => {
-        logger.error({ err: error }, "Failed to insert habit");
-        return "database_error" as const;
-      },
-    ).andThen((records) =>
-      records.length > 0
-        ? recordToHabit(records[0])
-        : err("database_error" as const),
-    );
-  },
-
-  fetchById(id: string): ResultAsync<Habit, ErrRepository> {
-    const query = db.select().from(habits).where(eq(habits.id, id)).limit(1);
-
-    return executeQuery(query, "fetchById")
-      .andThen(fetchSingleRecord)
-      .andThen((record) => recordToHabit(record));
-  },
-
-  fetchActive(): ResultAsync<Habit[], ErrRepository> {
-    const query = db
-      .select()
-      .from(habits)
-      .where(
-        and(
-          eq(habits.is_active, true),
-          lte(habits.start_date, today().toISOString().split("T")[0]),
-        ),
-      )
-      .orderBy(desc(habits.is_keystone), habits.name);
-
-    return executeQuery(query, "fetchActive").andThen((records) =>
-      Result.combine(records.map(recordToHabit)),
-    );
-  },
-
-  fetchAll(): ResultAsync<Habit[], ErrRepository> {
-    const query = db.select().from(habits).orderBy(desc(habits.created_at));
-
-    return executeQuery(query, "fetchAll").andThen((records) =>
-      Result.combine(records.map(recordToHabit)),
-    );
-  },
-
-  delete(id: string): ResultAsync<void, ErrRepository> {
-    return executeQuery(
-      db
-        .update(habits)
-        .set({
-          is_active: false,
-          updated_at: new Date(),
-        })
-        .where(eq(habits.id, id))
-        .returning({ id: habits.id }),
-      "deleteHabit",
-    ).andThen((records) =>
-      records.length > 0 ? ok(undefined) : err("not_found" as const),
-    );
-  },
-};
-
 function recordToHabitCompletion(
   record: InferSelectModel<typeof habit_completions>,
 ): Result<HabitCompletion, ErrValidation> {
@@ -168,100 +76,234 @@ function recordToHabitCompletion(
   });
 }
 
-export const HabitCompletionRepository = {
-  save(completion: HabitCompletion) {
-    const dateStr = completion.completionDate.toISOString().split("T")[0];
+export function createHabitRepositories(userId: UserId, database = db) {
+  const HabitRepository = {
+    save(habit: Readonly<Omit<Habit, "id"> | Habit>) {
+      const values = {
+        name: habit.name,
+        identity_phrase: habit.identityPhrase,
+        time_of_day: habit.timeOfDay,
+        location: habit.location,
+        is_keystone: habit.isKeystone,
+        minimal_version: habit.minimalVersion,
+        color: habit.color,
+        frequency_type: habit.frequencyType,
+        frequency_config: habit.frequencyConfig,
+        target_count: habit.targetCount,
+        start_date: habit.startDate.toISOString().split("T")[0],
+        end_date: habit.endDate?.toISOString().split("T")[0],
+        is_active: habit.isActive,
+      };
 
-    return ResultAsync.fromPromise(
-      db
-        .insert(habit_completions)
-        .values({
-          habit_id: completion.habitId,
-          completion_date: dateStr,
-          completed: completion.completed,
-          notes: completion.notes,
-        })
-        .onConflictDoUpdate({
-          target: [
-            habit_completions.habit_id,
-            habit_completions.completion_date,
-          ],
-          set: {
-            completed: completion.completed,
-            notes: completion.notes,
-            updated_at: new Date(),
+      if ("id" in habit) {
+        return ResultAsync.fromPromise(
+          database
+            .update(habits)
+            .set({ ...values, updated_at: new Date() })
+            .where(and(eq(habits.id, habit.id), eq(habits.userId, userId)))
+            .returning({ id: habits.id }),
+          (error) => {
+            logger.error({ err: error }, "Failed to update habit");
+            return "database_error" as const;
           },
+        ).andThen((records) =>
+          records.length > 0 ? ok(undefined) : err("not_found" as const),
+        );
+      }
+
+      return ResultAsync.fromPromise(
+        database
+          .insert(habits)
+          .values({ ...values, userId })
+          .returning(),
+        (error) => {
+          logger.error({ err: error }, "Failed to insert habit");
+          return "database_error" as const;
+        },
+      ).andThen((records) =>
+        records.length > 0
+          ? recordToHabit(records[0])
+          : err("database_error" as const),
+      );
+    },
+
+    fetchById(id: string): ResultAsync<Habit, ErrRepository> {
+      const query = database
+        .select()
+        .from(habits)
+        .where(and(eq(habits.id, id), eq(habits.userId, userId)))
+        .limit(1);
+
+      return executeQuery(query, "fetchById")
+        .andThen(fetchSingleRecord)
+        .andThen((record) => recordToHabit(record));
+    },
+
+    fetchActive(): ResultAsync<Habit[], ErrRepository> {
+      const query = database
+        .select()
+        .from(habits)
+        .where(
+          and(
+            eq(habits.userId, userId),
+            eq(habits.is_active, true),
+            lte(habits.start_date, today().toISOString().split("T")[0]),
+          ),
+        )
+        .orderBy(desc(habits.is_keystone), habits.name);
+
+      return executeQuery(query, "fetchActive").andThen((records) =>
+        Result.combine(records.map(recordToHabit)),
+      );
+    },
+
+    fetchAll(): ResultAsync<Habit[], ErrRepository> {
+      const query = database
+        .select()
+        .from(habits)
+        .where(eq(habits.userId, userId))
+        .orderBy(desc(habits.created_at));
+
+      return executeQuery(query, "fetchAll").andThen((records) =>
+        Result.combine(records.map(recordToHabit)),
+      );
+    },
+
+    delete(id: string): ResultAsync<void, ErrRepository> {
+      return executeQuery(
+        database
+          .update(habits)
+          .set({
+            is_active: false,
+            updated_at: new Date(),
+          })
+          .where(and(eq(habits.id, id), eq(habits.userId, userId)))
+          .returning({ id: habits.id }),
+        "deleteHabit",
+      ).andThen((records) =>
+        records.length > 0 ? ok(undefined) : err("not_found" as const),
+      );
+    },
+  };
+
+  const HabitCompletionRepository = {
+    save(completion: HabitCompletion) {
+      const dateStr = completion.completionDate.toISOString().split("T")[0];
+
+      return ResultAsync.fromPromise(
+        database.transaction(async (tx) => {
+          const [habit] = await tx
+            .select({ id: habits.id })
+            .from(habits)
+            .where(
+              and(eq(habits.id, completion.habitId), eq(habits.userId, userId)),
+            )
+            .for("key share");
+          if (!habit) return err("not_found" as const);
+          await tx
+            .insert(habit_completions)
+            .values({
+              habit_id: completion.habitId,
+              completion_date: dateStr,
+              completed: completion.completed,
+              notes: completion.notes,
+            })
+            .onConflictDoUpdate({
+              target: [
+                habit_completions.habit_id,
+                habit_completions.completion_date,
+              ],
+              set: {
+                completed: completion.completed,
+                notes: completion.notes,
+                updated_at: new Date(),
+              },
+            });
+          return ok(undefined);
         }),
-      (error) => {
-        logger.error({ err: error }, "Failed to save habit completion");
-        return "database_error" as const;
-      },
-    );
-  },
+        (error) => {
+          logger.error({ err: error }, "Failed to save habit completion");
+          return "database_error" as const;
+        },
+      ).andThen((result) => result);
+    },
 
-  fetchByHabitAndDate(
-    habitId: string,
-    date: Date,
-  ): ResultAsync<HabitCompletion | null, ErrRepository> {
-    const dateStr = date.toISOString().split("T")[0];
-    const query = db
-      .select()
-      .from(habit_completions)
-      .where(
-        and(
-          eq(habit_completions.habit_id, habitId),
-          eq(habit_completions.completion_date, dateStr),
-        ),
-      )
-      .limit(1);
+    fetchByHabitAndDate(
+      habitId: string,
+      date: Date,
+    ): ResultAsync<HabitCompletion | null, ErrRepository> {
+      const dateStr = date.toISOString().split("T")[0];
+      const query = database
+        .select(getTableColumns(habit_completions))
+        .from(habit_completions)
+        .innerJoin(habits, eq(habits.id, habit_completions.habit_id))
+        .where(
+          and(
+            eq(habits.userId, userId),
+            eq(habit_completions.habit_id, habitId),
+            eq(habit_completions.completion_date, dateStr),
+          ),
+        )
+        .limit(1);
 
-    return executeQuery(query, "fetchByHabitAndDate").andThen((records) =>
-      records.length > 0
-        ? recordToHabitCompletion(records[0]).map(
-            (r) => r as HabitCompletion | null,
-          )
-        : ok(null),
-    );
-  },
+      return executeQuery(query, "fetchByHabitAndDate").andThen((records) =>
+        records.length > 0
+          ? recordToHabitCompletion(records[0]).map(
+              (r) => r as HabitCompletion | null,
+            )
+          : ok(null),
+      );
+    },
 
-  fetchByHabitBetween(
-    habitId: string,
-    from: Date,
-    to: Date,
-  ): ResultAsync<HabitCompletion[], ErrRepository> {
-    const fromStr = from.toISOString().split("T")[0];
-    const toStr = to.toISOString().split("T")[0];
+    fetchByHabitBetween(
+      habitId: string,
+      from: Date,
+      to: Date,
+    ): ResultAsync<HabitCompletion[], ErrRepository> {
+      const fromStr = from.toISOString().split("T")[0];
+      const toStr = to.toISOString().split("T")[0];
 
-    const query = db
-      .select()
-      .from(habit_completions)
-      .where(
-        and(
-          eq(habit_completions.habit_id, habitId),
-          between(habit_completions.completion_date, fromStr, toStr),
-        ),
-      )
-      .orderBy(desc(habit_completions.completion_date));
+      const query = database
+        .select(getTableColumns(habit_completions))
+        .from(habit_completions)
+        .innerJoin(habits, eq(habits.id, habit_completions.habit_id))
+        .where(
+          and(
+            eq(habits.userId, userId),
+            eq(habit_completions.habit_id, habitId),
+            between(habit_completions.completion_date, fromStr, toStr),
+          ),
+        )
+        .orderBy(desc(habit_completions.completion_date));
 
-    return executeQuery(query, "fetchByHabitBetween").andThen((records) =>
-      Result.combine(records.map(recordToHabitCompletion)),
-    );
-  },
+      return executeQuery(query, "fetchByHabitBetween").andThen((records) =>
+        Result.combine(records.map(recordToHabitCompletion)),
+      );
+    },
 
-  fetchByDateRange(
-    from: Date,
-    to: Date,
-  ): ResultAsync<HabitCompletion[], ErrRepository> {
-    const fromStr = from.toISOString().split("T")[0];
-    const toStr = to.toISOString().split("T")[0];
+    fetchByDateRange(
+      from: Date,
+      to: Date,
+    ): ResultAsync<HabitCompletion[], ErrRepository> {
+      const fromStr = from.toISOString().split("T")[0];
+      const toStr = to.toISOString().split("T")[0];
 
-    const query = db
-      .select()
-      .from(habit_completions)
-      .where(between(habit_completions.completion_date, fromStr, toStr));
+      const query = database
+        .select(getTableColumns(habit_completions))
+        .from(habit_completions)
+        .innerJoin(habits, eq(habits.id, habit_completions.habit_id))
+        .where(
+          and(
+            eq(habits.userId, userId),
+            between(habit_completions.completion_date, fromStr, toStr),
+          ),
+        );
 
-    return executeQuery(query, "fetchByDateRange").andThen((records) =>
-      Result.combine(records.map(recordToHabitCompletion)),
-    );
-  },
-};
+      return executeQuery(query, "fetchByDateRange").andThen((records) =>
+        Result.combine(records.map(recordToHabitCompletion)),
+      );
+    },
+  };
+
+  return { habits: HabitRepository, completions: HabitCompletionRepository };
+}

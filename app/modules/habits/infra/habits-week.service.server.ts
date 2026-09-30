@@ -1,13 +1,12 @@
+import type { UserId } from "~/modules/auth/domain/user";
 import { today } from "~/time";
 import { handleResultError } from "~/utils/errors";
 import { HabitCompletion } from "../domain/entity";
-import {
-  HabitCompletionRepository,
-  HabitRepository,
-} from "./repository.server";
+import { createHabitRepositories } from "./repository.server";
 
-export async function getHabitsWeekData() {
-  const habitsResult = await HabitRepository.fetchActive();
+export async function getHabitsWeekData(userId: UserId) {
+  const repositories = createHabitRepositories(userId);
+  const habitsResult = await repositories.habits.fetchActive();
   if (habitsResult.isErr()) {
     handleResultError(habitsResult, "Failed to load habits");
   }
@@ -23,7 +22,7 @@ export async function getHabitsWeekData() {
   // 0=Mon, 6=Sun
   const todayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
-  const completionsResult = await HabitCompletionRepository.fetchByDateRange(
+  const completionsResult = await repositories.completions.fetchByDateRange(
     weekStart,
     todayDate,
   );
@@ -53,12 +52,16 @@ export async function getHabitsWeekData() {
   return { habits, weekStart, todayIndex, completionMap, todayCompletionMap };
 }
 
-export async function toggleWeekHabitCompletion(input: {
-  readonly habitId: string;
-  readonly completed: boolean;
-  readonly date?: Date;
-  readonly notes?: string;
-}): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
+export async function toggleWeekHabitCompletion(
+  userId: UserId,
+  input: {
+    readonly habitId: string;
+    readonly completed: boolean;
+    readonly date?: Date;
+    readonly notes?: string;
+  },
+): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
+  const repositories = createHabitRepositories(userId);
   const completion = HabitCompletion.create(
     input.habitId,
     input.date ?? today(),
@@ -66,10 +69,17 @@ export async function toggleWeekHabitCompletion(input: {
     input.notes,
   );
 
-  const result = await HabitCompletionRepository.save(completion);
+  const result = await repositories.completions.save(completion);
 
   if (result.isErr()) {
-    return { ok: false, error: "Failed to save completion", status: 500 };
+    return {
+      ok: false,
+      error:
+        result.error === "not_found"
+          ? "Habit not found"
+          : "Failed to save completion",
+      status: result.error === "not_found" ? 404 : 500,
+    };
   }
 
   return { ok: true };

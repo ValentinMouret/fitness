@@ -1,6 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { workoutCommands } from "~/modules/fitness/infra/workout.repository.server";
+import { createRuntimeQueryRunner } from "~/modules/mcp/infra/query.server";
 import { registerFitnessTools } from "~/modules/mcp/infra/tools.server";
+import { requireLegacyOwnerIdentity } from "./legacy-owner.server";
 import { findAccess } from "./oauth.repository.server";
 import { oauthConfig } from "./oauth-config.server";
 import { oauthError, privateHeaders } from "./oauth-http.server";
@@ -37,7 +40,12 @@ export async function handleMcp(request: Request) {
     sessionIdGenerator: undefined,
     enableJsonResponse: true,
   });
-  registerFitnessTools(server);
+  const owner = await requireLegacyOwnerIdentity();
+  registerFitnessTools(
+    server,
+    workoutCommands,
+    createRuntimeQueryRunner(owner.id),
+  );
   try {
     await server.connect(transport);
     const response = await transport.handleRequest(request);

@@ -4,6 +4,7 @@ import { deparse, parse } from "pgsql-parser";
 import { z } from "zod";
 import { env } from "~/env.server";
 import { logger } from "~/logger.server";
+import type { UserId } from "~/modules/auth/domain/user";
 import { queryLimits, validateQueryAst } from "../domain/query-policy";
 
 let pool: Pool | undefined;
@@ -18,6 +19,7 @@ export type QueryResult = {
 const rowSchema = z.object({ payload: z.string().nullable() });
 
 export function createQueryRunner(
+  userId: UserId,
   connect: () => Promise<PoolClient>,
   expectedRole = "fitness_mcp_reader",
 ) {
@@ -29,6 +31,7 @@ export function createQueryRunner(
   > =>
     ResultAsync.fromPromise(
       (async () => {
+        if (!userId) throw new Error("A trusted user identity is required");
         if (Buffer.byteLength(sql) > queryLimits.sqlBytes)
           throw new Error("SQL exceeds the byte limit");
         const ast = await parse(sql);
@@ -39,6 +42,9 @@ export function createQueryRunner(
         let broken = false;
         try {
           await client.query("begin read only");
+          await client.query("select set_config('fitness.user_id', $1, true)", [
+            userId,
+          ]);
           await client.query(
             `set local statement_timeout = '${queryLimits.timeoutMs}ms'`,
           );
@@ -111,16 +117,18 @@ export function createQueryRunner(
     );
 }
 
-export const runQuery = createQueryRunner(async () => {
-  if (!env.MCP_DATABASE_URL) throw new Error("SQL reads are not configured");
-  pool ??= new Pool({
-    connectionString: env.MCP_DATABASE_URL,
-    max: 2,
-    connectionTimeoutMillis: 2000,
-    idleTimeoutMillis: 10000,
-    query_timeout: queryLimits.timeoutMs + 1000,
-  }).on("error", (error) =>
-    logger.error({ err: error }, "MCP reader connection failed"),
-  );
-  return pool.connect();
-});
+export function createRuntimeQueryRunner(userId: UserId) {
+  return createQueryRunner(userId, async () => {
+    if (!env.MCP_DATABASE_URL) throw new Error("SQL reads are not configured");
+    pool ??= new Pool({
+      connectionString: env.MCP_DATABASE_URL,
+      max: 2,
+      connectionTimeoutMillis: 2000,
+      idleTimeoutMillis: 10000,
+      query_timeout: queryLimits.timeoutMs + 1000,
+    }).on("error", (error) =>
+      logger.error({ err: error }, "MCP reader connection failed"),
+    );
+    return pool.connect();
+  });
+}
