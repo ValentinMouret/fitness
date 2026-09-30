@@ -29,7 +29,7 @@ or running write tests; do not use production data.
 The auth integration suite has a separate command, `bun run test:auth:integration`,
 and [configuration](../../vitest.auth.config.ts). See
 [authentication setup](../operations/authentication.md) for its environment and
-cleanup behaviour. Personal habit ownership and owner-history migration regressions use
+cleanup behaviour. Personal data ownership and owner-history migration regressions use
 `bun run test:tenant:integration`, with `TENANT_TEST_ADMIN_URL` explicitly
 pointing to a loopback disposable PostgreSQL admin connection. The suite creates
 and drops its own scratch database.

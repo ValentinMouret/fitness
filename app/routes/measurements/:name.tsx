@@ -21,6 +21,7 @@ import { SuccessPulse } from "~/components/Celebration";
 import MeasurementChart from "~/components/MeasurementChart";
 import { NumberInput } from "~/components/NumberInput";
 import { SectionHeader } from "~/components/SectionHeader";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import {
   addMeasure,
   deleteMeasure,
@@ -32,9 +33,9 @@ import { formNumber, formOptionalText } from "~/utils/form-data";
 import type { Route } from "./+types/:name";
 import "./measurement-detail.css";
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, context }: Route.LoaderArgs) {
   const { name } = params;
-  return getMeasurementDetail(name);
+  return getMeasurementDetail(context.get(authenticatedUserContext).id, name);
 }
 
 export const handle = {
@@ -49,7 +50,7 @@ export const handle = {
   },
 };
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
   const { name } = params;
   const formData = await request.formData();
   const intentSchema = zfd.formData({
@@ -69,7 +70,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     }
 
     const measureDate = parsed.data.date ? new Date(parsed.data.date) : today();
-    const result = await addMeasure({
+    const result = await addMeasure(context.get(authenticatedUserContext).id, {
       name,
       value: parsed.data.value,
       date: measureDate,
@@ -89,7 +90,10 @@ export async function action({ request, params }: Route.ActionArgs) {
     const parsed = schema.parse(formData);
     const measureDate = parsed.date ? new Date(parsed.date) : new Date();
 
-    const result = await deleteMeasure({ name, date: measureDate });
+    const result = await deleteMeasure(
+      context.get(authenticatedUserContext).id,
+      { name, date: measureDate },
+    );
     if (!result.ok) {
       return data({ error: result.error }, { status: result.status });
     }
@@ -127,7 +131,7 @@ export default function MeasurementPage(_: Route.ComponentProps) {
   }, []);
   const actionData = z
     .object({ error: z.string().optional(), success: z.boolean().optional() })
-    .nullable()
+    .nullish()
     .parse(addFetcher.data);
 
   return (

@@ -4,6 +4,7 @@ import {
   check,
   date,
   doublePrecision,
+  foreignKey,
   index,
   integer,
   jsonb,
@@ -129,23 +130,35 @@ export const timestampColumns = () => ({
   deleted_at: timestamp(),
 });
 
-export const measurements = pgTable("measurements", {
-  name: text().primaryKey(),
-  unit: text().notNull(),
-  description: text(),
-  ...timestampColumns(),
-});
+export const measurements = pgTable(
+  "measurements",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id),
+    name: text().notNull(),
+    unit: text().notNull(),
+    description: text(),
+    ...timestampColumns(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.name] })],
+);
 
 export const measures = pgTable(
   "measures",
   {
-    measurement_name: text()
-      .references(() => measurements.name)
-      .notNull(),
+    userId: uuid("user_id").notNull(),
+    measurement_name: text().notNull(),
     t: timestamp().notNull().defaultNow(),
     value: doublePrecision().notNull(),
   },
-  (table) => [primaryKey({ columns: [table.measurement_name, table.t] })],
+  (table) => [
+    primaryKey({ columns: [table.userId, table.measurement_name, table.t] }),
+    foreignKey({
+      columns: [table.userId, table.measurement_name],
+      foreignColumns: [measurements.userId, measurements.name],
+    }),
+  ],
 );
 
 export const habits = pgTable(
@@ -192,15 +205,18 @@ export const targets = pgTable(
   "targets",
   {
     id: uuid().defaultRandom().primaryKey(),
-    measurement_name: text()
-      .references(() => measurements.name)
-      .notNull(),
+    userId: uuid("user_id").notNull(),
+    measurement_name: text().notNull(),
     value: doublePrecision().notNull(),
     ...timestampColumns(),
   },
   (table) => [
+    foreignKey({
+      columns: [table.userId, table.measurement_name],
+      foreignColumns: [measurements.userId, measurements.name],
+    }),
     uniqueIndex("idx_targets_measurement_active")
-      .on(table.measurement_name)
+      .on(table.userId, table.measurement_name)
       .where(isNull(table.deleted_at)),
   ],
 );
@@ -632,11 +648,18 @@ export const mealLogIngredients = pgTable(
   ],
 );
 
-export const daily_note = pgTable("daily_note", {
-  id: integer().primaryKey().default(1),
-  content: text().notNull().default(""),
-  updated_at: timestamp(),
-});
+export const daily_note = pgTable(
+  "daily_note",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id),
+    id: integer().notNull().default(1),
+    content: text().notNull().default(""),
+    updated_at: timestamp(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.id] })],
+);
 
 export {
   oauthCodes,

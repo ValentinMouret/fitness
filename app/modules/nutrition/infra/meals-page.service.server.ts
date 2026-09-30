@@ -1,14 +1,15 @@
+import type { UserId } from "~/modules/auth/domain/user";
 import { baseMeasurements } from "~/modules/core/domain/measurements";
-import { TargetService } from "~/modules/core/infra/measurement-service";
+import { createTargetService } from "~/modules/core/infra/measurement-service.server";
 import { dailyTargetsFromCalories } from "~/modules/nutrition/domain/daily-targets";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import { NutritionService } from "~/modules/nutrition/infra/service";
 import { handleResultError } from "~/utils/errors";
 
-export async function getMealsPageData(date: Date) {
+export async function getMealsPageData(userId: UserId, date: Date) {
   const dailySummaryResult = await NutritionService.getDailySummary(date);
   const mealTemplatesResult = await NutritionService.getAllMealTemplates();
-  const activeTargets = await TargetService.currentTargets();
+  const activeTargets = await createTargetService(userId).currentTargets();
 
   if (dailySummaryResult.isErr()) {
     handleResultError(dailySummaryResult, "Failed to load daily summary");

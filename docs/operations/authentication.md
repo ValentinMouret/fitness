@@ -178,3 +178,32 @@ inside its isolated PostgreSQL service before browser tests.
 After additional accounts write private data, rollback must retain ownership
 and scoped operations; restoring the former global application is not a safe
 recovery procedure. Production admission remains disabled in this stage.
+
+### Measurement, target and daily note ownership (production hold)
+
+Migration `0014_measurement_ownership.sql` extends the same explicit owner
+backfill prerequisite to measurement definitions, dated measurements, all
+active/deleted target history and the existing daily note. It preserves names,
+IDs, timestamps and values. Definitions are unique by user/name; dated measures
+by user/name/time; the singleton note by user/ID; active targets by user/name.
+Composite foreign keys prevent a dated value or target from referencing another
+account's definition.
+
+Browser services, dashboard aggregates, calorie target persistence and SQL
+progress views receive the trusted actor. Target replacement locks the owned
+measurement and runs in one transaction; a conflicting foreign target ID rolls
+back without deleting the caller's previous target. Native admission remains
+closed and unconverted private paths still prevent onboarding. The production
+bootstrap/backfill/compatibility hold from the habit stage also applies here.
+
+`bun run db:seed` now requires a configured and explicitly bootstrapped owner.
+It adds only the neutral weight/calorie definitions to that owner's account and
+never copies private values or creates a calorie prescription. CI bootstraps
+synthetic users in its isolated test service before seeding those definitions.
+A new account's first-action/empty-state setup remains part of the later
+onboarding stage.
+
+The tenant suite also checks measurement/target/note history preservation,
+same-name/same-timestamp isolation, composite foreign keys, independent notes,
+concurrent target replacement and forged-ID rollback. MCP tests use the real
+restricted role for parallel A/B progress aggregates and missing-identity reads.

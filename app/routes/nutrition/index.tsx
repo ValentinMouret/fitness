@@ -38,6 +38,7 @@ import { zfd } from "zod-form-data";
 import { Celebration, SuccessPulse } from "~/components/Celebration";
 import { PageHeader } from "~/components/PageHeader";
 import RequiredStar from "~/components/RequiredStar";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { defaultDailyTargets } from "~/modules/nutrition/domain/daily-targets";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
@@ -68,14 +69,17 @@ import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types";
 import "./index.css";
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const dateParam = url.searchParams.get("date");
   const currentDate = dateParam ? new Date(dateParam) : today();
-  return getMealsPageData(currentDate);
+  return getMealsPageData(
+    context.get(authenticatedUserContext).id,
+    currentDate,
+  );
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   const formData = await request.formData();
   const intentSchema = zfd.formData({
     intent: formOptionalText(),

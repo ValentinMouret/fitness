@@ -20,6 +20,7 @@ import {
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import RequiredStar from "~/components/RequiredStar";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { createMeasurement } from "~/modules/core/infra/create-measurement.service.server";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/new";
@@ -31,7 +32,7 @@ export const handle = {
   }),
 };
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const formData = await request.formData();
 
   const schema = zfd.formData({
@@ -42,11 +43,14 @@ export async function action({ request }: Route.ActionArgs) {
 
   const parsed = schema.parse(formData);
 
-  const result = await createMeasurement({
-    rawName: parsed.name,
-    unit: parsed.unit,
-    description: parsed.description ?? undefined,
-  });
+  const result = await createMeasurement(
+    context.get(authenticatedUserContext).id,
+    {
+      rawName: parsed.name,
+      unit: parsed.unit,
+      description: parsed.description ?? undefined,
+    },
+  );
 
   if (!result.ok) {
     return data({ error: result.error }, { status: result.status });
