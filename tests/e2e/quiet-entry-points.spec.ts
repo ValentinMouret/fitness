@@ -127,6 +127,67 @@ test("weight correction keeps both original timestamps and dated entry remains a
   }
 });
 
+test("Dashboard weight stays directly loggable after a same-day reading and repeated saves", async ({
+  page,
+  pool,
+}) => {
+  const originalTimestamp = new Date().toISOString();
+  const originalValue = Number((85 + Math.random()).toFixed(6));
+  const firstValue = Number((86 + Math.random()).toFixed(6));
+  const secondValue = Number((87 + Math.random()).toFixed(6));
+  const existing = await pool.query(
+    "select 1 from measures where measurement_name='weight' and (t=$1 or value=any($2::float8[]))",
+    [originalTimestamp, [firstValue, secondValue]],
+  );
+  expect(existing.rowCount).toBe(0);
+  try {
+    await pool.query(
+      "insert into measures(measurement_name,t,value) values('weight',$1,$2)",
+      [originalTimestamp, originalValue],
+    );
+    await page.goto("/dashboard");
+    const input = page.getByRole("textbox", { name: "Weight", exact: true });
+    const log = page.getByRole("button", { name: "Log", exact: true });
+    await expect(input).toBeVisible();
+    await expectTouchTarget(log);
+    for (const value of [firstValue, secondValue]) {
+      await input.fill(String(value));
+      await log.click();
+      await expect
+        .poll(
+          async () =>
+            (
+              await pool.query(
+                "select count(*)::int as count from measures where measurement_name='weight' and value=$1",
+                [value],
+              )
+            ).rows[0].count,
+        )
+        .toBe(1);
+      await expect(page).toHaveURL(/\/dashboard$/);
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await expect(input).toBeVisible();
+      await expect(log).toBeEnabled();
+    }
+    expect(
+      (
+        await pool.query(
+          "select value from measures where measurement_name='weight' and t=$1",
+          [originalTimestamp],
+        )
+      ).rows[0].value,
+    ).toBe(originalValue);
+    await expect(
+      page.getByRole("link", { name: "History & corrections" }),
+    ).toBeVisible();
+  } finally {
+    await pool.query(
+      "delete from measures where measurement_name='weight' and (t=$1 or value=any($2::float8[]))",
+      [originalTimestamp, [firstValue, secondValue]],
+    );
+  }
+});
+
 test("nutrition opens the saved calorie target and existing calculator", async ({
   page,
   pool,
