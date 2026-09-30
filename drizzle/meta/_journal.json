@@ -127,6 +127,13 @@
       "when": 1790802206104,
       "tag": "0017_nutrition_ownership",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790803636247,
+      "tag": "0018_equipment_ownership",
+      "breakpoints": true
     }
   ]
 }

@@ -1,3 +1,4 @@
+import { requireLegacyOwnerIdentity } from "~/modules/auth/infra/legacy-owner.server";
 import "dotenv/config";
 import { type InferInsertModel, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -868,165 +869,168 @@ const exerciseData: Omit<InferInsertModel<typeof exercises>, "id">[] = [
 ];
 
 // Equipment preferences based on evidence-based hierarchy: Cables > Dumbbells > Barbells > Machines (except legs)
-const equipmentPreferenceData: InferInsertModel<typeof equipmentPreferences>[] =
-  [
-    // Chest preferences
-    { muscle_group: "pecs", exercise_type: "cable", preference_score: 10 },
-    { muscle_group: "pecs", exercise_type: "dumbbells", preference_score: 9 },
-    { muscle_group: "pecs", exercise_type: "barbell", preference_score: 8 },
-    { muscle_group: "pecs", exercise_type: "machine", preference_score: 6 },
-    { muscle_group: "pecs", exercise_type: "bodyweight", preference_score: 7 },
+const equipmentPreferenceData: Omit<
+  InferInsertModel<typeof equipmentPreferences>,
+  "userId"
+>[] = [
+  // Chest preferences
+  { muscle_group: "pecs", exercise_type: "cable", preference_score: 10 },
+  { muscle_group: "pecs", exercise_type: "dumbbells", preference_score: 9 },
+  { muscle_group: "pecs", exercise_type: "barbell", preference_score: 8 },
+  { muscle_group: "pecs", exercise_type: "machine", preference_score: 6 },
+  { muscle_group: "pecs", exercise_type: "bodyweight", preference_score: 7 },
 
-    // Back preferences
-    { muscle_group: "lats", exercise_type: "cable", preference_score: 10 },
-    { muscle_group: "lats", exercise_type: "dumbbells", preference_score: 9 },
-    { muscle_group: "lats", exercise_type: "barbell", preference_score: 8 },
-    { muscle_group: "lats", exercise_type: "machine", preference_score: 7 },
-    { muscle_group: "lats", exercise_type: "bodyweight", preference_score: 9 },
+  // Back preferences
+  { muscle_group: "lats", exercise_type: "cable", preference_score: 10 },
+  { muscle_group: "lats", exercise_type: "dumbbells", preference_score: 9 },
+  { muscle_group: "lats", exercise_type: "barbell", preference_score: 8 },
+  { muscle_group: "lats", exercise_type: "machine", preference_score: 7 },
+  { muscle_group: "lats", exercise_type: "bodyweight", preference_score: 9 },
 
-    // Shoulders preferences
-    { muscle_group: "delts", exercise_type: "cable", preference_score: 10 },
-    { muscle_group: "delts", exercise_type: "dumbbells", preference_score: 9 },
-    { muscle_group: "delts", exercise_type: "barbell", preference_score: 7 },
-    { muscle_group: "delts", exercise_type: "machine", preference_score: 6 },
-    { muscle_group: "delts", exercise_type: "bodyweight", preference_score: 5 },
+  // Shoulders preferences
+  { muscle_group: "delts", exercise_type: "cable", preference_score: 10 },
+  { muscle_group: "delts", exercise_type: "dumbbells", preference_score: 9 },
+  { muscle_group: "delts", exercise_type: "barbell", preference_score: 7 },
+  { muscle_group: "delts", exercise_type: "machine", preference_score: 6 },
+  { muscle_group: "delts", exercise_type: "bodyweight", preference_score: 5 },
 
-    // Arms preferences
-    { muscle_group: "biceps", exercise_type: "cable", preference_score: 10 },
-    { muscle_group: "biceps", exercise_type: "dumbbells", preference_score: 9 },
-    { muscle_group: "biceps", exercise_type: "barbell", preference_score: 8 },
-    { muscle_group: "biceps", exercise_type: "machine", preference_score: 6 },
-    {
-      muscle_group: "biceps",
-      exercise_type: "bodyweight",
-      preference_score: 7,
-    },
+  // Arms preferences
+  { muscle_group: "biceps", exercise_type: "cable", preference_score: 10 },
+  { muscle_group: "biceps", exercise_type: "dumbbells", preference_score: 9 },
+  { muscle_group: "biceps", exercise_type: "barbell", preference_score: 8 },
+  { muscle_group: "biceps", exercise_type: "machine", preference_score: 6 },
+  {
+    muscle_group: "biceps",
+    exercise_type: "bodyweight",
+    preference_score: 7,
+  },
 
-    { muscle_group: "triceps", exercise_type: "cable", preference_score: 10 },
-    {
-      muscle_group: "triceps",
-      exercise_type: "dumbbells",
-      preference_score: 9,
-    },
-    { muscle_group: "triceps", exercise_type: "barbell", preference_score: 7 },
-    { muscle_group: "triceps", exercise_type: "machine", preference_score: 6 },
-    {
-      muscle_group: "triceps",
-      exercise_type: "bodyweight",
-      preference_score: 8,
-    },
+  { muscle_group: "triceps", exercise_type: "cable", preference_score: 10 },
+  {
+    muscle_group: "triceps",
+    exercise_type: "dumbbells",
+    preference_score: 9,
+  },
+  { muscle_group: "triceps", exercise_type: "barbell", preference_score: 7 },
+  { muscle_group: "triceps", exercise_type: "machine", preference_score: 6 },
+  {
+    muscle_group: "triceps",
+    exercise_type: "bodyweight",
+    preference_score: 8,
+  },
 
-    // Legs preferences (machines preferred due to leverage advantages)
-    { muscle_group: "quads", exercise_type: "machine", preference_score: 10 },
-    { muscle_group: "quads", exercise_type: "barbell", preference_score: 9 },
-    { muscle_group: "quads", exercise_type: "dumbbells", preference_score: 7 },
-    { muscle_group: "quads", exercise_type: "cable", preference_score: 6 },
-    { muscle_group: "quads", exercise_type: "bodyweight", preference_score: 5 },
+  // Legs preferences (machines preferred due to leverage advantages)
+  { muscle_group: "quads", exercise_type: "machine", preference_score: 10 },
+  { muscle_group: "quads", exercise_type: "barbell", preference_score: 9 },
+  { muscle_group: "quads", exercise_type: "dumbbells", preference_score: 7 },
+  { muscle_group: "quads", exercise_type: "cable", preference_score: 6 },
+  { muscle_group: "quads", exercise_type: "bodyweight", preference_score: 5 },
 
-    { muscle_group: "glutes", exercise_type: "barbell", preference_score: 10 },
-    { muscle_group: "glutes", exercise_type: "machine", preference_score: 9 },
-    { muscle_group: "glutes", exercise_type: "cable", preference_score: 8 },
-    { muscle_group: "glutes", exercise_type: "dumbbells", preference_score: 7 },
-    {
-      muscle_group: "glutes",
-      exercise_type: "bodyweight",
-      preference_score: 6,
-    },
+  { muscle_group: "glutes", exercise_type: "barbell", preference_score: 10 },
+  { muscle_group: "glutes", exercise_type: "machine", preference_score: 9 },
+  { muscle_group: "glutes", exercise_type: "cable", preference_score: 8 },
+  { muscle_group: "glutes", exercise_type: "dumbbells", preference_score: 7 },
+  {
+    muscle_group: "glutes",
+    exercise_type: "bodyweight",
+    preference_score: 6,
+  },
 
-    {
-      muscle_group: "armstrings",
-      exercise_type: "machine",
-      preference_score: 10,
-    },
-    {
-      muscle_group: "armstrings",
-      exercise_type: "barbell",
-      preference_score: 9,
-    },
-    {
-      muscle_group: "armstrings",
-      exercise_type: "dumbbells",
-      preference_score: 8,
-    },
-    { muscle_group: "armstrings", exercise_type: "cable", preference_score: 7 },
-    {
-      muscle_group: "armstrings",
-      exercise_type: "bodyweight",
-      preference_score: 5,
-    },
+  {
+    muscle_group: "armstrings",
+    exercise_type: "machine",
+    preference_score: 10,
+  },
+  {
+    muscle_group: "armstrings",
+    exercise_type: "barbell",
+    preference_score: 9,
+  },
+  {
+    muscle_group: "armstrings",
+    exercise_type: "dumbbells",
+    preference_score: 8,
+  },
+  { muscle_group: "armstrings", exercise_type: "cable", preference_score: 7 },
+  {
+    muscle_group: "armstrings",
+    exercise_type: "bodyweight",
+    preference_score: 5,
+  },
 
-    { muscle_group: "calves", exercise_type: "machine", preference_score: 10 },
-    { muscle_group: "calves", exercise_type: "dumbbells", preference_score: 7 },
-    { muscle_group: "calves", exercise_type: "barbell", preference_score: 6 },
-    { muscle_group: "calves", exercise_type: "cable", preference_score: 8 },
-    {
-      muscle_group: "calves",
-      exercise_type: "bodyweight",
-      preference_score: 5,
-    },
+  { muscle_group: "calves", exercise_type: "machine", preference_score: 10 },
+  { muscle_group: "calves", exercise_type: "dumbbells", preference_score: 7 },
+  { muscle_group: "calves", exercise_type: "barbell", preference_score: 6 },
+  { muscle_group: "calves", exercise_type: "cable", preference_score: 8 },
+  {
+    muscle_group: "calves",
+    exercise_type: "bodyweight",
+    preference_score: 5,
+  },
 
-    // Core preferences
-    { muscle_group: "abs", exercise_type: "bodyweight", preference_score: 10 },
-    { muscle_group: "abs", exercise_type: "cable", preference_score: 9 },
-    { muscle_group: "abs", exercise_type: "machine", preference_score: 7 },
-    { muscle_group: "abs", exercise_type: "dumbbells", preference_score: 6 },
-    { muscle_group: "abs", exercise_type: "barbell", preference_score: 5 },
+  // Core preferences
+  { muscle_group: "abs", exercise_type: "bodyweight", preference_score: 10 },
+  { muscle_group: "abs", exercise_type: "cable", preference_score: 9 },
+  { muscle_group: "abs", exercise_type: "machine", preference_score: 7 },
+  { muscle_group: "abs", exercise_type: "dumbbells", preference_score: 6 },
+  { muscle_group: "abs", exercise_type: "barbell", preference_score: 5 },
 
-    // Other muscle groups
-    { muscle_group: "trapezes", exercise_type: "cable", preference_score: 10 },
-    {
-      muscle_group: "trapezes",
-      exercise_type: "dumbbells",
-      preference_score: 9,
-    },
-    { muscle_group: "trapezes", exercise_type: "barbell", preference_score: 8 },
-    { muscle_group: "trapezes", exercise_type: "machine", preference_score: 7 },
-    {
-      muscle_group: "trapezes",
-      exercise_type: "bodyweight",
-      preference_score: 6,
-    },
+  // Other muscle groups
+  { muscle_group: "trapezes", exercise_type: "cable", preference_score: 10 },
+  {
+    muscle_group: "trapezes",
+    exercise_type: "dumbbells",
+    preference_score: 9,
+  },
+  { muscle_group: "trapezes", exercise_type: "barbell", preference_score: 8 },
+  { muscle_group: "trapezes", exercise_type: "machine", preference_score: 7 },
+  {
+    muscle_group: "trapezes",
+    exercise_type: "bodyweight",
+    preference_score: 6,
+  },
 
-    {
-      muscle_group: "lower_back",
-      exercise_type: "barbell",
-      preference_score: 10,
-    },
-    { muscle_group: "lower_back", exercise_type: "cable", preference_score: 9 },
-    {
-      muscle_group: "lower_back",
-      exercise_type: "machine",
-      preference_score: 8,
-    },
-    {
-      muscle_group: "lower_back",
-      exercise_type: "dumbbells",
-      preference_score: 7,
-    },
-    {
-      muscle_group: "lower_back",
-      exercise_type: "bodyweight",
-      preference_score: 9,
-    },
+  {
+    muscle_group: "lower_back",
+    exercise_type: "barbell",
+    preference_score: 10,
+  },
+  { muscle_group: "lower_back", exercise_type: "cable", preference_score: 9 },
+  {
+    muscle_group: "lower_back",
+    exercise_type: "machine",
+    preference_score: 8,
+  },
+  {
+    muscle_group: "lower_back",
+    exercise_type: "dumbbells",
+    preference_score: 7,
+  },
+  {
+    muscle_group: "lower_back",
+    exercise_type: "bodyweight",
+    preference_score: 9,
+  },
 
-    { muscle_group: "forearm", exercise_type: "cable", preference_score: 10 },
-    {
-      muscle_group: "forearm",
-      exercise_type: "dumbbells",
-      preference_score: 9,
-    },
-    { muscle_group: "forearm", exercise_type: "barbell", preference_score: 8 },
-    { muscle_group: "forearm", exercise_type: "machine", preference_score: 6 },
-    {
-      muscle_group: "forearm",
-      exercise_type: "bodyweight",
-      preference_score: 7,
-    },
-  ];
+  { muscle_group: "forearm", exercise_type: "cable", preference_score: 10 },
+  {
+    muscle_group: "forearm",
+    exercise_type: "dumbbells",
+    preference_score: 9,
+  },
+  { muscle_group: "forearm", exercise_type: "barbell", preference_score: 8 },
+  { muscle_group: "forearm", exercise_type: "machine", preference_score: 6 },
+  {
+    muscle_group: "forearm",
+    exercise_type: "bodyweight",
+    preference_score: 7,
+  },
+];
 
 async function main() {
   logger.info("Starting exercise database seeding...");
 
+  const owner = await requireLegacyOwnerIdentity();
   await db.transaction(async (tx) => {
     logger.info("Seeding exercises...");
     const insertedExercises = await tx
@@ -1052,7 +1056,12 @@ async function main() {
     logger.info("Seeding equipment preferences...");
     await tx
       .insert(equipmentPreferences)
-      .values(equipmentPreferenceData)
+      .values(
+        equipmentPreferenceData.map((preference) => ({
+          ...preference,
+          userId: owner.id,
+        })),
+      )
       .onConflictDoNothing();
 
     logger.info("Seeding exercise muscle groups...");
