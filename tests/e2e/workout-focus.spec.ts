@@ -244,3 +244,101 @@ test("final-save readiness spans every exercise and correction retains historica
     await pool.end();
   }
 });
+
+test("completed sessions use read-only overview and focus without changing history", async ({
+  page,
+  sessionId,
+}) => {
+  const pool = new pg.Pool({ connectionString: process.env.E2E_DATABASE_URL });
+  const snapshot = async () =>
+    (
+      await pool.query(
+        `select
+    (select to_jsonb(w) from workouts w where id = $1) as workout,
+    (select jsonb_agg(to_jsonb(e) order by order_index) from workout_exercises e where workout_id = $1) as exercises,
+    (select jsonb_agg(to_jsonb(s) order by exercise, set) from workout_sets s where workout = $1) as sets`,
+        [sessionId],
+      )
+    ).rows;
+  try {
+    await pool.query(
+      "update workouts set start = '2024-01-02 10:00:00', stop = '2024-01-02 10:35:00', notes = 'Retained history' where id = $1",
+      [sessionId],
+    );
+    await pool.query(
+      'update workout_sets set "isCompleted" = (set <> 2), reported_rir = case when set <> 2 then $2 else null end, rpe = 8 where workout = $1',
+      [sessionId, "2"],
+    );
+    const before = await snapshot();
+    let mutationCount = 0;
+    page.on("request", (request) => {
+      if (request.method() !== "GET") mutationCount++;
+    });
+    await page.goto(`/workouts/${sessionId}`);
+    await expect(
+      page.getByText("Completed · 35m", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText(/Started .*ago/)).toHaveCount(0);
+    const links = page.getByRole("link", {
+      name: /^Open Focus fixture exercise/,
+    });
+    await expect(links).toHaveCount(2);
+    const firstHref = await links.first().getAttribute("href");
+    await links.first().click();
+    await expect(page).toHaveURL(firstHref!);
+    await expect(
+      page.getByText("7 of 8 sets saved", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox")).toHaveCount(0);
+    await expect(page.getByRole("checkbox")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", {
+        name: /Complete set|Remove set|Add Set|Add Exercise|Finish workout|Reorder|reported effort/,
+      }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByText("~2 left", { exact: true }).filter({ visible: true }),
+    ).toHaveCount(7);
+    await expect(
+      page
+        .getByText("RPE 8 (legacy)", { exact: true })
+        .filter({ visible: true }),
+    ).toHaveCount(8);
+    await page.reload();
+    await expect(page).toHaveURL(firstHref!);
+    await page.getByRole("link", { name: "Next" }).click();
+    await expect(
+      page.getByText("1 of 2 sets saved", { exact: true }),
+    ).toBeVisible();
+    await page.getByRole("link", { name: "Previous" }).click();
+    await expect(page).toHaveURL(firstHref!);
+    await page.getByRole("link", { name: "Overview", exact: true }).click();
+    await expect(links).toHaveCount(2);
+    await expect(page.getByRole("textbox")).toHaveCount(0);
+    await expect(page.getByRole("checkbox")).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Rest timer" })).toHaveCount(
+      0,
+    );
+    await expect(
+      page.getByRole("button", {
+        name: /Complete set|Remove set|Add Set|Add Exercise|Finish workout|Reorder|reported effort/,
+      }),
+    ).toHaveCount(0);
+    await page
+      .getByRole("button", { name: "Workout actions", exact: true })
+      .click();
+    await expect(page.getByRole("menuitem", { name: /Repeat/ })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: /Delete/ })).toBeVisible();
+    await page.keyboard.press("Escape");
+    expect(mutationCount).toBe(0);
+    expect(await snapshot()).toEqual(before);
+    await page.setViewportSize({ width: 320, height: 844 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  } finally {
+    await pool.end();
+  }
+});

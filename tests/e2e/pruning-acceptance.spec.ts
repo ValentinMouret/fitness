@@ -80,6 +80,7 @@ test("historical template, Strong and Fitbod sessions retain their records", asy
           exact: true,
         }),
       ).toBeVisible();
+      await page.getByRole("link", { name: /^Open / }).click();
       await expect(page.getByText("62.5", { exact: true })).toBeVisible();
       await page.reload();
       await expect(page.getByText("62.5", { exact: true })).toBeVisible();
