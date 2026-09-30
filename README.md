@@ -30,6 +30,15 @@ Use the [documentation index](docs/README.md) to find guidance for your task:
 
 Install dependencies once with `bun i`.
 
+Use `bun run dev` for local iteration. Check for a suitable running server first;
+when working concurrently, choose a separate port with `PORT=5176 bun run dev`.
+
+Before local E2E checks, configure and start a test server using a dedicated test
+database and matching test credentials. Set `TEST_PORT` or `E2E_BASE_URL` to its
+address; see the [testing guide](docs/engineering/testing.md). The local E2E
+runner checks that the server is reachable; it does not start it or prepare its
+database.
+
 Use the smallest relevant check while iterating:
 
 ```shell
@@ -42,8 +51,9 @@ bun run test:e2e # Playwright end-to-end tests
 
 Before hand-off, run `bun run gate` (typecheck, lint, unit tests, build, and
 component browser tests).
-Run `bun run gate:e2e` when the change affects a user workflow and the Playwright
-browsers are available. `bun run fmt` and `bun run lint` write changes, so
+Run `bun run gate:e2e` when the change affects a user workflow, Playwright
+browsers are available, and a test server is correctly configured.
+`bun run fmt` and `bun run lint` write changes, so
 review their output before running them in a dirty worktree.
 
 Use `bun run db:dev` while iterating on a database change. Generate a migration

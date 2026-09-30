@@ -50,12 +50,16 @@ Prefer `getByRole()` and `getByLabel()` selectors. Use test IDs when there is no
 suitable semantic locator, not as a replacement for accessible controls. Check
 changed flows step by step so a failure identifies the broken interaction.
 
-Locally, use the existing development server. Set `E2E_BASE_URL` and test
-credentials to match it, and confirm it is using an appropriate database before
-running write tests. Do not start another server in an agent session.
+Developers and QA manage the local servers needed for their work. Check for a
+suitable running server, or configure and start one with `bun run dev`; use a
+separate port when working concurrently. Inspect its logs, restart it when
+needed, and stop servers you started when finished. Set `TEST_PORT` or
+`E2E_BASE_URL` and test credentials to match it. Before write tests, confirm the
+server and test fixtures use the same dedicated test database; do not use
+production or personal data.
 
 [playwright.config.ts](../../playwright.config.ts) requires a reachable existing
-server locally and fails before browser tests when `/login` is unavailable.
+test server locally and fails before browser tests when `/login` is unavailable.
 It never builds, migrates, seeds, or starts a local server. CI retains its isolated
 server startup. Auth-only browser tests use a separate configuration and also
 require an existing server. Their fixtures and lifetime profiles are described in the
@@ -77,6 +81,6 @@ from selector failures.
 ## Before hand-off
 
 Run focused checks while iterating, then `bun run gate`. For a changed user
-workflow, also run `bun run gate:e2e` when browsers are available and the existing
+workflow, also run `bun run gate:e2e` when browsers are available and a test
 server is correctly configured. Formatting and lint commands write changes;
 inspect the working tree before and after running them.
