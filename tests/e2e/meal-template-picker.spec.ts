@@ -49,8 +49,8 @@ test.beforeEach(async ({ page, request }) => {
   ingredientId = ingredient.rows[0].id;
   await pool.query(
     `insert into meal_templates
-      (id, name, category, total_calories, total_protein, total_carbs, total_fat, total_fiber, satiety_score)
-      values ($1, $2, 'lunch', 400, 30, 40, 10, 5, 3)`,
+      (id, name, categories, total_calories, total_protein, total_carbs, total_fat, total_fiber, satiety_score)
+      values ($1, $2, array['lunch']::meal_category[], 400, 30, 40, 10, 5, 3)`,
     [templateId, templateName],
   );
   await pool.query(

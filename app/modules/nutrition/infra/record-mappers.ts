@@ -39,7 +39,7 @@ export function recordToMealTemplate(
   return ok({
     id: record.id,
     name: record.name,
-    category: record.category,
+    categories: record.categories,
     notes: record.notes,
     totalCalories: record.total_calories,
     totalProtein: record.total_protein,

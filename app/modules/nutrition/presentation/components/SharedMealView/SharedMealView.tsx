@@ -15,7 +15,7 @@ import "./SharedMealView.css";
 
 export interface SharedMealViewModel {
   readonly name: string;
-  readonly category: MealCategory;
+  readonly categories: readonly MealCategory[];
   readonly notes: string | null;
   readonly ingredients: readonly IngredientWithQuantity[];
 }
@@ -171,7 +171,9 @@ export function SharedMealView({
     <div className="shared-meal">
       <header className="shared-meal__header">
         <div className="shared-meal__eyebrow">
-          {CATEGORY_LABELS[meal.category]}
+          {meal.categories
+            .map((category) => CATEGORY_LABELS[category])
+            .join(" · ")}
         </div>
         <h1 className="shared-meal__title">{meal.name}</h1>
         {meal.notes && <p className="shared-meal__notes">{meal.notes}</p>}

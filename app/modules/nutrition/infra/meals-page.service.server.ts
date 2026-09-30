@@ -89,7 +89,7 @@ export async function setMealTemplatePublic(input: {
 export async function saveMealAsTemplate(input: {
   readonly mealId: string;
   readonly name: string;
-  readonly category: MealCategory;
+  readonly categories: readonly MealCategory[];
   readonly notes?: string;
 }): Promise<MealActionResult> {
   const mealResult = await NutritionService.getMealLogWithIngredients(
@@ -103,7 +103,7 @@ export async function saveMealAsTemplate(input: {
   const meal = mealResult.value;
   const templateResult = await NutritionService.createMealTemplate({
     name: input.name,
-    category: input.category,
+    categories: input.categories,
     notes: input.notes,
     ingredients: meal.ingredients,
   });

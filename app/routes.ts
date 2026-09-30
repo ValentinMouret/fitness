@@ -38,6 +38,7 @@ export default [
         "nutrition/calculate-targets",
         "routes/nutrition/calculate-targets/index.tsx",
       ),
+      route("nutrition/templates", "routes/nutrition/templates.tsx"),
       route("nutrition/meal-builder", "routes/nutrition/meal-builder.tsx"),
       route("nutrition/meals", "routes/nutrition/meals.tsx"),
       route("workouts", "routes/workouts/index.tsx"),

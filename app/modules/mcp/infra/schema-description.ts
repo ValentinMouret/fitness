@@ -106,7 +106,10 @@ export const schemaDescription = {
       columns: {
         id: "uuid",
         name: "text",
-        category: "text",
+        category:
+          "text; legacy first assigned meal time, use categories for availability",
+        categories:
+          "text[]; assigned meal times: breakfast, lunch, dinner, snack",
         notes: "text nullable",
         total_calories: "number; kcal",
         total_protein: "number; g",

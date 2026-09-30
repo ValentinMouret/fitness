@@ -1,0 +1,26 @@
+.nutrition-navigation {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--gray-4);
+}
+.nutrition-navigation a,
+.meal-template-filters button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  color: var(--brand-text-secondary);
+  text-decoration: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.nutrition-navigation [aria-current="page"],
+.meal-template-filters [aria-pressed="true"] {
+  color: var(--brand-text);
+  border-bottom-color: var(--brand-coral);
+  font-weight: 600;
+}

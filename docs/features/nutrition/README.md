@@ -7,7 +7,11 @@ This is a personal tracking tool, not a multi-user diet platform.
 
 - An **ingredient** has nutritional values per quantity and may carry texture and
   water/fibre information used by satiety estimates.
-- A **meal template** is a reusable composition of ingredients and quantities.
+- A **meal template** is one reusable composition of ingredients and quantities,
+  explicitly assigned to one or more meal times. Existing templates retain their
+  original assignment. Management filters All/Breakfast/Lunch/Dinner/Snacks;
+  Save and Cancel retain the filter. A picker offers only assigned templates and
+  the log retains its chosen meal time. Assignment changes do not alter past logs.
 - A **meal log** records consumption on a date in a meal category. It is distinct
   from a template or an unlogged composition.
 - A **target** describes intended intake; logged intake is the actual record.

@@ -5,6 +5,7 @@ import {
   calculateSatietyScore,
   createMealTemplateFromIngredients,
   type MealCategory,
+  mealAssignmentsSchema,
 } from "./meal-template";
 
 const createTestIngredient = (overrides?: Partial<Ingredient>): Ingredient => ({
@@ -43,7 +44,7 @@ const createMealTemplateInput = (
   overrides?: Partial<CreateMealTemplateInput>,
 ): CreateMealTemplateInput => ({
   name: "Test Meal",
-  category: "lunch",
+  categories: ["lunch"],
   ingredients: [],
   ...overrides,
 });
@@ -275,14 +276,14 @@ describe("createMealTemplateFromIngredients", () => {
     const ingredients = [createIngredientWithQuantity(ingredient, 150)];
     const input = createMealTemplateInput({
       name: "Protein Bowl",
-      category: "lunch",
+      categories: ["lunch"],
       ingredients,
     });
 
     const result = createMealTemplateFromIngredients(input);
 
     expect(result.name).toBe("Protein Bowl");
-    expect(result.category).toBe("lunch");
+    expect(result.categories).toEqual(["lunch"]);
     expect(result.notes).toBeNull();
     expect(result.totalCalories).toBe(150); // 100 * 1.5
     expect(result.totalProtein).toBe(30); // 20 * 1.5
@@ -315,14 +316,14 @@ describe("createMealTemplateFromIngredients", () => {
     ];
     const input = createMealTemplateInput({
       name: "Balanced Meal",
-      category: "dinner",
+      categories: ["dinner"],
       ingredients,
     });
 
     const result = createMealTemplateFromIngredients(input);
 
     expect(result.name).toBe("Balanced Meal");
-    expect(result.category).toBe("dinner");
+    expect(result.categories).toEqual(["dinner"]);
     expect(result.totalCalories).toBe(170); // (120 * 1) + (25 * 2)
     expect(result.totalProtein).toBe(29); // (25 * 1) + (2 * 2)
     expect(result.totalCarbs).toBe(10); // (0 * 1) + (5 * 2)
@@ -336,14 +337,14 @@ describe("createMealTemplateFromIngredients", () => {
 
     const inputWithNotes = createMealTemplateInput({
       name: "Meal with Notes",
-      category: "breakfast",
+      categories: ["breakfast"],
       notes: "Special preparation instructions",
       ingredients,
     });
 
     const inputWithoutNotes = createMealTemplateInput({
       name: "Meal without Notes",
-      category: "breakfast",
+      categories: ["breakfast"],
       ingredients,
     });
 
@@ -358,14 +359,14 @@ describe("createMealTemplateFromIngredients", () => {
   it("should handle empty ingredients list", () => {
     const input = createMealTemplateInput({
       name: "Empty Meal",
-      category: "snack",
+      categories: ["snack"],
       ingredients: [],
     });
 
     const result = createMealTemplateFromIngredients(input);
 
     expect(result.name).toBe("Empty Meal");
-    expect(result.category).toBe("snack");
+    expect(result.categories).toEqual(["snack"]);
     expect(result.totalCalories).toBe(0);
     expect(result.totalProtein).toBe(0);
     expect(result.totalCarbs).toBe(0);
@@ -380,7 +381,7 @@ describe("createMealTemplateFromIngredients", () => {
     const ingredients = [createIngredientWithQuantity(ingredient, 100)];
     const input = createMealTemplateInput({
       name: "New Template",
-      category: "lunch",
+      categories: ["lunch"],
       ingredients,
     });
 
@@ -403,12 +404,25 @@ describe("createMealTemplateFromIngredients", () => {
     for (const category of categories) {
       const input = createMealTemplateInput({
         name: `${category} meal`,
-        category,
+        categories: [category],
         ingredients,
       });
 
       const result = createMealTemplateFromIngredients(input);
-      expect(result.category).toBe(category);
+      expect(result.categories).toEqual([category]);
     }
+  });
+});
+
+describe("meal assignments", () => {
+  it("keeps one explicit reusable Lunch and Dinner assignment", () => {
+    expect(mealAssignmentsSchema.parse(["dinner", "lunch"])).toEqual([
+      "lunch",
+      "dinner",
+    ]);
+  });
+  it("rejects empty, duplicate and unknown assignments", () => {
+    for (const values of [[], ["lunch", "lunch"], ["brunch"]])
+      expect(mealAssignmentsSchema.safeParse(values).success).toBe(false);
   });
 });

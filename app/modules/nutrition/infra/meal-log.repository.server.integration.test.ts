@@ -90,7 +90,7 @@ describe("updating meal ingredients", () => {
       .insert(mealTemplates)
       .values({
         name: "Meal update source",
-        category: "lunch",
+        categories: ["lunch"],
         total_calories: 100,
         total_protein: 20,
         total_carbs: 5,

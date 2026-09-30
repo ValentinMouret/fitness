@@ -1,9 +1,6 @@
 import { data, redirect } from "react-router";
 import type { CreateAIIngredientInput } from "~/modules/nutrition/domain/ingredient";
-import type {
-  CreateMealTemplateInput,
-  MealCategory,
-} from "~/modules/nutrition/domain/meal-template";
+import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import { NutritionService } from "~/modules/nutrition/infra/service";
 import { fromDateString, toDateString } from "~/time";
 import { isSafePath } from "~/utils";
@@ -72,45 +69,37 @@ export async function getMealBuilderData(input: {
 
 export async function saveMealTemplate(input: {
   readonly name: string;
-  readonly category: MealCategory;
+  readonly categories: readonly MealCategory[];
   readonly notes?: string;
-  readonly ingredientsJson: string;
+  readonly ingredients: Readonly<NotEmpty<MealIngredientInput>>;
+  readonly returnTo?: string;
 }) {
-  try {
-    const ingredientsData = JSON.parse(input.ingredientsJson);
-
-    const ingredients = await Promise.all(
-      ingredientsData.map(async (item: { id: string; quantity: number }) => {
-        const ingredientResult = await NutritionService.getIngredientById(
-          item.id,
-        );
-        if (ingredientResult.isErr()) {
-          throw new Error(`Failed to find ingredient: ${item.id}`);
-        }
-        return {
-          ingredient: ingredientResult.value,
-          quantityGrams: item.quantity,
-        };
-      }),
+  const ingredients = await resolveMealIngredients(
+    input.ingredients,
+    NutritionService.getIngredientById,
+  );
+  if (ingredients.isErr())
+    return data(
+      { error: "Could not load an ingredient. Try again." },
+      { status: 400 },
     );
-
-    const templateInput: CreateMealTemplateInput = {
-      name: input.name,
-      category: input.category,
-      notes: input.notes,
-      ingredients,
-    };
-
-    const result = await NutritionService.createMealTemplate(templateInput);
-
-    if (result.isErr()) {
-      throw new Error("Failed to save meal template");
-    }
-
-    return { success: true, template: result.value };
-  } catch (_error) {
-    throw new Error("Invalid ingredient data");
-  }
+  const result = await NutritionService.createMealTemplate({
+    name: input.name,
+    categories: input.categories,
+    notes: input.notes,
+    ingredients: ingredients.value,
+  });
+  if (result.isErr())
+    return data(
+      { error: "Could not save the template. Try again." },
+      { status: 500 },
+    );
+  if (
+    input.returnTo?.startsWith("/nutrition/templates") &&
+    isSafePath(input.returnTo)
+  )
+    return redirect(input.returnTo);
+  return { success: true, template: result.value };
 }
 
 export type SaveMealLogInput = {

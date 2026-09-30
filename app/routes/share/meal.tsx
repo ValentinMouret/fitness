@@ -28,7 +28,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   const template = result.value;
   const meal: SharedMealViewModel = {
     name: template.name,
-    category: template.category,
+    categories: template.categories,
     notes: template.notes,
     ingredients: template.ingredients,
   };

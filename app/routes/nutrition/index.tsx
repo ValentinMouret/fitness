@@ -20,7 +20,6 @@ import {
   IconButton,
   Kbd,
   Progress,
-  RadioGroup,
   Text,
   TextField,
   Tooltip,
@@ -37,6 +36,7 @@ import {
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { Celebration, SuccessPulse } from "~/components/Celebration";
+import { PageHeader } from "~/components/PageHeader";
 import RequiredStar from "~/components/RequiredStar";
 import { defaultDailyTargets } from "~/modules/nutrition/domain/daily-targets";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
@@ -53,6 +53,9 @@ import {
   QuickEstimateModal,
   TemplateSelectionModal,
 } from "~/modules/nutrition/presentation";
+import { MealAssignments } from "~/modules/nutrition/presentation/components/MealAssignments/MealAssignments";
+import { NutritionNavigation } from "~/modules/nutrition/presentation/components/NutritionNavigation/NutritionNavigation";
+import { mealAssignmentsField } from "~/modules/nutrition/presentation/meal-builder-form";
 import {
   addOneDay,
   isSameDay,
@@ -137,7 +140,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const schema = zfd.formData({
       mealId: formText(z.string().min(1)),
       name: formText(z.string().min(1)),
-      category: formText(z.enum(["breakfast", "lunch", "dinner", "snack"])),
+      categories: mealAssignmentsField,
       notes: formOptionalText(),
     });
     const parsed = schema.parse(formData);
@@ -145,7 +148,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const result = await saveMealAsTemplate({
       mealId: parsed.mealId,
       name: parsed.name,
-      category: parsed.category,
+      categories: parsed.categories,
       notes: parsed.notes ?? undefined,
     });
 
@@ -416,6 +419,8 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="nutrition-page">
+      <PageHeader title="Nutrition" />
+      <NutritionNavigation current="today" />
       {/* Date Navigation */}
       <div className="nutrition-date-nav">
         <Tooltip content="Previous day (Left Arrow)">
@@ -428,7 +433,9 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             <ChevronLeftIcon width="16" height="16" />
           </IconButton>
         </Tooltip>
-        <Heading size="5">{formatDateLabel(parsedCurrentDate)}</Heading>
+        <Heading as="h2" size="5">
+          {formatDateLabel(parsedCurrentDate)}
+        </Heading>
         <Tooltip content="Next day (Right Arrow)">
           <IconButton
             variant="ghost"
@@ -811,19 +818,15 @@ function SaveAsTemplateDialog({
 }) {
   const [name, setName] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const [category, setCategory] = useState<MealCategory>("lunch");
+  const [categories, setCategories] = useState<readonly MealCategory[]>([]);
   const [notes, setNotes] = useState("");
 
   const nameId = useId();
   const notesId = useId();
-  const breakfastId = useId();
-  const lunchId = useId();
-  const dinnerId = useId();
-  const snackId = useId();
 
   useEffect(() => {
     if (meal) {
-      setCategory(meal.category);
+      setCategories([meal.category]);
       setName("");
       setNotes("");
     }
@@ -837,7 +840,7 @@ function SaveAsTemplateDialog({
         intent: "save-as-template",
         mealId: meal.id,
         name,
-        category,
+        categories: JSON.stringify(categories),
         notes,
       },
       { method: "post" },
@@ -891,62 +894,7 @@ function SaveAsTemplateDialog({
             />
           </Box>
 
-          <Box>
-            <Text as="p" size="2" weight="medium" mb="1">
-              Category
-            </Text>
-            <RadioGroup.Root
-              value={category}
-              onValueChange={(value: MealCategory) => setCategory(value)}
-            >
-              <Flex gap="4">
-                <Flex align="center" gap="2">
-                  <RadioGroup.Item value="breakfast" id={breakfastId} />
-                  <Text
-                    as="label"
-                    htmlFor={breakfastId}
-                    size="2"
-                    style={{ cursor: "pointer" }}
-                  >
-                    Breakfast
-                  </Text>
-                </Flex>
-                <Flex align="center" gap="2">
-                  <RadioGroup.Item value="lunch" id={lunchId} />
-                  <Text
-                    as="label"
-                    htmlFor={lunchId}
-                    size="2"
-                    style={{ cursor: "pointer" }}
-                  >
-                    Lunch
-                  </Text>
-                </Flex>
-                <Flex align="center" gap="2">
-                  <RadioGroup.Item value="dinner" id={dinnerId} />
-                  <Text
-                    as="label"
-                    htmlFor={dinnerId}
-                    size="2"
-                    style={{ cursor: "pointer" }}
-                  >
-                    Dinner
-                  </Text>
-                </Flex>
-                <Flex align="center" gap="2">
-                  <RadioGroup.Item value="snack" id={snackId} />
-                  <Text
-                    as="label"
-                    htmlFor={snackId}
-                    size="2"
-                    style={{ cursor: "pointer" }}
-                  >
-                    Snack
-                  </Text>
-                </Flex>
-              </Flex>
-            </RadioGroup.Root>
-          </Box>
+          <MealAssignments selected={categories} onChange={setCategories} />
 
           <Box>
             <Text
@@ -979,7 +927,7 @@ function SaveAsTemplateDialog({
               <Box display="inline-block">
                 <Button
                   onClick={handleSave}
-                  disabled={!name}
+                  disabled={!name || categories.length === 0}
                   aria-keyshortcuts="Meta+Enter Control+Enter"
                 >
                   Save Template
