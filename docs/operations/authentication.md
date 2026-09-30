@@ -438,6 +438,14 @@ hashes/expiry/replay state, and pre-bootstrap auth state in the recovery databas
 Production recovery still requires coordinated source/database restoration;
 after another account writes, never restore global code or reassign all history.
 
+Martin independently passed a fresh September 29 archive restore at clean
+integrated commit `10bc3d8466d14e83e40954757d97966d4dc1b084`, applying0010–0018
+verbatim with isolated synthetic owner bootstrap between0012 and0013. All28
+historical tables and10,162 rows preserved counts and canonical content hashes;
+all1,003 rows in21 owner-bearing tables had the sole owner, with zero unvalidated
+foreign keys. This clears the historical FK blocker, not the fresh current
+snapshot, production identity/authorization or admission release gates.
+
 ### External SDK acceptance and remaining boundary audit
 
 Run `bun run test:mcp:acceptance` with Bun, Node and local `initdb`, `pg_ctl`,
@@ -458,6 +466,13 @@ existing restricted SQL integration suite proves independent A/B queries and
 pooled identity cleanup. **B runtime access remains deliberately closed**: these
 tests do not prove native multi-account admission, the actual owner's stored
 ChatGPT/Claude connection, production email delivery or live proxy behavior.
+
+The disposable HTTP app also enables the local auth foundation and redeems real
+magic links for A and B, verifying each session's exact account identity. Both
+native sessions must still be redirected to legacy login for habits,
+measurements, workouts and nutrition. A forged workout rename must be denied
+and leave the stored name unchanged. This tests the current admission hold;
+full native workflow parity requires the later reviewed identity cutover.
 
 The fixture also uses the historical FK name and includes a nonempty archived
 habit before0013. Its read-only preflight leaves auth users empty; apply succeeds
