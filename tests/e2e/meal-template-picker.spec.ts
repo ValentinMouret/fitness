@@ -1,3 +1,4 @@
+import { fixtureOwnerId } from "./support/fixture-database";
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import pg from "pg";
@@ -49,14 +50,14 @@ test.beforeEach(async ({ page, request }) => {
   ingredientId = ingredient.rows[0].id;
   await pool.query(
     `insert into meal_templates
-      (id, name, categories, total_calories, total_protein, total_carbs, total_fat, total_fiber, satiety_score)
-      values ($1, $2, array['lunch']::meal_category[], 400, 30, 40, 10, 5, 3)`,
-    [templateId, templateName],
+      (user_id, id, name, categories, total_calories, total_protein, total_carbs, total_fat, total_fiber, satiety_score)
+      values ($3, $1, $2, array['lunch']::meal_category[], 400, 30, 40, 10, 5, 3)`,
+    [templateId, templateName, fixtureOwnerId()],
   );
   await pool.query(
-    `insert into meal_template_ingredients (meal_template_id, ingredient_id, quantity_grams)
-      values ($1, $2, 100)`,
-    [templateId, ingredientId],
+    `insert into meal_template_ingredients (user_id, meal_template_id, ingredient_id, quantity_grams)
+      values ($3, $1, $2, 100)`,
+    [templateId, ingredientId, fixtureOwnerId()],
   );
   await page.goto("/nutrition?date=1901-03-01");
   await page.getByRole("button", { name: "Use template for Lunch" }).tap();

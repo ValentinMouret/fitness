@@ -1,7 +1,8 @@
+import type { UserId } from "~/modules/auth/domain/user";
 import { data, redirect } from "react-router";
-import type { CreateAIIngredientInput } from "~/modules/nutrition/domain/ingredient";
+import type { CreateIngredientCommand } from "~/modules/nutrition/domain/nutrition-commands";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
-import { NutritionService } from "~/modules/nutrition/infra/service";
+import { createNutritionService } from "~/modules/nutrition/infra/service.server";
 import { fromDateString, toDateString } from "~/time";
 import { isSafePath } from "~/utils";
 import type { NotEmpty } from "~/utils/types";
@@ -11,17 +12,23 @@ import {
   validateMealComposition,
 } from "../domain/meal-composition";
 
-export async function getMealBuilderData(input: {
-  readonly searchTerm?: string;
-  readonly category?: string;
-  readonly mealCategory: MealCategory | null;
-  readonly date: string | null;
-  readonly returnTo: string | null;
-  readonly mealId: string | null;
-}) {
+export async function getMealBuilderData(
+  userId: UserId,
+  input: {
+    readonly searchTerm?: string;
+    readonly category?: string;
+    readonly mealCategory: MealCategory | null;
+    readonly date: string | null;
+    readonly returnTo: string | null;
+    readonly mealId: string | null;
+  },
+) {
   const [ingredientsResult, templatesResult] = await Promise.all([
-    NutritionService.searchIngredients(input.searchTerm, input.category),
-    NutritionService.getAllMealTemplates(),
+    createNutritionService(userId).searchIngredients(
+      input.searchTerm,
+      input.category,
+    ),
+    createNutritionService(userId).getAllMealTemplates(),
   ]);
 
   if (ingredientsResult.isErr()) {
@@ -34,9 +41,9 @@ export async function getMealBuilderData(input: {
 
   let existingMeal = null;
   if (input.mealId) {
-    const mealResult = await NutritionService.getMealLogWithIngredients(
-      input.mealId,
-    );
+    const mealResult = await createNutritionService(
+      userId,
+    ).getMealLogWithIngredients(input.mealId);
     if (mealResult.isOk()) {
       existingMeal = mealResult.value;
     } else {
@@ -67,23 +74,26 @@ export async function getMealBuilderData(input: {
   };
 }
 
-export async function saveMealTemplate(input: {
-  readonly name: string;
-  readonly categories: readonly MealCategory[];
-  readonly notes?: string;
-  readonly ingredients: Readonly<NotEmpty<MealIngredientInput>>;
-  readonly returnTo?: string;
-}) {
+export async function saveMealTemplate(
+  userId: UserId,
+  input: {
+    readonly name: string;
+    readonly categories: readonly MealCategory[];
+    readonly notes?: string;
+    readonly ingredients: Readonly<NotEmpty<MealIngredientInput>>;
+    readonly returnTo?: string;
+  },
+) {
   const ingredients = await resolveMealIngredients(
     input.ingredients,
-    NutritionService.getIngredientById,
+    createNutritionService(userId).getIngredientById,
   );
   if (ingredients.isErr())
     return data(
       { error: "Could not load an ingredient. Try again." },
       { status: 400 },
     );
-  const result = await NutritionService.createMealTemplate({
+  const result = await createNutritionService(userId).createMealTemplate({
     name: input.name,
     categories: input.categories,
     notes: input.notes,
@@ -114,7 +124,7 @@ export type SaveMealLogInput = {
     }
 );
 
-export async function saveMealLog(input: SaveMealLogInput) {
+export async function saveMealLog(userId: UserId, input: SaveMealLogInput) {
   if (validateMealComposition(input.ingredients).isErr()) {
     return data(
       {
@@ -126,7 +136,7 @@ export async function saveMealLog(input: SaveMealLogInput) {
   }
   const ingredientsResult = await resolveMealIngredients(
     input.ingredients,
-    NutritionService.getIngredientById,
+    createNutritionService(userId).getIngredientById,
   );
   if (ingredientsResult.isErr()) {
     return data(
@@ -140,8 +150,10 @@ export async function saveMealLog(input: SaveMealLogInput) {
   const ingredients = ingredientsResult.value;
   const result =
     input.mode === "update"
-      ? await NutritionService.updateMealLog(input.mealId, { ingredients })
-      : await NutritionService.createMealLog({
+      ? await createNutritionService(userId).updateMealLog(input.mealId, {
+          ingredients,
+        })
+      : await createNutritionService(userId).createMealLog({
           mealCategory: input.mealCategory,
           loggedDate: fromDateString(input.loggedDate),
           ingredients,
@@ -165,9 +177,14 @@ export async function saveMealLog(input: SaveMealLogInput) {
   );
 }
 
-export async function searchAiIngredient(input: { readonly query: string }) {
+export async function searchAiIngredient(
+  userId: UserId,
+  input: { readonly query: string },
+) {
   try {
-    const result = await NutritionService.searchIngredientWithAI(input.query);
+    const result = await createNutritionService(userId).searchIngredientWithAI(
+      input.query,
+    );
     return { aiIngredient: result };
   } catch (error) {
     console.error("AI ingredient search error:", error);
@@ -177,14 +194,18 @@ export async function searchAiIngredient(input: { readonly query: string }) {
   }
 }
 
-export async function saveAiIngredient(input: {
-  readonly ingredientDataJson: string;
-}) {
+export async function saveAiIngredient(
+  userId: UserId,
+  input: {
+    readonly ingredient: CreateIngredientCommand;
+  },
+) {
   try {
-    const ingredientData: CreateAIIngredientInput = JSON.parse(
-      input.ingredientDataJson,
-    );
-    const result = await NutritionService.createIngredient(ingredientData);
+    const result = await createNutritionService(userId).createIngredient({
+      ...input.ingredient,
+      aiGenerated: true,
+      aiGeneratedAt: new Date(),
+    });
 
     if (result.isErr()) {
       throw new Error("Failed to save AI ingredient");

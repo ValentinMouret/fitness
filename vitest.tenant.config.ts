@@ -10,6 +10,7 @@ export default defineConfig({
       "app/modules/habits/**/*.integration.test.ts",
       "app/modules/core/**/*.integration.test.ts",
       "app/modules/fitness/infra/ownership.integration.test.ts",
+      "app/modules/nutrition/infra/ownership.integration.test.ts",
     ],
     exclude: ["node_modules/**"],
     fileParallelism: false,

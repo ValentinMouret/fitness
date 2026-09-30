@@ -1,3 +1,5 @@
+import { createIngredientSchema } from "~/modules/nutrition/domain/nutrition-commands";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import {
   Cross2Icon,
   DownloadIcon,
@@ -66,19 +68,22 @@ import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/meal-builder";
 import "./meal-builder.css";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const parsed = mealBuilderQuerySchema.safeParse(
     Object.fromEntries(new URL(request.url).searchParams),
   );
   if (!parsed.success)
     throw new Response("Invalid meal details", { status: 400 });
   return {
-    ...(await getMealBuilderData(parsed.data)),
+    ...(await getMealBuilderData(
+      context.get(authenticatedUserContext).id,
+      parsed.data,
+    )),
     estimateId: parsed.data.estimateId,
   };
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const formData = await request.formData();
   const intentSchema = zfd.formData({
     intent: formOptionalText(),
@@ -96,7 +101,10 @@ export async function action({ request }: Route.ActionArgs) {
         },
         { status: 400 },
       );
-    return saveMealTemplate(parsed.data);
+    return saveMealTemplate(
+      context.get(authenticatedUserContext).id,
+      parsed.data,
+    );
   }
 
   if (intent === "save-meal") {
@@ -110,7 +118,7 @@ export async function action({ request }: Route.ActionArgs) {
         { status: 400 },
       );
     }
-    return saveMealLog(parsed.data);
+    return saveMealLog(context.get(authenticatedUserContext).id, parsed.data);
   }
 
   if (intent === "search-ai-ingredient") {
@@ -119,7 +127,9 @@ export async function action({ request }: Route.ActionArgs) {
     });
     const parsed = schema.parse(formData);
 
-    return searchAiIngredient({ query: parsed.query });
+    return searchAiIngredient(context.get(authenticatedUserContext).id, {
+      query: parsed.query,
+    });
   }
 
   if (intent === "save-ai-ingredient") {
@@ -128,7 +138,11 @@ export async function action({ request }: Route.ActionArgs) {
     });
     const parsed = schema.parse(formData);
 
-    return saveAiIngredient({ ingredientDataJson: parsed.ingredientData });
+    return saveAiIngredient(context.get(authenticatedUserContext).id, {
+      ingredient: createIngredientSchema
+        .strip()
+        .parse(JSON.parse(parsed.ingredientData)),
+    });
   }
 
   throw new Error("Invalid intent");

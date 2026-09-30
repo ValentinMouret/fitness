@@ -569,6 +569,9 @@ export const mealCategory = pgEnum("meal_category", mealCategories);
 export const ingredients = pgTable(
   "ingredients",
   {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id),
     id: uuid().primaryKey().defaultRandom(),
     name: text().notNull(),
     category: ingredientCategory().notNull(),
@@ -589,10 +592,14 @@ export const ingredients = pgTable(
     ...timestampColumns(),
   },
   (table) => [
+    uniqueIndex("ingredients_user_id_id_unique_idx").on(table.userId, table.id),
     uniqueIndex("ingredients_name_unique_idx")
-      .on(table.name)
+      .on(table.userId, table.name)
       .where(isNull(table.deleted_at)),
-    uniqueIndex("ingredients_name_simple_unique_idx").on(table.name),
+    uniqueIndex("ingredients_name_simple_unique_idx").on(
+      table.userId,
+      table.name,
+    ),
     check("calories_positive", sql`${table.calories} >= 0`),
     check(
       "macros_positive",
@@ -613,6 +620,9 @@ export const ingredients = pgTable(
 export const mealTemplates = pgTable(
   "meal_templates",
   {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id),
     id: uuid().primaryKey().defaultRandom(),
     name: text().notNull(),
     categories: mealCategory().array().notNull(),
@@ -628,6 +638,10 @@ export const mealTemplates = pgTable(
     ...timestampColumns(),
   },
   (table) => [
+    uniqueIndex("meal_templates_user_id_id_unique_idx").on(
+      table.userId,
+      table.id,
+    ),
     check(
       "meal_assignments_valid",
       sql`cardinality(${table.categories}) between 1 and 4 and array_position(${table.categories}, null) is null and cardinality(${table.categories}) = (('breakfast' = any(${table.categories}))::int + ('lunch' = any(${table.categories}))::int + ('dinner' = any(${table.categories}))::int + ('snack' = any(${table.categories}))::int)`,
@@ -638,6 +652,7 @@ export const mealTemplates = pgTable(
 export const mealTemplateIngredients = pgTable(
   "meal_template_ingredients",
   {
+    userId: uuid("user_id").notNull(),
     meal_template_id: uuid()
       .references(() => mealTemplates.id)
       .notNull(),
@@ -648,6 +663,16 @@ export const mealTemplateIngredients = pgTable(
     ...timestampColumns(),
   },
   (table) => [
+    foreignKey({
+      name: "meal_template_ingredients_owner_parent_fk",
+      columns: [table.userId, table.meal_template_id],
+      foreignColumns: [mealTemplates.userId, mealTemplates.id],
+    }),
+    foreignKey({
+      name: "meal_template_ingredients_owner_ingredient_fk",
+      columns: [table.userId, table.ingredient_id],
+      foreignColumns: [ingredients.userId, ingredients.id],
+    }),
     primaryKey({ columns: [table.meal_template_id, table.ingredient_id] }),
     check("quantity_positive", sql`${table.quantity_grams} > 0`),
   ],
@@ -656,6 +681,9 @@ export const mealTemplateIngredients = pgTable(
 export const mealLogs = pgTable(
   "meal_logs",
   {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id),
     id: uuid().primaryKey().defaultRandom(),
     meal_category: mealCategory().notNull(),
     logged_date: date().notNull(),
@@ -665,8 +693,14 @@ export const mealLogs = pgTable(
     ...timestampColumns(),
   },
   (table) => [
+    foreignKey({
+      name: "meal_logs_owner_template_fk",
+      columns: [table.userId, table.meal_template_id],
+      foreignColumns: [mealTemplates.userId, mealTemplates.id],
+    }),
+    uniqueIndex("meal_logs_user_id_id_unique_idx").on(table.userId, table.id),
     uniqueIndex("meal_logs_category_date_unique_idx")
-      .on(table.meal_category, table.logged_date)
+      .on(table.userId, table.meal_category, table.logged_date)
       .where(isNull(table.deleted_at)),
   ],
 );
@@ -674,6 +708,7 @@ export const mealLogs = pgTable(
 export const mealLogIngredients = pgTable(
   "meal_log_ingredients",
   {
+    userId: uuid("user_id").notNull(),
     meal_log_id: uuid()
       .references(() => mealLogs.id)
       .notNull(),
@@ -684,6 +719,16 @@ export const mealLogIngredients = pgTable(
     ...timestampColumns(),
   },
   (table) => [
+    foreignKey({
+      name: "meal_log_ingredients_owner_parent_fk",
+      columns: [table.userId, table.meal_log_id],
+      foreignColumns: [mealLogs.userId, mealLogs.id],
+    }),
+    foreignKey({
+      name: "meal_log_ingredients_owner_ingredient_fk",
+      columns: [table.userId, table.ingredient_id],
+      foreignColumns: [ingredients.userId, ingredients.id],
+    }),
     primaryKey({ columns: [table.meal_log_id, table.ingredient_id] }),
     check("quantity_positive", sql`${table.quantity_grams} > 0`),
   ],

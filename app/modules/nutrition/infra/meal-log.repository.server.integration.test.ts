@@ -1,8 +1,18 @@
+import { userIdSchema } from "~/modules/auth/domain/user";
 import { randomUUID } from "node:crypto";
 import { eq, inArray } from "drizzle-orm";
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "vitest";
 import { closeConnections, db } from "~/db";
 import {
+  authUsers,
   ingredients,
   mealLogIngredients,
   mealLogs,
@@ -11,9 +21,18 @@ import {
 } from "~/db/schema";
 import type { Ingredient } from "../domain/ingredient";
 import { getMealBuilderData, saveMealLog } from "./meal-builder.service.server";
-import { MealLogRepository } from "./meal-log.repository.server";
+import { createMealLogRepository } from "./meal-log.repository.server";
 import { recordToIngredient } from "./record-mappers";
 
+const userId = userIdSchema.parse(randomUUID());
+const MealLogRepository = createMealLogRepository(userId);
+beforeAll(async () => {
+  await db.insert(authUsers).values({
+    id: userId,
+    name: "Nutrition fixture",
+    email: `${userId}@example.invalid`,
+  });
+});
 let mealId: string;
 let foods: readonly Ingredient[];
 let templateId: string | undefined;
@@ -24,6 +43,7 @@ beforeEach(async () => {
     .insert(ingredients)
     .values(
       ["A", "B", "C"].map((name) => ({
+        userId,
         name: `meal-update-${randomUUID()}-${name}`,
         category: "proteins" as const,
         texture: "firm_solid" as const,
@@ -43,6 +63,7 @@ beforeEach(async () => {
   const [meal] = await db
     .insert(mealLogs)
     .values({
+      userId,
       meal_category: "lunch",
       logged_date: "1901-01-01",
       notes: "Keep my notes",
@@ -51,6 +72,7 @@ beforeEach(async () => {
     .returning();
   mealId = meal.id;
   await db.insert(mealLogIngredients).values({
+    userId,
     meal_log_id: mealId,
     ingredient_id: foods[0].id,
     quantity_grams: 100,
@@ -75,7 +97,10 @@ afterEach(async () => {
     ),
   );
 });
-afterAll(closeConnections);
+afterAll(async () => {
+  await db.delete(authUsers).where(eq(authUsers.id, userId));
+  await closeConnections();
+});
 
 const selection = (index: number, quantityGrams = 100) => ({
   ingredient: foods[index],
@@ -89,6 +114,7 @@ describe("updating meal ingredients", () => {
     const [template] = await db
       .insert(mealTemplates)
       .values({
+        userId,
         name: "Meal update source",
         categories: ["lunch"],
         total_calories: 100,
@@ -102,6 +128,7 @@ describe("updating meal ingredients", () => {
       .returning();
     templateId = template.id;
     await db.insert(mealTemplateIngredients).values({
+      userId,
       meal_template_id: template.id,
       ingredient_id: foods[0].id,
       quantity_grams: 100,
@@ -138,7 +165,7 @@ describe("updating meal ingredients", () => {
     expect((await read()).ingredients).toEqual([selection(0, 100)]);
   });
   it("saves an edit through the service and redirects without clearing metadata", async () => {
-    const response = await saveMealLog({
+    const response = await saveMealLog(userId, {
       mode: "update",
       mealId,
       ingredients: [{ id: foods[0].id, quantity: 125 }],
@@ -161,7 +188,7 @@ describe("updating meal ingredients", () => {
         { id: foods[0].id, quantity: 150 },
       ],
     ] as const) {
-      const result = await saveMealLog({
+      const result = await saveMealLog(userId, {
         mode: "update",
         mealId,
         ingredients: items,
@@ -187,7 +214,7 @@ describe("updating meal ingredients", () => {
 
   it("does not turn a missing edit target into create mode", async () => {
     await expect(
-      getMealBuilderData({
+      getMealBuilderData(userId, {
         mealId: randomUUID(),
         mealCategory: "lunch",
         date: "1901-01-01",
@@ -197,7 +224,7 @@ describe("updating meal ingredients", () => {
   });
 
   it("derives edit context from the saved meal even without create parameters", async () => {
-    const loaded = await getMealBuilderData({
+    const loaded = await getMealBuilderData(userId, {
       mealId,
       mealCategory: "breakfast",
       date: "1902-01-01",

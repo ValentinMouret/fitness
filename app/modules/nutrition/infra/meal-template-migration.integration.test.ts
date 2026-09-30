@@ -72,7 +72,18 @@ it("migrates existing assignments and keeps template identity, logs and reader g
     await pool.query(
       `grant select on fitness_data.meal_templates to ${admin.escapeIdentifier(role)}`,
     );
-    await migrate(database, { migrationsFolder: "./drizzle" });
+    const assignment = journal.entries.find(
+      (entry: { idx: number }) => entry.idx === 11,
+    );
+    await copyFile(
+      `drizzle/${assignment.tag}.sql`,
+      join(folder, `${assignment.tag}.sql`),
+    );
+    await writeFile(
+      join(folder, "meta/_journal.json"),
+      JSON.stringify({ ...journal, entries: [...entries, assignment] }),
+    );
+    await migrate(database, { migrationsFolder: folder });
     const after = (
       await pool.query(
         "select to_jsonb(t) as record from meal_templates t order by name",

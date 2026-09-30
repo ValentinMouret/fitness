@@ -3,12 +3,14 @@ import { baseMeasurements } from "~/modules/core/domain/measurements";
 import { createTargetService } from "~/modules/core/infra/measurement-service.server";
 import { dailyTargetsFromCalories } from "~/modules/nutrition/domain/daily-targets";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
-import { NutritionService } from "~/modules/nutrition/infra/service";
+import { createNutritionService } from "~/modules/nutrition/infra/service.server";
 import { handleResultError } from "~/utils/errors";
 
 export async function getMealsPageData(userId: UserId, date: Date) {
-  const dailySummaryResult = await NutritionService.getDailySummary(date);
-  const mealTemplatesResult = await NutritionService.getAllMealTemplates();
+  const dailySummaryResult =
+    await createNutritionService(userId).getDailySummary(date);
+  const mealTemplatesResult =
+    await createNutritionService(userId).getAllMealTemplates();
   const activeTargets = await createTargetService(userId).currentTargets();
 
   if (dailySummaryResult.isErr()) {
@@ -41,12 +43,15 @@ export type MealActionResult =
   | { readonly ok: true }
   | { readonly ok: false; readonly error: string };
 
-export async function applyMealTemplate(input: {
-  readonly templateId: string;
-  readonly mealCategory: MealCategory;
-  readonly loggedDate: Date;
-}): Promise<MealActionResult> {
-  const result = await NutritionService.createMealLogFromTemplate(
+export async function applyMealTemplate(
+  userId: UserId,
+  input: {
+    readonly templateId: string;
+    readonly mealCategory: MealCategory;
+    readonly loggedDate: Date;
+  },
+): Promise<MealActionResult> {
+  const result = await createNutritionService(userId).createMealLogFromTemplate(
     input.templateId,
     input.mealCategory,
     input.loggedDate,
@@ -59,10 +64,15 @@ export async function applyMealTemplate(input: {
   return { ok: true };
 }
 
-export async function deleteMealLog(input: {
-  readonly mealId: string;
-}): Promise<MealActionResult> {
-  const result = await NutritionService.deleteMealLog(input.mealId);
+export async function deleteMealLog(
+  userId: UserId,
+  input: {
+    readonly mealId: string;
+  },
+): Promise<MealActionResult> {
+  const result = await createNutritionService(userId).deleteMealLog(
+    input.mealId,
+  );
 
   if (result.isErr()) {
     return { ok: false, error: "Failed to delete meal" };
@@ -71,11 +81,14 @@ export async function deleteMealLog(input: {
   return { ok: true };
 }
 
-export async function setMealTemplatePublic(input: {
-  readonly templateId: string;
-  readonly isPublic: boolean;
-}): Promise<MealActionResult> {
-  const result = await NutritionService.setMealTemplatePublic(
+export async function setMealTemplatePublic(
+  userId: UserId,
+  input: {
+    readonly templateId: string;
+    readonly isPublic: boolean;
+  },
+): Promise<MealActionResult> {
+  const result = await createNutritionService(userId).setMealTemplatePublic(
     input.templateId,
     input.isPublic,
   );
@@ -87,22 +100,27 @@ export async function setMealTemplatePublic(input: {
   return { ok: true };
 }
 
-export async function saveMealAsTemplate(input: {
-  readonly mealId: string;
-  readonly name: string;
-  readonly categories: readonly MealCategory[];
-  readonly notes?: string;
-}): Promise<MealActionResult> {
-  const mealResult = await NutritionService.getMealLogWithIngredients(
-    input.mealId,
-  );
+export async function saveMealAsTemplate(
+  userId: UserId,
+  input: {
+    readonly mealId: string;
+    readonly name: string;
+    readonly categories: readonly MealCategory[];
+    readonly notes?: string;
+  },
+): Promise<MealActionResult> {
+  const mealResult = await createNutritionService(
+    userId,
+  ).getMealLogWithIngredients(input.mealId);
 
   if (mealResult.isErr()) {
     return { ok: false, error: "Failed to load meal" };
   }
 
   const meal = mealResult.value;
-  const templateResult = await NutritionService.createMealTemplate({
+  const templateResult = await createNutritionService(
+    userId,
+  ).createMealTemplate({
     name: input.name,
     categories: input.categories,
     notes: input.notes,

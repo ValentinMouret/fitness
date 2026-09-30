@@ -96,11 +96,14 @@ export async function action({ request, context }: ActionFunctionArgs) {
     const parsed = schema.parse(formData);
     const loggedDate = new Date(parsed.loggedDate);
 
-    const result = await applyMealTemplate({
-      templateId: parsed.templateId,
-      mealCategory: parsed.mealCategory,
-      loggedDate,
-    });
+    const result = await applyMealTemplate(
+      context.get(authenticatedUserContext).id,
+      {
+        templateId: parsed.templateId,
+        mealCategory: parsed.mealCategory,
+        loggedDate,
+      },
+    );
 
     if (!result.ok) {
       return { success: false, error: result.error };
@@ -114,7 +117,10 @@ export async function action({ request, context }: ActionFunctionArgs) {
     });
     const parsed = schema.parse(formData);
 
-    const result = await deleteMealLog({ mealId: parsed.mealId });
+    const result = await deleteMealLog(
+      context.get(authenticatedUserContext).id,
+      { mealId: parsed.mealId },
+    );
 
     if (!result.ok) {
       return { success: false, error: result.error };
@@ -129,10 +135,13 @@ export async function action({ request, context }: ActionFunctionArgs) {
     });
     const parsed = schema.parse(formData);
 
-    const result = await setMealTemplatePublic({
-      templateId: parsed.templateId,
-      isPublic: parsed.isPublic === "true",
-    });
+    const result = await setMealTemplatePublic(
+      context.get(authenticatedUserContext).id,
+      {
+        templateId: parsed.templateId,
+        isPublic: parsed.isPublic === "true",
+      },
+    );
 
     if (!result.ok) {
       return { success: false, error: result.error };
@@ -149,12 +158,15 @@ export async function action({ request, context }: ActionFunctionArgs) {
     });
     const parsed = schema.parse(formData);
 
-    const result = await saveMealAsTemplate({
-      mealId: parsed.mealId,
-      name: parsed.name,
-      categories: parsed.categories,
-      notes: parsed.notes ?? undefined,
-    });
+    const result = await saveMealAsTemplate(
+      context.get(authenticatedUserContext).id,
+      {
+        mealId: parsed.mealId,
+        name: parsed.name,
+        categories: parsed.categories,
+        notes: parsed.notes ?? undefined,
+      },
+    );
 
     if (!result.ok) {
       return { success: false, error: result.error };

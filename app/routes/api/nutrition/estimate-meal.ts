@@ -1,3 +1,4 @@
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import type { ActionFunctionArgs } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -22,7 +23,7 @@ const resolveSchema = zfd.formData({
   mealCategory: formText(z.enum(["breakfast", "lunch", "dinner", "snack"])),
 });
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
 
@@ -32,7 +33,10 @@ export async function action({ request }: ActionFunctionArgs) {
       .array(EstimationMessageSchema)
       .parse(JSON.parse(parsed.messages));
 
-    const result = await processChatTurn(messages);
+    const result = await processChatTurn(
+      context.get(authenticatedUserContext).id,
+      messages,
+    );
 
     if (result.isErr()) {
       return { error: result.error.message };
@@ -47,7 +51,10 @@ export async function action({ request }: ActionFunctionArgs) {
       .array(EstimatedIngredientSchema)
       .parse(JSON.parse(parsed.items));
 
-    const result = await resolveEstimatedIngredients(items);
+    const result = await resolveEstimatedIngredients(
+      context.get(authenticatedUserContext).id,
+      items,
+    );
 
     if (result.isErr()) {
       return { error: result.error.message };

@@ -58,6 +58,20 @@ describe("MCP tool registration", () => {
       },
       () =>
         okAsync({ rows: [{ name: "Press" }], rowCount: 1, truncated: false }),
+      {
+        createIngredient: vi.fn(() =>
+          errAsync({ code: "database_error" as const, message: "Not used" }),
+        ),
+        logMeal: vi.fn(() =>
+          errAsync({ code: "database_error" as const, message: "Not used" }),
+        ),
+        updateMealLog: vi.fn(() =>
+          errAsync({ code: "database_error" as const, message: "Not used" }),
+        ),
+        deleteMealLog: vi.fn(() =>
+          errAsync({ code: "database_error" as const, message: "Not used" }),
+        ),
+      },
     );
     const client = new Client({ name: "Integration client", version: "1" });
     const [clientTransport, serverTransport] =
