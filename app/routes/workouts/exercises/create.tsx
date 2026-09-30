@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import ExerciseForm from "~/components/ExerciseForm";
+import { movementPatterns } from "~/modules/fitness/domain/workout";
 import {
   createExercise,
   type MuscleGroupSplitInput,
@@ -52,5 +53,5 @@ export const handle = {
 };
 
 export default function CreateExercisePage() {
-  return <ExerciseForm mode="create" />;
+  return <ExerciseForm mode="create" movementPatterns={movementPatterns} />;
 }

@@ -7,7 +7,6 @@ import {
   ExitIcon,
   HamburgerMenuIcon,
   ReaderIcon,
-  RulerSquareIcon,
 } from "@radix-ui/react-icons";
 import {
   Box,
@@ -33,7 +32,6 @@ const navItems = [
   { path: "/habits", label: "Habits", icon: <CheckboxIcon /> },
   { path: "/nutrition", label: "Nutrition", icon: <ReaderIcon /> },
   { path: "/workouts", label: "Workouts", icon: <CounterClockwiseClockIcon /> },
-  { path: "/measurements", label: "Meas.", icon: <RulerSquareIcon /> },
 ];
 
 const BottomTabBar: React.FC = () => (

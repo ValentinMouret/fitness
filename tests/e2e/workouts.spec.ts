@@ -17,7 +17,7 @@ test.describe("Workouts Page", () => {
     ).toHaveCount(0);
     await expect(
       page.getByRole("link", { name: "Manage Exercises" }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Recovery Map" })).toHaveCount(
       0,
     );
@@ -32,8 +32,8 @@ test.describe("Workouts Page", () => {
     ).toHaveCount(0);
   });
 
-  test("should navigate to exercises page", async ({ page }) => {
-    await page.getByRole("link", { name: "Manage Exercises" }).click();
+  test("keeps the catalogue route available", async ({ page }) => {
+    await page.goto("/workouts/exercises");
     await expect(page).toHaveURL(/\/workouts\/exercises/);
     await expect(
       page.getByRole("heading", { name: "Exercises", exact: true }),

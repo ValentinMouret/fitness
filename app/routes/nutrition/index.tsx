@@ -13,6 +13,7 @@ import {
   Box,
   Button,
   Card,
+  Dialog,
   DropdownMenu,
   Flex,
   Grid,
@@ -490,6 +491,33 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
 
       {/* Daily Progress Bars */}
       <Card size="3" mb="4" className="nutrition-progress-card">
+        <Dialog.Root>
+          <Dialog.Trigger>
+            <Button type="button" variant="ghost" mb="3">
+              Calorie target
+            </Button>
+          </Dialog.Trigger>
+          <Dialog.Content size="2">
+            <Dialog.Title>Active calorie target</Dialog.Title>
+            <Dialog.Description>
+              {targets
+                ? `${targets.calories} kcal per day`
+                : "No saved calorie target yet."}
+            </Dialog.Description>
+            <Flex justify="end" gap="3" mt="4">
+              <Dialog.Close>
+                <Button type="button" variant="soft" color="gray">
+                  Close
+                </Button>
+              </Dialog.Close>
+              <Button asChild>
+                <Link to="/nutrition/calculate-targets">
+                  Recalculate target
+                </Link>
+              </Button>
+            </Flex>
+          </Dialog.Content>
+        </Dialog.Root>
         <Grid columns="2" gap="3">
           <Box>
             <Flex justify="between" mb="1">
@@ -763,9 +791,6 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
       <div className="nutrition-tools">
         <Button variant="outline" size="2" asChild>
           <Link to="/nutrition/meal-builder">Meal Builder</Link>
-        </Button>
-        <Button variant="outline" size="2" asChild>
-          <Link to="/nutrition/calculate-targets">Calculate Targets</Link>
         </Button>
       </div>
 

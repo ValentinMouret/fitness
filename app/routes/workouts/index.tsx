@@ -197,12 +197,6 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
         totalPages={pagination.totalPages}
         onPageChange={handlePageChange}
       />
-
-      <Flex gap="3" wrap="wrap" mt="6">
-        <Button variant="outline" size="2" asChild>
-          <Link to="/workouts/exercises">Manage Exercises</Link>
-        </Button>
-      </Flex>
     </>
   );
 }

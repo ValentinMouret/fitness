@@ -305,6 +305,10 @@ export default function DashboardPage({
             </Tooltip>
           </Flex>
 
+          <Button asChild variant="ghost">
+            <Link to="/measurements/weight">History &amp; corrections</Link>
+          </Button>
+
           {!loggedToday && (
             <weightFetcher.Form
               method="post"
