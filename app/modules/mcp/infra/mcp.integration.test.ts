@@ -907,3 +907,202 @@ describe("nutrition MCP", () => {
     ).toBe("not_found");
   });
 });
+
+describe("progress reads through MCP", () => {
+  it("preserves dated weight records and persisted target semantics without base-table access", async () => {
+    const server = new McpServer({ name: "progress test", version: "1" });
+    registerFitnessTools(server, operations, query, nutrition);
+    const client = new McpClient({ name: "progress client", version: "1" });
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    await server.connect(serverTransport);
+    await client.connect(clientTransport);
+    const targetId = randomUUID();
+    const deletedId = randomUUID();
+    const otherId = randomUUID();
+    const rowsSchema = z.object({
+      rows: z.array(z.record(z.string(), z.unknown())),
+      rowCount: z.number(),
+      truncated: z.boolean(),
+    });
+    const read = async (sql: string) => {
+      const result = await client.callTool({
+        name: "query",
+        arguments: { sql },
+      });
+      expect(result.isError).toBe(false);
+      return rowsSchema.parse(result.structuredContent);
+    };
+    try {
+      await writer.query(
+        "insert into measurements (name, unit) values ('weight', 'kg'), ('daily_calorie_intake', 'Cal'), ('progress_other', 'cm') on conflict do nothing",
+      );
+      await writer.query(
+        "insert into measures (measurement_name, t, value) values ('weight', '1904-05-06 08:30:00', 81.5), ('weight', '1904-05-06 19:45:00', 82), ('weight', '1904-05-07 08:00:00', 0), ('progress_other', '1904-05-06 08:30:00', 99)",
+      );
+      const schema = await client.callTool({
+        name: "describe_schema",
+        arguments: {},
+      });
+      expect(schema.structuredContent).toMatchObject({
+        views: {
+          body_weight_history: {
+            primaryKey: ["measurement_name", "recorded_at"],
+          },
+          active_calorie_target: { primaryKey: ["id"] },
+        },
+      });
+      const history = await read(
+        "select measurement_name, recorded_at, weight_kg, unit from fitness_data.body_weight_history order by recorded_at desc",
+      );
+      expect(history).toEqual({
+        rowCount: 3,
+        truncated: false,
+        rows: [
+          {
+            measurement_name: "weight",
+            recorded_at: "1904-05-07T08:00:00+00:00",
+            weight_kg: 0,
+            unit: "kg",
+          },
+          {
+            measurement_name: "weight",
+            recorded_at: "1904-05-06T19:45:00+00:00",
+            weight_kg: 82,
+            unit: "kg",
+          },
+          {
+            measurement_name: "weight",
+            recorded_at: "1904-05-06T08:30:00+00:00",
+            weight_kg: 81.5,
+            unit: "kg",
+          },
+        ],
+      });
+      expect(
+        (
+          await read(
+            "select recorded_at, weight_kg from body_weight_history where recorded_at >= '1904-05-06T00:00:00Z'::timestamptz and recorded_at < '1904-05-07T00:00:00Z'::timestamptz order by recorded_at",
+          )
+        ).rowCount,
+      ).toBe(2);
+      const appWeights = await writer.query(
+        "select t at time zone 'UTC' as recorded_at, value from measures where measurement_name = 'weight' order by t desc",
+      );
+      expect(
+        history.rows.map((row) => ({
+          t: new Date(z.string().parse(row.recorded_at)).toISOString(),
+          value: row.weight_kg,
+        })),
+      ).toEqual(
+        appWeights.rows.map((row) => ({
+          t: row.recorded_at.toISOString(),
+          value: row.value,
+        })),
+      );
+      expect(await read("select * from active_calorie_target")).toEqual({
+        rows: [],
+        rowCount: 0,
+        truncated: false,
+      });
+      await writer.query(
+        "insert into targets (id, measurement_name, value, deleted_at) values ($1, 'daily_calorie_intake', 2300, null), ($2, 'daily_calorie_intake', 1800, now()), ($3, 'progress_other', 99, null)",
+        [targetId, deletedId, otherId],
+      );
+      const target = await read("select * from active_calorie_target");
+      expect(target).toEqual({
+        rowCount: 1,
+        truncated: false,
+        rows: [
+          {
+            id: targetId,
+            measurement_name: "daily_calorie_intake",
+            calories_kcal_per_day: 2300,
+            unit: "kcal",
+            source: "persisted_target",
+          },
+        ],
+      });
+      const appTarget = await writer.query(
+        "select id, value from targets where measurement_name = 'daily_calorie_intake' and deleted_at is null",
+      );
+      expect(
+        target.rows.map((row) => ({
+          id: row.id,
+          value: row.calories_kcal_per_day,
+        })),
+      ).toEqual(appTarget.rows);
+      await writer.query("update targets set value = 0 where id = $1", [
+        targetId,
+      ]);
+      expect(
+        (await read("select calories_kcal_per_day from active_calorie_target"))
+          .rows,
+      ).toEqual([{ calories_kcal_per_day: 0 }]);
+      await writer.query(
+        "update targets set deleted_at = now() where id = $1",
+        [targetId],
+      );
+      expect(await read("select * from active_calorie_target")).toEqual({
+        rows: [],
+        rowCount: 0,
+        truncated: false,
+      });
+      const connection = await reader.connect();
+      try {
+        await connection.query("set timezone = 'Pacific/Auckland'");
+        const alternateZone = await connection.query(
+          "select recorded_at from fitness_data.body_weight_history order by recorded_at desc",
+        );
+        expect(
+          alternateZone.rows.map((row) => row.recorded_at.toISOString()),
+        ).toEqual(
+          history.rows.map((row) =>
+            new Date(z.string().parse(row.recorded_at)).toISOString(),
+          ),
+        );
+      } finally {
+        await connection.query("set timezone = 'UTC'");
+        connection.release();
+      }
+      for (const table of ["measures", "targets"]) {
+        await expect(
+          reader.query(`select * from public.${table}`),
+        ).rejects.toMatchObject({ code: "42501" });
+        expect(
+          (
+            await client.callTool({
+              name: "query",
+              arguments: { sql: `select * from public.${table}` },
+            })
+          ).isError,
+        ).toBe(true);
+      }
+      for (const view of ["body_weight_history", "active_calorie_target"]) {
+        await expect(
+          reader.query(`delete from fitness_data.${view}`),
+        ).rejects.toBeDefined();
+        expect(
+          (
+            await client.callTool({
+              name: "query",
+              arguments: { sql: `delete from fitness_data.${view}` },
+            })
+          ).isError,
+        ).toBe(true);
+      }
+    } finally {
+      await writer.query("delete from targets where id = any($1::uuid[])", [
+        [targetId, deletedId, otherId],
+      ]);
+      await writer.query(
+        "delete from measures where t >= '1904-05-06' and t < '1904-05-08'",
+      );
+      await writer.query(
+        "delete from measurements where name = 'progress_other'",
+      );
+      await client.close();
+      await server.close();
+    }
+  });
+});
