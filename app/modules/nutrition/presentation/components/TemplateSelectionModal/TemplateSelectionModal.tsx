@@ -16,7 +16,7 @@ import {
   Text,
   Tooltip,
 } from "@radix-ui/themes";
-import { useEffect } from "react";
+import { type RefObject, useEffect } from "react";
 import { isEditableTarget } from "~/utils/dom";
 import type { TemplateSelectionViewModel } from "../../view-models/template-selection.view-model";
 import "./TemplateSelectionModal.css";
@@ -24,6 +24,7 @@ import "./TemplateSelectionModal.css";
 interface TemplateSelectionModalProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
+  readonly returnFocusRef?: RefObject<HTMLButtonElement | null>;
   readonly viewModel: TemplateSelectionViewModel | null;
   readonly onApply: (templateId: string) => void;
   readonly onCopyLink: (templateId: string) => void;
@@ -33,6 +34,7 @@ interface TemplateSelectionModalProps {
 export function TemplateSelectionModal({
   isOpen,
   onClose,
+  returnFocusRef,
   viewModel,
   onApply,
   onCopyLink,
@@ -65,7 +67,15 @@ export function TemplateSelectionModal({
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
-      <Dialog.Content size="3">
+      <Dialog.Content
+        size="3"
+        onCloseAutoFocus={(event) => {
+          const opener = returnFocusRef?.current;
+          if (!opener?.isConnected) return;
+          event.preventDefault();
+          opener.focus({ preventScroll: true });
+        }}
+      >
         <Flex justify="between" align="center" mb="3">
           <Dialog.Title>
             Choose Template for {viewModel.mealDisplayName}

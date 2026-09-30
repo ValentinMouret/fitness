@@ -74,6 +74,9 @@ test("first touch closes the picker", async ({ page }) => {
     .toBeGreaterThanOrEqual(44);
   await close.tap();
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Use template for Lunch" }),
+  ).toBeFocused();
 });
 
 test("outside touch then reopening permits first Escape dismissal", async ({
@@ -81,12 +84,18 @@ test("outside touch then reopening permits first Escape dismissal", async ({
 }) => {
   await page.touchscreen.tap(5, 5);
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Use template for Lunch" }),
+  ).toBeFocused();
   await page.getByRole("button", { name: "Use template for Lunch" }).tap();
   await expect(
     page.getByRole("button", { name: "Close (Esc)", exact: true }),
   ).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Use template for Lunch" }),
+  ).toBeFocused();
 });
 
 test("share menu dismissal and actions leave template selection intact", async ({
@@ -113,6 +122,9 @@ test("share menu dismissal and actions leave template selection intact", async (
   await page.getByRole("button", { name: "Lunch bowl (1)", exact: true }).tap();
   await expect(page.locator("output")).toHaveText("Template applied");
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Use template for Lunch" }),
+  ).toBeFocused();
 });
 
 test(
