@@ -4,6 +4,7 @@ import { data, Link, useFetcher, useFetchers, useNavigate } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { Celebration } from "~/components/Celebration";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import type { Habit } from "~/modules/habits/domain/entity";
 import {
   getHabitsPageData,
@@ -47,11 +48,11 @@ const STYLES = `
   .habit-min-btn:focus-visible { outline: 2px solid #e15a46; outline-offset: 2px; }
 `;
 
-export async function loader() {
-  return getHabitsPageData();
+export async function loader({ context }: Route.LoaderArgs) {
+  return getHabitsPageData(context.get(authenticatedUserContext).id);
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const formData = await request.formData();
   const intentParsed = zfd
     .formData({ intent: formOptionalText() })
@@ -65,11 +66,14 @@ export async function action({ request }: Route.ActionArgs) {
     });
     const parsed = schema.parse(formData);
 
-    const result = await toggleHabitCompletion({
-      habitId: parsed.habitId,
-      completed: parsed.completed === "true",
-      notes: parsed.notes,
-    });
+    const result = await toggleHabitCompletion(
+      context.get(authenticatedUserContext).id,
+      {
+        habitId: parsed.habitId,
+        completed: parsed.completed === "true",
+        notes: parsed.notes,
+      },
+    );
 
     if (!result.ok) {
       return data({ error: result.error }, { status: result.status });

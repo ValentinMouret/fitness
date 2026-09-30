@@ -138,3 +138,43 @@ Server lifetime controls, in seconds:
 | `OAUTH_REFRESH_TTL_SECONDS` | 2592000 |
 
 Local fixtures verify the protocol, not actual ChatGPT/Claude connections. Complete linking from both real clients after configuring a publicly reachable HTTPS deployment. The browser suite's Secure-cookie test also requires HTTPS.
+
+## Habit ownership stage (production hold)
+
+Migration `0013_habit_ownership.sql` assigns all existing habit definitions, including
+inactive and deleted history, to exactly one explicitly bootstrapped owner.
+Completions inherit ownership through their parent habit. A nonempty database
+without that owner, or with ambiguous self-invitations, fails transactionally.
+No owner identity is invented by the migration. Empty databases need no backfill.
+
+Before releasing this stage against existing data, independently review the
+owner's stable UUID and email, bootstrap that identity through the reviewed
+operator procedure, configure `AUTH_FOUNDATION_OWNER_USER_ID`, and reconcile
+historical counts and relationships. That production bootstrap and migration
+are not authorized by local test success. Until the prerequisite is met, do not
+deploy this stage: private routes require the configured, self-invited, accepted
+and nonrevoked owner record and fail with HTTP 503 when it is missing.
+
+The signed legacy browser session and validated legacy OAuth bearer still admit
+only the original owner. Native magic-link accounts remain excluded from private
+browser/OAuth/MCP entry points. Habit operations, dashboard habit data and AI
+habit references now receive explicit trusted identity. Other private subsystems
+remain unconverted; onboarding cannot be activated yet.
+
+The MCP query runner sets `fitness.user_id` only inside each read-only transaction
+and rolls it back before returning the pooled connection. Habit views filter on
+that identity; missing identity returns no habit rows. SQL submitted by clients
+cannot call `set_config` or `current_setting`. Other exposed views still require
+conversion before additional accounts can access MCP.
+
+Run `bun run test:tenant:integration` with `TENANT_TEST_ADMIN_URL` explicitly
+pointing to a loopback disposable PostgreSQL admin database. The suite creates
+and drops its own database, proves missing/ambiguous-owner rollback, preserves
+active/inactive/deleted owner history and rejects cross-account habit writes.
+`bun run test:mcp:integration` proves real restricted-role habit view isolation
+and pooled identity cleanup. CI seeds synthetic owner/invited accounts only
+inside its isolated PostgreSQL service before browser tests.
+
+After additional accounts write private data, rollback must retain ownership
+and scoped operations; restoring the former global application is not a safe
+recovery procedure. Production admission remains disabled in this stage.

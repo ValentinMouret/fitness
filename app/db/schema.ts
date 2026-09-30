@@ -148,24 +148,31 @@ export const measures = pgTable(
   (table) => [primaryKey({ columns: [table.measurement_name, table.t] })],
 );
 
-export const habits = pgTable("habits", {
-  id: uuid().primaryKey().defaultRandom(),
-  name: text().notNull(),
-  description: text(),
-  identity_phrase: text().notNull().default(""),
-  time_of_day: text().notNull().default(""),
-  location: text().notNull().default(""),
-  is_keystone: boolean().notNull().default(false),
-  minimal_version: text().notNull().default(""),
-  color: text().notNull().default("#e15a46"),
-  frequency_type: text().notNull(), // 'daily', 'weekly', 'monthly', 'custom'
-  frequency_config: jsonb().notNull().default({}),
-  target_count: integer().notNull().default(1),
-  start_date: date().notNull(),
-  end_date: date(),
-  is_active: boolean().notNull().default(true),
-  ...timestampColumns(),
-});
+export const habits = pgTable(
+  "habits",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id),
+    id: uuid().primaryKey().defaultRandom(),
+    name: text().notNull(),
+    description: text(),
+    identity_phrase: text().notNull().default(""),
+    time_of_day: text().notNull().default(""),
+    location: text().notNull().default(""),
+    is_keystone: boolean().notNull().default(false),
+    minimal_version: text().notNull().default(""),
+    color: text().notNull().default("#e15a46"),
+    frequency_type: text().notNull(), // 'daily', 'weekly', 'monthly', 'custom'
+    frequency_config: jsonb().notNull().default({}),
+    target_count: integer().notNull().default(1),
+    start_date: date().notNull(),
+    end_date: date(),
+    is_active: boolean().notNull().default(true),
+    ...timestampColumns(),
+  },
+  (table) => [index("habits_user_id_idx").on(table.userId)],
+);
 
 export const habit_completions = pgTable(
   "habit_completions",

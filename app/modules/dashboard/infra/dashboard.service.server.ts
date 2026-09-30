@@ -1,4 +1,5 @@
 import { ResultAsync } from "neverthrow";
+import type { UserId } from "~/modules/auth/domain/user";
 import type { Measure as MeasureRecord } from "~/modules/core/domain/measure";
 import { Measure } from "~/modules/core/domain/measure";
 import type { Measurement } from "~/modules/core/domain/measurements";
@@ -15,10 +16,7 @@ import type { Workout } from "~/modules/fitness/domain/workout";
 import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { HabitService } from "~/modules/habits/application/service";
 import { type Habit, HabitCompletion } from "~/modules/habits/domain/entity";
-import {
-  HabitCompletionRepository,
-  HabitRepository,
-} from "~/modules/habits/infra/repository.server";
+import { createHabitRepositories } from "~/modules/habits/infra/repository.server";
 import {
   dailyTargetsFromCalories,
   defaultDailyTargets,
@@ -48,7 +46,8 @@ export type DashboardData = {
   readonly dailyNote: DailyNote | undefined;
 };
 
-export async function getDashboardData(): Promise<DashboardData> {
+export async function getDashboardData(userId: UserId): Promise<DashboardData> {
+  const repositories = createHabitRepositories(userId);
   const now = new Date();
   const todayDate = today();
 
@@ -57,8 +56,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     MeasureRepository.fetchByMeasurementName("weight", 200),
     MeasurementRepository.fetchByName("weight"),
     MeasurementService.fetchStreak("weight"),
-    HabitRepository.fetchActive(),
-    HabitCompletionRepository.fetchByDateRange(todayDate, todayDate),
+    repositories.habits.fetchActive(),
+    repositories.completions.fetchByDateRange(todayDate, todayDate),
     WorkoutRepository.findInProgress(),
     NutritionService.getDailySummary(todayDate),
     TargetService.currentTargets(),
@@ -93,12 +92,11 @@ export async function getDashboardData(): Promise<DashboardData> {
   );
 
   const habitStreakPromises = todayHabits.map(async (habit) => {
-    const habitCompletions =
-      await HabitCompletionRepository.fetchByHabitBetween(
-        habit.id,
-        new Date(habit.startDate),
-        todayDate,
-      );
+    const habitCompletions = await repositories.completions.fetchByHabitBetween(
+      habit.id,
+      new Date(habit.startDate),
+      todayDate,
+    );
 
     if (habitCompletions.isOk()) {
       const habitStreak = HabitService.calculateStreak(
@@ -151,20 +149,28 @@ export async function getDashboardData(): Promise<DashboardData> {
   };
 }
 
-export async function toggleHabitCompletion(input: {
-  readonly habitId: string;
-  readonly completed: boolean;
-}): Promise<void> {
+export async function toggleHabitCompletion(
+  userId: UserId,
+  input: {
+    readonly habitId: string;
+    readonly completed: boolean;
+  },
+): Promise<void> {
+  const repositories = createHabitRepositories(userId);
   const completion = HabitCompletion.create(
     input.habitId,
     today(),
     !input.completed,
   );
 
-  const result = await HabitCompletionRepository.save(completion);
+  const result = await repositories.completions.save(completion);
 
   if (result.isErr()) {
-    throw createServerError("Failed to toggle habit", 500, result.error);
+    throw createServerError(
+      "Failed to toggle habit",
+      result.error === "not_found" ? 404 : 500,
+      result.error,
+    );
   }
 }
 

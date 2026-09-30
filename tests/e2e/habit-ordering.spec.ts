@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import pg from "pg";
+import { z } from "zod";
 import {
   canWriteFixtureDatabase,
   verifyFixtureServerDatabase,
@@ -17,6 +18,7 @@ test("orders today's habits by time and keeps manual, minimum and backfill compl
   request,
 }) => {
   const pool = new pg.Pool({ connectionString: process.env.E2E_DATABASE_URL });
+  const ownerId = z.uuid().parse(process.env.AUTH_FOUNDATION_OWNER_USER_ID);
   const prefix = `Ordering ${randomUUID()}`;
   const definitions = [
     {
@@ -62,8 +64,8 @@ test("orders today's habits by time and keeps manual, minimum and backfill compl
     await verifyFixtureServerDatabase(request, pool);
     for (const habit of definitions) {
       await pool.query(
-        "insert into habits (id, name, time_of_day, is_keystone, minimal_version, frequency_type, start_date) values ($1, $2, $3, $4, 'One minute', 'daily', '2020-01-01')",
-        [habit.id, habit.name, habit.time, habit.keystone],
+        "insert into habits (user_id, id, name, time_of_day, is_keystone, minimal_version, frequency_type, start_date) values ($5, $1, $2, $3, $4, 'One minute', 'daily', '2020-01-01')",
+        [habit.id, habit.name, habit.time, habit.keystone, ownerId],
       );
     }
     await page.goto("/habits");
@@ -174,6 +176,86 @@ test("orders today's habits by time and keeps manual, minimum and backfill compl
       [ids],
     );
     await pool.query("delete from habits where id = any($1::uuid[])", [ids]);
+    await pool.end();
+  }
+});
+
+test("private habit routes reject another account's identifiers without changing its history", async ({
+  page,
+  request,
+}) => {
+  const pool = new pg.Pool({ connectionString: process.env.E2E_DATABASE_URL });
+  const ownerId = z.uuid().parse(process.env.AUTH_FOUNDATION_OWNER_USER_ID);
+  const otherId = randomUUID();
+  const habitId = randomUUID();
+  const name = `Private other habit ${randomUUID()}`;
+  try {
+    await verifyFixtureServerDatabase(request, pool);
+    await pool.query(
+      "insert into auth_users (id,name,email) values ($1,'Other fixture account',$2)",
+      [otherId, `${otherId}@example.invalid`],
+    );
+    await pool.query(
+      "insert into auth_invitations (user_id,invited_by,expires_at,accepted_at) values ($1,$2,now(),now())",
+      [otherId, ownerId],
+    );
+    await pool.query(
+      "insert into habits (id,user_id,name,frequency_type,start_date) values ($1,$2,$3,'daily','2020-01-01')",
+      [habitId, otherId, name],
+    );
+    await pool.query(
+      "insert into habit_completions (habit_id,completion_date,completed,notes) values ($1,current_date,true,'Private history')",
+      [habitId],
+    );
+    for (const path of ["/habits", "/habits/week", "/dashboard"]) {
+      await page.goto(path);
+      await expect(page.getByText(name, { exact: true })).toHaveCount(0);
+    }
+    for (const path of [
+      `/habits/${habitId}/edit`,
+      `/habits/${habitId}/edit.data`,
+    ]) {
+      const response = await request.get(path);
+      expect(response.status()).toBe(404);
+      expect(await response.text()).not.toContain(name);
+    }
+    const edit = await request.post(`/habits/${habitId}/edit`, {
+      form: { name: "Forged edit", color: "#e15a46", freqMode: "daily" },
+    });
+    expect(edit.status()).toBe(404);
+    for (const [path, intent] of [
+      ["/habits", "toggle-completion"],
+      ["/habits/week", "toggle-completion"],
+      ["/dashboard", "toggle-habit"],
+      ["/habits/week", "delete-habit"],
+    ]) {
+      const response = await request.post(path, {
+        form: { intent, habitId, completed: "true" },
+      });
+      expect(response.status()).toBe(404);
+    }
+    expect(
+      (
+        await pool.query(
+          "select name,is_active,user_id from habits where id=$1",
+          [habitId],
+        )
+      ).rows,
+    ).toEqual([{ name, is_active: true, user_id: otherId }]);
+    expect(
+      (
+        await pool.query(
+          "select completed,notes from habit_completions where habit_id=$1",
+          [habitId],
+        )
+      ).rows,
+    ).toEqual([{ completed: true, notes: "Private history" }]);
+  } finally {
+    await pool.query("delete from habit_completions where habit_id=$1", [
+      habitId,
+    ]);
+    await pool.query("delete from habits where id=$1", [habitId]);
+    await pool.query("delete from auth_users where id=$1", [otherId]);
     await pool.end();
   }
 });
