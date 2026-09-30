@@ -22,7 +22,24 @@ begin
   end if;
 end $$;
 --> statement-breakpoint
-alter table workouts drop constraint workouts_template_id_workout_templates_id_fk;
+do $$
+declare
+  constraint_name text;
+  constraint_count integer;
+begin
+  select count(*), min(c.conname::text) into constraint_count, constraint_name
+    from pg_constraint c
+   where c.conrelid = 'public.workouts'::regclass
+     and c.confrelid = 'public.workout_templates'::regclass
+     and c.contype = 'f'
+     and c.conname in ('workouts_template_id_workout_templates_id_fk', 'workouts_template_id_fkey')
+     and c.conkey = array[(select attnum from pg_attribute where attrelid = 'public.workouts'::regclass and attname = 'template_id')]
+     and c.confkey = array[(select attnum from pg_attribute where attrelid = 'public.workout_templates'::regclass and attname = 'id')];
+  if constraint_count <> 1 then
+    raise exception 'Workout ownership requires exactly one recognized workouts.template_id foreign key to workout_templates.id';
+  end if;
+  execute format('alter table public.workouts drop constraint %I', constraint_name);
+end $$;
 --> statement-breakpoint
 alter table workouts alter column user_id set not null;
 --> statement-breakpoint
