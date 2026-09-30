@@ -339,10 +339,6 @@ export default function DashboardPage({
             </Tooltip>
           </weightFetcher.Form>
 
-          <Button asChild variant="ghost">
-            <Link to="/measurements/weight">History &amp; corrections</Link>
-          </Button>
-
           {weightData.length > 0 && (
             <MeasurementChart
               data={weightData}

@@ -59,10 +59,10 @@ test("weight correction keeps both original timestamps and dated entry remains a
     await expect(
       page.getByRole("navigation").getByRole("link", { name: "Meas." }),
     ).toHaveCount(0);
-    await expectTouchTarget(
+    await expect(
       page.getByRole("link", { name: "History & corrections" }),
-    );
-    await page.getByRole("link", { name: "History & corrections" }).click();
+    ).toHaveCount(0);
+    await page.goto("/measurements/weight");
     const row = page
       .getByRole("row")
       .filter({ hasText: `${originalValue} kg` });
@@ -179,7 +179,7 @@ test("Dashboard weight stays directly loggable after a same-day reading and repe
     ).toBe(originalValue);
     await expect(
       page.getByRole("link", { name: "History & corrections" }),
-    ).toBeVisible();
+    ).toHaveCount(0);
   } finally {
     await pool.query(
       "delete from measures where measurement_name='weight' and (t=$1 or value=any($2::float8[]))",
