@@ -34,6 +34,14 @@ cleanup behaviour. Personal data ownership and owner-history migration regressio
 pointing to a loopback disposable PostgreSQL admin connection. The suite creates
 and drops its own scratch database.
 
+`bun run test:mcp:acceptance` builds the full stack and runs a real HTTP SDK
+client against a separate loopback PostgreSQL cluster and app server. It needs
+local `initdb`, `pg_ctl`, `pg_dump` and `pg_restore`. It includes retained OAuth
+credential migration, local rehearsal preflight/apply and backup recovery proof;
+see the [isolated ownership rehearsal](../operations/authentication.md#isolated-restored-history-rehearsal-command).
+This operator acceptance suite is separate from ordinary unit/tenant tests and
+does not change an existing reader login or open native onboarding.
+
 Meal update regressions use `bun run test:nutrition:integration` with
 `NUTRITION_TEST_DATABASE_URL` explicitly pointing to a migrated, dedicated test
 database. The suite creates and cleans up its own fixtures and never calls AI.

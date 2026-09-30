@@ -368,3 +368,117 @@ native admission or removal of the legacy-owner MCP gate.
 - Admit the first invitation-only cohort only after independent full release and
   parity acceptance. No retired generation UI, public signup or private exercise
   fallback is included by the ownership migrations.
+
+### Isolated restored-history rehearsal command
+
+`scripts/rehearse-ownership.ts` is an operator rehearsal for a restored local
+copy, not a production bootstrap command. It refuses remote hosts and database
+names outside `fitness_ownership_rehearsal_test_*` or disposable
+`fitness_tenant_test_*`. Its source must have the exact reviewed migration
+journal through0012; a partially migrated or differently versioned copy stops
+for review. The owner UUID/email must be explicitly supplied and reviewed;
+conflicting or ambiguous identities stop the command.
+
+The September29 archive and live database use the historical
+`workouts_template_id_fkey` name. Migration0016 accepts that name or the
+schema-generated `workouts_template_id_workout_templates_id_fk` only after
+verifying exactly one FK from `workouts.template_id` to `workout_templates.id`.
+Unexpected, duplicate or wrong-target constraints fail for review. The final
+unmodified migration must pass a fresh archive rehearsal; an in-memory
+diagnostic constraint-name replacement is not acceptance evidence. That archive
+predates current owner history and cannot serve as a current rollback point.
+
+Use PostgreSQL tools matching the backup/server major version. Restore the
+controlled owner-history dump into a fresh isolated database. Set `PGHOST`,
+`PGPORT`, `PGUSER` and any password through the operator's local environment;
+never use the production endpoint for these commands:
+
+```sh
+createdb fitness_ownership_rehearsal_test_copy
+pg_restore --no-owner --exit-on-error \
+  --dbname=fitness_ownership_rehearsal_test_copy "$OWNER_HISTORY_DUMP"
+export OWNERSHIP_REHEARSAL_DATABASE_URL='postgresql://127.0.0.1:5432/fitness_ownership_rehearsal_test_copy'
+export OWNERSHIP_REHEARSAL_OWNER_ID="$REVIEWED_OWNER_UUID"
+export OWNERSHIP_REHEARSAL_OWNER_EMAIL="$REVIEWED_OWNER_EMAIL"
+export OWNERSHIP_REHEARSAL_ARTIFACT_DIR="$PRIVATE_REHEARSAL_DIRECTORY"
+bun scripts/rehearse-ownership.ts
+```
+
+The default invocation only reads the copy. It checks owner conflicts and
+orphan workout/template set membership, source-workout, composition,
+consumed-template, gym-floor and retired conversation links, including archived
+history. Review the count/fingerprint report before the explicit apply step:
+
+```sh
+bun scripts/rehearse-ownership.ts --apply
+```
+
+Apply saves a custom-format backup **before** owner bootstrap in a new private
+artifact directory. It invokes `bootstrapAuthOwner` with the supplied UUID/email,
+checks exactly one accepted self-bootstrap identity, applies0013–0018, compares
+counts and ordered full-row fingerprints for all25 covered tables (excluding
+only the added `user_id`) and checks every owned row has the supplied owner.
+The JSON report records the backup location and elapsed bootstrap/migration/
+reconciliation time. Fingerprints detect accidental changes; retain the backup
+and independently inspect history and relationships before release acceptance.
+Keep writes stopped throughout the source snapshot and rehearsal. The script
+does not repair orphans, admit accounts or roll back a live application.
+
+Recovery proof uses a **second fresh isolated database**, preserving the failed
+copy and artifacts for diagnosis:
+
+```sh
+createdb fitness_ownership_rehearsal_test_recovery
+pg_restore --no-owner --exit-on-error \
+  --dbname=fitness_ownership_rehearsal_test_recovery "$REHEARSAL_BEFORE_DUMP"
+```
+
+Verify the original journal through0012, historical counts/IDs/fields, OAuth
+hashes/expiry/replay state, and pre-bootstrap auth state in the recovery database.
+Production recovery still requires coordinated source/database restoration;
+after another account writes, never restore global code or reassign all history.
+
+### External SDK acceptance and remaining boundary audit
+
+Run `bun run test:mcp:acceptance` with Bun, Node and local `initdb`, `pg_ctl`,
+`pg_dump`, `pg_restore` available. It builds the current app, creates a separate
+loopback PostgreSQL cluster (test trust authentication, synthetic data only),
+uses its own restricted reader login, and starts/stops its own HTTP server.
+It cannot replace or rotate an existing local reader login. Cleanup removes its
+scratch databases, server, cluster and artifacts, including on test failure.
+
+The fixture issues an owner credential at0012, runs the read-only preflight and
+apply command, checks all25 history fingerprints, restores the backup into a
+fresh database, then exercises the real external SDK HTTP transport against
+the full stacked runtime. It verifies retained-owner query/write access,
+foreign private references, B's accepted credential refusal, missing/unknown
+bearers, missing self-bootstrap identity, SDK discovery/refresh without new
+consent, replay refusal and revocation on an already initialized client. The
+existing restricted SQL integration suite proves independent A/B queries and
+pooled identity cleanup. **B runtime access remains deliberately closed**: these
+tests do not prove native multi-account admission, the actual owner's stored
+ChatGPT/Claude connection, production email delivery or live proxy behavior.
+
+The fixture also uses the historical FK name and includes a nonempty archived
+habit before0013. Its read-only preflight leaves auth users empty; apply succeeds
+only because `bootstrapAuthOwner` runs **before** the ownership migrations.
+`auth:seed-local` migrates first and cannot bootstrap a nonempty restored source;
+use the reviewed isolated rehearsal ordering, not a bypass of the local seeder.
+
+Code audit at the held stack identifies the following admission gates:
+
+| Boundary | Current evidence and remaining gate |
+| --- | --- |
+| Protected browser routes and private APIs | `ProtectedLayout` accepts the signed legacy browser session and resolves the configured accepted original owner. It does not use native B sessions. Habits, measurements/targets/notes, workouts/history/dashboard, nutrition/AI context and equipment use that explicit actor. Native identity cutover and real native A/B workflows remain required. |
+| MCP private writes and SQL reads | `handleMcp` resolves the credential account and compares it with the configured owner before registering tools. Workout/nutrition factories and SQL transaction GUC receive that account. B initialization is denied; base-table reads are denied by the restricted role. Keep this gate until catalogue/private-cue scope is complete. |
+| Shared exercise catalogue reads | `ExerciseRepository`, `ExerciseMuscleGroupsRepository`, exercise selectors/history/session mapping, substitute candidates and `fitness_data.exercises` expose global exercise names/descriptions/MMC. Those fields can contain the owner's personal labels or cues. Separate private fields and review neutral shared publication before B access. Do not publish copied private history. |
+| Catalogue writes | Browser create/edit/delete, session `updateExerciseMmcInstructions` and MCP `create_exercise` mutate shared definitions. The session cue action checks the workout owner but its supplied exercise ID is not checked for membership before the global cue write. Existing name-change delete/reinsert behavior also needs the separate ENSO-88 identity correction. Review canonical creation/correction rights and private cue ownership; private missing-exercise creation is deferred. |
+| Empty-account targets and dates | Nutrition falls back to `defaultDailyTargets` when no saved target exists. Review the displayed default label rather than treating this as a personalized prescription. `app/time.ts` uses server-local date/calendar helpers; no account timezone is stored. Account timezone and date-boundary acceptance remain required. |
+| Native auth and invitation administration | `/api/auth/*` and `/sign-in` use admitted native sessions when the foundation is enabled; invitation administration requires the configured owner. They do not open protected fitness routes. SMTP/fresh-link recovery, invitation revocation and cutover acceptance remain release gates. |
+| OAuth/public endpoints | Discovery exposes protocol metadata only. Authorization still requires the legacy session and accepted owner; token/refresh/revoke bind the stored connection/account. `/healthz` reports source/database health without private history. Anonymous `/share/meal/:id` is the explicit active published-recipe exception; private lists and SQL views still exclude another account's recipe. |
+| Retired data and operator scripts | Stored training preferences and generation conversations are owned and preserved but have no enabled route/tool consumer. Gym/equipment preference/measurement seeds require the actual accepted owner; the exercise seed still writes the shared catalogue and needs publication review. No tracked active scheduler/import worker adds a separate private-data execution path. |
+
+These are release blockers and scoped follow-ups, not evidence of an admitted B
+data breach: onboarding stays disabled and owner-only browser/MCP safeguards
+remain. Martin's live query-string logging and trusted-IP remediation approval
+is still separate from the isolated SDK proof.

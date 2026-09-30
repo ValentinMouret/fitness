@@ -28,6 +28,7 @@ export function createDisposablePostgres(adminUrl: URL) {
   const folders: string[] = [];
   let created = false;
   return {
+    databaseUrl,
     pool,
     database,
     async create() {
