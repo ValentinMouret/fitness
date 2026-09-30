@@ -365,7 +365,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
 
   const isComplete = !!workoutSession.workout.stop;
 
-  const { startedAgo } = useLiveDuration({
+  const { startedAgo, formattedDuration } = useLiveDuration({
     startTime: workoutSession.workout.start,
     endTime: workoutSession.workout.stop ?? undefined,
   });
@@ -509,7 +509,9 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                     </span>
                   )}
                   <Text size="2" className="active-workout-header__started-ago">
-                    {startedAgo}
+                    {isComplete
+                      ? `Completed · ${formattedDuration}`
+                      : startedAgo}
                   </Text>
                 </div>
               </div>
@@ -520,7 +522,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
               gap="2"
               className="active-workout-header__actions"
             >
-              {!isComplete && focusExerciseId && (
+              {focusExerciseId && (
                 <>
                   <Text size="1">
                     {focusedIndex + 1} / {workoutSession.exerciseGroups.length}
@@ -622,78 +624,58 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
 
       {/* Exercise sections */}
       <div className="active-workout-content">
-        {!isComplete ? (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+        <DndContext
+          sensors={isComplete ? [] : sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={isComplete ? undefined : handleDragEnd}
+        >
+          <SortableContext
+            items={workoutSession.exerciseGroups.map((g) => g.exercise.id)}
+            strategy={verticalListSortingStrategy}
           >
-            <SortableContext
-              items={workoutSession.exerciseGroups.map((g) => g.exercise.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              {workoutSession.exerciseGroups.map((group) => (
-                <SortableExerciseCard
-                  key={group.exercise.id}
-                  group={group}
-                  summary={progress.exercises.find(
-                    (exercise) => exercise.id === group.exercise.id,
-                  )}
-                  focusExerciseId={focusExerciseId}
-                  href={exerciseHref(group.exercise.id)}
-                  onNavigate={rememberScroll}
-                  openReportSetKey={openReportSetKey}
-                  onReportPromptChange={onReportPromptChange}
-                  onCompleteSet={handleCompletedSet}
-                  onReplaceExercise={(exerciseId) => {
-                    setReplaceExerciseId(exerciseId);
-                    setShowExerciseSelector(true);
-                  }}
-                  onExerciseNameClick={(exerciseId) => {
-                    const g = workoutSession.exerciseGroups.find(
-                      (eg) => eg.exercise.id === exerciseId,
-                    );
-                    if (g)
-                      setHistoryExercise({
-                        id: g.exercise.id,
-                        name: g.exercise.name,
-                      });
-                  }}
-                  onMMCClick={(exerciseId) => {
-                    const g = workoutSession.exerciseGroups.find(
-                      (eg) => eg.exercise.id === exerciseId,
-                    );
-                    if (g)
-                      setMmcExercise({
-                        id: g.exercise.id,
-                        name: g.exercise.name,
-                        mmcInstructions: g.exercise.mmcInstructions,
-                      });
-                  }}
-                />
-              ))}
-            </SortableContext>
-          </DndContext>
-        ) : (
-          workoutSession.exerciseGroups.map((group) => {
-            const viewModel = createWorkoutExerciseCardViewModel(group, true);
-            return (
-              <div key={group.exercise.id} className="active-workout-exercise">
-                <WorkoutExerciseCard
-                  viewModel={viewModel}
-                  openReportSetKey={openReportSetKey}
-                  onReportPromptChange={onReportPromptChange}
-                  onExerciseNameClick={() =>
+            {workoutSession.exerciseGroups.map((group) => (
+              <SortableExerciseCard
+                key={group.exercise.id}
+                group={group}
+                isWorkoutComplete={isComplete}
+                summary={progress.exercises.find(
+                  (exercise) => exercise.id === group.exercise.id,
+                )}
+                focusExerciseId={focusExerciseId}
+                href={exerciseHref(group.exercise.id)}
+                onNavigate={rememberScroll}
+                openReportSetKey={openReportSetKey}
+                onReportPromptChange={onReportPromptChange}
+                onCompleteSet={handleCompletedSet}
+                onReplaceExercise={(exerciseId) => {
+                  setReplaceExerciseId(exerciseId);
+                  setShowExerciseSelector(true);
+                }}
+                onExerciseNameClick={(exerciseId) => {
+                  const g = workoutSession.exerciseGroups.find(
+                    (eg) => eg.exercise.id === exerciseId,
+                  );
+                  if (g)
                     setHistoryExercise({
-                      id: group.exercise.id,
-                      name: group.exercise.name,
-                    })
-                  }
-                />
-              </div>
-            );
-          })
-        )}
+                      id: g.exercise.id,
+                      name: g.exercise.name,
+                    });
+                }}
+                onMMCClick={(exerciseId) => {
+                  const g = workoutSession.exerciseGroups.find(
+                    (eg) => eg.exercise.id === exerciseId,
+                  );
+                  if (g)
+                    setMmcExercise({
+                      id: g.exercise.id,
+                      name: g.exercise.name,
+                      mmcInstructions: g.exercise.mmcInstructions,
+                    });
+                }}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
 
         {!isComplete && workoutSession.exerciseGroups.length === 0 && (
           <div className="active-workout-empty">
@@ -707,7 +689,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
           </div>
         )}
 
-        {!isComplete && focusExerciseId && (
+        {focusExerciseId && (
           <nav
             className="active-workout-exercise-navigation"
             aria-label="Exercise navigation"
@@ -829,6 +811,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
 
 function SortableExerciseCard({
   group,
+  isWorkoutComplete,
   summary,
   focusExerciseId,
   href,
@@ -841,6 +824,7 @@ function SortableExerciseCard({
   onReportPromptChange,
 }: {
   readonly group: WorkoutExerciseGroup;
+  readonly isWorkoutComplete: boolean;
   readonly summary?: WorkoutExerciseProgressViewModel;
   readonly focusExerciseId?: string;
   readonly href: string;
@@ -859,14 +843,17 @@ function SortableExerciseCard({
     setActivatorNodeRef,
     transform,
     transition,
-  } = useSortable({ id: group.exercise.id });
+  } = useSortable({ id: group.exercise.id, disabled: isWorkoutComplete });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
 
-  const viewModel = createWorkoutExerciseCardViewModel(group, false);
+  const viewModel = createWorkoutExerciseCardViewModel(
+    group,
+    isWorkoutComplete,
+  );
 
   return (
     <div
@@ -882,16 +869,18 @@ function SortableExerciseCard({
         hidden={focusExerciseId !== undefined}
         className={`active-workout-overview-exercise${summary?.isCompleted ? " active-workout-overview-exercise--completed" : ""}`}
       >
-        <button
-          type="button"
-          ref={setActivatorNodeRef}
-          {...listeners}
-          {...attributes}
-          className="exercise-card__drag-handle"
-          aria-label={`Reorder ${group.exercise.name}`}
-        >
-          <span aria-hidden="true">⠿</span>
-        </button>
+        {!isWorkoutComplete && (
+          <button
+            type="button"
+            ref={setActivatorNodeRef}
+            {...listeners}
+            {...attributes}
+            className="exercise-card__drag-handle"
+            aria-label={`Reorder ${group.exercise.name}`}
+          >
+            <span aria-hidden="true">⠿</span>
+          </button>
+        )}
         <Link
           to={href}
           onClick={onNavigate}
@@ -921,10 +910,10 @@ function SortableExerciseCard({
           viewModel={viewModel}
           openReportSetKey={openReportSetKey}
           onReportPromptChange={onReportPromptChange}
-          onCompleteSet={onCompleteSet}
-          onReplaceExercise={onReplaceExercise}
+          onCompleteSet={isWorkoutComplete ? undefined : onCompleteSet}
+          onReplaceExercise={isWorkoutComplete ? undefined : onReplaceExercise}
           onExerciseNameClick={onExerciseNameClick}
-          onMMCClick={onMMCClick}
+          onMMCClick={isWorkoutComplete ? undefined : onMMCClick}
         />
       </div>
     </div>

@@ -22,10 +22,12 @@ muscle-group volume.
 - The active rest timer remains with the sticky session header while scrolling.
   Completing a set or returning to the tab never advances the viewport to another
   exercise. Scrolling and exercise navigation stay under the lifter's control.
-- Active sessions open an overview of ordered exercises. Selecting an exercise
+- Active and completed sessions share an overview of ordered exercises. Selecting an exercise
   focuses its sets; Previous, Next, and Overview preserve drafts, effort reports,
   the rest timer, and each view's scroll position. The `exercise` query parameter
-  identifies the focused exercise.
+  identifies the focused exercise. Completed sessions use read-only sets and
+  show Completed with their recorded duration; Repeat and Delete remain available.
+  Rest, logging, adding, sorting, and finishing controls belong to active sessions.
 - Finish workout is available in the overview when the session has sets and no
   save is pending. Unfinished sets require confirmation and remain uncompleted
   after finishing; saved sets are retained. Saving the final remaining set opens
