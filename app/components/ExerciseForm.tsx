@@ -48,6 +48,7 @@ interface ExerciseFormExercise {
   readonly id: string;
   readonly name: string;
   readonly type: ExerciseFormExerciseType;
+  readonly movementPattern?: string;
   readonly description?: string;
   readonly mmcInstructions?: string;
 }
@@ -61,12 +62,14 @@ interface ExerciseFormProps {
   readonly initialExercise?: ExerciseFormExercise;
   readonly initialSplits?: ReadonlyArray<MuscleGroupSplit>;
   readonly mode: "create" | "edit";
+  readonly movementPatterns: readonly string[];
 }
 
 export default function ExerciseForm({
   initialExercise,
   initialSplits = [],
   mode,
+  movementPatterns,
 }: ExerciseFormProps) {
   const [splits, setSplits] = useState<MuscleGroupSplit[]>([...initialSplits]);
 
@@ -89,6 +92,7 @@ export default function ExerciseForm({
 
   const nameId = useId();
   const typeId = useId();
+  const movementPatternId = useId();
   const descriptionId = useId();
   const mmcId = useId();
 
@@ -149,6 +153,27 @@ export default function ExerciseForm({
               {EXERCISE_TYPES.map((exerciseType) => (
                 <Select.Item key={exerciseType} value={exerciseType}>
                   {humanFormatting(exerciseType)}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        </Flex>
+
+        <Flex direction="column" gap="2">
+          <Text as="label" htmlFor={movementPatternId} size="2" weight="medium">
+            Movement pattern <RequiredStar />
+          </Text>
+          <Select.Root
+            required
+            name="movementPattern"
+            defaultValue={initialExercise?.movementPattern}
+            disabled={isSubmitting}
+          >
+            <Select.Trigger id={movementPatternId} />
+            <Select.Content>
+              {movementPatterns.map((pattern) => (
+                <Select.Item key={pattern} value={pattern}>
+                  {humanFormatting(pattern)}
                 </Select.Item>
               ))}
             </Select.Content>

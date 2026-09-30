@@ -19,9 +19,10 @@ import {
 } from "@radix-ui/themes";
 import { Brain } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useFetcher } from "react-router";
+import { Link, useFetcher, useLocation } from "react-router";
 import { NumberInput } from "~/components/NumberInput";
 import { reportedRirValues } from "~/modules/fitness/domain/workout";
+import { exerciseEditorUrl } from "../../exercise-editor-navigation";
 import type {
   WorkoutExerciseCardViewModel,
   WorkoutSetViewModel,
@@ -60,6 +61,7 @@ export function WorkoutExerciseCard({
   dragHandleAttributes,
   dragHandleRef,
 }: WorkoutExerciseCardProps) {
+  const location = useLocation();
   const fetcher = useFetcher();
 
   const isAddingSet =
@@ -141,6 +143,16 @@ export function WorkoutExerciseCard({
               </DropdownMenu.Trigger>
             </Tooltip>
             <DropdownMenu.Content>
+              <DropdownMenu.Item asChild>
+                <Link
+                  to={exerciseEditorUrl(
+                    viewModel.exerciseId,
+                    `${location.pathname}${location.search}`,
+                  )}
+                >
+                  Correct catalogue details
+                </Link>
+              </DropdownMenu.Item>
               {onReplaceExercise && (
                 <DropdownMenu.Item
                   onSelect={() => onReplaceExercise(viewModel.exerciseId)}

@@ -15,7 +15,7 @@ test.describe("Nutrition Page", () => {
       page.getByRole("link", { name: "Meal Builder" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Calculate Targets" }),
+      page.getByRole("button", { name: "Calorie target", exact: true }),
     ).toBeVisible();
   });
 

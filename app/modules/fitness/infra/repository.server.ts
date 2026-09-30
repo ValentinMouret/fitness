@@ -167,6 +167,43 @@ export const ExerciseMuscleGroupsRepository = {
     });
   },
 
+  update({
+    exercise,
+    muscleGroupSplits,
+  }: ExerciseMuscleGroups): ResultAsync<void, ErrRepository> {
+    return ResultAsync.fromPromise(
+      db.transaction(async (tx) => {
+        await tx
+          .update(exercises)
+          .set({
+            name: exercise.name,
+            type: exercise.type,
+            movement_pattern: exercise.movementPattern,
+            description: exercise.description ?? null,
+            mmc_instructions: exercise.mmcInstructions ?? null,
+            updated_at: new Date(),
+          })
+          .where(eq(exercises.id, exercise.id));
+        await tx
+          .delete(exerciseMuscleGroups)
+          .where(eq(exerciseMuscleGroups.exercise, exercise.id));
+        if (muscleGroupSplits.length > 0) {
+          await tx.insert(exerciseMuscleGroups).values(
+            muscleGroupSplits.map(({ muscleGroup, split }) => ({
+              exercise: exercise.id,
+              muscle_group: muscleGroup,
+              split,
+            })),
+          );
+        }
+      }),
+      (err) => {
+        logger.error({ err }, "Failed to update exercise with muscle groups");
+        return "database_error";
+      },
+    );
+  },
+
   deleteById(exerciseId: string): ResultAsync<void, ErrRepository> {
     return ResultAsync.fromPromise(
       db.transaction(async (tx) => {

@@ -26,6 +26,7 @@ import {
   deleteMeasure,
   getMeasurementDetail,
 } from "~/modules/core/infra/measurement-detail.service.server";
+import { WeightValueCorrection } from "~/modules/core/presentation/components/WeightValueCorrection";
 import { today } from "~/time";
 import { isEditableTarget } from "~/utils/dom";
 import { formNumber, formOptionalText } from "~/utils/form-data";
@@ -44,7 +45,8 @@ export const handle = {
       .replace(/\b\w/g, (l) => l.toUpperCase());
     return {
       title: displayName,
-      backTo: "/measurements",
+      backTo:
+        data.measurement.name === "weight" ? "/dashboard" : "/measurements",
     };
   },
 };
@@ -60,8 +62,8 @@ export async function action({ request, params }: Route.ActionArgs) {
 
   if (intent === "add-measure") {
     const schema = zfd.formData({
-      value: formNumber(z.number()),
-      date: formOptionalText(),
+      value: formNumber(name === "weight" ? z.number().positive() : z.number()),
+      date: zfd.text(z.union([z.iso.date(), z.iso.datetime()]).optional()),
     });
     const parsed = schema.safeParse(formData);
     if (!parsed.success) {
@@ -127,7 +129,7 @@ export default function MeasurementPage(_: Route.ComponentProps) {
   }, []);
   const actionData = z
     .object({ error: z.string().optional(), success: z.boolean().optional() })
-    .nullable()
+    .nullish()
     .parse(addFetcher.data);
 
   return (
@@ -245,6 +247,13 @@ export default function MeasurementPage(_: Route.ComponentProps) {
                     {measure.value} {measurement.unit}
                   </Table.Cell>
                   <Table.Cell>
+                    {measurement.name === "weight" && (
+                      <WeightValueCorrection
+                        value={measure.value}
+                        timestamp={measure.t.toISOString()}
+                        unit={measurement.unit}
+                      />
+                    )}
                     <AlertDialog.Root>
                       <Tooltip content="Delete measurement">
                         <AlertDialog.Trigger>

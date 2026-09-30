@@ -27,7 +27,7 @@ import {
 } from "@radix-ui/themes";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useFetcher } from "react-router";
+import { Link, useFetcher, useNavigate, useSearchParams } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { CancelConfirmationDialog } from "~/components/workout/CancelConfirmationDialog";
@@ -37,7 +37,10 @@ import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
 import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
 import { logger } from "~/logger.server";
-import type { WorkoutExerciseGroup } from "~/modules/fitness/domain/workout";
+import {
+  exerciseTypes,
+  type WorkoutExerciseGroup,
+} from "~/modules/fitness/domain/workout";
 import { duplicateWorkout } from "~/modules/fitness/infra/duplicate-workout.service.server";
 import {
   addExercisesToWorkout,
@@ -61,6 +64,7 @@ import {
   ExerciseHistoryModal,
   WorkoutExerciseCard,
 } from "~/modules/fitness/presentation";
+import { exerciseEditorUrl } from "~/modules/fitness/presentation/exercise-editor-navigation";
 import { reorderExerciseGroups } from "~/modules/fitness/presentation/reorder-exercise-groups";
 import { isEditableTarget } from "~/utils/dom";
 import { formOptionalText, formText } from "~/utils/form-data";
@@ -265,6 +269,8 @@ function parseWorkoutId(id: string): string {
 }
 
 export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { workoutSession, exercises } = loaderData;
   const workoutId = workoutSession.workout.id;
   const [openReport, setOpenReport] = useState<{
@@ -285,8 +291,18 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     },
     [workoutId],
   );
-  const [showExerciseSelector, setShowExerciseSelector] = useState(false);
-  const [replaceExerciseId, setReplaceExerciseId] = useState<string>();
+  const [showExerciseSelector, setShowExerciseSelector] = useState(
+    searchParams.get("selectExercise") === "1",
+  );
+  const [replaceExerciseId, setReplaceExerciseId] = useState<
+    string | undefined
+  >(
+    z
+      .uuid()
+      .optional()
+      .catch(undefined)
+      .parse(searchParams.get("replaceExerciseId") ?? undefined),
+  );
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -690,11 +706,75 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
       </div>
 
       <ExerciseSelector
+        correctionHref={(exerciseId, context) => {
+          const params = new URLSearchParams(searchParams);
+          params.set("selectExercise", "1");
+          params.set("exerciseSearch", context.query);
+          params.set("exerciseType", context.type);
+          params.delete("selectedExerciseIds");
+          for (const id of context.selectedIds)
+            params.append("selectedExerciseIds", id);
+          if (context.replacementSelectionId)
+            params.set("selectedReplacementId", context.replacementSelectionId);
+          else params.delete("selectedReplacementId");
+          if (replaceExerciseId)
+            params.set("replaceExerciseId", replaceExerciseId);
+          else params.delete("replaceExerciseId");
+          return exerciseEditorUrl(
+            exerciseId,
+            `/workouts/${workoutId}?${params}`,
+          );
+        }}
+        onCorrectionNavigate={async (href) => {
+          const returnTo = new URL(
+            href,
+            window.location.origin,
+          ).searchParams.get("returnTo");
+          if (!returnTo) return;
+          await navigate(returnTo, { replace: true, preventScrollReset: true });
+          await navigate(href);
+        }}
+        initialSelectedIds={z
+          .array(z.uuid())
+          .catch([])
+          .parse(searchParams.getAll("selectedExerciseIds"))}
+        initialReplacementSelectionId={z
+          .uuid()
+          .optional()
+          .catch(undefined)
+          .parse(searchParams.get("selectedReplacementId") ?? undefined)}
+        initialSearchQuery={z
+          .string()
+          .max(200)
+          .catch("")
+          .parse(searchParams.get("exerciseSearch") ?? "")}
+        initialType={z
+          .enum(["all", ...exerciseTypes])
+          .catch("all")
+          .parse(searchParams.get("exerciseType") ?? "all")}
         exercises={exercises}
         open={showExerciseSelector}
         onOpenChange={(open) => {
           setShowExerciseSelector(open);
-          if (!open) setReplaceExerciseId(undefined);
+          if (!open) {
+            setReplaceExerciseId(undefined);
+            if (searchParams.get("selectExercise") === "1") {
+              const params = new URLSearchParams(searchParams);
+              for (const key of [
+                "selectExercise",
+                "exerciseSearch",
+                "exerciseType",
+                "replaceExerciseId",
+                "selectedExerciseIds",
+                "selectedReplacementId",
+              ])
+                params.delete(key);
+              setSearchParams(params, {
+                replace: true,
+                preventScrollReset: true,
+              });
+            }
+          }
         }}
         replaceExerciseId={replaceExerciseId}
       />

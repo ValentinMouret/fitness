@@ -12,7 +12,7 @@ import {
 } from "@radix-ui/themes";
 import Fuse from "fuse.js";
 import { useMemo, useState } from "react";
-import { useFetcher } from "react-router";
+import { Link, useFetcher } from "react-router";
 import "./ExerciseSelector.css";
 
 interface ExerciseSelectorExercise {
@@ -26,6 +26,20 @@ interface ExerciseSelectorProps {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
   readonly replaceExerciseId?: string;
+  readonly initialSearchQuery?: string;
+  readonly initialType?: string;
+  readonly initialSelectedIds?: readonly string[];
+  readonly initialReplacementSelectionId?: string;
+  readonly correctionHref?: (
+    exerciseId: string,
+    context: {
+      readonly query: string;
+      readonly type: string;
+      readonly selectedIds: readonly string[];
+      readonly replacementSelectionId?: string;
+    },
+  ) => string;
+  readonly onCorrectionNavigate?: (href: string) => Promise<void>;
 }
 
 export function ExerciseSelector({
@@ -33,14 +47,24 @@ export function ExerciseSelector({
   open,
   onOpenChange,
   replaceExerciseId,
+  initialSearchQuery = "",
+  initialType = "all",
+  initialSelectedIds = [],
+  initialReplacementSelectionId,
+  correctionHref,
+  onCorrectionNavigate,
 }: ExerciseSelectorProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedType, setSelectedType] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
+  const [selectedType, setSelectedType] = useState<string>(initialType);
   const [selectedExercise, setSelectedExercise] =
-    useState<ExerciseSelectorExercise | null>(null);
+    useState<ExerciseSelectorExercise | null>(
+      exercises.find(
+        (exercise) => exercise.id === initialReplacementSelectionId,
+      ) ?? null,
+    );
   const [selectedExercises, setSelectedExercises] = useState<
     ReadonlyArray<ExerciseSelectorExercise>
-  >([]);
+  >(exercises.filter((exercise) => initialSelectedIds.includes(exercise.id)));
   const fetcher = useFetcher();
 
   const availableTypes = useMemo(() => {
@@ -204,6 +228,43 @@ export function ExerciseSelector({
                             {exercise.type}
                           </Text>
                         </div>
+                        {correctionHref && (
+                          <Button
+                            asChild
+                            variant="ghost"
+                            size="1"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <Link
+                              to={correctionHref(exercise.id, {
+                                query: searchQuery,
+                                type: selectedType,
+                                selectedIds: selectedExercises.map(
+                                  (selected) => selected.id,
+                                ),
+                                replacementSelectionId: selectedExercise?.id,
+                              })}
+                              onClick={(event) => {
+                                if (
+                                  !onCorrectionNavigate ||
+                                  event.metaKey ||
+                                  event.ctrlKey ||
+                                  event.shiftKey ||
+                                  event.altKey
+                                )
+                                  return;
+                                event.preventDefault();
+                                void onCorrectionNavigate(
+                                  event.currentTarget.getAttribute("href") ??
+                                    "",
+                                );
+                              }}
+                              aria-label={`Correct catalogue details for ${exercise.name}`}
+                            >
+                              Correct details
+                            </Link>
+                          </Button>
+                        )}
                         {!isReplaceMode && isSelected && (
                           <Badge size="1" variant="solid" radius="full">
                             <CheckIcon width="12" height="12" />
