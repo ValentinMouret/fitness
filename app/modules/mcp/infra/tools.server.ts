@@ -15,7 +15,7 @@ import {
   workoutExerciseSchema,
   workoutIdSchema,
 } from "~/modules/fitness/domain/workout-commands";
-import type { workoutCommands } from "~/modules/fitness/infra/workout.repository.server";
+import type { createWorkoutCommands } from "~/modules/fitness/infra/workout.repository.server";
 import {
   createIngredientSchema,
   logMealSchema,
@@ -39,7 +39,7 @@ function result(value: unknown, isError = false): CallToolResult {
 
 export function registerFitnessTools(
   server: McpServer,
-  commands: typeof workoutCommands,
+  commands: ReturnType<typeof createWorkoutCommands>,
   query: ReturnType<typeof createRuntimeQueryRunner>,
   nutrition = nutritionCommands,
 ) {

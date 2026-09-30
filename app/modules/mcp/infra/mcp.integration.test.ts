@@ -49,13 +49,13 @@ const reader = new Pool({
   query_timeout: 4000,
 });
 const database = drizzle(writer);
-const repository = createWorkoutRepository(database);
+const ownerUserId = userIdSchema.parse(randomUUID());
+const repository = createWorkoutRepository(ownerUserId, database);
 const operations = workoutOperations(repository);
 const nutrition = nutritionOperations(
   createIngredientRepository(database),
   createMealLogRepository(database),
 );
-const ownerUserId = userIdSchema.parse(randomUUID());
 const query = createQueryRunner(
   ownerUserId,
   () => reader.connect(),
@@ -1301,4 +1301,119 @@ describe("personal progress SQL isolation", () => {
       await writer.query("delete from auth_users where id=$1", [otherUserId]);
     }
   });
+});
+
+it("isolates workout sessions, ordered groups, sets and volume for the real A/B SQL reader", async () => {
+  const otherUserId = userIdSchema.parse(randomUUID());
+  const otherOperations = workoutOperations(
+    createWorkoutRepository(otherUserId, database),
+  );
+  const otherQuery = createQueryRunner(
+    otherUserId,
+    () => reader.connect(),
+    readerRole,
+  );
+  await writer.query(
+    "insert into auth_users (id,name,email) values ($1,'Other workout fixture',$2)",
+    [otherUserId, `${otherUserId}@example.invalid`],
+  );
+  const entry = await exercise("Reader isolation neutral exercise");
+  const workoutIds: string[] = [];
+  try {
+    for (const [operation, name, reps, weight] of [
+      [operations, "Account A private workout", 8, 60],
+      [otherOperations, "Account B private workout", 3, 10],
+    ] as const) {
+      const session = (
+        await operation.createWorkout({
+          name,
+          start: "1900-01-01T10:00:00Z",
+          stop: "1900-01-01T11:00:00Z",
+          notes: name,
+          exercises: [
+            {
+              exerciseId: entry.id,
+              notes: name,
+              sets: [
+                {
+                  set: 1,
+                  reps,
+                  weight,
+                  note: name,
+                  isCompleted: true,
+                  isWarmup: false,
+                  isFailure: false,
+                },
+              ],
+            },
+          ],
+        })
+      )._unsafeUnwrap();
+      workoutIds.push(session.workout.id);
+    }
+    const sql =
+      "select w.id,w.notes,we.notes as exercise_notes,s.note,s.volume_kg from fitness_data.workouts w join fitness_data.workout_exercises we on we.workout_id=w.id join fitness_data.sets s on s.workout_id=we.workout_id and s.exercise_id=we.exercise_id where w.id in ('" +
+      workoutIds.join("','") +
+      "') order by w.id";
+    const [a, b] = await Promise.all([query({ sql }), otherQuery({ sql })]);
+    expect(a._unsafeUnwrap().rows).toEqual([
+      {
+        id: workoutIds[0],
+        notes: "Account A private workout",
+        exercise_notes: "Account A private workout",
+        note: "Account A private workout",
+        volume_kg: 480,
+      },
+    ]);
+    expect(b._unsafeUnwrap().rows).toEqual([
+      {
+        id: workoutIds[1],
+        notes: "Account B private workout",
+        exercise_notes: "Account B private workout",
+        note: "Account B private workout",
+        volume_kg: 30,
+      },
+    ]);
+    for (const view of [
+      "workouts",
+      "workout_exercises",
+      "sets",
+      "muscle_volume",
+    ])
+      expect(
+        (await reader.query(`select * from fitness_data.${view}`)).rows,
+      ).toEqual([]);
+    const aggregateSql =
+      "select sum(volume_kg)::float8 as total from fitness_data.sets where workout_id in ('" +
+      workoutIds.join("','") +
+      "')";
+    for (const [run, total] of [
+      [query, 480],
+      [otherQuery, 30],
+      [query, 480],
+    ] as const)
+      expect((await run({ sql: aggregateSql }))._unsafeUnwrap().rows).toEqual([
+        { total },
+      ]);
+    await expect(
+      reader.query("select * from public.workout_templates"),
+    ).rejects.toThrow();
+  } finally {
+    await writer.query(
+      "delete from workout_sets where workout=any($1::uuid[])",
+      [workoutIds],
+    );
+    await writer.query(
+      "delete from workout_exercises where workout_id=any($1::uuid[])",
+      [workoutIds],
+    );
+    await writer.query("delete from workouts where id=any($1::uuid[])", [
+      workoutIds,
+    ]);
+    await writer.query("delete from exercise_muscle_groups where exercise=$1", [
+      entry.id,
+    ]);
+    await writer.query("delete from exercises where id=$1", [entry.id]);
+    await writer.query("delete from auth_users where id=$1", [otherUserId]);
+  }
 });

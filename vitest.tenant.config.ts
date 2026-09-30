@@ -9,6 +9,8 @@ export default defineConfig({
     include: [
       "app/modules/habits/**/*.integration.test.ts",
       "app/modules/core/**/*.integration.test.ts",
+      "app/modules/fitness/infra/ownership.integration.test.ts",
+      "app/modules/fitness/infra/workout-migration-compatibility.integration.test.ts",
     ],
     exclude: ["node_modules/**"],
     fileParallelism: false,

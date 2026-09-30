@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { workoutCommands } from "~/modules/fitness/infra/workout.repository.server";
+import { createWorkoutCommands } from "~/modules/fitness/infra/workout.repository.server";
 import { createRuntimeQueryRunner } from "~/modules/mcp/infra/query.server";
 import { registerFitnessTools } from "~/modules/mcp/infra/tools.server";
 import { requireLegacyOwnerIdentity } from "./legacy-owner.server";
@@ -44,7 +44,7 @@ export async function handleMcp(request: Request) {
   });
   registerFitnessTools(
     server,
-    workoutCommands,
+    createWorkoutCommands(access.value.user.id),
     createRuntimeQueryRunner(access.value.user.id),
   );
   try {
