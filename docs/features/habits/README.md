@@ -22,6 +22,12 @@ streak and total-completion feedback, and logging a minimum version. The
 [weekly page](../../../app/routes/habits/week.tsx) provides a calendar-oriented
 view. Creation and editing have separate routes.
 
+Today's valid timed habits appear chronologically in Morning (before noon) and
+Later today. Untimed or invalid times appear in Anytime. Equal times and Anytime
+use name then ID for stable ordering. Completing a habit keeps its position;
+keystone badges do not override chronology. Completion remains manual, including
+minimum versions and weekly backfill.
+
 The [MCP API](../../mcp.md#read-habits) exposes active habit definitions and
 dated completion history as read-only views for connected agents.
 
