@@ -318,7 +318,9 @@ beforeAll(async () => {
         PORT: String(httpPort),
         DATABASE_URL: fixture.databaseUrl.toString(),
         MCP_DATABASE_URL: reader.toString(),
-        AUTH_FOUNDATION_ENABLED: "false",
+        AUTH_FOUNDATION_ENABLED: "true",
+        AUTH_FOUNDATION_ORIGIN: origin,
+        AUTH_LOCAL_INBOX: join(folder, "inbox.jsonl"),
         AUTH_FOUNDATION_OWNER_USER_ID: owner,
         AUTH_USERNAME: "test-owner",
         AUTH_PASSWORD: "test-password",
@@ -367,6 +369,86 @@ afterAll(async () => {
 });
 
 describe.sequential("full-stack external HTTP SDK ownership acceptance", () => {
+  it("keeps private routes closed to real native A/B sessions before identity cutover", async () => {
+    for (const [id, email] of [
+      [owner, "owner@example.invalid"],
+      [other, "other@example.invalid"],
+    ] as const) {
+      const requested = await fetch(`${origin}/sign-in`, {
+        method: "POST",
+        headers: {
+          Origin: origin,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ intent: "request-link", email }),
+      });
+      expect(requested.status).toBe(200);
+      const messages = (await readFile(join(folder, "inbox.jsonl"), "utf8"))
+        .trim()
+        .split("\n")
+        .map((line) =>
+          z.object({ to: z.string(), url: z.url() }).parse(JSON.parse(line)),
+        );
+      const message = messages.findLast((entry) => entry.to === email);
+      if (!message) throw new Error("Native acceptance link was not delivered");
+      const verified = await fetch(message.url, { redirect: "manual" });
+      expect(verified.status).toBe(302);
+      const cookie = verified.headers
+        .getSetCookie()
+        .map((value) => value.split(";")[0])
+        .join("; ");
+      expect(cookie).toContain("better-auth.session_token=");
+      const session = await fetch(`${origin}/api/auth/get-session`, {
+        headers: { Cookie: cookie },
+      });
+      expect(
+        z
+          .object({ user: z.object({ id: z.string() }) })
+          .parse(await session.json()).user.id,
+      ).toBe(id);
+      for (const path of [
+        "/habits",
+        "/measurements",
+        "/workouts",
+        "/nutrition",
+      ]) {
+        const response = await fetch(`${origin}${path}`, {
+          headers: { Cookie: cookie },
+          redirect: "manual",
+        });
+        expect(response.status).toBe(302);
+        expect(response.headers.get("Location")).toContain("/login");
+      }
+      const before = await databaseFixture().pool.query(
+        "select name from workouts where id=$1",
+        [ownWorkout],
+      );
+      const mutation = await fetch(`${origin}/workouts/${ownWorkout}`, {
+        method: "POST",
+        redirect: "manual",
+        headers: {
+          Cookie: cookie,
+          Origin: origin,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          intent: "update-name",
+          name: "Native hold bypass",
+        }),
+      });
+      expect(mutation.status).toBe(302);
+      expect(mutation.headers.get("Location")).toContain("/login");
+      expect(
+        (
+          await databaseFixture().pool.query(
+            "select name from workouts where id=$1",
+            [ownWorkout],
+          )
+        ).rows,
+      ).toEqual(before.rows);
+    }
+  });
+
   it("retains an owner credential across0013–0018 and scopes query and private writes", async () => {
     const connected = sdk(access);
     client = connected.value;
