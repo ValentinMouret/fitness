@@ -32,6 +32,8 @@ export async function handleMcp(request: Request) {
   );
   if (access.isErr()) return oauthError(access.error);
   if (!access.value) return challenge();
+  const owner = await requireLegacyOwnerIdentity();
+  if (access.value.user.id !== owner.id) return challenge();
   const server = new McpServer(
     { name: "Fitness", version: "1.0.0" },
     { capabilities: { tools: {} } },
@@ -40,11 +42,10 @@ export async function handleMcp(request: Request) {
     sessionIdGenerator: undefined,
     enableJsonResponse: true,
   });
-  const owner = await requireLegacyOwnerIdentity();
   registerFitnessTools(
     server,
     workoutCommands,
-    createRuntimeQueryRunner(owner.id),
+    createRuntimeQueryRunner(access.value.user.id),
   );
   try {
     await server.connect(transport);

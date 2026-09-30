@@ -207,3 +207,21 @@ The tenant suite also checks measurement/target/note history preservation,
 same-name/same-timestamp isolation, composite foreign keys, independent notes,
 concurrent target replacement and forged-ID rollback. MCP tests use the real
 restricted role for parallel A/B progress aggregates and missing-identity reads.
+
+### OAuth ownership stage (draft release hold)
+
+Migration 0015 assigns every existing OAuth connection, including revoked
+connections, to the uniquely accepted bootstrap owner. It preserves connection
+IDs, hashed codes/tokens, expiry, replay and revocation history. Like migrations
+0013–0014, it must remain held until the owner bootstrap/backfill and legacy
+compatibility rollout have been reviewed and rehearsed.
+
+Consent passes the trusted legacy owner to authorization-code issuance. New
+connections require an accepted, non-revoked invitation; code exchange and
+refresh serialize with invitation revocation. Access lookup returns the account
+identity joined through the persisted connection and rejects revoked admission.
+MCP checks this identity against the legacy owner before registering any tools,
+then passes the connection's account identity to the SQL runner. Other accounts
+remain denied while private workout/nutrition paths are still global. Native
+sessions still cannot consent or enter the private app; this stage does not
+activate onboarding.

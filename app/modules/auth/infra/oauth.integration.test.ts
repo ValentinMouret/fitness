@@ -1,7 +1,17 @@
 import { createHash, randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
-import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { closeConnections, db } from "~/db";
+import { authInvitations, authUsers } from "~/db/schema";
+import { type UserId, userIdSchema } from "../domain/user";
 import { hashCredential } from "./crypto.server";
 import {
   exchangeToken,
@@ -20,8 +30,27 @@ const client = {
 const verifier = "a".repeat(43);
 const connections: string[] = [];
 
-async function issue() {
+const ownerId = userIdSchema.parse(randomUUID());
+const otherId = userIdSchema.parse(randomUUID());
+beforeAll(async () => {
+  for (const id of [ownerId, otherId]) {
+    await db
+      .insert(authUsers)
+      .values({ id, name: "OAuth fixture", email: `${id}@example.invalid` });
+    await db
+      .insert(authInvitations)
+      .values({
+        userId: id,
+        invitedBy: ownerId,
+        expiresAt: new Date(),
+        acceptedAt: new Date(),
+      });
+  }
+});
+
+async function issue(userId: UserId = ownerId) {
   const result = await issueAuthorizationCode(
+    userId,
     {
       response_type: "code",
       client_id: client.id,
@@ -68,9 +97,60 @@ afterEach(async () => {
     await db.delete(oauthConnections).where(eq(oauthConnections.id, id));
   }
 });
-afterAll(closeConnections);
+afterAll(async () => {
+  await db.delete(authInvitations).where(eq(authInvitations.userId, otherId));
+  await db.delete(authUsers).where(eq(authUsers.id, otherId));
+  await db.delete(authUsers).where(eq(authUsers.id, ownerId));
+  await closeConnections();
+});
 
 describe("persistent OAuth expiry and transactions", () => {
+  it("binds each credential to its consenting account and rejects revoked admission", async () => {
+    const [a, b] = await Promise.all([issue(ownerId), issue(otherId)]);
+    const [aPair, bPair] = await Promise.all([
+      exchange(a.raw),
+      exchange(b.raw),
+    ]);
+    const aTokens = aPair._unsafeUnwrap().body;
+    const bTokens = bPair._unsafeUnwrap().body;
+    expect(
+      (
+        await findAccess(aTokens.access_token, resource, [client.id])
+      )._unsafeUnwrap()?.user.id,
+    ).toBe(ownerId);
+    expect(
+      (
+        await findAccess(bTokens.access_token, resource, [client.id])
+      )._unsafeUnwrap()?.user.id,
+    ).toBe(otherId);
+    const pending = await issue(otherId);
+    await db
+      .update(authInvitations)
+      .set({ revokedAt: new Date() })
+      .where(eq(authInvitations.userId, otherId));
+    try {
+      await expect(issue(otherId)).rejects.toThrow("invalid_request");
+      expect(
+        (
+          await findAccess(bTokens.access_token, resource, [client.id])
+        )._unsafeUnwrap(),
+      ).toBeNull();
+      expect((await refresh(bTokens.refresh_token)).isErr()).toBe(true);
+      expect((await exchange(pending.raw)).isErr()).toBe(true);
+      expect(
+        (
+          await findAccess(aTokens.access_token, resource, [client.id])
+        )._unsafeUnwrap()?.user.id,
+      ).toBe(ownerId);
+      expect((await refresh(aTokens.refresh_token)).isOk()).toBe(true);
+    } finally {
+      await db
+        .update(authInvitations)
+        .set({ revokedAt: null })
+        .where(eq(authInvitations.userId, otherId));
+    }
+  });
+
   it("rejects expired codes using the persisted expiry", async () => {
     const code = await issue();
     await db
@@ -88,7 +168,10 @@ describe("persistent OAuth expiry and transactions", () => {
       (
         await findAccess(pair.access_token, resource, [client.id])
       )._unsafeUnwrap(),
-    ).toBe(code.stored.connectionId);
+    ).toEqual({
+      connectionId: code.stored.connectionId,
+      user: { id: ownerId, email: `${ownerId}@example.invalid` },
+    });
     await db
       .update(oauthTokens)
       .set({

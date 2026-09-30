@@ -1,9 +1,11 @@
 import OAuth2Server from "@node-oauth/oauth2-server";
-import { and, eq, gt, isNull, or } from "drizzle-orm";
+import { and, eq, gt, isNotNull, isNull, or } from "drizzle-orm";
 import { err, ok, ResultAsync } from "neverthrow";
 import { db } from "~/db";
+import { authInvitations, authUsers } from "~/db/schema";
 import { logger } from "~/logger.server";
 import type { Authorization, OAuthClient, OAuthFailure } from "../domain/oauth";
+import { type UserId, userIdSchema } from "../domain/user";
 import { hashCredential } from "./crypto.server";
 import {
   libraryRequest,
@@ -19,17 +21,30 @@ function storageError(): OAuthFailure {
 }
 
 export function issueAuthorizationCode(
+  userId: UserId,
   params: Authorization,
   client: OAuthClient,
 ) {
   return ResultAsync.fromPromise(
     db.transaction(async (tx) => {
+      const [admission] = await tx
+        .select()
+        .from(authInvitations)
+        .where(
+          and(
+            eq(authInvitations.userId, userId),
+            isNotNull(authInvitations.acceptedAt),
+            isNull(authInvitations.revokedAt),
+          ),
+        )
+        .for("update");
+      if (!admission) return err<never, OAuthFailure>("invalid_request");
       const server = createOAuthServer(tx, client, params.resource);
       const response = new OAuth2Server.Response();
       const result = await protocolResult(() =>
         server.authorize(libraryRequest(params), response, {
           allowEmptyState: true,
-          authenticateHandler: { handle: async () => ({ owner: true }) },
+          authenticateHandler: { handle: async () => ({ userId }) },
         }),
       );
       if (result.isErr()) return err<never, OAuthFailure>("invalid_request");
@@ -78,6 +93,18 @@ export function exchangeToken(
         connection.scope !== "fitness"
       )
         return err<never, OAuthFailure>("invalid_grant");
+      const [admission] = await tx
+        .select()
+        .from(authInvitations)
+        .where(
+          and(
+            eq(authInvitations.userId, connection.userId),
+            isNotNull(authInvitations.acceptedAt),
+            isNull(authInvitations.revokedAt),
+          ),
+        )
+        .for("update");
+      if (!admission) return err<never, OAuthFailure>("invalid_grant");
       if (isCode) {
         const [code] = await tx
           .select()
@@ -149,14 +176,21 @@ export function findAccess(
 ) {
   return ResultAsync.fromPromise(
     db
-      .select({ connection: oauthConnections, token: oauthTokens })
+      .select({
+        connection: oauthConnections,
+        user: { id: authUsers.id, email: authUsers.email },
+      })
       .from(oauthTokens)
       .innerJoin(
         oauthConnections,
         eq(oauthTokens.connectionId, oauthConnections.id),
       )
+      .innerJoin(authUsers, eq(authUsers.id, oauthConnections.userId))
+      .innerJoin(authInvitations, eq(authInvitations.userId, authUsers.id))
       .where(
         and(
+          isNotNull(authInvitations.acceptedAt),
+          isNull(authInvitations.revokedAt),
           eq(oauthTokens.accessHash, hashCredential(raw)),
           gt(oauthTokens.accessExpiresAt, new Date()),
           isNull(oauthConnections.revokedAt),
@@ -168,7 +202,13 @@ export function findAccess(
     storageError,
   ).map((rows) =>
     rows[0] && clientIds.includes(rows[0].connection.clientId)
-      ? rows[0].connection.id
+      ? {
+          connectionId: rows[0].connection.id,
+          user: {
+            id: userIdSchema.parse(rows[0].user.id),
+            email: rows[0].user.email,
+          },
+        }
       : null,
   );
 }
