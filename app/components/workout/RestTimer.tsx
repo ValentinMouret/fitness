@@ -227,7 +227,10 @@ export function RestTimer({
   const progress = 1 - secondsRemaining / totalSeconds;
 
   return (
-    <div className={`rest-timer ${isFinished ? "rest-timer--finished" : ""}`}>
+    <section
+      aria-label="Rest timer"
+      className={`rest-timer ${isFinished ? "rest-timer--finished" : ""}`}
+    >
       <div className="rest-timer__progress-track">
         <div
           className="rest-timer__progress-fill"
@@ -285,6 +288,6 @@ export function RestTimer({
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 }

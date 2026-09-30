@@ -1,0 +1,290 @@
+import { randomUUID } from "node:crypto";
+import { test as base, expect, type Page } from "@playwright/test";
+import pg from "pg";
+import {
+  canWriteFixtureDatabase,
+  verifyFixtureServerDatabase,
+} from "./support/fixture-database";
+
+const test = base.extend<{ readonly sessionId: string }>({
+  sessionId: async ({ request }, use) => {
+    const pool = new pg.Pool({
+      connectionString: process.env.E2E_DATABASE_URL,
+    });
+    const id = randomUUID();
+    const exerciseIds = Array.from({ length: 6 }, () => randomUUID());
+    try {
+      await verifyFixtureServerDatabase(request, pool);
+      await pool.query(
+        "insert into workouts (id, name, start) values ($1, 'A long workout name that wraps across multiple lines on a phone', now())",
+        [id],
+      );
+      for (const [index, exerciseId] of exerciseIds.entries()) {
+        await pool.query(
+          "insert into exercises (id, name, type, movement_pattern) values ($1, $2, 'barbell', 'push')",
+          [exerciseId, `Rest fixture exercise ${index + 1} ${exerciseId}`],
+        );
+        await pool.query(
+          "insert into workout_exercises (workout_id, exercise_id, order_index) values ($1, $2, $3)",
+          [id, exerciseId, index],
+        );
+        for (let set = 1; set <= (index === 0 ? 2 : 4); set++) {
+          await pool.query(
+            'insert into workout_sets (workout, exercise, set, reps, weight, "isCompleted") values ($1, $2, $3, 8, 60, false)',
+            [id, exerciseId, set],
+          );
+        }
+      }
+      await use(id);
+    } finally {
+      await pool.query("delete from workout_sets where workout = $1", [id]);
+      await pool.query("delete from workout_exercises where workout_id = $1", [
+        id,
+      ]);
+      await pool.query("delete from workouts where id = $1", [id]);
+      await pool.query("delete from exercises where id = any($1::uuid[])", [
+        exerciseIds,
+      ]);
+      await pool.end();
+    }
+  },
+});
+test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
+test.skip(
+  !canWriteFixtureDatabase(process.env.E2E_DATABASE_URL),
+  "Requires a matching dedicated fixture database/server",
+);
+
+async function expectUncovered(page: Page, selector: string) {
+  await expect
+    .poll(() =>
+      page.locator(selector).evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        const chrome = document
+          .querySelector(".active-workout-chrome")
+          ?.getBoundingClientRect();
+        const navigation = document
+          .querySelector(".bottom-tabs")
+          ?.getBoundingClientRect();
+        const hit = document.elementFromPoint(
+          box.x + box.width / 2,
+          box.y + box.height / 2,
+        );
+        return (
+          box.top >= (chrome?.bottom ?? 0) &&
+          box.bottom <= (navigation?.top ?? innerHeight) &&
+          (hit === element || element.contains(hit))
+        );
+      }),
+    )
+    .toBe(true);
+}
+
+test("rest stays visible and usable while scrolling, resizing and logging", async ({
+  page,
+  sessionId,
+}) => {
+  test.setTimeout(30_000);
+  await page.clock.install();
+  await page.goto(`/workouts/${sessionId}`);
+  await page
+    .getByRole("button", { name: "Complete set 1", exact: true })
+    .first()
+    .click();
+  const timer = page.getByRole("region", { name: "Rest timer" });
+  await expect(timer).toBeVisible();
+  const expectTimerPlacement = async () => {
+    await expect
+      .poll(() =>
+        timer.evaluate((element) => {
+          const box = element.getBoundingClientRect();
+          const header = document
+            .querySelector(".active-workout-header")
+            ?.getBoundingClientRect();
+          return box.top >= (header?.bottom ?? 0) && box.bottom < innerHeight;
+        }),
+      )
+      .toBe(true);
+  };
+  await expectTimerPlacement();
+  for (const button of await timer.getByRole("button").all()) {
+    const box = await button.boundingBox();
+    expect(box?.width).toBeGreaterThanOrEqual(44);
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+  }
+  const countdown = timer.locator(".rest-timer__countdown");
+  await page.clock.runFor(1100);
+  const beforeScroll = await countdown.textContent();
+  const later = page.locator(".active-workout-exercise").nth(4);
+  await later.evaluate((element) => element.scrollIntoView({ block: "start" }));
+  await expect
+    .poll(() =>
+      page.locator(".main-content").evaluate((element) => element.scrollTop),
+    )
+    .toBeGreaterThan(1000);
+  await expect
+    .poll(() =>
+      timer.evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        return (
+          box.top >= 0 &&
+          box.bottom < innerHeight &&
+          document
+            .elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)
+            ?.closest(".rest-timer") === element
+        );
+      }),
+    )
+    .toBe(true);
+  await page.clock.runFor(1100);
+  expect(await countdown.textContent()).not.toBe(beforeScroll);
+  for (const [key, duration] of [
+    ["1", "1:00"],
+    ["2", "1:30"],
+    ["3", "2:00"],
+    ["4", "3:00"],
+  ]) {
+    await timer.locator(`[aria-keyshortcuts="${key}"]`).click();
+    await expect(countdown).toHaveText(duration);
+  }
+  const input = later.getByRole("textbox", { name: "Set 1 weight" });
+  await input.evaluate((element) =>
+    element.scrollIntoView({ block: "center" }),
+  );
+  await input.fill("65");
+  await expectUncovered(
+    page,
+    '.active-workout-exercise:nth-child(5) input[aria-label="Set 1 weight"]',
+  );
+  await page.setViewportSize({ width: 390, height: 500 });
+  await expectTimerPlacement();
+  await input.focus();
+  await input.evaluate((element) =>
+    element.scrollIntoView({ block: "center" }),
+  );
+  await expectUncovered(
+    page,
+    '.active-workout-exercise:nth-child(5) input[aria-label="Set 1 weight"]',
+  );
+  await input.press("3");
+  await expect(countdown).toHaveText("3:00");
+  await input.fill("65");
+  await later
+    .getByRole("button", { name: "Complete set 1", exact: true })
+    .click();
+  await expect(later.locator(".set-row--completed")).toHaveCount(1);
+  await expect(countdown).toHaveText("3:00");
+  await expect(
+    later.getByText("How many more good reps could you have done?", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.setViewportSize({ width: 844, height: 390 });
+  await expect(timer).toBeVisible();
+  await expectTimerPlacement();
+  await expect
+    .poll(() =>
+      timer.evaluate(
+        (element) => element.getBoundingClientRect().bottom < innerHeight,
+      ),
+    )
+    .toBe(true);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const largerTitle = await page.addStyleTag({
+    content: ".active-workout-header__name { font-size: 40px !important; }",
+  });
+  await expectTimerPlacement();
+  await later
+    .getByRole("textbox", { name: "Set 2 weight" })
+    .evaluate((element) => element.scrollIntoView({ block: "center" }));
+  await expectUncovered(
+    page,
+    '.active-workout-exercise:nth-child(5) input[aria-label="Set 2 weight"]',
+  );
+  await largerTitle.evaluate((element) =>
+    element.parentNode?.removeChild(element),
+  );
+  await page
+    .locator(".active-workout-header")
+    .getByRole("button")
+    .last()
+    .click();
+  await page
+    .getByRole("menuitem", { name: "Cancel Workout", exact: true })
+    .hover();
+  await page.keyboard.press("Escape");
+  await timer.locator('[aria-keyshortcuts="1"]').click();
+  await page.clock.runFor(60_000);
+  await expect(
+    timer.getByRole("button", { name: "OK", exact: true }),
+  ).toBeVisible();
+  await timer.getByRole("button", { name: "OK", exact: true }).click();
+  await expect(timer).toHaveCount(0);
+  await later
+    .getByRole("button", { name: "Complete set 2", exact: true })
+    .click();
+  await expect(timer).toBeVisible();
+  await timer.getByRole("button", { name: "Skip", exact: true }).click();
+  await expect(timer).toHaveCount(0);
+});
+
+test("last-set completion and returning to the tab never scroll to another exercise", async ({
+  page,
+  sessionId,
+}) => {
+  await page.clock.install();
+  await page.goto(`/workouts/${sessionId}`);
+  const first = page.locator(".active-workout-exercise").first();
+  await first
+    .getByRole("button", { name: "Complete set 1", exact: true })
+    .click();
+  await expect(first.locator(".set-row--completed")).toHaveCount(1);
+  await first
+    .getByRole("button", { name: "Report 2 good reps left for set 1" })
+    .click();
+  await expect(
+    first.getByText("How many more good reps could you have done?"),
+  ).toHaveCount(0);
+  await page.clock.runFor(500);
+  await first
+    .getByRole("button", { name: "Complete set 2", exact: true })
+    .evaluate((element) => element.scrollIntoView({ block: "center" }));
+  const before = await page
+    .locator(".main-content")
+    .evaluate((element) => element.scrollTop);
+  await page.evaluate(() => {
+    const scrolls: string[] = [];
+    Object.assign(window, { exerciseScrolls: scrolls });
+    const original = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = function (...args) {
+      if (this.hasAttribute("data-exercise-id"))
+        scrolls.push(this.getAttribute("data-exercise-id") ?? "");
+      return original.call(this, ...args);
+    };
+  });
+  await first
+    .getByRole("button", { name: "Complete set 2", exact: true })
+    .click();
+  await expect(first.locator(".set-row--completed")).toHaveCount(2);
+  await page.clock.runFor(500);
+  expect(
+    await page.evaluate(() => Reflect.get(window, "exerciseScrolls")),
+  ).toEqual([]);
+  expect(
+    await page
+      .locator(".main-content")
+      .evaluate((element) => element.scrollTop),
+  ).toBeCloseTo(before, 0);
+  await page.evaluate(() =>
+    document.dispatchEvent(new Event("visibilitychange")),
+  );
+  await page.clock.runFor(500);
+  expect(
+    await page.evaluate(() => Reflect.get(window, "exerciseScrolls")),
+  ).toEqual([]);
+  expect(
+    await page
+      .locator(".main-content")
+      .evaluate((element) => element.scrollTop),
+  ).toBeCloseTo(before, 0);
+});

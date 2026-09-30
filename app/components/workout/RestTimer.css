@@ -43,7 +43,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 36px;
+  min-height: 44px;
 }
 
 .rest-timer__info {
@@ -75,14 +75,19 @@
 
 .rest-timer__preset {
   flex: 1;
-  min-height: 32px;
+  min-height: 44px;
 }
 
 /* --- Action button (Skip / OK) --- */
 
 .rest-timer__action {
   min-width: 44px;
-  min-height: 36px;
+  min-height: 44px;
+}
+
+.rest-timer .rt-IconButton {
+  min-width: 44px;
+  min-height: 44px;
 }
 
 /* ================================================================
@@ -108,11 +113,11 @@
 @keyframes rest-timer-enter {
   from {
     opacity: 0;
-    max-height: 0;
+    transform: translateY(-4px);
   }
   to {
     opacity: 1;
-    max-height: 100px;
+    transform: translateY(0);
   }
 }
 

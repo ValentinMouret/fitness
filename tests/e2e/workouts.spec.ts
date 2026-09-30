@@ -255,65 +255,6 @@ test.describe("Workout Session - Set Management", () => {
     await expect(page.getByText("done")).toBeVisible();
   });
 
-  test("scrolls to the next exercise only after the current exercise is complete", async ({
-    page,
-  }) => {
-    test.setTimeout(30_000);
-    const exerciseName = `Scroll target ${crypto.randomUUID()}`;
-    const response = await page.request.post("/workouts/exercises/create", {
-      form: {
-        name: exerciseName,
-        type: "barbell",
-        movementPattern: "push",
-      },
-    });
-    expect(response.ok()).toBeTruthy();
-    await page.reload();
-    await page.getByRole("button", { name: "Add Exercise" }).click();
-    await page
-      .locator(".exercise-selector__item", { hasText: exerciseName })
-      .click();
-    await page.getByRole("button", { name: /Add \(1\)/ }).click();
-
-    const exercises = page.locator(".active-workout-exercise");
-    await expect(exercises).toHaveCount(2);
-    const firstExercise = exercises.first();
-    const secondExerciseId = await exercises
-      .nth(1)
-      .getAttribute("data-exercise-id");
-    if (!secondExerciseId) throw new Error("Second exercise ID is missing");
-
-    await expect(firstExercise.locator(".set-row--pending")).toHaveCount(1);
-    await firstExercise.getByRole("button", { name: "Add Set" }).click();
-    await expect(firstExercise.locator(".set-row--pending")).toHaveCount(2);
-    await expect(exercises.nth(1).locator(".set-row--pending")).toHaveCount(1);
-
-    await page.evaluate(() => {
-      const scrolls: string[] = [];
-      Object.assign(window, { exerciseScrolls: scrolls });
-      const original = Element.prototype.scrollIntoView;
-      Element.prototype.scrollIntoView = function (...args) {
-        const id = this.getAttribute("data-exercise-id");
-        if (id) scrolls.push(id);
-        original.call(this, ...args);
-      };
-    });
-
-    await firstExercise.getByRole("button", { name: "Complete set 1" }).click();
-    await expect(firstExercise.locator(".set-row--completed")).toHaveCount(1);
-    await expect(firstExercise.locator(".set-row--pending")).toHaveCount(1);
-    await page.waitForTimeout(400);
-    expect(
-      await page.evaluate(() => Reflect.get(window, "exerciseScrolls")),
-    ).toEqual([]);
-
-    await firstExercise.getByRole("button", { name: "Complete set 2" }).click();
-    await expect(firstExercise.locator(".set-row--completed")).toHaveCount(2);
-    await expect
-      .poll(() => page.evaluate(() => Reflect.get(window, "exerciseScrolls")))
-      .toContain(secondExerciseId);
-  });
-
   test("should correct a completed set without completing it again", async ({
     page,
   }) => {

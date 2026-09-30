@@ -4,11 +4,14 @@
   min-height: 100dvh;
 }
 
-/* Header — editorial style */
-.active-workout-header {
+.active-workout-chrome {
   position: sticky;
   top: 0;
   z-index: 12;
+}
+
+/* Header — editorial style */
+.active-workout-header {
   padding: calc(env(safe-area-inset-top) + var(--space-3)) var(--space-3)
     var(--space-4);
   background: color-mix(in srgb, var(--brand-background) 92%, white 8%);
@@ -109,7 +112,16 @@
 
 /* Exercise sections */
 .active-workout-exercise {
-  scroll-margin-top: calc(var(--header-height) + var(--space-3));
+  scroll-margin-top: calc(var(--session-chrome-height) + var(--space-3));
+}
+
+.active-workout-content :is(input, button, .set-row) {
+  scroll-margin-top: calc(var(--session-chrome-height) + var(--space-3));
+  scroll-margin-bottom: calc(
+    60px +
+    env(safe-area-inset-bottom) +
+    var(--space-3)
+  );
 }
 
 /* Add exercise button */
