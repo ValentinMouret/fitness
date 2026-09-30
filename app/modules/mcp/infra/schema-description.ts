@@ -14,13 +14,15 @@ export const schemaDescription = {
   schema: "fitness_data",
   dialect: "PostgreSQL",
   conventions: [
+    "Body weight history preserves every weight measurement and original UTC timestamp, including separate same-day readings. Identity is (measurement_name, recorded_at), not a UUID. Units are kg; zero is preserved, and no record means no row.",
+    "Active calorie target exposes at most one persisted daily_calorie_intake record in kcal/day. source=persisted_target describes stored state, not calculator/manual origin. Missing target means no row; stored zero remains zero. Dashboard's 2100 kcal fallback is not a persisted target. No target history/effective dates or independent macro targets are exposed.",
     "Nutrition: ingredient calories are kcal per 100 g; protein, carbs, fat and fiber are grams per 100 g. Quantities and slider limits are grams, energy_density is kcal/g, water_percentage is 0–100.",
     "Meal logged_date is a calendar date (YYYY-MM-DD), not a timestamp. One active meal per date/category. All logs count toward intake regardless of is_completed, which is a separate checklist flag.",
     "Meal nutrition uses current catalogue values × quantity_grams / 100, matching the app; values are not historical snapshots. Template total_* values are stored totals. A deleted template does not hide a consumed meal; its meal_template_id becomes null.",
     "Habits lists active, non-deleted definitions. frequency_config is JSON: weekly days_of_week uses 0=Sunday through 6=Saturday; custom interval_days and monthly day_of_month are supported by the app. start_date and end_date bound the schedule.",
     "Habit completions are dated records for active habits. A false completed value is an explicit uncompleted record, not an absent record. A minimum version counts as completion; the record does not distinguish minimum from full actions.",
-    "Only the listed views are exposed. All views exclude soft-deleted records and their deleted parents.",
-    "Identifiers are UUIDs. Exercises are catalogue entries; workout_exercises links one catalogue exercise to one workout. An exercise can occur once per workout.",
+    "Only the listed views are exposed. Workout, nutrition and habit views exclude soft-deleted records and their deleted parents. Progress reads follow the app repositories: weight records remain until deleted, and calorie targets exclude targets.deleted_at; neither filters measurement-definition lifecycle metadata.",
+    "Except for body_weight_history, identifiers are UUIDs. Exercises are catalogue entries; workout_exercises links one catalogue exercise to one workout. An exercise can occur once per workout.",
     "Timestamps represent UTC instants. Use ISO dates and explicit timezone conversion when grouping by local day. A null stop means the workout is ongoing.",
     "Weights are kilograms. Null performance means unknown/unrecorded, not zero. Uncompleted sets may contain suggested values; only is_completed records performed sets.",
     "Sets are identified by (workout_id, exercise_id, set_number). target_reps is planned; reps is recorded/suggested according to is_completed. Historic RPE (6–10) is separate from reported RIR and must not be converted.",
@@ -32,6 +34,26 @@ export const schemaDescription = {
     "Results contain rows, rowCount, and truncated. If truncated is true, narrow the query or use aggregates; an empty result may still be truncated if its first row exceeds the byte limit.",
   ],
   views: {
+    body_weight_history: {
+      primaryKey: ["measurement_name", "recorded_at"],
+      columns: {
+        measurement_name: "text; always weight",
+        recorded_at:
+          "timestamptz; original measurement timestamp interpreted as UTC",
+        weight_kg: "number; kg",
+        unit: "text; always kg",
+      },
+    },
+    active_calorie_target: {
+      primaryKey: ["id"],
+      columns: {
+        id: "uuid; persisted target record identity",
+        measurement_name: "text; always daily_calorie_intake",
+        calories_kcal_per_day: "number; kcal/day",
+        unit: "text; always kcal",
+        source: "text; always persisted_target",
+      },
+    },
     habits: {
       primaryKey: ["id"],
       columns: {
@@ -204,6 +226,9 @@ export const schemaDescription = {
   limits: queryLimits,
   allowedFunctions,
   examples: [
+    "select recorded_at, weight_kg, unit from fitness_data.body_weight_history order by recorded_at desc limit 200",
+    "select recorded_at, weight_kg, unit from fitness_data.body_weight_history where recorded_at >= '2026-09-30T00:00:00Z'::timestamptz and recorded_at < '2026-10-01T00:00:00Z'::timestamptz order by recorded_at",
+    "select id, calories_kcal_per_day, unit, source from fitness_data.active_calorie_target",
     "select id, name, identity_phrase, minimal_version, frequency_type, frequency_config from fitness_data.habits order by name",
     "select h.name, c.completion_date, c.completed from fitness_data.habit_completions c join fitness_data.habits h on h.id = c.habit_id where c.completion_date >= current_date - interval '30 days' order by c.completion_date desc, h.name",
     "select id, name, calories, protein from fitness_data.ingredients where name ilike '%yogurt%' order by name",

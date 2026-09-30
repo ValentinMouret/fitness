@@ -6,7 +6,7 @@ Configure [OAuth](auth.md) first. This guide covers the tool contract and the se
 
 ## Configure SQL reads
 
-1. Run `bun run db:migrate`. Migration `0006_mcp_workout_views.sql` adds the `fitness_data` schema and six workout views; `0007_mcp_nutrition_views.sql` adds five nutrition views. It leaves the underlying tables unchanged.
+1. Run `bun run db:migrate`. Migration `0006_mcp_workout_views.sql` adds the `fitness_data` schema and six workout views; `0007_mcp_nutrition_views.sql` adds five nutrition views. Migration `0010_mcp_progress_views.sql` adds body-weight history and the persisted active calorie target. These migrations leave the underlying tables unchanged.
 2. Set `MCP_DATABASE_URL` in the server environment to a connection URL for `fitness_mcp_reader`, with a randomly generated password. It must point to the same database as `DATABASE_URL`. URL-encode the password when necessary. Never use the application login for this connection.
 3. Run `bun run mcp:provision-reader` with a `DATABASE_URL` login that owns the views and can manage roles. This creates or updates the reader login and grants SELECT on only the exposed views. Production startup reruns provisioning after migrations when `MCP_DATABASE_URL` is set, so new views receive grants on deployment. It fails if role memberships, inherited schema/database creation rights, table/column privileges, or callable non-system functions would broaden access. Resolve the reported grants and rerun it; provisioning rolls back on failure.
 4. Restart the existing app process to load the environment change, then connect a client and call `describe_schema` and `query`.
@@ -69,6 +69,24 @@ the saved meal and its ingredients; updating returns meal metadata. Query the
 composition after an update if needed. On an uncertain create response, query
 before retrying; explicit composition updates can be repeated without adding
 quantities. Template editing and target changes are not exposed yet.
+
+## Read body weight and the calorie target
+
+`fitness_data.body_weight_history` exposes weight measurements in kilograms,
+with their original timestamps interpreted as UTC, matching the existing workout
+view convention. Identity is `(measurement_name, recorded_at)`; multiple readings
+on one day remain separate. Order explicitly by `recorded_at` for latest/history
+queries, and use inclusive-start/exclusive-end ranges.
+
+`fitness_data.active_calorie_target` exposes the persisted active
+`daily_calorie_intake` record, its UUID, kcal/day value and `persisted_target`
+source. A missing record returns no rows; a stored zero remains zero. Dashboard's
+2100 kcal fallback is not a saved target. Source does not identify a calculator
+or manual origin. This view provides no target history, effective dates or
+independent macro targets. Other measurements and deleted targets are excluded.
+
+Use the existing `query` and `describe_schema` tools. Reader provisioning grants
+SELECT on these views after migration; base-table access remains denied.
 
 ## Read habits
 
