@@ -479,6 +479,17 @@ describe("workout operations and restricted SQL", () => {
     ).toBe(true);
   });
   it("enforces database privileges independently of SQL validation", async () => {
+    for (const table of [
+      "auth_users",
+      "auth_sessions",
+      "auth_accounts",
+      "auth_verifications",
+      "auth_invitations",
+    ]) {
+      await expect(
+        reader.query(`select * from public.${table}`),
+      ).rejects.toMatchObject({ code: "42501" });
+    }
     await expect(
       reader.query("select * from public.workouts"),
     ).rejects.toMatchObject({ code: "42501" });

@@ -107,6 +107,7 @@ test("explicit assignments filter management and log one composition in the chos
     page.getByRole("heading", { name: riceName, exact: true }),
   ).toHaveCount(1);
   await page.getByRole("button", { name: "Lunch", exact: true }).click();
+  await expect(page).toHaveURL(/meal=lunch$/);
   await page
     .getByRole("link", { name: `Edit ${riceName}`, exact: true })
     .click();
@@ -114,6 +115,7 @@ test("explicit assignments filter management and log one composition in the chos
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(/meal=lunch$/);
   await page.getByRole("button", { name: "Dinner", exact: true }).click();
+  await expect(page).toHaveURL(/meal=dinner$/);
   await expect(
     page.getByRole("heading", { name: riceName, exact: true }),
   ).toBeVisible();

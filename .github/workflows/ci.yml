@@ -113,6 +113,8 @@ jobs:
         env:
           NUTRITION_TEST_DATABASE_URL: postgresql://postgres:password@localhost:5432/fitness
       - run: bun run test:auth:integration
+        env:
+          AUTH_TEST_ADMIN_URL: postgresql://postgres:password@localhost:5432/postgres
       - run: bun run test:mcp:integration
         env:
           MCP_TEST_ADMIN_URL: postgresql://postgres:password@localhost:5432/postgres
@@ -148,6 +150,11 @@ jobs:
       E2E_CONNECTIONS_TABLE: public.oauth_connections
       E2E_AUTHORIZATION_CODES_TABLE: public.oauth_authorization_codes
       E2E_TOKENS_TABLE: public.oauth_tokens
+      AUTH_FOUNDATION_ENABLED: "true"
+      AUTH_FOUNDATION_ORIGIN: http://127.0.0.1:5175
+      AUTH_FOUNDATION_OWNER_USER_ID: 720cbf7c-67b5-4d6b-b026-c8e1099ff435
+      AUTH_LOCAL_INBOX: /tmp/fitness-auth-foundation/inbox.jsonl
+      E2E_SERVER_LOG: /tmp/fitness-test-server.log
 
     steps:
       - uses: actions/checkout@v4

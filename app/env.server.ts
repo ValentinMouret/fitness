@@ -26,6 +26,21 @@ const sessionSchema = z.object({
   AUTH_SESSION_TTL_SECONDS: z.coerce.number().int().positive().default(604800),
 });
 
+const authFoundationSchema = z.object({
+  AUTH_FOUNDATION_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  AUTH_FOUNDATION_ORIGIN: z.url().optional(),
+  AUTH_FOUNDATION_OWNER_USER_ID: z.uuid().optional(),
+  AUTH_LOCAL_INBOX: z.string().min(1).optional(),
+  AUTH_INVITATION_TTL_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(604800),
+});
+
 const oauthSchema = z.object({
   OAUTH_ISSUER_URL: z.url().optional(),
   OAUTH_CLIENTS: z
@@ -66,9 +81,29 @@ const schema = z
     ...databaseSchema.shape,
     ...anthropicSchema.shape,
     ...sessionSchema.shape,
+    ...authFoundationSchema.shape,
     ...oauthSchema.shape,
   })
   .superRefine((value, ctx) => {
+    if (value.AUTH_FOUNDATION_ENABLED) {
+      const origin = value.AUTH_FOUNDATION_ORIGIN;
+      const local = origin && new URL(origin);
+      if (
+        value.NODE_ENV === "production" ||
+        !local ||
+        local.protocol !== "http:" ||
+        !["localhost", "127.0.0.1", "[::1]"].includes(local.hostname) ||
+        local.origin !== origin ||
+        !value.AUTH_FOUNDATION_OWNER_USER_ID ||
+        !value.AUTH_LOCAL_INBOX
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "Auth foundation requires a non-production loopback origin, owner ID and private local inbox. Production admission remains closed until tenant isolation is verified.",
+        });
+      }
+    }
     if (!value.OAUTH_ISSUER_URL) {
       if (value.OAUTH_CLIENTS.length)
         ctx.addIssue({

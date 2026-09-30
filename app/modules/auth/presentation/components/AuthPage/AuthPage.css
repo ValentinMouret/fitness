@@ -1,0 +1,11 @@
+.auth-page {
+  min-height: 100dvh;
+  padding: var(--space-4);
+}
+.auth-page-card {
+  width: 100%;
+  max-width: 400px;
+}
+.auth-invitation-email {
+  overflow-wrap: anywhere;
+}
