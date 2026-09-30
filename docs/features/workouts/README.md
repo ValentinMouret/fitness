@@ -29,7 +29,6 @@ The [route configuration](../../../app/routes.ts) includes:
 | `/workouts` | Browse workouts |
 | `/workouts/create` | Start an empty workout with one action |
 | `/workouts/:id` | View a session and log exercises and sets |
-| `/workouts/import` | Import Fitbod training history |
 | `/workouts/exercises` | Manage the exercise catalogue |
 | `/workouts/:id/substitute/:exercise-id` | Substitute an exercise |
 
@@ -41,10 +40,10 @@ storage definitions.
 
 ## Retired entry points
 
-Workout templates, Generate Workout, Strong import, AI Feedback, and Recovery Map
-are retired. Their stored
-history remains intact; this removal does not migrate or delete past sessions.
-Fitbod import and [exercise substitution](adaptive-generation.md) remain available.
+Workout templates, Generate Workout, Strong and Fitbod import, AI Feedback, and
+Recovery Map are retired. Their stored history remains intact; this removal does
+not migrate or delete past sessions.
+[Exercise substitution](adaptive-generation.md) remains available.
 
 Coaches can create a current or past session through MCP and read history and
 muscle volume. Future weekly planning is not implemented by this change; see
