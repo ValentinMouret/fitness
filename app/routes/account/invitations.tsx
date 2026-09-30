@@ -9,27 +9,32 @@ import {
 } from "~/modules/auth/domain/invitation";
 import { getAuthFoundation } from "~/modules/auth/infra/auth-foundation.server";
 import { requireSameOrigin } from "~/modules/auth/infra/session.server";
+import {
+  authenticatedUserContext,
+  requirePersonalUser,
+} from "~/modules/auth/infra/user-context.server";
 import { AuthPage } from "~/modules/auth/presentation/components/AuthPage/AuthPage";
 import { EmailField } from "~/modules/auth/presentation/components/EmailField/EmailField";
 import type { Route } from "./+types/invitations";
 
-async function requireOwner(request: Request) {
+export const middleware: Route.MiddlewareFunction[] = [
+  async ({ request, context }, next) => {
+    const user = await requirePersonalUser(request);
+    if (!canManageInvitations(user.id, env.AUTH_FOUNDATION_OWNER_USER_ID ?? ""))
+      throw new Response("Forbidden", { status: 403 });
+    context.set(authenticatedUserContext, user);
+    return next();
+  },
+];
+
+function ownerRuntime(context: Route.LoaderArgs["context"]) {
   const runtime = getAuthFoundation();
   if (!runtime) throw new Response("Not found", { status: 404 });
-  const session = await runtime.getAdmittedSession(request.headers);
-  if (!session) throw redirect("/sign-in");
-  if (
-    !canManageInvitations(
-      session.user.id,
-      env.AUTH_FOUNDATION_OWNER_USER_ID ?? "",
-    )
-  )
-    throw new Response("Forbidden", { status: 403 });
-  return { runtime, actorUserId: session.user.id };
+  return { runtime, actorUserId: context.get(authenticatedUserContext).id };
 }
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const { runtime, actorUserId } = await requireOwner(request);
+export async function loader({ context }: Route.LoaderArgs) {
+  const { runtime, actorUserId } = ownerRuntime(context);
   const result = await runtime.invitations.list(actorUserId);
   if (result.isErr()) throw new Response("Forbidden", { status: 403 });
   return {
@@ -49,8 +54,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   };
 }
 
-export async function action({ request }: Route.ActionArgs) {
-  const { runtime, actorUserId } = await requireOwner(request);
+export async function action({ request, context }: Route.ActionArgs) {
+  const { runtime, actorUserId } = ownerRuntime(context);
   requireSameOrigin(request);
   const form = await request.formData();
   const parsed = z
@@ -87,10 +92,17 @@ export async function action({ request }: Route.ActionArgs) {
       );
     }
     try {
-      await runtime.auth.api.signInMagicLink({
+      const response = await runtime.requestSignInLink({
         headers: request.headers,
-        body: { email: invitation.email, callbackURL: "/sign-in" },
+        email: invitation.email,
       });
+      if (!response.ok)
+        return data({
+          error:
+            response.status === 429
+              ? "Too many requests. Try again later."
+              : "Could not send the email. Use Resend email to try again.",
+        });
     } catch {
       return data({
         error: "Could not send the email. Use Resend email to try again.",
@@ -114,10 +126,17 @@ export async function action({ request }: Route.ActionArgs) {
         { status: 400 },
       );
     try {
-      await runtime.auth.api.signInMagicLink({
+      const response = await runtime.requestSignInLink({
         headers: request.headers,
-        body: { email: parsed.data.email, callbackURL: "/sign-in" },
+        email: parsed.data.email,
       });
+      if (!response.ok)
+        return data({
+          error:
+            response.status === 429
+              ? "Invitation created. Too many email requests; try Resend email later."
+              : "Invitation created, but the email could not be sent. Use Resend email to try again.",
+        });
     } catch {
       return data({
         error:

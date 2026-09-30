@@ -25,6 +25,13 @@ export function createMagicLinkAuth(input: {
     baseURL: input.origin,
     secret: input.secret,
     logger: { disabled: true },
+    rateLimit: {
+      enabled: true,
+      customRules: {
+        "/sign-in/magic-link": { window: 60, max: 10 },
+        "/magic-link/verify": { window: 60, max: 30 },
+      },
+    },
     advanced: {
       database: { generateId: () => randomUUID() },
       disableOriginCheck: false,
@@ -76,7 +83,10 @@ export function createMagicLinkAuth(input: {
             );
           },
           after: async (session) => {
-            await invitations.accept(session.userId, new Date());
+            await invitations.finalizeSession({
+              userId: session.userId,
+              sessionId: session.id,
+            });
           },
         },
       },
@@ -104,5 +114,20 @@ export function createMagicLinkAuth(input: {
       ? session
       : null;
   }
-  return { auth, invitations, getAdmittedSession };
+  async function requestSignInLink(message: {
+    readonly headers: Headers;
+    readonly email: string;
+  }) {
+    const headers = new Headers(message.headers);
+    headers.set("Content-Type", "application/json");
+    headers.delete("Content-Length");
+    return auth.handler(
+      new Request(new URL("/api/auth/sign-in/magic-link", input.origin), {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ email: message.email, callbackURL: "/sign-in" }),
+      }),
+    );
+  }
+  return { auth, invitations, getAdmittedSession, requestSignInLink };
 }

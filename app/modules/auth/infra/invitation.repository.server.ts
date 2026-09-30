@@ -1,9 +1,13 @@
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { err, ok } from "neverthrow";
 import type { Pool } from "pg";
 import { authInvitations, authSessions, authUsers } from "~/db/schema";
-import { canManageInvitations, type Invitation } from "../domain/invitation";
+import {
+  canManageInvitations,
+  type Invitation,
+  invitationAllowsSignIn,
+} from "../domain/invitation";
 
 export function createInvitationRepository(pool: Pool, ownerUserId: string) {
   const database = drizzle(pool);
@@ -67,18 +71,43 @@ export function createInvitationRepository(pool: Pool, ownerUserId: string) {
       return ok({ user, invitation });
     });
   }
-  async function accept(userId: string, now: Date) {
-    await database
-      .update(authInvitations)
-      .set({ acceptedAt: now })
-      .where(
-        and(
-          eq(authInvitations.userId, userId),
-          isNull(authInvitations.acceptedAt),
-          isNull(authInvitations.revokedAt),
-          gt(authInvitations.expiresAt, now),
-        ),
-      );
+  async function finalizeSession(input: {
+    readonly userId: string;
+    readonly sessionId: string;
+  }) {
+    return database.transaction(async (tx) => {
+      const [invitation] = await tx
+        .select(selection)
+        .from(authInvitations)
+        .innerJoin(authUsers, eq(authUsers.id, authInvitations.userId))
+        .where(eq(authInvitations.userId, input.userId))
+        .for("update", { of: authInvitations });
+      const now = new Date();
+      if (
+        !invitationAllowsSignIn(
+          invitation ?? null,
+          invitation?.email ?? "",
+          now,
+        )
+      ) {
+        await tx
+          .delete(authSessions)
+          .where(
+            and(
+              eq(authSessions.id, input.sessionId),
+              eq(authSessions.userId, input.userId),
+            ),
+          );
+        return false;
+      }
+      if (invitation.acceptedAt === null) {
+        await tx
+          .update(authInvitations)
+          .set({ acceptedAt: now })
+          .where(eq(authInvitations.userId, input.userId));
+      }
+      return true;
+    });
   }
   async function revoke(input: {
     readonly actorUserId: string;
@@ -101,5 +130,5 @@ export function createInvitationRepository(pool: Pool, ownerUserId: string) {
     });
     return ok(undefined);
   }
-  return { findByEmail, findByUserId, list, invite, accept, revoke };
+  return { findByEmail, findByUserId, list, invite, finalizeSession, revoke };
 }
