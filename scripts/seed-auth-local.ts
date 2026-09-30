@@ -14,7 +14,8 @@ const config = z
         (["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) &&
           /^\/[a-z0-9_]+_(test|dev)$/.test(url.pathname)) ||
         (process.env.CI === "true" &&
-          url.hostname === "postgres" &&
+          process.env.NODE_ENV === "test" &&
+          ["postgres", "localhost", "127.0.0.1"].includes(url.hostname) &&
           url.pathname === "/fitness")
       );
     }, "Use an explicitly named loopback test/dev database"),

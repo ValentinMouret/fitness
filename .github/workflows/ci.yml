@@ -17,6 +17,7 @@ permissions:
 env:
   DATABASE_URL: postgresql://postgres:password@localhost:5432/fitness
   ANTHROPIC_API_KEY: dummy_key
+  AUTH_FOUNDATION_OWNER_USER_ID: 720cbf7c-67b5-4d6b-b026-c8e1099ff435
   AUTH_USERNAME: admin
   AUTH_PASSWORD: password
   AUTH_SESSION_SECRET: ci-only-session-secret-not-for-production-32-bytes
@@ -107,6 +108,9 @@ jobs:
 
       - run: bun install --frozen-lockfile
       - run: bun run db:migrate
+      - run: bun run auth:seed-local
+        env:
+          AUTH_LOCAL_DATABASE_URL: postgresql://postgres:password@localhost:5432/fitness
       - run: bun run db:seed
       - run: bun run test
       - run: bun run test:nutrition:integration

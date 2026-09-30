@@ -1,76 +1,26 @@
 import { randomUUID } from "node:crypto";
-import {
-  copyFile,
-  mkdir,
-  mkdtemp,
-  readFile,
-  rm,
-  writeFile,
-} from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { Client, Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { userIdSchema } from "~/modules/auth/domain/user";
 import { findLegacyOwner } from "~/modules/auth/infra/legacy-owner.server";
 import { bootstrapAuthOwner } from "~/modules/auth/infra/owner-bootstrap.server";
+import { createDisposablePostgres } from "../../../../tests/integration/support/disposable-postgres";
 import { Habit, HabitCompletion } from "../domain/entity";
 import { createHabitRepositories } from "./repository.server";
 
 const adminUrl = new URL(z.url().parse(process.env.TENANT_TEST_ADMIN_URL));
-if (!["localhost", "127.0.0.1", "[::1]"].includes(adminUrl.hostname))
-  throw new Error(
-    "Tenant tests require a loopback disposable PostgreSQL admin connection",
-  );
-const databaseName = `fitness_tenant_test_${randomUUID().replaceAll("-", "")}`;
-const databaseUrl = new URL(adminUrl);
-databaseUrl.pathname = `/${databaseName}`;
-const admin = new Client({ connectionString: adminUrl.toString() });
-const pool = new Pool({ connectionString: databaseUrl.toString() });
-const database = drizzle(pool);
+const fixture = createDisposablePostgres(adminUrl);
+const { database, pool } = fixture;
 const ownerId = userIdSchema.parse(randomUUID());
 const otherId = userIdSchema.parse(randomUUID());
 const legacyIds = [randomUUID(), randomUUID(), randomUUID()];
-let folder = "";
-let created = false;
 let originalHabits: readonly Record<string, unknown>[] = [];
 let originalCompletions: readonly Record<string, unknown>[] = [];
 
 beforeAll(async () => {
-  await admin.connect();
-  await admin.query(`create database ${admin.escapeIdentifier(databaseName)}`);
-  created = true;
-  folder = await mkdtemp(join(tmpdir(), "fitness-habit-migration-"));
-  await mkdir(join(folder, "meta"));
-  const journal = z
-    .object({
-      version: z.string(),
-      dialect: z.string(),
-      entries: z.array(
-        z.object({
-          idx: z.number(),
-          version: z.string(),
-          when: z.number(),
-          tag: z.string(),
-          breakpoints: z.boolean(),
-        }),
-      ),
-    })
-    .parse(JSON.parse(await readFile("drizzle/meta/_journal.json", "utf8")));
-  const prior = {
-    ...journal,
-    entries: journal.entries.filter((entry) => entry.idx < 13),
-  };
-  await writeFile(join(folder, "meta/_journal.json"), JSON.stringify(prior));
-  for (const entry of prior.entries)
-    await copyFile(
-      `drizzle/${entry.tag}.sql`,
-      join(folder, `${entry.tag}.sql`),
-    );
-  await migrate(database, { migrationsFolder: folder });
+  await fixture.create();
+  await fixture.migrateBefore(13);
   await pool.query(
     `insert into habits (id, name, frequency_type, start_date, is_active, deleted_at)
     values ($1, 'Active history', 'daily', '2020-01-01', true, null),
@@ -91,13 +41,7 @@ beforeAll(async () => {
   ).rows;
 });
 
-afterAll(async () => {
-  await pool.end();
-  if (created)
-    await admin.query(`drop database ${admin.escapeIdentifier(databaseName)}`);
-  await admin.end();
-  if (folder) await rm(folder, { recursive: true, force: true });
-});
+afterAll(() => fixture.close());
 
 describe.sequential(
   "explicit owner backfill and personal habit ownership",

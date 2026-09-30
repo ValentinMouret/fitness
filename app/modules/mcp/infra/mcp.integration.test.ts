@@ -964,10 +964,12 @@ describe("progress reads through MCP", () => {
     };
     try {
       await writer.query(
-        "insert into measurements (name, unit) values ('weight', 'kg'), ('daily_calorie_intake', 'Cal'), ('progress_other', 'cm') on conflict do nothing",
+        "insert into measurements (user_id, name, unit) values ($1, 'weight', 'kg'), ($1, 'daily_calorie_intake', 'Cal'), ($1, 'progress_other', 'cm') on conflict do nothing",
+        [ownerUserId],
       );
       await writer.query(
-        "insert into measures (measurement_name, t, value) values ('weight', '1904-05-06 08:30:00', 81.5), ('weight', '1904-05-06 19:45:00', 82), ('weight', '1904-05-07 08:00:00', 0), ('progress_other', '1904-05-06 08:30:00', 99)",
+        "insert into measures (user_id, measurement_name, t, value) values ($1, 'weight', '1904-05-06 08:30:00', 81.5), ($1, 'weight', '1904-05-06 19:45:00', 82), ($1, 'weight', '1904-05-07 08:00:00', 0), ($1, 'progress_other', '1904-05-06 08:30:00', 99)",
+        [ownerUserId],
       );
       const schema = await client.callTool({
         name: "describe_schema",
@@ -1035,8 +1037,8 @@ describe("progress reads through MCP", () => {
         truncated: false,
       });
       await writer.query(
-        "insert into targets (id, measurement_name, value, deleted_at) values ($1, 'daily_calorie_intake', 2300, null), ($2, 'daily_calorie_intake', 1800, now()), ($3, 'progress_other', 99, null)",
-        [targetId, deletedId, otherId],
+        "insert into targets (user_id, id, measurement_name, value, deleted_at) values ($4, $1, 'daily_calorie_intake', 2300, null), ($4, $2, 'daily_calorie_intake', 1800, now()), ($4, $3, 'progress_other', 99, null)",
+        [targetId, deletedId, otherId, ownerUserId],
       );
       const target = await read("select * from active_calorie_target");
       expect(target).toEqual({
@@ -1080,6 +1082,11 @@ describe("progress reads through MCP", () => {
       const connection = await reader.connect();
       try {
         await connection.query("set timezone = 'Pacific/Auckland'");
+        await connection.query("begin read only");
+        await connection.query(
+          "select set_config('fitness.user_id', $1, true)",
+          [ownerUserId],
+        );
         const alternateZone = await connection.query(
           "select recorded_at from fitness_data.body_weight_history order by recorded_at desc",
         );
@@ -1091,6 +1098,7 @@ describe("progress reads through MCP", () => {
           ),
         );
       } finally {
+        await connection.query("rollback");
         await connection.query("set timezone = 'UTC'");
         connection.release();
       }
@@ -1214,6 +1222,81 @@ describe("personal habit SQL isolation", () => {
       );
       await writer.query("delete from habits where id=any($1::uuid[])", [
         [ownerHabitId, otherHabitId],
+      ]);
+      await writer.query("delete from auth_users where id=$1", [otherUserId]);
+    }
+  });
+});
+
+describe("personal progress SQL isolation", () => {
+  it("isolates body weight and calorie targets across parallel accounts and missing identity", async () => {
+    const otherUserId = userIdSchema.parse(randomUUID());
+    const ownerTargetId = randomUUID();
+    const otherTargetId = randomUUID();
+    const otherQuery = createQueryRunner(
+      otherUserId,
+      () => reader.connect(),
+      readerRole,
+    );
+    try {
+      await writer.query(
+        "insert into auth_users (id,name,email) values ($1,'Other progress account',$2)",
+        [otherUserId, `${otherUserId}@example.invalid`],
+      );
+      await writer.query(
+        `insert into measurements (user_id,name,unit)
+        values ($1,'weight','kg'),($1,'daily_calorie_intake','Cal'),
+               ($2,'weight','kg'),($2,'daily_calorie_intake','Cal') on conflict do nothing`,
+        [ownerUserId, otherUserId],
+      );
+      await writer.query(
+        "insert into measures (user_id,measurement_name,t,value) values ($1,'weight','1890-01-01',80),($2,'weight','1890-01-01',50)",
+        [ownerUserId, otherUserId],
+      );
+      await writer.query(
+        "insert into targets (user_id,id,measurement_name,value) values ($1,$2,'daily_calorie_intake',2300),($3,$4,'daily_calorie_intake',1800)",
+        [ownerUserId, ownerTargetId, otherUserId, otherTargetId],
+      );
+      const sql =
+        "select avg(w.weight_kg)::float8 as weight, max(t.calories_kcal_per_day)::float8 as calories from fitness_data.body_weight_history w cross join fitness_data.active_calorie_target t";
+      const [owner, other] = await Promise.all([
+        query({ sql }),
+        otherQuery({ sql }),
+      ]);
+      expect(owner._unsafeUnwrap().rows).toEqual([
+        { weight: 80, calories: 2300 },
+      ]);
+      expect(other._unsafeUnwrap().rows).toEqual([
+        { weight: 50, calories: 1800 },
+      ]);
+      expect(
+        (await reader.query("select * from fitness_data.body_weight_history"))
+          .rows,
+      ).toEqual([]);
+      expect(
+        (await reader.query("select * from fitness_data.active_calorie_target"))
+          .rows,
+      ).toEqual([]);
+      for (const table of ["measurements", "daily_note"])
+        await expect(
+          reader.query(`select * from public.${table}`),
+        ).rejects.toMatchObject({ code: "42501" });
+      expect((await query({ sql }))._unsafeUnwrap().rows).toEqual([
+        { weight: 80, calories: 2300 },
+      ]);
+      expect((await otherQuery({ sql }))._unsafeUnwrap().rows).toEqual([
+        { weight: 50, calories: 1800 },
+      ]);
+    } finally {
+      await writer.query("delete from targets where id=any($1::uuid[])", [
+        [ownerTargetId, otherTargetId],
+      ]);
+      await writer.query(
+        "delete from measures where user_id=any($1::uuid[]) and t='1890-01-01'",
+        [[ownerUserId, otherUserId]],
+      );
+      await writer.query("delete from measurements where user_id=$1", [
+        otherUserId,
       ]);
       await writer.query("delete from auth_users where id=$1", [otherUserId]);
     }

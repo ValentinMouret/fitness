@@ -6,7 +6,10 @@ export default defineConfig({
   test: {
     ...base.test,
     env: {},
-    include: ["app/modules/habits/**/*.integration.test.ts"],
+    include: [
+      "app/modules/habits/**/*.integration.test.ts",
+      "app/modules/core/**/*.integration.test.ts",
+    ],
     exclude: ["node_modules/**"],
     fileParallelism: false,
     testTimeout: 15000,

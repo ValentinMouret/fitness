@@ -67,7 +67,10 @@ export async function action({ request, context }: Route.ActionArgs) {
       content: formText(z.string()),
     });
     const parsed = schema.parse(form);
-    await saveDailyNote(parsed.content);
+    await saveDailyNote(
+      context.get(authenticatedUserContext).id,
+      parsed.content,
+    );
     return { saved: true };
   }
 
@@ -80,7 +83,9 @@ export async function action({ request, context }: Route.ActionArgs) {
     throw createValidationError("Invalid weight value provided", parsed.error);
   }
 
-  await logWeight({ weight: parsed.data.weight });
+  await logWeight(context.get(authenticatedUserContext).id, {
+    weight: parsed.data.weight,
+  });
 }
 
 export const handle = {

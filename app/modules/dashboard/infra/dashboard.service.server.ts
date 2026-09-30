@@ -4,14 +4,14 @@ import type { Measure as MeasureRecord } from "~/modules/core/domain/measure";
 import { Measure } from "~/modules/core/domain/measure";
 import type { Measurement } from "~/modules/core/domain/measurements";
 import { baseMeasurements } from "~/modules/core/domain/measurements";
-import { MeasureRepository } from "~/modules/core/infra/measure.repository.server";
+import { createMeasureRepository } from "~/modules/core/infra/measure.repository.server";
 import {
-  MeasurementService,
-  TargetService,
-} from "~/modules/core/infra/measurement-service";
-import { MeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
+  createMeasurementService,
+  createTargetService,
+} from "~/modules/core/infra/measurement-service.server";
+import { createMeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
 import type { DailyNote } from "~/modules/daily-note/domain/entity";
-import { DailyNoteRepository } from "~/modules/daily-note/infra/repository.server";
+import { createDailyNoteRepository } from "~/modules/daily-note/infra/repository.server";
 import type { Workout } from "~/modules/fitness/domain/workout";
 import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { HabitService } from "~/modules/habits/application/service";
@@ -52,16 +52,16 @@ export async function getDashboardData(userId: UserId): Promise<DashboardData> {
   const todayDate = today();
 
   const result = await ResultAsync.combine([
-    MeasureRepository.fetchByMeasurementName("weight", 1),
-    MeasureRepository.fetchByMeasurementName("weight", 200),
-    MeasurementRepository.fetchByName("weight"),
-    MeasurementService.fetchStreak("weight"),
+    createMeasureRepository(userId).fetchByMeasurementName("weight", 1),
+    createMeasureRepository(userId).fetchByMeasurementName("weight", 200),
+    createMeasurementRepository(userId).fetchByName("weight"),
+    createMeasurementService(userId).fetchStreak("weight"),
     repositories.habits.fetchActive(),
     repositories.completions.fetchByDateRange(todayDate, todayDate),
     WorkoutRepository.findInProgress(),
     NutritionService.getDailySummary(todayDate),
-    TargetService.currentTargets(),
-    DailyNoteRepository.fetch(),
+    createTargetService(userId).currentTargets(),
+    createDailyNoteRepository(userId).fetch(),
   ]);
 
   if (result.isErr()) {
@@ -174,10 +174,13 @@ export async function toggleHabitCompletion(
   }
 }
 
-export async function logWeight(input: {
-  readonly weight: number;
-}): Promise<void> {
-  const result = await MeasureRepository.save(
+export async function logWeight(
+  userId: UserId,
+  input: {
+    readonly weight: number;
+  },
+): Promise<void> {
+  const result = await createMeasureRepository(userId).save(
     Measure.create("weight", input.weight),
   );
 
