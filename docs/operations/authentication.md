@@ -2,6 +2,82 @@
 
 Fitness uses one owner login. Browser sessions use a signed, expiring HttpOnly cookie. Remote Model Context Protocol (MCP) clients use OAuth authorization code exchange with PKCE and one `fitness` scope for reads and writes. The MCP endpoint exposes workout tools and generic SQL reads over documented views. See [MCP tools and reader setup](mcp.md).
 
+## Local magic-link foundation (ENSO-89)
+
+The approved next authentication model is invitation-only email magic links with
+Better Auth 1.7.6 and its native PostgreSQL adapter. Drizzle remains unchanged.
+This first stage is a local development foundation: the existing owner login,
+private app pages, OAuth and MCP authorization remain on their current boundary.
+Native sessions do not authorize access to those surfaces. Production admission
+stays closed until all enabled data, browser and agent paths have tested tenant
+isolation and the owner's historical data migration has been reviewed.
+
+Migration 0012 adds only auth users, sessions, accounts, verification records and
+invitations. It does not assign ownership or change fitness records/catalogues.
+The nullable account password field is part of Better Auth's core storage;
+password authentication, password signup and SSO are disabled.
+
+To exercise the foundation, create an explicitly named loopback test/dev database
+and configure the existing test server credentials together with:
+
+```sh
+AUTH_FOUNDATION_ENABLED=true
+AUTH_FOUNDATION_ORIGIN=http://127.0.0.1:5196
+AUTH_FOUNDATION_OWNER_USER_ID=720cbf7c-67b5-4d6b-b026-c8e1099ff435
+AUTH_LOCAL_DATABASE_URL=postgresql://localhost/fitness_magic_link_test
+AUTH_LOCAL_INBOX=/tmp/fitness-auth-foundation/inbox.jsonl
+```
+
+Use the same database for `DATABASE_URL` and the test fixture connection. Run
+`bun run auth:seed-local` to migrate and seed `owner@example.invalid`,
+`first@example.invalid` and `second@example.invalid`. The command refuses
+non-loopback databases and names without a `_test` or `_dev` suffix. It creates
+no session cookies and does not mark email addresses verified. Request a link
+through `/sign-in`, open the newest matching URL from the private local inbox,
+then use **Manage invitations** as the owner. The inbox is outside public assets
+and is written with mode 0600. Do not publish its contents.
+
+`/sign-in`, `/account/invitations` and `/api/auth/*` return 404 by default.
+Enabling this foundation in production is rejected by environment validation.
+The owner bootstrap uses an explicit stable ID and rejects conflicting email/ID
+assignments. Only that authenticated owner can list, create or revoke invitations.
+If email delivery fails after creation, the invitation remains visible with an
+inline error. **Resend email** retries delivery for an active, unaccepted
+invitation. It does not renew expired invitations or reactivate revoked accounts.
+Invitation expiry defaults to seven days (`AUTH_INVITATION_TTL_SECONDS`); accepted
+accounts can request fresh sign-in links. Revocation removes existing sessions
+and rejects outstanding links. Unknown addresses get the same response without
+an email or an account. Magic links expire in five minutes, are stored as hashes,
+and are single-use. Native session readers must use `getAdmittedSession`, which
+rechecks admission; a raw library session is not sufficient authorization.
+
+Better Auth's verification IDs use text because its concurrency reservations use
+deterministic non-UUID primary keys. Ordinary user/session/account IDs remain
+UUIDs. The adapter's custom UUID generator preserves supplied reservation IDs.
+Origin and CSRF protection are explicitly enabled, including in test mode.
+
+The standard server and Docker entry use a Morgan preload that logs request paths
+without query strings. Better Auth's verbose library logger is disabled, so
+rejected callback URLs cannot leak tokens into error logs. Status/path logging
+remains available. The SMTP transport is exercised over real loopback SMTP;
+production SMTP wiring is part of the later reviewed cutover, with TLS required.
+
+Run `bun run test:auth:integration` with `AUTH_TEST_ADMIN_URL` pointing explicitly
+to a disposable PostgreSQL admin connection. Its native-auth test creates and
+drops its own uniquely named database. The SMTP test needs no database.
+`tests/e2e/auth-foundation.spec.ts` verifies the built React Router flow against
+the matching dedicated server and inbox. Set `E2E_SERVER_LOG` to that server's
+log file to verify successful, rejected and replayed callbacks contain no tokens.
+CI supplies these settings and exercises the owner invite flow, two independent
+sessions, revocation, origin rejection, and denied private-app/OAuth/MCP access.
+
+Before any production cutover: bind browser/OAuth/MCP execution to trusted user
+identity; scope every enabled private read/write/aggregate and parent-child link;
+rehearse and reconcile owner-history backfill; verify real reader-role two-user
+negative tests; and configure production email delivery and recovery. Existing
+public meal links remain an explicit read-only exception. Catalogue publication,
+aliases and private fallback decisions are outside this foundation.
+
 Session-protected pages and API routes inherit server authentication middleware from `ProtectedLayout`. See [ADR 0001](../adr/0001-server-auth-middleware.md) for route placement, client navigation, and the separate OAuth/MCP boundaries.
 
 ## Configure browser login

@@ -30,6 +30,7 @@ ENV GIT_SHA=$GIT_SHA
 ENV NODE_ENV=production
 
 COPY --from=build --chown=bun:bun /app/build              ./build
+COPY --from=build --chown=bun:bun /app/server/request-logging.cjs ./server/request-logging.cjs
 COPY --from=build --chown=bun:bun /app/drizzle            ./drizzle
 COPY --from=build --chown=bun:bun /app/app/db/migrate.ts  ./app/db/migrate.ts
 COPY --from=build --chown=bun:bun /app/app/env.server.ts  ./app/env.server.ts
@@ -45,4 +46,4 @@ USER bun
 EXPOSE 5174
 
 ENTRYPOINT ["./deploy/preview-entrypoint.sh"]
-CMD ["node", "./node_modules/.bin/react-router-serve", "./build/server/index.js"]
+CMD ["node", "--require", "./server/request-logging.cjs", "./node_modules/.bin/react-router-serve", "./build/server/index.js"]

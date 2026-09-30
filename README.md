@@ -73,3 +73,5 @@ For production setup, see the [deployment guide](deploy/README.md).
 - Linear: https://linear.app/valentin-mouret/project/fitness-22f97be13373/issues
 
 See [MCP tools](docs/mcp.md) for the API, SQL reader setup, and integration tests.
+See the [local magic-link foundation](docs/operations/authentication.md#local-magic-link-foundation-enso-89)
+for invitation-only auth development, local email capture and isolation gates.

@@ -25,6 +25,9 @@ const publicRoutes = new Set([
   "routes/logout.tsx",
   "routes/healthz.ts",
   "routes/share/meal.tsx",
+  "routes/sign-in.tsx",
+  "routes/api/auth.ts",
+  "routes/account/invitations.tsx",
 ]);
 const missingId = "00000000-0000-4000-8000-000000000000";
 

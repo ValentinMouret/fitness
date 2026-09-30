@@ -47,7 +47,9 @@ export default defineConfig({
   ],
   webServer: process.env.CI
     ? {
-        command: "bun run start",
+        command: process.env.E2E_SERVER_LOG
+          ? 'bun run start > "$E2E_SERVER_LOG" 2>&1'
+          : "bun run start",
         url: authTestEnv.E2E_BASE_URL,
         reuseExistingServer: false,
         env: {
