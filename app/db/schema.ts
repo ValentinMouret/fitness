@@ -8,6 +8,7 @@ import {
   index,
   integer,
   jsonb,
+  type PgTableExtraConfigValue,
   pgEnum,
   pgTable,
   primaryKey,
@@ -272,12 +273,25 @@ export const exerciseMuscleGroups = pgTable(
   ],
 );
 
-export const workoutTemplates = pgTable("workout_templates", {
-  id: uuid().defaultRandom().primaryKey(),
-  name: text().notNull(),
-  source_workout_id: uuid(),
-  ...timestampColumns(),
-});
+export const workoutTemplates = pgTable(
+  "workout_templates",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id),
+    id: uuid().defaultRandom().primaryKey(),
+    name: text().notNull(),
+    source_workout_id: uuid(),
+    ...timestampColumns(),
+  },
+  (table): PgTableExtraConfigValue[] => [
+    uniqueIndex("workout_templates_user_id_id_idx").on(table.userId, table.id),
+    foreignKey({
+      columns: [table.userId, table.source_workout_id],
+      foreignColumns: [workouts.userId, workouts.id],
+    }),
+  ],
+);
 
 export const workoutTemplateExercises = pgTable(
   "workout_template_exercises",
@@ -315,21 +329,41 @@ export const workoutTemplateSets = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.template_id, table.exercise_id, table.set] }),
+    foreignKey({
+      columns: [table.template_id, table.exercise_id],
+      foreignColumns: [
+        workoutTemplateExercises.template_id,
+        workoutTemplateExercises.exercise_id,
+      ],
+    }),
     check("template_set_is_positive", sql`${table.set} > 0`),
   ],
 );
 
-export const workouts = pgTable("workouts", {
-  id: uuid().defaultRandom().primaryKey(),
-  name: text().notNull(),
-  start: timestamp().defaultNow(),
-  stop: timestamp(),
-  notes: text(),
-  imported_from_strong: boolean().notNull().default(false),
-  imported_from_fitbod: boolean().notNull().default(false),
-  template_id: uuid().references(() => workoutTemplates.id),
-  ...timestampColumns(),
-});
+export const workouts = pgTable(
+  "workouts",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id),
+    id: uuid().defaultRandom().primaryKey(),
+    name: text().notNull(),
+    start: timestamp().defaultNow(),
+    stop: timestamp(),
+    notes: text(),
+    imported_from_strong: boolean().notNull().default(false),
+    imported_from_fitbod: boolean().notNull().default(false),
+    template_id: uuid(),
+    ...timestampColumns(),
+  },
+  (table): PgTableExtraConfigValue[] => [
+    uniqueIndex("workouts_user_id_id_idx").on(table.userId, table.id),
+    foreignKey({
+      columns: [table.userId, table.template_id],
+      foreignColumns: [workoutTemplates.userId, workoutTemplates.id],
+    }),
+  ],
+);
 
 export const workoutExercises = pgTable(
   "workout_exercises",
@@ -474,6 +508,13 @@ export const workoutSets = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.workout, table.exercise, table.set] }),
+    foreignKey({
+      columns: [table.workout, table.exercise],
+      foreignColumns: [
+        workoutExercises.workout_id,
+        workoutExercises.exercise_id,
+      ],
+    }),
     check("set_is_positive", sql`${table.set} > 0`),
     check(
       "target_reps_is_null_or_positive",

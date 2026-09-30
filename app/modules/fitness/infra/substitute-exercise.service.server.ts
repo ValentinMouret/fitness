@@ -1,11 +1,26 @@
 import { redirect } from "react-router";
+import type { UserId } from "~/modules/auth/domain/user";
 import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
 import { AdaptiveWorkoutService } from "~/modules/fitness/infra/adaptive-workout-service.server";
+import { getWorkoutSessionData } from "./workout-session.service.server";
 
-export async function getSubstituteExerciseData(input: {
-  readonly workoutId: string;
-  readonly exerciseId: string;
-}) {
+export async function getSubstituteExerciseData(
+  userId: UserId,
+  input: {
+    readonly workoutId: string;
+    readonly exerciseId: string;
+  },
+) {
+  const { workoutSession } = await getWorkoutSessionData(
+    userId,
+    input.workoutId,
+  );
+  if (
+    !workoutSession.exerciseGroups.some(
+      (group) => group.exercise.id === input.exerciseId,
+    )
+  )
+    throw new Response("Exercise not found", { status: 404 });
   const availableEquipmentResult =
     await AdaptiveWorkoutRepository.getAvailableEquipment();
   if (availableEquipmentResult.isErr()) {
@@ -27,11 +42,24 @@ export async function getSubstituteExerciseData(input: {
   };
 }
 
-export async function substituteExercise(input: {
-  readonly workoutId: string;
-  readonly exerciseId: string;
-  readonly selectedEquipmentIds: string[];
-}) {
+export async function substituteExercise(
+  userId: UserId,
+  input: {
+    readonly workoutId: string;
+    readonly exerciseId: string;
+    readonly selectedEquipmentIds: string[];
+  },
+) {
+  const { workoutSession } = await getWorkoutSessionData(
+    userId,
+    input.workoutId,
+  );
+  if (
+    !workoutSession.exerciseGroups.some(
+      (group) => group.exercise.id === input.exerciseId,
+    )
+  )
+    throw new Response("Exercise not found", { status: 404 });
   const availableEquipmentResult =
     await AdaptiveWorkoutRepository.getAvailableEquipment();
   if (availableEquipmentResult.isErr()) {

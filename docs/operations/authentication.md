@@ -225,3 +225,29 @@ then passes the connection's account identity to the SQL runner. Other accounts
 remain denied while private workout/nutrition paths are still global. Native
 sessions still cannot consent or enter the private app; this stage does not
 activate onboarding.
+
+### Workout ownership stage (draft release hold)
+
+Migration 0016 assigns all workout and retained template roots, including
+archived/imported history, to the uniquely accepted bootstrap owner. Children
+inherit ownership through their existing parent IDs. Composite foreign keys
+bind workout/template source associations to one account and sets to their
+actual workout/template exercise membership. Existing IDs, order, notes,
+weights, reps, RPE and reported RIR remain intact.
+
+Before deployment, the required rehearsal must check orphan workout sets,
+template sets and source-workout links. The migration fails on incompatible
+history; it does not delete, reassign or fabricate parent records. Owner
+bootstrap/backfill and legacy browser/MCP compatibility remain release holds.
+
+Workouts, sessions, history, duplication, dashboard readers and weekly/historical
+volume use explicit account factories. Mutations lock the owned parent before
+changing children. MCP workout views filter trusted transaction-local identity;
+set/group/volume descendants inherit that filter. The legacy-owner MCP gate
+remains until every private tool is isolated.
+
+The owner deferred private provisional exercise creation. This stage scopes
+private workout records without publishing or copying personal exercise
+catalogues/cues or choosing general-user creation policy. Existing owner
+creation/history is retained; catalogue/onboarding parity needs concrete review
+before admitting new accounts.

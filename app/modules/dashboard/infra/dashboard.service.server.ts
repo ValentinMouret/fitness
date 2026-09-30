@@ -13,7 +13,7 @@ import { createMeasurementRepository } from "~/modules/core/infra/measurements.r
 import type { DailyNote } from "~/modules/daily-note/domain/entity";
 import { createDailyNoteRepository } from "~/modules/daily-note/infra/repository.server";
 import type { Workout } from "~/modules/fitness/domain/workout";
-import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
+import { createWorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { HabitService } from "~/modules/habits/application/service";
 import { type Habit, HabitCompletion } from "~/modules/habits/domain/entity";
 import { createHabitRepositories } from "~/modules/habits/infra/repository.server";
@@ -58,7 +58,7 @@ export async function getDashboardData(userId: UserId): Promise<DashboardData> {
     createMeasurementService(userId).fetchStreak("weight"),
     repositories.habits.fetchActive(),
     repositories.completions.fetchByDateRange(todayDate, todayDate),
-    WorkoutRepository.findInProgress(),
+    createWorkoutRepository(userId).findInProgress(),
     NutritionService.getDailySummary(todayDate),
     createTargetService(userId).currentTargets(),
     createDailyNoteRepository(userId).fetch(),

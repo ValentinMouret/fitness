@@ -11,6 +11,7 @@ import {
 import { useEffect, useRef } from "react";
 import { Form, Link, useNavigation } from "react-router";
 import { zfd } from "zod-form-data";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import {
   getSubstituteExerciseData,
   substituteExercise,
@@ -18,7 +19,7 @@ import {
 import { formRepeatableText } from "~/utils/form-data";
 import type { Route } from "./+types/:exercise-id";
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, context }: Route.LoaderArgs) {
   const workoutId = params.id;
   const exerciseId = params["exercise-id"];
 
@@ -28,10 +29,13 @@ export async function loader({ params }: Route.LoaderArgs) {
     });
   }
 
-  return getSubstituteExerciseData({ workoutId, exerciseId });
+  return getSubstituteExerciseData(context.get(authenticatedUserContext).id, {
+    workoutId,
+    exerciseId,
+  });
 }
 
-export async function action({ params, request }: Route.ActionArgs) {
+export async function action({ params, request, context }: Route.ActionArgs) {
   const workoutId = params.id;
   const exerciseId = params["exercise-id"];
   const formData = await request.formData();
@@ -47,7 +51,7 @@ export async function action({ params, request }: Route.ActionArgs) {
     });
   }
 
-  return substituteExercise({
+  return substituteExercise(context.get(authenticatedUserContext).id, {
     workoutId,
     exerciseId,
     selectedEquipmentIds: selectedEquipment,

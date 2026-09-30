@@ -113,6 +113,13 @@
       "when": 1790796452042,
       "tag": "0015_oauth_connection_ownership",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790799007475,
+      "tag": "0016_workout_ownership",
+      "breakpoints": true
     }
   ]
 }
