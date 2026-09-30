@@ -305,41 +305,39 @@ export default function DashboardPage({
             </Tooltip>
           </Flex>
 
-          {!loggedToday && (
-            <weightFetcher.Form
-              method="post"
-              className="dashboard__weight-log-form"
-            >
-              <Box className="dashboard__weight-input">
-                <NumberInput
-                  ref={weightInputRef}
-                  name="weight"
-                  min={0}
-                  placeholder={lastWeight?.value?.toString() ?? "..."}
-                  size="2"
-                  aria-label="Weight"
-                  aria-keyshortcuts="w"
-                >
-                  {weight?.unit && (
-                    <TextField.Slot pr="3">
-                      <Text size="1" color="gray">
-                        {weight.unit}
-                      </Text>
-                    </TextField.Slot>
-                  )}
-                </NumberInput>
-              </Box>
-              <Tooltip content="Log weight (Enter)">
-                <Button
-                  type="submit"
-                  size="2"
-                  loading={weightFetcher.state !== "idle"}
-                >
-                  Log
-                </Button>
-              </Tooltip>
-            </weightFetcher.Form>
-          )}
+          <weightFetcher.Form
+            method="post"
+            className="dashboard__weight-log-form"
+          >
+            <Box className="dashboard__weight-input">
+              <NumberInput
+                ref={weightInputRef}
+                name="weight"
+                min={0}
+                placeholder={lastWeight?.value?.toString() ?? "..."}
+                size="2"
+                aria-label="Weight"
+                aria-keyshortcuts="w"
+              >
+                {weight?.unit && (
+                  <TextField.Slot pr="3">
+                    <Text size="1" color="gray">
+                      {weight.unit}
+                    </Text>
+                  </TextField.Slot>
+                )}
+              </NumberInput>
+            </Box>
+            <Tooltip content="Log weight (Enter)">
+              <Button
+                type="submit"
+                size="2"
+                loading={weightFetcher.state !== "idle"}
+              >
+                Log
+              </Button>
+            </Tooltip>
+          </weightFetcher.Form>
 
           {weightData.length > 0 && (
             <MeasurementChart
