@@ -132,3 +132,19 @@
     background-color: var(--brand-surface);
   }
 }
+
+button.rest-timer__countdown {
+  border: 0;
+  border-bottom: 1px dotted var(--brand-coral);
+  border-radius: 0;
+  background: none;
+  min-width: 64px;
+  min-height: 44px;
+  padding: 0 var(--space-1);
+  font: 600 1.2rem var(--font-body);
+  color: var(--brand-coral);
+  cursor: pointer;
+}
+.rest-timer__shortcut {
+  margin-left: var(--space-1);
+}

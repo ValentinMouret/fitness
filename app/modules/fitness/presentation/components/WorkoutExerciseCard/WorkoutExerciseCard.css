@@ -277,3 +277,67 @@
   color: var(--gray-12);
   padding: 0 var(--space-2);
 }
+
+.exercise-card__cue--editable {
+  cursor: pointer;
+}
+.exercise-card--focused {
+  padding-top: 0;
+  border-top: 0;
+}
+.exercise-card__heading {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: 500 2rem var(--font-display);
+}
+.exercise-card--focused .exercise-card__name {
+  font: inherit;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.exercise-card__equipment {
+  display: block;
+  margin-top: var(--space-2);
+  font: 500 1rem var(--font-body);
+}
+.exercise-card__progress {
+  margin: var(--space-3) 0;
+}
+.exercise-card--focused .set-table-header,
+.exercise-card--focused .set-row {
+  grid-template-columns: 28px minmax(0, 1fr) minmax(0, 0.75fr) 92px;
+}
+.exercise-card--focused .set-table-header [hidden] {
+  display: none;
+}
+.exercise-card--focused .set-row {
+  min-height: 56px;
+}
+.exercise-card--focused .set-row__actions {
+  grid-column: 4;
+  grid-row: 1;
+}
+.exercise-card--focused .set-row__report-value {
+  grid-row: 2;
+  grid-column: 2 / -1;
+  align-items: flex-start;
+}
+.exercise-card--focused .set-row__report-value button {
+  color: var(--brand-text);
+  font-weight: 500;
+  font-size: var(--font-size-1);
+}
+.exercise-card--focused .set-row--pending .set-row__report-value,
+.exercise-card--focused .set-row--editing .set-row__report-value {
+  display: none;
+}
+.exercise-card--focused .set-row__edit-form {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.exercise-card--focused .set-row__report-prompt {
+  grid-column: 1 / -1;
+}

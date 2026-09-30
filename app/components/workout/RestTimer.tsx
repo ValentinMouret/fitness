@@ -186,6 +186,7 @@ interface RestTimerProps {
   readonly secondsRemaining: number;
   readonly totalSeconds: number;
   readonly onDismiss: () => void;
+  readonly onStart?: () => void;
   readonly onSetDuration: (seconds: number) => void;
 }
 
@@ -194,9 +195,11 @@ export function RestTimer({
   secondsRemaining,
   totalSeconds,
   onDismiss,
+  onStart,
   onSetDuration,
 }: RestTimerProps) {
-  const isFinished = secondsRemaining === 0;
+  const [showDurations, setShowDurations] = useState(false);
+  const isFinished = isActive && secondsRemaining === 0;
 
   useEffect(() => {
     if (!isActive || isFinished) return;
@@ -222,9 +225,9 @@ export function RestTimer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isActive, isFinished, onSetDuration]);
 
-  if (!isActive) return null;
+  if (!isActive && !onStart) return null;
 
-  const progress = 1 - secondsRemaining / totalSeconds;
+  const progress = isActive ? 1 - secondsRemaining / totalSeconds : 0;
 
   return (
     <section
@@ -243,25 +246,37 @@ export function RestTimer({
           <div className="rest-timer__info">
             <NotificationBell />
             <Text size="1" weight="medium" className="rest-timer__label">
-              {isFinished ? "Done" : "Rest"}
+              {isFinished ? "Done" : isActive ? "Rest" : "Rest ready"}
             </Text>
-            <Text size="4" weight="bold" className="rest-timer__countdown">
-              {formatCountdown(secondsRemaining)}
-            </Text>
+            {onStart ? (
+              <button
+                type="button"
+                className="rest-timer__countdown"
+                aria-label="Choose rest duration"
+                aria-expanded={showDurations}
+                onClick={() => setShowDurations((open) => !open)}
+              >
+                {formatCountdown(isActive ? secondsRemaining : totalSeconds)}
+              </button>
+            ) : (
+              <Text size="4" weight="bold" className="rest-timer__countdown">
+                {formatCountdown(secondsRemaining)}
+              </Text>
+            )}
           </div>
 
           <Button
             size="1"
-            variant={isFinished ? "solid" : "soft"}
-            color={isFinished ? "green" : "gray"}
-            onClick={onDismiss}
+            variant={onStart || isFinished ? "solid" : "soft"}
+            color={isFinished ? "green" : onStart ? undefined : "gray"}
+            onClick={isActive ? onDismiss : onStart}
             className="rest-timer__action"
           >
-            {isFinished ? "OK" : "Skip"}
+            {isFinished ? "OK" : isActive ? "Skip" : "Start"}
           </Button>
         </div>
 
-        {!isFinished && (
+        {(onStart ? showDurations : !isFinished) && (
           <div className="rest-timer__presets">
             {REST_PRESETS.map((preset, idx) => {
               const shortcut = String(idx + 1);
@@ -278,7 +293,7 @@ export function RestTimer({
                     aria-keyshortcuts={shortcut}
                   >
                     {formatPreset(preset)}
-                    <Kbd size="1" style={{ marginLeft: "4px" }}>
+                    <Kbd size="1" className="rest-timer__shortcut">
                       {shortcut}
                     </Kbd>
                   </Button>

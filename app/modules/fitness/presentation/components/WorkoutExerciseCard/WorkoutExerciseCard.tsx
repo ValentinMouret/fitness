@@ -18,7 +18,7 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import { Brain } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 import { NumberInput } from "~/components/NumberInput";
 import { reportedRirValues } from "~/modules/fitness/domain/workout";
@@ -30,6 +30,8 @@ import "./WorkoutExerciseCard.css";
 
 interface WorkoutExerciseCardProps {
   readonly viewModel: WorkoutExerciseCardViewModel;
+  readonly focused?: boolean;
+  readonly progressLabel?: string;
   readonly onAddSet?: (
     exerciseId: string,
     lastSet?: WorkoutSetViewModel,
@@ -48,6 +50,8 @@ interface WorkoutExerciseCardProps {
 
 export function WorkoutExerciseCard({
   viewModel,
+  focused = false,
+  progressLabel,
   onAddSet,
   onRemoveExercise,
   onReplaceExercise,
@@ -103,7 +107,7 @@ export function WorkoutExerciseCard({
   };
 
   return (
-    <div className="exercise-card">
+    <div className={`exercise-card${focused ? " exercise-card--focused" : ""}`}>
       <div className="exercise-card__header">
         {dragHandleListeners && (
           <button
@@ -117,15 +121,30 @@ export function WorkoutExerciseCard({
             <DragHandleDots2Icon />
           </button>
         )}
-        <button
-          type="button"
-          className="exercise-card__name exercise-card__name--clickable"
-          onClick={() => onExerciseNameClick?.(viewModel.exerciseId)}
-        >
-          <Text size="3" weight="medium">
-            {viewModel.exerciseName}
-          </Text>
-        </button>
+        {focused ? (
+          <h1 className="exercise-card__heading">
+            <button
+              type="button"
+              className="exercise-card__name exercise-card__name--clickable"
+              onClick={() => onExerciseNameClick?.(viewModel.exerciseId)}
+            >
+              {viewModel.exerciseName}
+            </button>
+            <span className="exercise-card__equipment">
+              {viewModel.exerciseType}
+            </span>
+          </h1>
+        ) : (
+          <button
+            type="button"
+            className="exercise-card__name exercise-card__name--clickable"
+            onClick={() => onExerciseNameClick?.(viewModel.exerciseId)}
+          >
+            <Text size="3" weight="medium">
+              {viewModel.exerciseName}
+            </Text>
+          </button>
+        )}
 
         {viewModel.canRemoveExercise && (
           <DropdownMenu.Root>
@@ -156,9 +175,16 @@ export function WorkoutExerciseCard({
         )}
       </div>
 
-      <Text size="1" color="gray" className="exercise-card__type">
-        {viewModel.exerciseType}
-      </Text>
+      {!focused && (
+        <Text size="1" color="gray" className="exercise-card__type">
+          {viewModel.exerciseType}
+        </Text>
+      )}
+      {progressLabel && (
+        <Text as="p" size="2" color="gray" className="exercise-card__progress">
+          {progressLabel}
+        </Text>
+      )}
 
       {viewModel.mmcInstructions && (
         <Callout.Root
@@ -168,7 +194,7 @@ export function WorkoutExerciseCard({
           onClick={
             onMMCClick ? () => onMMCClick(viewModel.exerciseId) : undefined
           }
-          style={onMMCClick ? { cursor: "pointer" } : undefined}
+          className={onMMCClick ? "exercise-card__cue--editable" : undefined}
         >
           <Callout.Icon>
             <Brain size={16} />
@@ -197,7 +223,10 @@ export function WorkoutExerciseCard({
           <span className="set-table-header__label set-table-header__label--right">
             Reps
           </span>
-          <span className="set-table-header__label set-table-header__label--right">
+          <span
+            hidden={focused}
+            className="set-table-header__label set-table-header__label--right"
+          >
             RIR
           </span>
           <span className="set-table-header__label set-table-header__label--center" />
@@ -209,6 +238,7 @@ export function WorkoutExerciseCard({
             set={set}
             exerciseId={viewModel.exerciseId}
             canEdit={viewModel.canAddSets}
+            focused={focused}
             onCompleteSet={onCompleteSet}
             openReportSetKey={openReportSetKey}
             onReportPromptChange={onReportPromptChange}
@@ -236,6 +266,7 @@ interface SetRowProps {
   readonly set: WorkoutSetViewModel;
   readonly exerciseId: string;
   readonly canEdit: boolean;
+  readonly focused: boolean;
   readonly onCompleteSet?: () => void;
   readonly openReportSetKey?: string;
   readonly onReportPromptChange?: (key: string, open: boolean) => void;
@@ -245,10 +276,12 @@ function SetRow({
   set,
   exerciseId,
   canEdit,
+  focused,
   onCompleteSet,
   openReportSetKey,
   onReportPromptChange,
 }: SetRowProps) {
+  const editFormId = useId();
   const [localReps, setLocalReps] = useState(set.reps?.toString() ?? "");
   const [localWeight, setLocalWeight] = useState(set.weight?.toString() ?? "");
   const reportSetKey = `${exerciseId}:${set.set}`;
@@ -321,6 +354,7 @@ function SetRow({
 
   const rowClassName = [
     "set-row",
+    editingCompleted ? "set-row--editing" : "",
     set.isWarmup
       ? "set-row--warmup"
       : set.isCompleted
@@ -362,7 +396,30 @@ function SetRow({
         </span>
       )}
 
-      {!canEdit || set.isCompleted ? (
+      {editingCompleted ? (
+        <>
+          <NumberInput
+            form={editFormId}
+            name="weight"
+            value={localWeight}
+            onChange={(event) => setLocalWeight(event.target.value)}
+            placeholder="kg"
+            className="set-row__input"
+            aria-label={`Set ${set.set} weight`}
+          />
+          <NumberInput
+            form={editFormId}
+            name="reps"
+            allowDecimals={false}
+            value={localReps}
+            onChange={(event) => setLocalReps(event.target.value)}
+            placeholder="reps"
+            className="set-row__input"
+            aria-label={`Set ${set.set} reps`}
+          />
+          <div className="set-row__report-value" />
+        </>
+      ) : !canEdit || set.isCompleted ? (
         <>
           <Text size="2" className="set-row__value">
             {set.weight ? `${set.weight}` : "—"}
@@ -381,7 +438,9 @@ function SetRow({
                   ? "Unsure"
                   : set.reportedRir
                     ? `~${set.reportedRir} left`
-                    : "Add"}
+                    : focused
+                      ? "Add effort · optional"
+                      : "Add"}
               </button>
             ) : (
               <span>
@@ -446,14 +505,18 @@ function SetRow({
       )}
 
       <div className="set-row__actions">
-        {canEdit && set.isCompleted && (
+        {canEdit && set.isCompleted && !editingCompleted && (
           <Tooltip content={`Edit set ${set.set}`}>
             <IconButton
               type="button"
               size="2"
               variant="ghost"
               aria-label={`Edit set ${set.set}`}
-              onClick={() => setEditingCompleted(true)}
+              onClick={() => {
+                setLocalWeight(set.weight?.toString() ?? "");
+                setLocalReps(set.reps?.toString() ?? "");
+                setEditingCompleted(true);
+              }}
             >
               <Pencil1Icon />
             </IconButton>
@@ -512,26 +575,14 @@ function SetRow({
       {canEdit && set.isCompleted && editingCompleted && (
         <editFetcher.Form
           method="post"
+          id={editFormId}
           className="set-row__edit-form"
           onSubmit={() => setEditingSubmitted(true)}
         >
           <input type="hidden" name="intent" value="update-set" />
           <input type="hidden" name="exerciseId" value={exerciseId} />
           <input type="hidden" name="setNumber" value={set.set} />
-          <NumberInput
-            name="weight"
-            defaultValue={set.weight?.toString() ?? ""}
-            placeholder="kg"
-            aria-label={`Set ${set.set} weight`}
-          />
-          <NumberInput
-            name="reps"
-            allowDecimals={false}
-            defaultValue={set.reps?.toString() ?? ""}
-            placeholder="reps"
-            aria-label={`Set ${set.set} reps`}
-          />
-          {set.rpe !== undefined && (
+          {!focused && set.rpe !== undefined && (
             <NumberInput
               name="rpe"
               defaultValue={set.rpe.toString()}
@@ -539,7 +590,7 @@ function SetRow({
               aria-label={`Set ${set.set} legacy RPE`}
             />
           )}
-          {!set.isWarmup && (
+          {!focused && !set.isWarmup && (
             <select
               name="reportedRir"
               defaultValue={set.reportedRir ?? "clear"}
@@ -578,45 +629,69 @@ function SetRow({
         </Text>
       )}
 
-      {canEdit && set.isCompleted && !set.isWarmup && showReportPrompt && (
-        <div className="set-row__report-prompt">
-          <span>How many more good reps could you have done?</span>
-          <div className="set-row__report-options">
-            {reportedRirValues.map((value) => (
+      {canEdit &&
+        set.isCompleted &&
+        !set.isWarmup &&
+        !editingCompleted &&
+        showReportPrompt && (
+          <div className="set-row__report-prompt">
+            <span>How many more good reps could you have done?</span>
+            <div className="set-row__report-options">
+              {reportedRirValues.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  disabled={reportFetcher.state !== "idle"}
+                  aria-label={`Report ${value} good reps left for set ${set.set}`}
+                  onClick={() =>
+                    reportFetcher.submit(
+                      {
+                        intent: "update-set",
+                        exerciseId,
+                        setNumber: set.set.toString(),
+                        reportedRir: value,
+                      },
+                      { method: "post" },
+                    )
+                  }
+                >
+                  {value === "unsure" ? "Unsure" : value}
+                </button>
+              ))}
+              {set.reportedRir && (
+                <button
+                  type="button"
+                  disabled={reportFetcher.state !== "idle"}
+                  aria-label={`Clear set ${set.set} reported effort`}
+                  onClick={() =>
+                    reportFetcher.submit(
+                      {
+                        intent: "update-set",
+                        exerciseId,
+                        setNumber: set.set.toString(),
+                        reportedRir: "clear",
+                      },
+                      { method: "post" },
+                    )
+                  }
+                >
+                  Clear
+                </button>
+              )}
               <button
-                key={value}
                 type="button"
-                disabled={reportFetcher.state !== "idle"}
-                aria-label={`Report ${value} good reps left for set ${set.set}`}
-                onClick={() =>
-                  reportFetcher.submit(
-                    {
-                      intent: "update-set",
-                      exerciseId,
-                      setNumber: set.set.toString(),
-                      reportedRir: value,
-                    },
-                    { method: "post" },
-                  )
-                }
+                onClick={() => onReportPromptChange?.(reportSetKey, false)}
               >
-                {value === "unsure" ? "Unsure" : value}
+                Skip
               </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => onReportPromptChange?.(reportSetKey, false)}
-            >
-              Skip
-            </button>
+            </div>
+            {reportFetcher.data?.error && (
+              <Text color="red" size="1">
+                {reportFetcher.data.error}
+              </Text>
+            )}
           </div>
-          {reportFetcher.data?.error && (
-            <Text color="red" size="1">
-              {reportFetcher.data.error}
-            </Text>
-          )}
-        </div>
-      )}
+        )}
     </div>
   );
 }

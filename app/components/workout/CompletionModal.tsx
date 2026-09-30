@@ -24,19 +24,21 @@ interface CompletionWorkoutSession {
 interface CompletionModalProps {
   readonly workoutSession: CompletionWorkoutSession;
   readonly open: boolean;
+  readonly isSaving?: boolean;
   readonly onOpenChange: (open: boolean) => void;
 }
 
 export function CompletionModal({
   workoutSession,
   open,
+  isSaving = false,
   onOpenChange,
 }: CompletionModalProps) {
   const navigation = useNavigation();
   const isCompleting =
     navigation.state === "submitting" &&
     navigation.formData?.get("intent") === "complete-workout";
-  const isBusy = navigation.state !== "idle";
+  const isBusy = navigation.state !== "idle" || isSaving;
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -79,6 +81,11 @@ export function CompletionModal({
             Complete Workout
           </Dialog.Title>
 
+          <Dialog.Description>
+            {totalSets - completedSets > 0
+              ? `${totalSets - completedSets} ${totalSets - completedSets === 1 ? "set is" : "sets are"} unfinished. Finish anyway? Saved sets will be retained; unfinished sets stay unlogged.`
+              : "All sets are saved. Ready to finish your workout?"}
+          </Dialog.Description>
           <Box py="4" className="completion-modal__section">
             <Flex direction="column" gap="3">
               <Flex justify="between">
@@ -114,7 +121,7 @@ export function CompletionModal({
               onClick={() => onOpenChange(false)}
               disabled={isBusy}
             >
-              Continue
+              Keep training
             </Button>
             <Tooltip content="Finish workout (Cmd/Ctrl+Enter)">
               <Box display="inline-block">
@@ -125,7 +132,9 @@ export function CompletionModal({
                   loading={isCompleting}
                   aria-keyshortcuts="Meta+Enter Control+Enter"
                 >
-                  Finish
+                  {totalSets > completedSets
+                    ? "Finish anyway"
+                    : "Finish workout"}
                 </Button>
               </Box>
             </Tooltip>

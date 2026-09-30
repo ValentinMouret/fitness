@@ -75,7 +75,10 @@ test("historical template, Strong and Fitbod sessions retain their records", asy
     for (const id of workoutIds) {
       await page.goto(`/workouts/${id}`);
       await expect(
-        page.getByText(`Historical acceptance ${id}`, { exact: true }),
+        page.getByRole("heading", {
+          name: `Historical acceptance ${id}`,
+          exact: true,
+        }),
       ).toBeVisible();
       await expect(page.getByText("62.5", { exact: true })).toBeVisible();
       await page.reload();
@@ -149,7 +152,10 @@ test("unfinished Fitbod history does not replace the current native workout", as
     await current.click();
     await expect(page).toHaveURL(new RegExp(`/workouts/${nativeId}$`));
     await expect(
-      page.getByText(`Native acceptance ${nativeId}`, { exact: true }),
+      page.getByRole("heading", {
+        name: `Native acceptance ${nativeId}`,
+        exact: true,
+      }),
     ).toBeVisible();
     const after = await pool.query(
       "select to_jsonb(w) as record from workouts w where id = $1",
@@ -206,7 +212,10 @@ test("a current session created by MCP operations remains editable and loggable"
       [replacementId, replacementName],
     );
     await page.goto(`/workouts/${workoutId}`);
-    await expect(page.getByText(name, { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name, exact: true }),
+    ).toBeVisible();
+    await page.getByRole("link", { name: /^Open / }).click();
     await page
       .getByRole("button", { name: "Exercise actions", exact: true })
       .click();
@@ -235,6 +244,9 @@ test("a current session created by MCP operations remains editable and loggable"
       )
       .toEqual([{ exercise: replacementId }]);
     await page.reload();
+    await page
+      .getByRole("link", { name: `Open ${replacementName}`, exact: true })
+      .click();
     await expect(
       page.getByRole("button", { name: replacementName, exact: true }),
     ).toBeVisible();
@@ -250,9 +262,15 @@ test("a current session created by MCP operations remains editable and loggable"
     ).toBeVisible();
     await page.getByRole("link", { name: "Cancel", exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/workouts/${workoutId}$`));
+    await page
+      .getByRole("link", { name: `Open ${replacementName}`, exact: true })
+      .click();
     await page.getByRole("textbox", { name: "Set 1 weight" }).fill("62.5");
     await page.getByRole("textbox", { name: "Set 1 reps" }).fill("9");
     await page.getByRole("button", { name: "Complete set 1" }).click();
+    await page
+      .getByRole("button", { name: "Keep training", exact: true })
+      .click();
     await expect(page.locator(".set-row--completed")).toBeVisible();
     await expect
       .poll(

@@ -26,8 +26,14 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useFetcher } from "react-router";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { Link, useFetcher, useFetchers, useSearchParams } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { CancelConfirmationDialog } from "~/components/workout/CancelConfirmationDialog";
@@ -62,14 +68,23 @@ import {
   WorkoutExerciseCard,
 } from "~/modules/fitness/presentation";
 import { reorderExerciseGroups } from "~/modules/fitness/presentation/reorder-exercise-groups";
+import {
+  createWorkoutProgressViewModel,
+  type WorkoutExerciseProgressViewModel,
+} from "~/modules/fitness/presentation/view-models/workout-progress.view-model";
 import { isEditableTarget } from "~/utils/dom";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/index";
 import "./active-workout.css";
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, request }: Route.LoaderArgs) {
   const id = parseWorkoutId(params.id);
-  return getWorkoutSessionData(id);
+  const focusExerciseId = z
+    .uuid()
+    .optional()
+    .catch(undefined)
+    .parse(new URL(request.url).searchParams.get("exercise") ?? undefined);
+  return { ...(await getWorkoutSessionData(id)), focusExerciseId };
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -267,6 +282,40 @@ function parseWorkoutId(id: string): string {
 export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const { workoutSession, exercises } = loaderData;
   const workoutId = workoutSession.workout.id;
+  const [searchParams] = useSearchParams();
+  const focusExerciseId = workoutSession.exerciseGroups.find(
+    (group) => group.exercise.id === loaderData.focusExerciseId,
+  )?.exercise.id;
+  const focusedIndex = workoutSession.exerciseGroups.findIndex(
+    (group) => group.exercise.id === focusExerciseId,
+  );
+  const progress = createWorkoutProgressViewModel(
+    workoutSession.exerciseGroups,
+  );
+  const pendingSave = useFetchers().some((fetcher) => fetcher.state !== "idle");
+  const scrollPositions = useRef(new Map<string, number>());
+  const viewKey = `${workoutId}:${focusExerciseId ?? "overview"}`;
+  const rememberScroll = () => {
+    const content = document.querySelector<HTMLElement>(".main-content");
+    if (content) scrollPositions.current.set(viewKey, content.scrollTop);
+  };
+  useLayoutEffect(() => {
+    const content = document.querySelector<HTMLElement>(".main-content");
+    if (!content) return;
+    content.scrollTop = scrollPositions.current.get(viewKey) ?? 0;
+    const saveScroll = () => {
+      scrollPositions.current.set(viewKey, content.scrollTop);
+    };
+    content.addEventListener("scroll", saveScroll);
+    return () => content.removeEventListener("scroll", saveScroll);
+  }, [viewKey]);
+  const exerciseHref = (exerciseId?: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (exerciseId) params.set("exercise", exerciseId);
+    else params.delete("exercise");
+    const query = params.toString();
+    return `/workouts/${workoutId}${query ? `?${query}` : ""}`;
+  };
   const [openReport, setOpenReport] = useState<{
     readonly workoutId: string;
     readonly key: string;
@@ -316,7 +365,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
 
   const isComplete = !!workoutSession.workout.stop;
 
-  const { startedAgo, formattedDuration } = useLiveDuration({
+  const { startedAgo } = useLiveDuration({
     startTime: workoutSession.workout.start,
     endTime: workoutSession.workout.stop ?? undefined,
   });
@@ -363,15 +412,11 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const totalSets = workoutSession.exerciseGroups.reduce(
-    (sum, group) => sum + group.sets.length,
-    0,
-  );
-  const completedSets = workoutSession.exerciseGroups.reduce(
-    (sum, group) => sum + group.sets.filter((set) => set.isCompleted).length,
-    0,
-  );
-  const progressPercent = totalSets > 0 ? (completedSets / totalSets) * 100 : 0;
+  const { totalSets, completedSets, percent: progressPercent } = progress;
+  const handleCompletedSet = useCallback(() => {
+    restTimer.start();
+    if (!isComplete && progress.allSetsCompleted) setShowCompletionModal(true);
+  }, [restTimer.start, isComplete, progress.allSetsCompleted]);
 
   const optimisticName =
     fetcher.formData?.get("name")?.toString() || workoutSession.workout.name;
@@ -449,7 +494,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                   />
                 ) : (
                   <Text
-                    size="7"
+                    size="3"
                     weight="bold"
                     className={`active-workout-header__name${!isComplete ? " active-workout-header__name--live" : ""}`}
                     onClick={() => !isComplete && setIsEditingName(true)}
@@ -475,10 +520,21 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
               gap="2"
               className="active-workout-header__actions"
             >
-              {!isComplete && (
-                <Button size="1" onClick={() => setShowCompletionModal(true)}>
-                  Complete
-                </Button>
+              {!isComplete && focusExerciseId && (
+                <>
+                  <Text size="1">
+                    {focusedIndex + 1} / {workoutSession.exerciseGroups.length}
+                  </Text>
+                  <Button asChild variant="soft" size="1">
+                    <Link
+                      to={exerciseHref()}
+                      onClick={rememberScroll}
+                      preventScrollReset
+                    >
+                      Overview
+                    </Link>
+                  </Button>
+                </>
               )}
 
               <DropdownMenu.Root>
@@ -532,51 +588,27 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
             isActive={restTimer.isActive}
             secondsRemaining={restTimer.secondsRemaining}
             totalSeconds={restTimer.totalSeconds}
+            onStart={restTimer.start}
             onDismiss={restTimer.dismiss}
             onSetDuration={restTimer.setDuration}
           />
         )}
       </div>
 
-      {/* Stats row */}
-      {totalSets > 0 && (
-        <div className="active-workout-stats">
-          <div className="active-workout-stats__grid">
-            <div>
-              <span className="display-number display-number--lg">
-                {formattedDuration}
-              </span>
-              <Text as="p" size="1" className="active-workout-stats__label">
-                elapsed
-              </Text>
-            </div>
-            <div>
-              <span className="display-number display-number--lg">
-                {completedSets}
-                <span className="display-number--unit">/{totalSets}</span>
-              </span>
-              <Text as="p" size="1" className="active-workout-stats__label">
-                sets
-              </Text>
-            </div>
-            <div>
-              <span className="display-number display-number--lg">
-                {Math.round(progressPercent)}%
-              </span>
-              <Text as="p" size="1" className="active-workout-stats__label">
-                done
-              </Text>
-            </div>
-          </div>
-
-          <div className="active-workout-progress">
+      {!focusExerciseId && (
+        <div className="active-workout-progress-summary">
+          <h1>{optimisticName}</h1>
+          <Text as="p" size="2" color="gray">
+            {completedSets} of {totalSets} sets saved
+          </Text>
+          {totalSets > 0 && (
             <div
               className="active-workout-progress__bar"
               role="progressbar"
+              aria-label="Workout progress"
               aria-valuenow={Math.round(progressPercent)}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label="Workout progress"
               aria-valuetext={`${completedSets} of ${totalSets} sets completed`}
             >
               <div
@@ -584,7 +616,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -604,9 +636,15 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
                 <SortableExerciseCard
                   key={group.exercise.id}
                   group={group}
+                  summary={progress.exercises.find(
+                    (exercise) => exercise.id === group.exercise.id,
+                  )}
+                  focusExerciseId={focusExerciseId}
+                  href={exerciseHref(group.exercise.id)}
+                  onNavigate={rememberScroll}
                   openReportSetKey={openReportSetKey}
                   onReportPromptChange={onReportPromptChange}
-                  onCompleteSet={restTimer.start}
+                  onCompleteSet={handleCompletedSet}
                   onReplaceExercise={(exerciseId) => {
                     setReplaceExerciseId(exerciseId);
                     setShowExerciseSelector(true);
@@ -669,7 +707,50 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
           </div>
         )}
 
-        {!isComplete && (
+        {!isComplete && focusExerciseId && (
+          <nav
+            className="active-workout-exercise-navigation"
+            aria-label="Exercise navigation"
+          >
+            {focusedIndex > 0 ? (
+              <Link
+                to={exerciseHref(
+                  workoutSession.exerciseGroups[focusedIndex - 1].exercise.id,
+                )}
+                onClick={rememberScroll}
+                preventScrollReset
+              >
+                ‹ Previous
+              </Link>
+            ) : (
+              <span />
+            )}
+            {focusedIndex < workoutSession.exerciseGroups.length - 1 ? (
+              <Link
+                to={exerciseHref(
+                  workoutSession.exerciseGroups[focusedIndex + 1].exercise.id,
+                )}
+                onClick={rememberScroll}
+                preventScrollReset
+              >
+                Next ›
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
+        )}
+        {!isComplete && !focusExerciseId && totalSets > 0 && (
+          <Button
+            type="button"
+            className="active-workout-finish"
+            disabled={pendingSave}
+            onClick={() => setShowCompletionModal(true)}
+          >
+            Finish workout
+          </Button>
+        )}
+        {!isComplete && !focusExerciseId && (
           <div className="active-workout-add-exercise">
             <Button
               onClick={() => {
@@ -703,6 +784,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
         workoutSession={workoutSession}
         open={showCompletionModal}
         onOpenChange={setShowCompletionModal}
+        isSaving={pendingSave}
       />
 
       <CancelConfirmationDialog
@@ -747,6 +829,10 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
 
 function SortableExerciseCard({
   group,
+  summary,
+  focusExerciseId,
+  href,
+  onNavigate,
   onCompleteSet,
   onReplaceExercise,
   onExerciseNameClick,
@@ -755,6 +841,10 @@ function SortableExerciseCard({
   onReportPromptChange,
 }: {
   readonly group: WorkoutExerciseGroup;
+  readonly summary?: WorkoutExerciseProgressViewModel;
+  readonly focusExerciseId?: string;
+  readonly href: string;
+  readonly onNavigate: () => void;
   readonly onCompleteSet?: () => void;
   readonly onReplaceExercise?: (exerciseId: string) => void;
   readonly onExerciseNameClick?: (exerciseId: string) => void;
@@ -784,19 +874,59 @@ function SortableExerciseCard({
       style={style}
       className="active-workout-exercise"
       data-exercise-id={group.exercise.id}
+      hidden={
+        focusExerciseId !== undefined && focusExerciseId !== group.exercise.id
+      }
     >
-      <WorkoutExerciseCard
-        viewModel={viewModel}
-        openReportSetKey={openReportSetKey}
-        onReportPromptChange={onReportPromptChange}
-        onCompleteSet={onCompleteSet}
-        onReplaceExercise={onReplaceExercise}
-        onExerciseNameClick={onExerciseNameClick}
-        onMMCClick={onMMCClick}
-        dragHandleListeners={listeners}
-        dragHandleAttributes={attributes}
-        dragHandleRef={setActivatorNodeRef}
-      />
+      <div
+        hidden={focusExerciseId !== undefined}
+        className={`active-workout-overview-exercise${summary?.isCompleted ? " active-workout-overview-exercise--completed" : ""}`}
+      >
+        <button
+          type="button"
+          ref={setActivatorNodeRef}
+          {...listeners}
+          {...attributes}
+          className="exercise-card__drag-handle"
+          aria-label={`Reorder ${group.exercise.name}`}
+        >
+          <span aria-hidden="true">⠿</span>
+        </button>
+        <Link
+          to={href}
+          onClick={onNavigate}
+          preventScrollReset
+          aria-label={`Open ${group.exercise.name}`}
+        >
+          <span className="active-workout-overview-exercise__copy">
+            <span className="active-workout-overview-exercise__name">
+              {group.exercise.name}
+            </span>
+            <span className="active-workout-overview-exercise__meta">
+              {summary?.isCompleted
+                ? "Completed"
+                : `${summary?.totalSets ?? 0} sets`}{" "}
+              · {group.exercise.type}
+            </span>
+          </span>
+          <span>
+            {summary?.completedSets ?? 0}/{summary?.totalSets ?? 0} ›
+          </span>
+        </Link>
+      </div>
+      <div hidden={focusExerciseId === undefined}>
+        <WorkoutExerciseCard
+          focused
+          progressLabel={`${summary?.completedSets ?? 0} of ${summary?.totalSets ?? 0} sets saved`}
+          viewModel={viewModel}
+          openReportSetKey={openReportSetKey}
+          onReportPromptChange={onReportPromptChange}
+          onCompleteSet={onCompleteSet}
+          onReplaceExercise={onReplaceExercise}
+          onExerciseNameClick={onExerciseNameClick}
+          onMMCClick={onMMCClick}
+        />
+      </div>
     </div>
   );
 }
