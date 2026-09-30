@@ -1,3 +1,4 @@
+import { createNutritionCommands } from "~/modules/nutrition/infra/nutrition-commands.server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { createWorkoutCommands } from "~/modules/fitness/infra/workout.repository.server";
@@ -46,6 +47,7 @@ export async function handleMcp(request: Request) {
     server,
     createWorkoutCommands(access.value.user.id),
     createRuntimeQueryRunner(access.value.user.id),
+    createNutritionCommands(access.value.user.id),
   );
   try {
     await server.connect(transport);

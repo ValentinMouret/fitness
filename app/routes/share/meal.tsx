@@ -1,4 +1,4 @@
-import { NutritionService } from "~/modules/nutrition/infra/service";
+import { fetchPublicMealTemplateWithIngredients } from "~/modules/nutrition/infra/meal-template.repository.server";
 import {
   SharedMealView,
   type SharedMealViewModel,
@@ -17,9 +17,7 @@ export function meta({ data }: Route.MetaArgs) {
 }
 
 export async function loader({ params }: Route.LoaderArgs) {
-  const result = await NutritionService.getPublicMealTemplateWithIngredients(
-    params.id,
-  );
+  const result = await fetchPublicMealTemplateWithIngredients(params.id);
 
   if (result.isErr()) {
     throw new Response("Meal not found", { status: 404 });

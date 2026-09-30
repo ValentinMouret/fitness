@@ -1,3 +1,4 @@
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { Box, Button, Text, TextField } from "@radix-ui/themes";
 import { useId, useState } from "react";
 import { data, Form, Link, redirect, useNavigation } from "react-router";
@@ -8,7 +9,7 @@ import {
   mealAssignmentsSchema,
   mealCategories,
 } from "~/modules/nutrition/domain/meal-template";
-import { NutritionService } from "~/modules/nutrition/infra/service";
+import { createNutritionService } from "~/modules/nutrition/infra/service.server";
 import {
   MealAssignments,
   mealLabels,
@@ -25,21 +26,23 @@ const filters = ["all", ...mealCategories] as const;
 const filterHref = (meal: string) =>
   `/nutrition/templates?${new URLSearchParams({ meal })}`;
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const query = querySchema.safeParse(
     Object.fromEntries(new URL(request.url).searchParams),
   );
   if (!query.success)
     throw new Response("Invalid template filter", { status: 400 });
   const filter = query.data.meal;
-  const result = await NutritionService.getAllMealTemplates();
+  const result = await createNutritionService(
+    context.get(authenticatedUserContext).id,
+  ).getAllMealTemplates();
   if (result.isErr())
     throw new Response("Could not load templates", { status: 500 });
   let editing = null;
   if (query.data.edit) {
-    const result = await NutritionService.getMealTemplateWithIngredients(
-      query.data.edit,
-    );
+    const result = await createNutritionService(
+      context.get(authenticatedUserContext).id,
+    ).getMealTemplateWithIngredients(query.data.edit);
     if (result.isErr())
       throw new Response("Template not found", { status: 404 });
     const t = result.value;
@@ -68,7 +71,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   };
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const form = await request.formData();
   const parsed = z
     .object({
@@ -90,7 +93,9 @@ export async function action({ request }: Route.ActionArgs) {
       { error: "Enter a name and choose at least one meal time." },
       { status: 400 },
     );
-  const result = await NutritionService.updateMealTemplate(parsed.data.id, {
+  const result = await createNutritionService(
+    context.get(authenticatedUserContext).id,
+  ).updateMealTemplate(parsed.data.id, {
     name: parsed.data.name,
     categories: parsed.data.categories,
     notes: parsed.data.notes,
@@ -98,7 +103,7 @@ export async function action({ request }: Route.ActionArgs) {
   if (result.isErr())
     return data(
       { error: "Could not save this template. Try again." },
-      { status: 500 },
+      { status: result.error === "not_found" ? 404 : 500 },
     );
   return redirect(filterHref(parsed.data.meal));
 }

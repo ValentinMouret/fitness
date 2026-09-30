@@ -251,3 +251,28 @@ private workout records without publishing or copying personal exercise
 catalogues/cues or choosing general-user creation policy. Existing owner
 creation/history is retained; catalogue/onboarding parity needs concrete review
 before admitting new accounts.
+
+### Nutrition ownership stage (draft release hold)
+
+Migration 0017 assigns ingredients, meal templates, compositions and meal logs,
+including archived/AI-generated history, to exactly one explicitly accepted
+bootstrap owner. It preserves IDs, quantities, assignments, notes, usage,
+completion dates and existing public share flags/URLs. Ingredient name and
+meal-category/date uniqueness become account-specific. Composite foreign keys
+bind each composition and consumed template to its account; incompatible
+historical associations fail the migration rather than rewriting data.
+
+Nutrition factories, dashboard summaries, meal estimation ingredient context,
+AI ingredient resolution and MCP commands receive explicit trusted identity.
+Child mutations lock their owned parent. Restricted nutrition views require
+transaction-local identity, including for published recipes: the MCP reader
+never treats public sharing as permission to query another account's records.
+
+The existing `/share/meal/:id` route is the sole anonymous nutrition exception.
+It reads a published, active template and its owned composition in one query;
+private/archived templates return 404. Only the owner can change sharing.
+
+Owner bootstrap/backfill rehearsal, legacy browser/MCP compatibility, proxy
+logging and client-IP review remain preactivation requirements. Native private
+app/OAuth admission and the legacy-owner MCP safeguard remain closed. This
+stage does not add private exercise creation or decide catalogue publishing.

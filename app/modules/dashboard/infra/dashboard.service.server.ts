@@ -21,7 +21,7 @@ import {
   dailyTargetsFromCalories,
   defaultDailyTargets,
 } from "~/modules/nutrition/domain/daily-targets";
-import { NutritionService } from "~/modules/nutrition/infra/service";
+import { createNutritionService } from "~/modules/nutrition/infra/service.server";
 import { isSameDay, today } from "~/time";
 import { createServerError } from "~/utils/errors";
 
@@ -59,7 +59,7 @@ export async function getDashboardData(userId: UserId): Promise<DashboardData> {
     repositories.habits.fetchActive(),
     repositories.completions.fetchByDateRange(todayDate, todayDate),
     createWorkoutRepository(userId).findInProgress(),
-    NutritionService.getDailySummary(todayDate),
+    createNutritionService(userId).getDailySummary(todayDate),
     createTargetService(userId).currentTargets(),
     createDailyNoteRepository(userId).fetch(),
   ]);

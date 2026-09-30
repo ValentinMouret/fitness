@@ -22,7 +22,7 @@ import {
   mealLogIdSchema,
   updateMealLogSchema,
 } from "~/modules/nutrition/domain/nutrition-commands";
-import { nutritionCommands } from "~/modules/nutrition/infra/nutrition-commands.server";
+import type { createNutritionCommands } from "~/modules/nutrition/infra/nutrition-commands.server";
 import {
   type createRuntimeQueryRunner,
   queryInputSchema,
@@ -41,7 +41,7 @@ export function registerFitnessTools(
   server: McpServer,
   commands: ReturnType<typeof createWorkoutCommands>,
   query: ReturnType<typeof createRuntimeQueryRunner>,
-  nutrition = nutritionCommands,
+  nutrition: ReturnType<typeof createNutritionCommands>,
 ) {
   server.registerTool(
     "describe_schema",

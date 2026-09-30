@@ -1,8 +1,11 @@
+import type { UserId } from "~/modules/auth/domain/user";
+import { db } from "~/db/index";
 import { nutritionOperations } from "../application/nutrition-operations";
-import { IngredientRepository } from "./ingredient.repository.server";
-import { MealLogRepository } from "./meal-log.repository.server";
+import { createIngredientRepository } from "./ingredient.repository.server";
+import { createMealLogRepository } from "./meal-log.repository.server";
 
-export const nutritionCommands = nutritionOperations(
-  IngredientRepository,
-  MealLogRepository,
-);
+export const createNutritionCommands = (userId: UserId, database = db) =>
+  nutritionOperations(
+    createIngredientRepository(userId, database),
+    createMealLogRepository(userId, database),
+  );
