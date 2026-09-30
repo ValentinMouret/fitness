@@ -99,12 +99,48 @@ test("rest stays visible and usable while scrolling, resizing and logging", asyn
   await expect(page).toHaveURL(focusedHref!);
   await expect(page.locator(".exercise-card--focused:visible")).toBeVisible();
   await page.clock.install();
-  await page
-    .getByRole("button", { name: "Complete set 1", exact: true })
-    .first()
-    .click();
   const timer = page.getByRole("region", { name: "Rest timer" });
-  await expect(timer).toBeVisible();
+  let releaseSave = () => {};
+  let notifySaving = () => {};
+  const saveHeld = new Promise<void>((resolve) => {
+    releaseSave = resolve;
+  });
+  const savingStarted = new Promise<void>((resolve) => {
+    notifySaving = resolve;
+  });
+  const actionUrl = `**/workouts/${sessionId}.data*`;
+  await page.route(actionUrl, async (route) => {
+    const request = route.request();
+    if (
+      request.method() === "POST" &&
+      new URLSearchParams(request.postData() ?? "").get("isCompleted") ===
+        "true"
+    ) {
+      notifySaving();
+      await saveHeld;
+    }
+    await route.continue();
+  });
+  try {
+    await page
+      .getByRole("button", { name: "Complete set 1", exact: true })
+      .first()
+      .click();
+    await savingStarted;
+    await expect(
+      timer.getByRole("button", { name: "Start", exact: true }),
+    ).toBeVisible();
+    await page.clock.runFor(2200);
+    await expect(
+      timer.getByRole("button", { name: "Start", exact: true }),
+    ).toBeVisible();
+  } finally {
+    releaseSave();
+  }
+  await expect(
+    timer.getByRole("button", { name: "Skip", exact: true }),
+  ).toBeVisible();
+  await page.unroute(actionUrl);
   const expectTimerPlacement = async () => {
     await expect
       .poll(() =>
@@ -121,8 +157,9 @@ test("rest stays visible and usable while scrolling, resizing and logging", asyn
   await expectTimerPlacement();
   for (const button of await timer.getByRole("button").all()) {
     const box = await button.boundingBox();
-    expect(box?.width).toBeGreaterThanOrEqual(44);
-    expect(box?.height).toBeGreaterThanOrEqual(44);
+    // DOM geometry can have subpixel floating-point rounding.
+    expect(box?.width).toBeGreaterThanOrEqual(44 - 0.001);
+    expect(box?.height).toBeGreaterThanOrEqual(44 - 0.001);
   }
   const countdown = timer.locator(".rest-timer__countdown");
   await page.clock.runFor(1100);
