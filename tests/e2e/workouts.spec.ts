@@ -1,4 +1,19 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
+
+async function openFirstExercise(page: Page) {
+  await page
+    .getByRole("link", { name: /^Open / })
+    .first()
+    .click();
+}
+
+async function keepTraining(page: Page) {
+  const button = page.getByRole("button", {
+    name: "Keep training",
+    exact: true,
+  });
+  if (await button.isVisible()) await button.click();
+}
 
 test.describe("Workouts Page", () => {
   test.beforeEach(async ({ page }) => {
@@ -162,8 +177,10 @@ test.describe("Active Workout Session", () => {
     ).toBeVisible();
   });
 
-  test("should show Complete button", async ({ page }) => {
-    await expect(page.getByRole("button", { name: "Complete" })).toBeVisible();
+  test("cannot finish an empty workout", async ({ page }) => {
+    await expect(
+      page.getByRole("button", { name: "Finish workout", exact: true }),
+    ).toHaveCount(0);
   });
 
   test("should open exercise selector when clicking Add Exercise", async ({
@@ -215,13 +232,14 @@ test.describe("Workout Session - Set Management", () => {
     await page.locator(".exercise-selector__item").first().click();
     await page.getByRole("button", { name: /Add \(1\)/ }).click();
     await expect(page.getByText("No exercises yet")).not.toBeVisible();
+    await openFirstExercise(page);
   });
 
   test("should display set table headers", async ({ page }) => {
     await page.getByRole("button", { name: "Add Set" }).click();
     await expect(page.getByText("Weight").first()).toBeVisible();
     await expect(page.getByText("Reps").first()).toBeVisible();
-    await expect(page.getByText("RIR", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("RIR", { exact: true }).first()).toBeHidden();
   });
 
   test("should add a set with input fields", async ({ page }) => {
@@ -249,10 +267,10 @@ test.describe("Workout Session - Set Management", () => {
 
     const checkButton = page.getByLabel(/Complete set/i).first();
     await checkButton.click();
+    await keepTraining(page);
 
     // Stats should appear after completing a set
-    await expect(page.getByText("elapsed")).toBeVisible();
-    await expect(page.getByText("done")).toBeVisible();
+    await expect(page.getByText(/1 of \d+ sets saved/)).toBeVisible();
   });
 
   test("should correct a completed set without completing it again", async ({
@@ -262,6 +280,7 @@ test.describe("Workout Session - Set Management", () => {
     await page.getByRole("textbox", { name: "Set 1 weight" }).fill("80");
     await page.getByRole("textbox", { name: "Set 1 reps" }).fill("8");
     await page.getByRole("button", { name: "Complete set 1" }).click();
+    await keepTraining(page);
 
     const completedRow = page.locator(".set-row--completed");
     await expect(completedRow).toBeVisible();
@@ -292,6 +311,7 @@ test.describe("Workout Session - Set Management", () => {
   }) => {
     await page.getByRole("button", { name: "Add Set" }).click();
     await page.getByRole("button", { name: "Complete set 1" }).click();
+    await keepTraining(page);
 
     await expect(
       page.getByText("How many more good reps could you have done?"),
@@ -318,12 +338,23 @@ test.describe("Workout Session - Set Management", () => {
     ).toHaveText("Unsure");
 
     await page.getByRole("button", { name: "Edit set 1", exact: true }).click();
-    await page
-      .getByRole("combobox", { name: "Set 1 reported effort" })
-      .selectOption("clear");
+    await expect(
+      page.getByRole("combobox", { name: "Set 1 reported effort" }),
+    ).toHaveCount(0);
+    await expect(page.getByText("RPE", { exact: true })).toHaveCount(0);
     await page
       .locator(".set-row--completed")
-      .getByRole("button", { name: "Save" })
+      .getByRole("button", { name: "Save", exact: true })
+      .click();
+    await page.reload();
+    await expect(
+      page.getByRole("button", { name: "Edit set 1 reported effort" }),
+    ).toHaveText("Unsure");
+    await page
+      .getByRole("button", { name: "Edit set 1 reported effort" })
+      .click();
+    await page
+      .getByRole("button", { name: "Clear set 1 reported effort", exact: true })
       .click();
     await expect(
       page.getByRole("button", { name: "Add set 1 reported effort" }),
@@ -352,7 +383,11 @@ test.describe("Workout Session - Set Management", () => {
     });
 
     await expect(page.getByText("Failed to update set")).toBeVisible();
-    await expect(page.locator(".rest-timer")).toHaveCount(0);
+    await expect(
+      page
+        .getByRole("region", { name: "Rest timer" })
+        .getByRole("button", { name: "Start", exact: true }),
+    ).toBeVisible();
     await expect(
       page.getByText("How many more good reps could you have done?"),
     ).toHaveCount(0);
@@ -364,8 +399,10 @@ test.describe("Workout Session - Set Management", () => {
     await page.getByRole("button", { name: "Add Set" }).click();
 
     await page.getByRole("button", { name: "Complete set 1" }).click();
+    await keepTraining(page);
     await expect(page.locator(".set-row__report-prompt")).toHaveCount(1);
     await page.getByRole("button", { name: "Complete set 2" }).click();
+    await keepTraining(page);
     await expect(page.locator(".set-row__report-prompt")).toHaveCount(1);
     await expect(
       page.locator(".set-row").nth(1).locator(".set-row__report-prompt"),
@@ -382,67 +419,66 @@ test.describe("Workout Session - Set Management", () => {
 });
 
 test.describe("Workout Completion Flow", () => {
-  test("should complete a workout with exercises", async ({ page }) => {
+  test("explicit finish warns about unfinished sets and keeps them unlogged", async ({
+    page,
+  }) => {
     await page.goto("/workouts");
-
     await page.getByRole("button", { name: "Start Workout" }).click();
-    await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
-
-    // Add an exercise and a set
     await page.getByRole("button", { name: "Add Exercise" }).click();
     await page.locator(".exercise-selector__item").first().click();
     await page.getByRole("button", { name: /Add \(1\)/ }).click();
-    await expect(page.getByText("No exercises yet")).not.toBeVisible();
-
-    await page.getByRole("button", { name: "Add Set" }).click();
-    await page.getByPlaceholder("kg").first().fill("60");
-    await page.getByPlaceholder("reps").first().fill("12");
-
-    // Complete the workout
-    await page.getByRole("button", { name: "Complete", exact: true }).click();
-    await expect(
-      page.getByRole("heading", { name: "Complete Workout" }),
-    ).toBeVisible();
-    await expect(page.getByText("Duration")).toBeVisible();
-    await expect(page.getByText("Save as template")).toHaveCount(0);
-
-    await page.getByRole("button", { name: "Finish" }).click();
-    await expect(page).toHaveURL(/\/dashboard/);
-  });
-
-  test("should complete empty workout and show in list", async ({ page }) => {
-    await page.goto("/workouts");
-
-    await page.getByRole("button", { name: "Start Workout" }).click();
-    await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
     const workoutPath = new URL(page.url()).pathname;
-
-    await page.getByRole("button", { name: "Complete", exact: true }).click();
-    await page.getByRole("button", { name: "Finish" }).click();
+    await page
+      .getByRole("button", { name: "Finish workout", exact: true })
+      .click();
+    await expect(page.getByText(/unfinished. Finish anyway/)).toBeVisible();
+    await page
+      .getByRole("button", { name: "Keep training", exact: true })
+      .click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page).toHaveURL(new RegExp(`${workoutPath}$`));
+    await page
+      .getByRole("button", { name: "Finish workout", exact: true })
+      .click();
+    await expect(page.getByText("Save as template")).toHaveCount(0);
+    await page
+      .getByRole("button", { name: "Finish anyway", exact: true })
+      .click();
     await expect(page).toHaveURL(/\/dashboard/);
-
-    await page.goto("/workouts");
-    const workoutLink = page.locator(`a[href="${workoutPath}"]`);
-    await expect(workoutLink).toBeVisible();
-    await expect(workoutLink).toContainText("Done");
+    await page.goto(workoutPath);
+    await expect(page.locator(".set-row--completed")).toHaveCount(0);
   });
 
-  test("should dismiss completion modal with Continue", async ({ page }) => {
+  test("final set opens confirmation without finishing until explicitly confirmed", async ({
+    page,
+  }) => {
     await page.goto("/workouts");
-
     await page.getByRole("button", { name: "Start Workout" }).click();
-    await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+/);
-
-    await page.getByRole("button", { name: "Complete", exact: true }).click();
+    await page.getByRole("button", { name: "Add Exercise" }).click();
+    await page.locator(".exercise-selector__item").first().click();
+    await page.getByRole("button", { name: /Add \(1\)/ }).click();
+    await openFirstExercise(page);
+    await page.getByRole("textbox", { name: "Set 1 weight" }).fill("60");
+    await page.getByRole("textbox", { name: "Set 1 reps" }).fill("12");
+    await page
+      .getByRole("button", { name: "Complete set 1", exact: true })
+      .click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page
+      .getByRole("button", { name: "Keep training", exact: true })
+      .click();
     await expect(
-      page.getByRole("heading", { name: "Complete Workout" }),
+      page.getByText("How many more good reps could you have done?"),
     ).toBeVisible();
-
-    await page.getByRole("button", { name: "Continue" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Complete Workout" }),
-    ).not.toBeVisible();
-    await expect(page.getByText("Live")).toBeVisible();
+    await page.getByRole("link", { name: "Overview", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Finish workout", exact: true })
+      .click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Finish workout", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/dashboard/);
   });
 });
 

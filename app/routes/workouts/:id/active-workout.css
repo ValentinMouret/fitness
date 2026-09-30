@@ -36,7 +36,10 @@
 
 .active-workout-header__name {
   font-family: var(--font-display);
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
   line-height: 1.1;
 }
 
@@ -154,4 +157,96 @@
 
 .active-workout-stats__label {
   color: var(--brand-text-secondary);
+}
+
+.active-workout-header {
+  padding-bottom: var(--space-2);
+}
+.active-workout-header__name {
+  font-family: var(--font-body);
+  font-size: var(--font-size-3);
+  line-height: 1.3;
+}
+.active-workout-header__name--live {
+  font-style: normal;
+}
+.active-workout-header__back {
+  margin-top: 0;
+}
+.active-workout-progress-summary {
+  padding: var(--space-4) var(--space-3);
+}
+.active-workout-progress-summary h1 {
+  font: 500 2rem var(--font-display);
+  margin: 0 0 var(--space-2);
+}
+.active-workout-progress-summary p {
+  margin: 0 0 var(--space-3);
+}
+.active-workout-overview-exercise {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--gray-5);
+  border-radius: var(--radius-3);
+  padding: var(--space-2);
+}
+.active-workout-overview-exercise a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  min-width: 0;
+  min-height: 60px;
+  gap: var(--space-3);
+  color: var(--brand-text);
+  text-decoration: none;
+}
+.active-workout-overview-exercise__copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.active-workout-overview-exercise__name {
+  font: 500 1.3rem var(--font-display);
+  overflow-wrap: anywhere;
+}
+.active-workout-overview-exercise__meta {
+  font-size: var(--font-size-1);
+  color: var(--brand-text-secondary);
+}
+.active-workout-overview-exercise--completed {
+  background: var(--green-2);
+  border-color: var(--green-5);
+}
+.active-workout-overview-exercise--completed
+  .active-workout-overview-exercise__meta {
+  color: var(--green-11);
+}
+.active-workout-overview-exercise [aria-label^="Reorder"] {
+  min-width: 44px;
+  min-height: 44px;
+}
+.active-workout-exercise[hidden],
+.active-workout-overview-exercise[hidden] {
+  display: none;
+}
+.active-workout-exercise-navigation {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--gray-5);
+  margin-top: var(--space-3);
+}
+.active-workout-exercise-navigation a {
+  display: flex;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--brand-text-secondary);
+  text-decoration: none;
+}
+.active-workout-finish {
+  width: 100%;
+  margin-top: var(--space-4);
 }

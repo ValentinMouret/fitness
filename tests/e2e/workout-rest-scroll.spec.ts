@@ -16,8 +16,8 @@ const test = base.extend<{ readonly sessionId: string }>({
     try {
       await verifyFixtureServerDatabase(request, pool);
       await pool.query(
-        "insert into workouts (id, name, start) values ($1, 'A long workout name that wraps across multiple lines on a phone', now())",
-        [id],
+        "insert into workouts (id, name, start) values ($1, 'A long workout name that wraps across multiple lines on a phone', $2)",
+        [id, new Date().toISOString()],
       );
       for (const [index, exerciseId] of exerciseIds.entries()) {
         await pool.query(
@@ -28,7 +28,11 @@ const test = base.extend<{ readonly sessionId: string }>({
           "insert into workout_exercises (workout_id, exercise_id, order_index) values ($1, $2, $3)",
           [id, exerciseId, index],
         );
-        for (let set = 1; set <= (index === 0 ? 2 : 4); set++) {
+        for (
+          let set = 1;
+          set <= (index === 0 ? 2 : index === 4 ? 22 : 4);
+          set++
+        ) {
           await pool.query(
             'insert into workout_sets (workout, exercise, set, reps, weight, "isCompleted") values ($1, $2, $3, 8, 60, false)',
             [id, exerciseId, set],
@@ -88,6 +92,10 @@ test("rest stays visible and usable while scrolling, resizing and logging", asyn
   await page.clock.install();
   await page.goto(`/workouts/${sessionId}`);
   await page
+    .getByRole("link", { name: /^Open / })
+    .nth(4)
+    .click();
+  await page
     .getByRole("button", { name: "Complete set 1", exact: true })
     .first()
     .click();
@@ -116,7 +124,9 @@ test("rest stays visible and usable while scrolling, resizing and logging", asyn
   await page.clock.runFor(1100);
   const beforeScroll = await countdown.textContent();
   const later = page.locator(".active-workout-exercise").nth(4);
-  await later.evaluate((element) => element.scrollIntoView({ block: "start" }));
+  await later
+    .getByRole("textbox", { name: "Set 20 weight", exact: true })
+    .evaluate((element) => element.scrollIntoView({ block: "center" }));
   await expect
     .poll(() =>
       page.locator(".main-content").evaluate((element) => element.scrollTop),
@@ -138,6 +148,7 @@ test("rest stays visible and usable while scrolling, resizing and logging", asyn
     .toBe(true);
   await page.clock.runFor(1100);
   expect(await countdown.textContent()).not.toBe(beforeScroll);
+  await timer.getByRole("button", { name: "Choose rest duration" }).click();
   for (const [key, duration] of [
     ["1", "1:00"],
     ["2", "1:30"],
@@ -147,14 +158,14 @@ test("rest stays visible and usable while scrolling, resizing and logging", asyn
     await timer.locator(`[aria-keyshortcuts="${key}"]`).click();
     await expect(countdown).toHaveText(duration);
   }
-  const input = later.getByRole("textbox", { name: "Set 1 weight" });
+  const input = later.getByRole("textbox", { name: "Set 2 weight" });
   await input.evaluate((element) =>
     element.scrollIntoView({ block: "center" }),
   );
   await input.fill("65");
   await expectUncovered(
     page,
-    '.active-workout-exercise:nth-child(5) input[aria-label="Set 1 weight"]',
+    '.active-workout-exercise:nth-child(5) input[aria-label="Set 2 weight"]',
   );
   await page.setViewportSize({ width: 390, height: 500 });
   await expectTimerPlacement();
@@ -164,15 +175,15 @@ test("rest stays visible and usable while scrolling, resizing and logging", asyn
   );
   await expectUncovered(
     page,
-    '.active-workout-exercise:nth-child(5) input[aria-label="Set 1 weight"]',
+    '.active-workout-exercise:nth-child(5) input[aria-label="Set 2 weight"]',
   );
   await input.press("3");
   await expect(countdown).toHaveText("3:00");
   await input.fill("65");
   await later
-    .getByRole("button", { name: "Complete set 1", exact: true })
+    .getByRole("button", { name: "Complete set 2", exact: true })
     .click();
-  await expect(later.locator(".set-row--completed")).toHaveCount(1);
+  await expect(later.locator(".set-row--completed")).toHaveCount(2);
   await expect(countdown).toHaveText("3:00");
   await expect(
     later.getByText("How many more good reps could you have done?", {
@@ -195,15 +206,22 @@ test("rest stays visible and usable while scrolling, resizing and logging", asyn
   });
   await expectTimerPlacement();
   await later
-    .getByRole("textbox", { name: "Set 2 weight" })
+    .getByRole("textbox", { name: "Set 3 weight" })
     .evaluate((element) => element.scrollIntoView({ block: "center" }));
   await expectUncovered(
     page,
-    '.active-workout-exercise:nth-child(5) input[aria-label="Set 2 weight"]',
+    '.active-workout-exercise:nth-child(5) input[aria-label="Set 3 weight"]',
   );
+  await page.screenshot({ path: "/tmp/fitness-v3-390.png" });
+  await page.setViewportSize({ width: 320, height: 844 });
+  await expectTimerPlacement();
+  await page.screenshot({ path: "/tmp/fitness-v3-320.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
   await largerTitle.evaluate((element) =>
     element.parentNode?.removeChild(element),
   );
+  await expectTimerPlacement();
+  await page.screenshot({ path: "/tmp/fitness-v3-normal.png" });
   await page
     .locator(".active-workout-header")
     .getByRole("button")
@@ -219,13 +237,17 @@ test("rest stays visible and usable while scrolling, resizing and logging", asyn
     timer.getByRole("button", { name: "OK", exact: true }),
   ).toBeVisible();
   await timer.getByRole("button", { name: "OK", exact: true }).click();
-  await expect(timer).toHaveCount(0);
+  await expect(
+    timer.getByRole("button", { name: "Start", exact: true }),
+  ).toBeVisible();
   await later
-    .getByRole("button", { name: "Complete set 2", exact: true })
+    .getByRole("button", { name: "Complete set 3", exact: true })
     .click();
   await expect(timer).toBeVisible();
   await timer.getByRole("button", { name: "Skip", exact: true }).click();
-  await expect(timer).toHaveCount(0);
+  await expect(
+    timer.getByRole("button", { name: "Start", exact: true }),
+  ).toBeVisible();
 });
 
 test("last-set completion and returning to the tab never scroll to another exercise", async ({
@@ -234,6 +256,12 @@ test("last-set completion and returning to the tab never scroll to another exerc
 }) => {
   await page.clock.install();
   await page.goto(`/workouts/${sessionId}`);
+  await page
+    .getByRole("link", { name: /^Open / })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/\?exercise=/);
+  const focusUrl = page.url();
   const first = page.locator(".active-workout-exercise").first();
   await first
     .getByRole("button", { name: "Complete set 1", exact: true })
@@ -267,6 +295,7 @@ test("last-set completion and returning to the tab never scroll to another exerc
     .click();
   await expect(first.locator(".set-row--completed")).toHaveCount(2);
   await page.clock.runFor(500);
+  await expect(page).toHaveURL(focusUrl);
   expect(
     await page.evaluate(() => Reflect.get(window, "exerciseScrolls")),
   ).toEqual([]);
@@ -279,6 +308,7 @@ test("last-set completion and returning to the tab never scroll to another exerc
     document.dispatchEvent(new Event("visibilitychange")),
   );
   await page.clock.runFor(500);
+  await expect(page).toHaveURL(focusUrl);
   expect(
     await page.evaluate(() => Reflect.get(window, "exerciseScrolls")),
   ).toEqual([]);
