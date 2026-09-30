@@ -37,12 +37,14 @@ neverthrow, Pino, Biome, Radix UI, Tailwind CSS, Lucide React, and Recharts.
 
 ## Agent workflow
 
-- A development server is already running. Never start another instance. Ask the
-  owner to check server logs or restart it when needed.
+- Developers and QA own starting, inspecting logs, restarting, and stopping the
+  local servers needed for their work. Check for a suitable running server first;
+  use a separate port when working concurrently and stop servers you started
+  when finished.
 - Ask questions before proceeding when domain rules or requirements are unclear.
 - Use the commands in [README.md](README.md). Before hand-off, run `bun run gate`;
   for changed user workflows also run `bun run gate:e2e` when Playwright browsers
-  are available and the existing server is correctly configured.
+  are available and a test server is correctly configured.
 - `bun run fmt` and `bun run lint` write changes. Account for a dirty working tree
   before running them and inspect their output afterwards.
 - After changing frontend code, run the frontend engineer review for simplicity
