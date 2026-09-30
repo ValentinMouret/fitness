@@ -19,6 +19,9 @@ muscle-group volume.
   active workout flow does not ask for a new RPE.
 - Historical templates and import provenance remain stored for older sessions.
   New sessions start directly without a template picker.
+- The active rest timer remains with the sticky session header while scrolling.
+  Completing a set or returning to the tab never advances the viewport to another
+  exercise. Scrolling and exercise navigation stay under the lifter's control.
 
 ## Implemented entry points
 

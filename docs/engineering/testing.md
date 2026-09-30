@@ -58,6 +58,12 @@ needed, and stop servers you started when finished. Set `TEST_PORT` or
 server and test fixtures use the same dedicated test database; do not use
 production or personal data.
 
+For a local production-build server, restart it after rebuilding changed source
+before running E2E tests. A running server retains the previous asset manifest;
+the new build can remove those assets and cause navigation failures. Run
+`bun run gate`, restart the server from that build, then `bun run test:e2e`.
+If using `bun run gate:e2e`, keep the source unchanged after the server's build.
+
 [playwright.config.ts](../../playwright.config.ts) requires a reachable existing
 test server locally and fails before browser tests when `/login` is unavailable.
 It never builds, migrates, seeds, or starts a local server. CI retains its isolated

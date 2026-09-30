@@ -264,24 +264,6 @@ function parseWorkoutId(id: string): string {
   return parsed.data;
 }
 
-function findNextIncompleteExerciseId(
-  groups: ReadonlyArray<WorkoutExerciseGroup>,
-  afterIndex?: number,
-): string | undefined {
-  const start = afterIndex !== undefined ? afterIndex + 1 : 0;
-  for (let i = start; i < groups.length; i++) {
-    if (groups[i].sets.some((s) => !s.isCompleted)) {
-      return groups[i].exercise.id;
-    }
-  }
-  return undefined;
-}
-
-function scrollToExercise(exerciseId: string): void {
-  const el = document.querySelector(`[data-exercise-id="${exerciseId}"]`);
-  el?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
 export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const { workoutSession, exercises } = loaderData;
   const workoutId = workoutSession.workout.id;
@@ -322,8 +304,8 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   const reorderFetcher = useFetcher();
   const inputRef = useRef<HTMLInputElement>(null);
-  const headerRef = useRef<HTMLElement>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
+  const chromeRef = useRef<HTMLDivElement>(null);
+  const [chromeHeight, setChromeHeight] = useState(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -349,23 +331,20 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   }, [isEditingName]);
 
   useEffect(() => {
-    const header = headerRef.current;
-    if (!header) return;
+    const chrome = chromeRef.current;
+    if (!chrome) return;
 
-    const updateHeaderHeight = () => {
-      setHeaderHeight(header.getBoundingClientRect().height);
+    const updateChromeHeight = () => {
+      setChromeHeight(chrome.getBoundingClientRect().height);
     };
 
-    updateHeaderHeight();
+    updateChromeHeight();
 
-    const observer = new ResizeObserver(updateHeaderHeight);
-    observer.observe(header);
+    const observer = new ResizeObserver(updateChromeHeight);
+    observer.observe(chrome);
 
     return () => observer.disconnect();
   }, []);
-
-  const exerciseGroupsRef = useRef(workoutSession.exerciseGroups);
-  exerciseGroupsRef.current = workoutSession.exerciseGroups;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -382,21 +361,6 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState !== "visible") return;
-      const groups = exerciseGroupsRef.current;
-      if (!groups) return;
-      const id = findNextIncompleteExerciseId(groups);
-      if (id) {
-        setTimeout(() => scrollToExercise(id), 100);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
 
   const totalSets = workoutSession.exerciseGroups.reduce(
@@ -442,134 +406,137 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
     );
   };
 
-  const pageStyle: React.CSSProperties & { "--header-height": string } = {
-    "--header-height": `${headerHeight}px`,
-  };
+  const pageStyle: React.CSSProperties & { "--session-chrome-height": string } =
+    {
+      "--session-chrome-height": `${chromeHeight}px`,
+    };
 
   return (
     <div className="active-workout-page" style={pageStyle}>
       {/* Header — editorial style */}
-      <header ref={headerRef} className="active-workout-header">
-        <Flex justify="between" align="start" gap="2">
-          <Flex align="start" gap="2" className="active-workout-header__left">
-            <Tooltip content="Back to Workouts">
-              <IconButton
-                asChild
-                variant="ghost"
-                size="1"
-                className="active-workout-header__back"
-                aria-label="Back to Workouts"
-              >
-                <Link to="/workouts">
-                  <ArrowLeftIcon />
-                </Link>
-              </IconButton>
-            </Tooltip>
-
-            <div className="active-workout-header__title-group">
-              {isEditingName ? (
-                <TextField.Root
-                  ref={inputRef}
-                  defaultValue={optimisticName}
-                  size="3"
-                  onBlur={(e) => handleNameSubmit(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleNameSubmit(e.currentTarget.value);
-                    } else if (e.key === "Escape") {
-                      setIsEditingName(false);
-                    }
-                  }}
-                />
-              ) : (
-                <Text
-                  size="7"
-                  weight="bold"
-                  className={`active-workout-header__name${!isComplete ? " active-workout-header__name--live" : ""}`}
-                  onClick={() => !isComplete && setIsEditingName(true)}
+      <div ref={chromeRef} className="active-workout-chrome">
+        <header className="active-workout-header">
+          <Flex justify="between" align="start" gap="2">
+            <Flex align="start" gap="2" className="active-workout-header__left">
+              <Tooltip content="Back to Workouts">
+                <IconButton
+                  asChild
+                  variant="ghost"
+                  size="1"
+                  className="active-workout-header__back"
+                  aria-label="Back to Workouts"
                 >
-                  {optimisticName}
-                </Text>
-              )}
-              <div className="active-workout-header__subtitle">
-                {!isComplete && (
-                  <span className="active-workout-header__live-badge">
-                    Live
-                  </span>
-                )}
-                <Text size="2" className="active-workout-header__started-ago">
-                  {startedAgo}
-                </Text>
-              </div>
-            </div>
-          </Flex>
-
-          <Flex
-            align="center"
-            gap="2"
-            className="active-workout-header__actions"
-          >
-            {!isComplete && (
-              <Button size="1" onClick={() => setShowCompletionModal(true)}>
-                Complete
-              </Button>
-            )}
-
-            <DropdownMenu.Root>
-              <Tooltip content="Workout actions">
-                <DropdownMenu.Trigger>
-                  <IconButton
-                    variant="ghost"
-                    size="1"
-                    aria-label="Workout actions"
-                  >
-                    <DotsVerticalIcon />
-                  </IconButton>
-                </DropdownMenu.Trigger>
+                  <Link to="/workouts">
+                    <ArrowLeftIcon />
+                  </Link>
+                </IconButton>
               </Tooltip>
-              <DropdownMenu.Content>
-                {isComplete ? (
-                  <>
-                    <DropdownMenu.Item
-                      onSelect={() =>
-                        fetcher.submit(
-                          { intent: "duplicate-workout" },
-                          { method: "post" },
-                        )
+
+              <div className="active-workout-header__title-group">
+                {isEditingName ? (
+                  <TextField.Root
+                    ref={inputRef}
+                    defaultValue={optimisticName}
+                    size="3"
+                    onBlur={(e) => handleNameSubmit(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleNameSubmit(e.currentTarget.value);
+                      } else if (e.key === "Escape") {
+                        setIsEditingName(false);
                       }
+                    }}
+                  />
+                ) : (
+                  <Text
+                    size="7"
+                    weight="bold"
+                    className={`active-workout-header__name${!isComplete ? " active-workout-header__name--live" : ""}`}
+                    onClick={() => !isComplete && setIsEditingName(true)}
+                  >
+                    {optimisticName}
+                  </Text>
+                )}
+                <div className="active-workout-header__subtitle">
+                  {!isComplete && (
+                    <span className="active-workout-header__live-badge">
+                      Live
+                    </span>
+                  )}
+                  <Text size="2" className="active-workout-header__started-ago">
+                    {startedAgo}
+                  </Text>
+                </div>
+              </div>
+            </Flex>
+
+            <Flex
+              align="center"
+              gap="2"
+              className="active-workout-header__actions"
+            >
+              {!isComplete && (
+                <Button size="1" onClick={() => setShowCompletionModal(true)}>
+                  Complete
+                </Button>
+              )}
+
+              <DropdownMenu.Root>
+                <Tooltip content="Workout actions">
+                  <DropdownMenu.Trigger>
+                    <IconButton
+                      variant="ghost"
+                      size="1"
+                      aria-label="Workout actions"
                     >
-                      Repeat Workout
-                    </DropdownMenu.Item>
+                      <DotsVerticalIcon />
+                    </IconButton>
+                  </DropdownMenu.Trigger>
+                </Tooltip>
+                <DropdownMenu.Content>
+                  {isComplete ? (
+                    <>
+                      <DropdownMenu.Item
+                        onSelect={() =>
+                          fetcher.submit(
+                            { intent: "duplicate-workout" },
+                            { method: "post" },
+                          )
+                        }
+                      >
+                        Repeat Workout
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        color="red"
+                        onSelect={() => setShowDeleteDialog(true)}
+                      >
+                        Delete Workout
+                      </DropdownMenu.Item>
+                    </>
+                  ) : (
                     <DropdownMenu.Item
                       color="red"
-                      onSelect={() => setShowDeleteDialog(true)}
+                      onSelect={() => setShowCancelDialog(true)}
                     >
-                      Delete Workout
+                      Cancel Workout
                     </DropdownMenu.Item>
-                  </>
-                ) : (
-                  <DropdownMenu.Item
-                    color="red"
-                    onSelect={() => setShowCancelDialog(true)}
-                  >
-                    Cancel Workout
-                  </DropdownMenu.Item>
-                )}
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
+                  )}
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+            </Flex>
           </Flex>
-        </Flex>
-      </header>
+        </header>
 
-      {!isComplete && (
-        <RestTimer
-          isActive={restTimer.isActive}
-          secondsRemaining={restTimer.secondsRemaining}
-          totalSeconds={restTimer.totalSeconds}
-          onDismiss={restTimer.dismiss}
-          onSetDuration={restTimer.setDuration}
-        />
-      )}
+        {!isComplete && (
+          <RestTimer
+            isActive={restTimer.isActive}
+            secondsRemaining={restTimer.secondsRemaining}
+            totalSeconds={restTimer.totalSeconds}
+            onDismiss={restTimer.dismiss}
+            onSetDuration={restTimer.setDuration}
+          />
+        )}
+      </div>
 
       {/* Stats row */}
       {totalSets > 0 && (
@@ -633,24 +600,13 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
               items={workoutSession.exerciseGroups.map((g) => g.exercise.id)}
               strategy={verticalListSortingStrategy}
             >
-              {workoutSession.exerciseGroups.map((group, index) => (
+              {workoutSession.exerciseGroups.map((group) => (
                 <SortableExerciseCard
                   key={group.exercise.id}
                   group={group}
                   openReportSetKey={openReportSetKey}
                   onReportPromptChange={onReportPromptChange}
-                  onCompleteSet={() => {
-                    restTimer.start();
-                    if (group.sets.every((set) => set.isCompleted)) {
-                      const nextId = findNextIncompleteExerciseId(
-                        workoutSession.exerciseGroups,
-                        index,
-                      );
-                      if (nextId) {
-                        setTimeout(() => scrollToExercise(nextId), 300);
-                      }
-                    }
-                  }}
+                  onCompleteSet={restTimer.start}
                   onReplaceExercise={(exerciseId) => {
                     setReplaceExerciseId(exerciseId);
                     setShowExerciseSelector(true);
