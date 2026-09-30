@@ -136,3 +136,8 @@ Run `bun run gate` and `bun run test:mcp:integration`. The integration suite req
 The suite covers historical and progressive recording, replacement, repeatable and concurrent saves, rollback after injected persistence failure, database permissions, SQL syntax restrictions, and row/byte/time limits. Test changed browser workflows against the existing server with Playwright.
 
 Actual ChatGPT/Claude linking and Secure-cookie verification require a public HTTPS deployment and configured client credentials. Local fixture tests do not verify those external connections.
+
+Meal template `categories` lists all assigned meal times. The legacy `category`
+read field projects the first assignment for compatibility; use `categories`
+for availability. Templates retain one ID and composition, and meal logs keep
+their independently chosen meal category.

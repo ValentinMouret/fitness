@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { formOptionalText, formText } from "~/utils/form-data";
 import { validateMealComposition } from "../domain/meal-composition";
-import { mealCategories } from "../domain/meal-template";
+import { mealAssignmentsSchema, mealCategories } from "../domain/meal-template";
 
 const ingredientSchema = z
   .object({
@@ -33,6 +33,28 @@ const ingredientsField = formText(
     })
     .pipe(compositionSchema),
 );
+
+export const mealAssignmentsField = formText(
+  z
+    .string()
+    .transform((value, ctx) => {
+      try {
+        return JSON.parse(value);
+      } catch {
+        ctx.addIssue({ code: "custom", message: "Invalid meal times." });
+        return z.NEVER;
+      }
+    })
+    .pipe(mealAssignmentsSchema),
+);
+
+export const mealTemplateFormSchema = zfd.formData({
+  name: formText(z.string().trim().min(1)),
+  categories: mealAssignmentsField,
+  notes: formOptionalText(),
+  ingredients: ingredientsField,
+  returnTo: formOptionalText(),
+});
 
 export const mealLogFormSchema = zfd.formData(
   z.discriminatedUnion("mode", [

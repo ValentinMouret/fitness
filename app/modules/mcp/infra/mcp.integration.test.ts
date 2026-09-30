@@ -781,7 +781,7 @@ describe("nutrition MCP", () => {
     )._unsafeUnwrap().ingredient;
     const templateId = randomUUID();
     await writer.query(
-      `insert into meal_templates (id, name, category, total_calories, total_protein, total_carbs, total_fat, total_fiber, satiety_score) values ($1, 'Template', 'breakfast', 100, 1, 1, 1, 1, 1)`,
+      `insert into meal_templates (id, name, categories, total_calories, total_protein, total_carbs, total_fat, total_fiber, satiety_score) values ($1, 'Template', array['breakfast']::meal_category[], 100, 1, 1, 1, 1, 1)`,
       [templateId],
     );
     await writer.query(

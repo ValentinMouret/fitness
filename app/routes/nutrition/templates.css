@@ -1,0 +1,35 @@
+.meal-template-filters {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  margin: var(--space-3) 0;
+}
+.meal-template-filters button {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.meal-template-list {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.meal-template-card {
+  padding: var(--space-4);
+  background: var(--brand-surface);
+  border: 1px solid var(--gray-4);
+  border-radius: var(--radius-3);
+}
+.meal-template-card h3 {
+  margin-top: 0;
+}
+.meal-template-card a {
+  margin-top: var(--space-2);
+}
+.meal-template-editor {
+  display: grid;
+  gap: var(--space-4);
+}
+.meal-template-editor-actions {
+  display: flex;
+  gap: var(--space-3);
+}

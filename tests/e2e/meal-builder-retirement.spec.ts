@@ -94,6 +94,9 @@ test("meal composition, templates and logged edits survive retired suggestions",
       .getByPlaceholder("e.g., Post-workout meal")
       .fill(templateName);
     await saveDialog
+      .getByRole("checkbox", { name: "Lunch", exact: true })
+      .check();
+    await saveDialog
       .getByRole("button", { name: "Save Template", exact: true })
       .click();
     await expect

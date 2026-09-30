@@ -154,7 +154,7 @@ export const MealTemplateRepository = {
         // Insert meal template
         const templateValues = {
           name: input.name,
-          category: input.category,
+          categories: [...input.categories],
           notes: input.notes || null,
           total_calories: totals.calories,
           total_protein: totals.protein,
@@ -209,8 +209,8 @@ export const MealTemplateRepository = {
     const updateValues: Record<string, unknown> = {};
 
     if (updates.name !== undefined) updateValues.name = updates.name;
-    if (updates.category !== undefined)
-      updateValues.category = updates.category;
+    if (updates.categories !== undefined)
+      updateValues.categories = [...updates.categories];
     if (updates.notes !== undefined) updateValues.notes = updates.notes;
 
     // If ingredients are being updated, recalculate everything

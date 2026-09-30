@@ -449,21 +449,30 @@ export const ingredients = pgTable(
   ],
 );
 
-export const mealTemplates = pgTable("meal_templates", {
-  id: uuid().primaryKey().defaultRandom(),
-  name: text().notNull(),
-  category: mealCategory().notNull(),
-  notes: text(),
-  total_calories: doublePrecision().notNull(),
-  total_protein: doublePrecision().notNull(),
-  total_carbs: doublePrecision().notNull(),
-  total_fat: doublePrecision().notNull(),
-  total_fiber: doublePrecision().notNull(),
-  satiety_score: doublePrecision().notNull(),
-  usage_count: integer().notNull().default(0),
-  is_public: boolean().notNull().default(false),
-  ...timestampColumns(),
-});
+export const mealTemplates = pgTable(
+  "meal_templates",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    name: text().notNull(),
+    categories: mealCategory().array().notNull(),
+    notes: text(),
+    total_calories: doublePrecision().notNull(),
+    total_protein: doublePrecision().notNull(),
+    total_carbs: doublePrecision().notNull(),
+    total_fat: doublePrecision().notNull(),
+    total_fiber: doublePrecision().notNull(),
+    satiety_score: doublePrecision().notNull(),
+    usage_count: integer().notNull().default(0),
+    is_public: boolean().notNull().default(false),
+    ...timestampColumns(),
+  },
+  (table) => [
+    check(
+      "meal_assignments_valid",
+      sql`cardinality(${table.categories}) between 1 and 4 and array_position(${table.categories}, null) is null and cardinality(${table.categories}) = (('breakfast' = any(${table.categories}))::int + ('lunch' = any(${table.categories}))::int + ('dinner' = any(${table.categories}))::int + ('snack' = any(${table.categories}))::int)`,
+    ),
+  ],
+);
 
 export const mealTemplateIngredients = pgTable(
   "meal_template_ingredients",

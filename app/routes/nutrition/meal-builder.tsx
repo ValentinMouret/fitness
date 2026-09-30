@@ -15,7 +15,6 @@ import {
   Grid,
   IconButton,
   Kbd,
-  RadioGroup,
   Spinner,
   Tabs,
   Text,
@@ -23,7 +22,7 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { data, useFetcher } from "react-router";
+import { data, useFetcher, useNavigate } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { PageHeader } from "~/components/PageHeader";
@@ -37,6 +36,7 @@ import {
   Ingredient as IngredientDomain,
   ingredientCategories,
 } from "~/modules/nutrition/domain/ingredient";
+import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import {
   getMealBuilderData,
   saveAiIngredient,
@@ -53,9 +53,11 @@ import {
   ObjectivesPanel,
   type SelectedIngredient,
 } from "~/modules/nutrition/presentation";
+import { MealAssignments } from "~/modules/nutrition/presentation/components/MealAssignments/MealAssignments";
 import {
   mealBuilderQuerySchema,
   mealLogFormSchema,
+  mealTemplateFormSchema,
 } from "~/modules/nutrition/presentation/meal-builder-form";
 import { parseQuickEstimate } from "~/modules/nutrition/presentation/quick-estimate";
 import { humanFormatting } from "~/strings";
@@ -85,20 +87,16 @@ export async function action({ request }: Route.ActionArgs) {
   const intent = intentParsed.intent;
 
   if (intent === "save-template") {
-    const schema = zfd.formData({
-      name: formText(z.string().min(1)),
-      category: formText(z.enum(["breakfast", "lunch", "dinner", "snack"])),
-      notes: formOptionalText(),
-      ingredients: formText(z.string().min(1)),
-    });
-    const parsed = schema.parse(formData);
-
-    return saveMealTemplate({
-      name: parsed.name,
-      category: parsed.category,
-      notes: parsed.notes ?? undefined,
-      ingredientsJson: parsed.ingredients,
-    });
+    const parsed = mealTemplateFormSchema.safeParse(formData);
+    if (!parsed.success)
+      return data(
+        {
+          error:
+            "Enter a name, choose at least one meal time and add ingredients.",
+        },
+        { status: 400 },
+      );
+    return saveMealTemplate(parsed.data);
   }
 
   if (intent === "save-meal") {
@@ -369,7 +367,7 @@ function MealBuilderEditor({
         backTo={
           mealLoggingMode.isEnabled
             ? mealLoggingMode.returnTo || "/nutrition"
-            : "/nutrition"
+            : mealLoggingMode.returnTo
         }
       />
 
@@ -472,6 +470,7 @@ function MealBuilderEditor({
               onClose={() => setShowSaveDialog(false)}
               selectedIngredients={selectedIngredients}
               fetcher={fetcher}
+              returnTo={mealLoggingMode.returnTo}
             />
           </AlertDialog.Root>
         )}
@@ -686,20 +685,43 @@ function SaveTemplateDialog({
   onClose,
   selectedIngredients,
   fetcher,
+  returnTo,
 }: {
   onClose: () => void;
   selectedIngredients: SelectedIngredient[];
-  fetcher: ReturnType<typeof useFetcher>;
+  fetcher: ReturnType<
+    typeof useFetcher<{ readonly success?: boolean; readonly error?: string }>
+  >;
+  readonly returnTo: string;
 }) {
+  const navigate = useNavigate();
   const [templateName, setTemplateName] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const [templateCategory, setTemplateCategory] = useState<
-    "breakfast" | "lunch" | "dinner" | "snack"
-  >("lunch");
+  const [templateCategories, setTemplateCategories] = useState<
+    readonly MealCategory[]
+  >([]);
   const [templateNotes, setTemplateNotes] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const previousResponse = useRef(fetcher.data);
+  const [templateError, setTemplateError] = useState<string | null>(null);
+  useEffect(() => {
+    if (
+      !submitted ||
+      fetcher.state !== "idle" ||
+      !fetcher.data ||
+      fetcher.data === previousResponse.current
+    )
+      return;
+    setSubmitted(false);
+    if (fetcher.data.success) onClose();
+    else if (fetcher.data.error) setTemplateError(fetcher.data.error);
+  }, [submitted, fetcher.state, fetcher.data, onClose]);
 
   const handleSave = () => {
-    if (!templateName) return;
+    if (!templateName || templateCategories.length === 0) return;
+    setTemplateError(null);
+    previousResponse.current = fetcher.data;
+    setSubmitted(true);
 
     const ingredientsData = selectedIngredients.map((ing) => ({
       id: ing.id,
@@ -710,14 +732,13 @@ function SaveTemplateDialog({
       {
         intent: "save-template",
         name: templateName,
-        category: templateCategory,
+        categories: JSON.stringify(templateCategories),
+        returnTo,
         notes: templateNotes,
         ingredients: JSON.stringify(ingredientsData),
       },
       { method: "post" },
     );
-
-    onClose();
   };
 
   return (
@@ -741,40 +762,15 @@ function SaveTemplateDialog({
             ref={nameInputRef}
             value={templateName}
             onChange={(e) => setTemplateName(e.target.value)}
+            aria-label="Template Name"
             placeholder="e.g., Post-workout meal"
           />
         </Box>
 
-        <Box>
-          <Text as="label" size="2" weight="medium" mb="1">
-            Category
-          </Text>
-          <RadioGroup.Root
-            value={templateCategory}
-            onValueChange={(
-              value: "breakfast" | "lunch" | "dinner" | "snack",
-            ) => setTemplateCategory(value)}
-          >
-            <Flex gap="4">
-              <Flex align="center" gap="2">
-                <RadioGroup.Item value="breakfast" />
-                <Text size="2">Breakfast</Text>
-              </Flex>
-              <Flex align="center" gap="2">
-                <RadioGroup.Item value="lunch" />
-                <Text size="2">Lunch</Text>
-              </Flex>
-              <Flex align="center" gap="2">
-                <RadioGroup.Item value="dinner" />
-                <Text size="2">Dinner</Text>
-              </Flex>
-              <Flex align="center" gap="2">
-                <RadioGroup.Item value="snack" />
-                <Text size="2">Snack</Text>
-              </Flex>
-            </Flex>
-          </RadioGroup.Root>
-        </Box>
+        <MealAssignments
+          selected={templateCategories}
+          onChange={setTemplateCategories}
+        />
 
         <Box>
           <Text as="label" size="2" weight="medium" mb="1">
@@ -783,22 +779,38 @@ function SaveTemplateDialog({
           <TextField.Root
             value={templateNotes}
             onChange={(e) => setTemplateNotes(e.target.value)}
+            aria-label="Notes"
             placeholder="Add any notes about this meal..."
           />
         </Box>
       </Flex>
 
+      {templateError && (
+        <Text as="p" role="alert" color="red">
+          {templateError}
+        </Text>
+      )}
       <Flex gap="3" mt="4" justify="end">
         <AlertDialog.Cancel>
-          <Button variant="soft" onClick={onClose}>
+          <Button
+            variant="soft"
+            onClick={() => {
+              onClose();
+              if (returnTo.startsWith("/nutrition/templates"))
+                navigate(returnTo);
+            }}
+          >
             Cancel
           </Button>
         </AlertDialog.Cancel>
-        <AlertDialog.Action>
-          <Button onClick={handleSave} disabled={!templateName}>
-            Save Template
-          </Button>
-        </AlertDialog.Action>
+        <Button
+          onClick={handleSave}
+          type="button"
+          loading={fetcher.state !== "idle"}
+          disabled={!templateName || templateCategories.length === 0}
+        >
+          Save Template
+        </Button>
       </Flex>
     </AlertDialog.Content>
   );

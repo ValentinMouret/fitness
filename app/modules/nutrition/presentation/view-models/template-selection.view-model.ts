@@ -1,6 +1,7 @@
-import type {
-  MealCategory,
-  MealTemplate,
+import {
+  type MealCategory,
+  type MealTemplate,
+  templateIsAvailableFor,
 } from "~/modules/nutrition/domain/meal-template";
 
 export interface TemplateSelectionViewModel {
@@ -38,8 +39,8 @@ export function createTemplateSelectionViewModel(
   mealType: MealCategory,
   allTemplates: readonly MealTemplate[],
 ): TemplateSelectionViewModel {
-  const filteredTemplates = allTemplates.filter(
-    (template) => template.category === mealType,
+  const filteredTemplates = allTemplates.filter((template) =>
+    templateIsAvailableFor(template, mealType),
   );
 
   return {

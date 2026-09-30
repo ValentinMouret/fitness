@@ -1,4 +1,4 @@
-import type { ResultAsync } from "neverthrow";
+import { err, type ResultAsync } from "neverthrow";
 import type { ErrRepository } from "~/repository";
 import type {
   CreateIngredientInput,
@@ -21,6 +21,7 @@ import type {
   MealTemplateWithIngredients,
   UpdateMealTemplateInput,
 } from "../domain/meal-template";
+import { templateIsAvailableFor } from "../domain/meal-template";
 import {
   type AIIngredientSearchResult,
   AIIngredientService,
@@ -183,6 +184,8 @@ export const NutritionService = {
   ): ResultAsync<MealLogWithIngredients, ErrRepository | "conflict"> {
     return MealTemplateRepository.fetchWithIngredients(templateId).andThen(
       (template) => {
+        if (!templateIsAvailableFor(template, mealCategory))
+          return err("validation_error" as const);
         const input: CreateMealLogInput = {
           mealCategory,
           loggedDate,

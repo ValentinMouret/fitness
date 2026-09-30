@@ -15,10 +15,23 @@ export const mealCategories = [
 
 export type MealCategory = (typeof mealCategories)[number];
 
+export const mealAssignmentsSchema = z
+  .array(z.enum(mealCategories))
+  .min(1)
+  .max(4)
+  .refine(
+    (values) => new Set(values).size === values.length,
+    "Choose each meal time once.",
+  )
+  .transform((values) =>
+    mealCategories.filter((category) => values.includes(category)),
+  )
+  .readonly();
+
 export const MealTemplateSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1),
-  category: z.enum(mealCategories),
+  categories: mealAssignmentsSchema,
   notes: z.string().nullable(),
   totalCalories: z.number().nonnegative(),
   totalProtein: z.number().nonnegative(),
@@ -41,10 +54,17 @@ export interface MealTemplateWithIngredients extends MealTemplate {
 
 export type CreateMealTemplateInput = {
   readonly name: string;
-  readonly category: MealCategory;
+  readonly categories: readonly MealCategory[];
   readonly notes?: string;
   readonly ingredients: readonly IngredientWithQuantity[];
 };
+
+export function templateIsAvailableFor(
+  template: Pick<MealTemplate, "categories">,
+  meal: MealCategory,
+): boolean {
+  return template.categories.includes(meal);
+}
 
 export type UpdateMealTemplateInput = Partial<CreateMealTemplateInput>;
 
@@ -132,7 +152,7 @@ export function createMealTemplateFromIngredients(
 
   return {
     name: input.name,
-    category: input.category,
+    categories: input.categories,
     notes: input.notes ?? null,
     totalCalories: totals.calories,
     totalProtein: totals.protein,

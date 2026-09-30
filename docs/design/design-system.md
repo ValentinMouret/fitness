@@ -204,3 +204,18 @@ Page-level headers use warm surface with shadow:
 - Touch targets: minimum 44px on mobile (`min-height: 44px; min-width: 44px`)
 - Inputs: `font-size: 16px` to prevent iOS auto-zoom
 - Bottom padding: account for tab bar + safe area inset
+
+## Nutrition view navigation and meal filters
+
+**Accepted:** keep page-wide Today/Templates links beneath the Nutrition identity,
+aligned with the content margins. Place meal filter buttons directly below the
+management heading and introduction. Use an underline and readable weight for
+the selected item, minimum44px touch targets, and horizontal row scrolling
+when the labels do not fit. Filters are pressed buttons; semantic tabs require
+actual tab panels and their keyboard behavior.
+
+All shows each template once. Meal filters use explicit assignments without
+changing assignments or log destinations. Save and Cancel retain the filter;
+removing an assignment may remove a template from that filtered list. Show an
+inline empty state. Creating a template does not inherit the active filter.
+Logging pickers use only their chosen meal time and have no All filter.
