@@ -200,9 +200,6 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
 
       <Flex gap="3" wrap="wrap" mt="6">
         <Button variant="outline" size="2" asChild>
-          <Link to="/workouts/import">Import from Fitbod</Link>
-        </Button>
-        <Button variant="outline" size="2" asChild>
           <Link to="/workouts/exercises">Manage Exercises</Link>
         </Button>
       </Flex>

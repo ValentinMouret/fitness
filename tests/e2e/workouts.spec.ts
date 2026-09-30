@@ -14,7 +14,7 @@ test.describe("Workouts Page", () => {
   test("should show navigation links", async ({ page }) => {
     await expect(
       page.getByRole("link", { name: "Import from Fitbod" }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(
       page.getByRole("link", { name: "Manage Exercises" }),
     ).toBeVisible();
@@ -57,19 +57,21 @@ test.describe("Workouts Page", () => {
     ).toBe(400);
   });
 
-  test("keeps Fitbod import available", async ({ page }) => {
-    await page.getByRole("link", { name: "Import from Fitbod" }).click();
-    await expect(page).toHaveURL(/\/workouts\/import/);
-    await expect(
-      page.getByRole("heading", { name: "Import from Fitbod", exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("tab", { name: "Strong", exact: true }),
-    ).toHaveCount(0);
-    const response = await page.request.post("/workouts/import", {
-      form: { importSource: "strong", strongText: "retired import" },
-    });
-    expect(response.status()).toBe(400);
+  test("retired workout import rejects navigation and writes", async ({
+    page,
+  }) => {
+    const response = await page.goto("/workouts/import");
+    expect(response?.status()).toBe(404);
+    expect((await page.request.get("/workouts/import")).status()).toBe(404);
+    for (const importSource of ["fitbod", "strong"]) {
+      expect(
+        (
+          await page.request.post("/workouts/import", {
+            form: { importSource, csvContent: "retired import" },
+          })
+        ).status(),
+      ).toBe(404);
+    }
   });
 
   test("retired workout routes reject reads and writes", async ({ page }) => {
