@@ -562,13 +562,13 @@ function AddIngredientModal({
     >
       <Flex justify="between" align="center" mb="3">
         <Dialog.Title>Add Ingredient</Dialog.Title>
-        <Dialog.Close>
-          <Tooltip content="Close">
-            <IconButton variant="ghost" aria-label="Close">
+        <Tooltip content="Close">
+          <Dialog.Close>
+            <IconButton type="button" variant="ghost" aria-label="Close">
               <Cross2Icon />
             </IconButton>
-          </Tooltip>
-        </Dialog.Close>
+          </Dialog.Close>
+        </Tooltip>
       </Flex>
 
       <Flex direction="column" gap="3">
