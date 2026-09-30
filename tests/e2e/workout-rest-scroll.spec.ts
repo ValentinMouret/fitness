@@ -89,12 +89,16 @@ test("rest stays visible and usable while scrolling, resizing and logging", asyn
   sessionId,
 }) => {
   test.setTimeout(30_000);
-  await page.clock.install();
   await page.goto(`/workouts/${sessionId}`);
-  await page
+  const focusedHref = await page
     .getByRole("link", { name: /^Open / })
     .nth(4)
-    .click();
+    .getAttribute("href");
+  expect(focusedHref).toBeTruthy();
+  await page.goto(focusedHref!);
+  await expect(page).toHaveURL(focusedHref!);
+  await expect(page.locator(".exercise-card--focused:visible")).toBeVisible();
+  await page.clock.install();
   await page
     .getByRole("button", { name: "Complete set 1", exact: true })
     .first()
@@ -254,13 +258,16 @@ test("last-set completion and returning to the tab never scroll to another exerc
   page,
   sessionId,
 }) => {
-  await page.clock.install();
   await page.goto(`/workouts/${sessionId}`);
-  await page
+  const focusedHref = await page
     .getByRole("link", { name: /^Open / })
     .first()
-    .click();
-  await expect(page).toHaveURL(/\?exercise=/);
+    .getAttribute("href");
+  expect(focusedHref).toBeTruthy();
+  await page.goto(focusedHref!);
+  await expect(page).toHaveURL(focusedHref!);
+  await expect(page.locator(".exercise-card--focused:visible")).toBeVisible();
+  await page.clock.install();
   const focusUrl = page.url();
   const first = page.locator(".active-workout-exercise").first();
   await first
