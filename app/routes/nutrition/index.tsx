@@ -233,6 +233,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
   const { mealTemplates, dailySummary, targets, currentDate } = loaderData;
   const [searchParams, setSearchParams] = useSearchParams();
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const templateOpenerRef = useRef<HTMLButtonElement>(null);
   const [currentMealType, setCurrentMealType] = useState<MealCategory | null>(
     null,
   );
@@ -738,7 +739,10 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                           <Button
                             variant="ghost"
                             size="1"
-                            onClick={() => handleUseTemplate(mealType)}
+                            onClick={(event) => {
+                              templateOpenerRef.current = event.currentTarget;
+                              handleUseTemplate(mealType);
+                            }}
                             aria-label={`Use template for ${label}`}
                             loading={isApplyingTemplate}
                           >
@@ -767,6 +771,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
 
       <TemplateSelectionModal
         isOpen={showTemplateModal}
+        returnFocusRef={templateOpenerRef}
         onClose={() => {
           setShowTemplateModal(false);
           setCurrentMealType(null);

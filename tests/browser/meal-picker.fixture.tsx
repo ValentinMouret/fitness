@@ -1,7 +1,7 @@
 import "@radix-ui/themes/styles.css";
 import "~/app.css";
 import { Button, Theme } from "@radix-ui/themes";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { TemplateSelectionModal } from "~/modules/nutrition/presentation/components/TemplateSelectionModal/TemplateSelectionModal";
 import type { TemplateSelectionViewModel } from "~/modules/nutrition/presentation/view-models/template-selection.view-model";
@@ -9,6 +9,7 @@ import { mountWorkoutCompletionFixture } from "./workout-completion.fixture";
 
 function MealPickerFixture() {
   const [open, setOpen] = useState(false);
+  const openerRef = useRef<HTMLButtonElement>(null);
   const [isPublic, setIsPublic] = useState(false);
   const [result, setResult] = useState("No template applied");
   const viewModel: TemplateSelectionViewModel = {
@@ -28,12 +29,19 @@ function MealPickerFixture() {
 
   return (
     <Theme accentColor="tomato" grayColor="sand" radius="medium">
-      <Button type="button" onClick={() => setOpen(true)}>
+      <Button
+        type="button"
+        onClick={(event) => {
+          openerRef.current = event.currentTarget;
+          setOpen(true);
+        }}
+      >
         Use template for Lunch
       </Button>
       <output>{result}</output>
       <TemplateSelectionModal
         isOpen={open}
+        returnFocusRef={openerRef}
         onClose={() => setOpen(false)}
         viewModel={viewModel}
         onApply={() => {
