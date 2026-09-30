@@ -1,6 +1,9 @@
 import { redirect } from "react-router";
 import type { UserId } from "~/modules/auth/domain/user";
-import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
+import {
+  AdaptiveWorkoutRepository,
+  createEquipmentRepository,
+} from "~/modules/fitness/infra/adaptive-workout-repository.server";
 import { AdaptiveWorkoutService } from "~/modules/fitness/infra/adaptive-workout-service.server";
 import { getWorkoutSessionData } from "./workout-session.service.server";
 
@@ -22,7 +25,7 @@ export async function getSubstituteExerciseData(
   )
     throw new Response("Exercise not found", { status: 404 });
   const availableEquipmentResult =
-    await AdaptiveWorkoutRepository.getAvailableEquipment();
+    await createEquipmentRepository(userId).getAvailableEquipment();
   if (availableEquipmentResult.isErr()) {
     throw new Error("Failed to load available equipment");
   }
@@ -61,10 +64,16 @@ export async function substituteExercise(
   )
     throw new Response("Exercise not found", { status: 404 });
   const availableEquipmentResult =
-    await AdaptiveWorkoutRepository.getAvailableEquipment();
+    await createEquipmentRepository(userId).getAvailableEquipment();
   if (availableEquipmentResult.isErr()) {
     throw new Error("Failed to load equipment data");
   }
+
+  const ownedEquipmentIds = new Set(
+    availableEquipmentResult.value.map((equipment) => equipment.id),
+  );
+  if (input.selectedEquipmentIds.some((id) => !ownedEquipmentIds.has(id)))
+    throw new Response("Equipment not found", { status: 404 });
 
   const selectedEquipmentInstances = availableEquipmentResult.value.filter(
     (equipment) => input.selectedEquipmentIds.includes(equipment.id),

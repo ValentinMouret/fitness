@@ -1,3 +1,4 @@
+import { requireLegacyOwnerIdentity } from "~/modules/auth/infra/legacy-owner.server";
 import "dotenv/config";
 import type { InferInsertModel } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -11,7 +12,10 @@ export const db = drizzle({
   },
 });
 
-const gymFloorsData: Omit<InferInsertModel<typeof gymFloors>, "id">[] = [
+const gymFloorsData: Omit<
+  InferInsertModel<typeof gymFloors>,
+  "id" | "userId"
+>[] = [
   {
     name: "First Floor - Machines & Cables",
     floor_number: 1,
@@ -28,11 +32,12 @@ const gymFloorsData: Omit<InferInsertModel<typeof gymFloors>, "id">[] = [
 async function main() {
   logger.info("Starting gym layout seeding...");
 
+  const owner = await requireLegacyOwnerIdentity();
   await db.transaction(async (tx) => {
     logger.info("Seeding gym floors...");
     const insertedFloors = await tx
       .insert(gymFloors)
-      .values(gymFloorsData)
+      .values(gymFloorsData.map((floor) => ({ ...floor, userId: owner.id })))
       .returning();
     logger.info({ count: insertedFloors.length }, "Inserted floors");
 
@@ -48,7 +53,7 @@ async function main() {
     // FIRST FLOOR EQUIPMENT
     const floor1Equipment: Omit<
       InferInsertModel<typeof equipmentInstances>,
-      "id"
+      "id" | "userId"
     >[] = [
       // Machine bench press
       {
@@ -180,7 +185,7 @@ async function main() {
     // SECOND FLOOR EQUIPMENT
     const floor2Equipment: Omit<
       InferInsertModel<typeof equipmentInstances>,
-      "id"
+      "id" | "userId"
     >[] = [
       // Dumbbells (represented as a shared resource)
       {
@@ -432,7 +437,9 @@ async function main() {
     const allEquipment = [...floor1Equipment, ...floor2Equipment];
     await tx
       .insert(equipmentInstances)
-      .values(allEquipment)
+      .values(
+        allEquipment.map((equipment) => ({ ...equipment, userId: owner.id })),
+      )
       .onConflictDoNothing();
 
     logger.info(

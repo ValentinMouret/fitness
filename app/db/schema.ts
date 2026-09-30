@@ -394,6 +394,9 @@ export const workoutExercises = pgTable(
 export const gymFloors = pgTable(
   "gym_floors",
   {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id),
     id: uuid().primaryKey().defaultRandom(),
     name: text().notNull(),
     floor_number: integer().notNull(),
@@ -401,8 +404,9 @@ export const gymFloors = pgTable(
     ...timestampColumns(),
   },
   (table) => [
+    uniqueIndex("gym_floors_user_id_id_idx").on(table.userId, table.id),
     uniqueIndex("gym_floors_number_unique_idx")
-      .on(table.floor_number)
+      .on(table.userId, table.floor_number)
       .where(isNull(table.deleted_at)),
     check("floor_number_positive", sql`${table.floor_number} > 0`),
   ],
@@ -411,6 +415,9 @@ export const gymFloors = pgTable(
 export const equipmentInstances = pgTable(
   "equipment_instances",
   {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id),
     id: uuid().primaryKey().defaultRandom(),
     exercise_type: exerciseType().notNull(),
     gym_floor_id: uuid()
@@ -422,6 +429,15 @@ export const equipmentInstances = pgTable(
     ...timestampColumns(),
   },
   (table) => [
+    foreignKey({
+      name: "equipment_instances_owner_floor_fk",
+      columns: [table.userId, table.gym_floor_id],
+      foreignColumns: [gymFloors.userId, gymFloors.id],
+    }),
+    uniqueIndex("equipment_instances_user_id_id_idx").on(
+      table.userId,
+      table.id,
+    ),
     uniqueIndex("equipment_instances_name_floor_unique_idx")
       .on(table.name, table.gym_floor_id)
       .where(isNull(table.deleted_at)),
@@ -432,13 +448,18 @@ export const equipmentInstances = pgTable(
 export const equipmentPreferences = pgTable(
   "equipment_preferences",
   {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id),
     muscle_group: muscleGroupsEnum().notNull(),
     exercise_type: exerciseType().notNull(),
     preference_score: integer().notNull(),
     ...timestampColumns(),
   },
   (table) => [
-    primaryKey({ columns: [table.muscle_group, table.exercise_type] }),
+    primaryKey({
+      columns: [table.userId, table.muscle_group, table.exercise_type],
+    }),
     check(
       "preference_score_range",
       sql`${table.preference_score} >= 1 and ${table.preference_score} <= 10`,
@@ -542,21 +563,37 @@ export const workoutSets = pgTable(
 
 // AI Workout Generation
 export const trainingPreferences = pgTable("training_preferences", {
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => authUsers.id),
   id: uuid().primaryKey().defaultRandom(),
   content: text().notNull(),
   source: text().notNull().default("refinement"),
   ...timestampColumns(),
 });
 
-export const generationConversations = pgTable("generation_conversations", {
-  id: uuid().primaryKey().defaultRandom(),
-  workout_id: uuid().references(() => workouts.id),
-  messages: jsonb().notNull().default([]),
-  context_snapshot: jsonb().notNull(),
-  model: text().notNull(),
-  total_tokens: integer().notNull().default(0),
-  ...timestampColumns(),
-});
+export const generationConversations = pgTable(
+  "generation_conversations",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id),
+    id: uuid().primaryKey().defaultRandom(),
+    workout_id: uuid().references(() => workouts.id),
+    messages: jsonb().notNull().default([]),
+    context_snapshot: jsonb().notNull(),
+    model: text().notNull(),
+    total_tokens: integer().notNull().default(0),
+    ...timestampColumns(),
+  },
+  (table) => [
+    foreignKey({
+      name: "generation_conversations_owner_workout_fk",
+      columns: [table.userId, table.workout_id],
+      foreignColumns: [workouts.userId, workouts.id],
+    }),
+  ],
+);
 
 // Nutrition
 export const ingredientCategory = pgEnum(

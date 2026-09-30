@@ -276,3 +276,95 @@ Owner bootstrap/backfill rehearsal, legacy browser/MCP compatibility, proxy
 logging and client-IP review remain preactivation requirements. Native private
 app/OAuth admission and the legacy-owner MCP safeguard remain closed. This
 stage does not add private exercise creation or decide catalogue publishing.
+
+### Equipment and retained preference ownership (draft release hold)
+
+Migration 0018 assigns gym floors/equipment, equipment preferences, retained
+training preferences and retired generation conversations to the unique accepted
+bootstrap owner. Existing IDs, archive timestamps, preference keys/content,
+conversation messages/context JSON, token counts and workout links remain
+intact. Composite foreign keys bind equipment to its account's floor and retained
+conversations to its account's workout. Existing owner data is not used as another
+account's defaults; missing/ambiguous bootstrap or incompatible parent links fail
+closed. No retired generation feature is reintroduced.
+
+The live substitution workflow loads equipment through a required account
+factory and rejects foreign equipment IDs. Equipment availability updates and
+stored preference reads also require an actor. These private tables are not
+exposed through MCP reader views. Exercise substitution/catalogue definitions
+remain a separate shared-catalogue boundary; personal descriptions/cues still
+require separation and reviewed canonical publication/correction. Owner-only
+MCP and native-app admission safeguards remain in force.
+
+## Integrated ownership release review
+
+The held stack must be evaluated as one release. Passing a stage does not permit
+native admission or removal of the legacy-owner MCP gate.
+
+| Order | Migration | Preserved ownership scope |
+| --- | --- | --- |
+| 1 | 0013 / draft233 | Habits and completions through owned parents |
+| 2 | 0014 / draft234 | Measurement definitions, values, targets and daily note |
+| 3 | 0015 / draft235 | Existing OAuth connections; token/code hashes and expiry/replay state retained |
+| 4 | 0016 / draft236 | Workouts/templates, exercise membership, sets, order and history |
+| 5 | 0017 / draft237 | Ingredients, recipes, consumed meals, compositions and public-link flags |
+| 6 | 0018 / equipment draft | Gym/equipment, stored preferences and retired conversation content |
+
+### Gate 1: approve the real owner and migration procedure
+
+- Record the real owner's stable UUID and normalized invited email explicitly;
+  the synthetic local owner UUID/email are not production choices.
+- Confirm the production source/migration journal and take a recoverable database
+  backup. Foundation migration0012 must already be present. Keep native admission
+  disabled, preserve the legacy session secret and pause writes during assignment.
+- Review the operator invocation of `bootstrapAuthOwner` before using it against
+  production. It takes an explicit pool, UUID, email and timestamp and refuses an
+  ID/email conflict. There is currently no approved production bootstrap CLI;
+  `auth:seed-local` intentionally refuses production and must not be bypassed.
+- Verify exactly one self-invited, accepted, nonrevoked owner identity, and set
+  `AUTH_FOUNDATION_OWNER_USER_ID` to that same UUID. Review duplicates/conflicts
+  rather than treating the oldest account or test fixture as the owner.
+- Check orphan workout-set exercise membership, template-set exercise membership
+  and source-workout links before0016. Check all retained composition, gym-floor
+  and conversation-workout links, including deleted history. Do not repair by
+  deleting records or silently changing their parent.
+- Rehearse0013–0018 together on an isolated restored copy: reconcile counts,
+  primary IDs, all retained fields/JSON, associations and OAuth credential state.
+  Record duration and recovery evidence. The committed mixed synthetic dataset
+  rehearsal checks all six migrations together, including transactional refusal
+  without bootstrap; it does not replace a rehearsal of actual owner history.
+
+### Gate 2: prove compatibility before merging the held stack
+
+- Use the full stacked head, not individual draft CI skips, for required CI and
+  local `gate:e2e`, auth, ownership, nutrition and restricted-reader suites.
+- Prove legacy owner browser reads/writes and existing OAuth connection/token
+  refresh/revocation against the rehearsed dataset with native admission closed.
+  Exercise a real external owner MCP client; SDK/HTTP fixtures alone do not prove
+  its stored connection compatibility. Check SQL pooled identity cleanup.
+- Review all draft diffs and deployment ordering with release coordination.
+  Apply only after the owner-bootstrap/history/compatibility evidence is accepted;
+  then independently verify source, health, counts and legacy access in production.
+- Before another account writes, recovery may restore the coordinated backup and
+  source. After another account has data, retain scoped code/schema and ownership;
+  do not restore global reads or the original single-owner assignment over it.
+
+### Gate 3: keep onboarding closed until the remaining boundaries pass
+
+- Separate private exercise labels/descriptions/cues from shared canonical data.
+  Review what may be published and who may correct/create shared definitions.
+  Private missing-exercise creation remains deferred; demonstrate the proposed
+  support path and its logging-parity consequence rather than claiming parity.
+- Review empty-account measurement/target behavior and default target labeling;
+  existing owner defaults must not become a new user's personalized prescription.
+  Add and test account timezones wherever server/calendar boundaries require them.
+- Bind native browser, consent and MCP admission to actual accepted account
+  identity only after every enabled private/catalogue capability is scoped.
+  Run real A/B loader/action/history/aggregate/AI/public-share negatives through
+  those native sessions before removing the owner-only safeguards.
+- Review production email delivery, fresh-link recovery and invitation revocation,
+  proxy query stripping and trusted client-IP/rate-limit evidence. Martin's replica
+  tests do not authorize the still-pending live shared Traefik change.
+- Admit the first invitation-only cohort only after independent full release and
+  parity acceptance. No retired generation UI, public signup or private exercise
+  fallback is included by the ownership migrations.
