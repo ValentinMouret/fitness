@@ -38,7 +38,17 @@ then use **Manage invitations** as the owner. The inbox is outside public assets
 and is written with mode 0600. Do not publish its contents.
 
 `/sign-in`, `/account/invitations` and `/api/auth/*` return 404 by default.
-Enabling this foundation in production is rejected by environment validation.
+Production configuration is now supported but activation remains held. With
+`NODE_ENV=production` and `AUTH_FOUNDATION_ENABLED=true`, startup requires a
+canonical HTTPS `AUTH_FOUNDATION_ORIGIN`, the approved durable owner UUID and
+complete `AUTH_SMTP_HOST`, `AUTH_SMTP_PORT`, `AUTH_SMTP_SECURE`, `AUTH_SMTP_USER`,
+`AUTH_SMTP_PASSWORD` and `AUTH_SMTP_FROM`. The sender is a plain verified email
+address. `AUTH_SMTP_SECURE=true` uses implicit TLS; `false` requires STARTTLS and
+refuses cleartext fallback. Certificates are verified with TLS 1.2 or newer.
+Production forbids `AUTH_LOCAL_INBOX`; development/test require the loopback
+inbox and reject mixed SMTP settings. SMTP debug logging is disabled and errors
+are generic. Keep credentials in deployment secrets, never PRs or logs.
+Configuration acceptance does not prove provider delivery or approve activation.
 The owner bootstrap uses an explicit stable ID and rejects conflicting email/ID
 assignments. Only that authenticated owner can list, create or revoke invitations.
 If email delivery fails after creation, the invitation remains visible with an
@@ -60,7 +70,8 @@ The standard server and Docker entry use a Morgan preload that logs request path
 without query strings. Better Auth's verbose library logger is disabled, so
 rejected callback URLs cannot leak tokens into error logs. Status/path logging
 remains available. The SMTP transport is exercised over real loopback SMTP;
-production SMTP wiring is part of the later reviewed cutover, with TLS required.
+production selects the SMTP adapter with mandatory TLS. Real provider delivery,
+verified sender DNS and owner access recovery remain cutover gates.
 
 Run `bun run test:auth:integration` with `AUTH_TEST_ADMIN_URL` pointing explicitly
 to a disposable PostgreSQL admin connection. Its native-auth test creates and
@@ -547,8 +558,8 @@ is still separate from the isolated SDK proof.
 ### Local native identity cutover
 
 The current local cutover supersedes the admission-hold audit above when
-`AUTH_FOUNDATION_ENABLED=true`. The foundation remains loopback-only,
-nonproduction and disabled by default. Production SMTP, the actual durable owner
+`AUTH_FOUNDATION_ENABLED=true`. The foundation remains disabled by default. Nonproduction uses loopback inboxes;
+production uses validated HTTPS and SMTP settings. Actual SMTP delivery, the durable owner
 bootstrap, fresh restored-history rehearsal and integrated exact-head CI remain
 release prerequisites; local inbox capture is not production delivery proof.
 
