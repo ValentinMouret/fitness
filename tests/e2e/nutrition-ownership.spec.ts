@@ -16,6 +16,7 @@ test("private nutrition routes, compositions and AI resolution stay account-scop
   page,
   request,
   browser,
+  baseURL,
 }) => {
   const pool = new pg.Pool({ connectionString: process.env.E2E_DATABASE_URL });
   const other = randomUUID();
@@ -184,7 +185,7 @@ test("private nutrition routes, compositions and AI resolution stay account-scop
     const anonymous = await browser.newContext();
     try {
       const shared = await anonymous.request.get(
-        new URL(`/share/meal/${template}`, process.env.E2E_BASE_URL).toString(),
+        new URL(`/share/meal/${template}`, baseURL).toString(),
       );
       expect(shared.ok()).toBe(true);
       expect(await shared.text()).toContain(note);
@@ -195,10 +196,7 @@ test("private nutrition routes, compositions and AI resolution stay account-scop
       expect(
         (
           await anonymous.request.get(
-            new URL(
-              `/share/meal/${template}`,
-              process.env.E2E_BASE_URL,
-            ).toString(),
+            new URL(`/share/meal/${template}`, baseURL).toString(),
           )
         ).status(),
       ).toBe(404);

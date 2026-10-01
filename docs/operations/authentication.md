@@ -572,10 +572,13 @@ release prerequisites; local inbox capture is not production delivery proof.
 
 The separate native phone browser profile redeems real local magic links in
 independent contexts. It checks private habits/completions, measurement dates,
-notes, ingredients/meals, explicit targets, workout sets/RIR and private cues
-through saves/reloads and known foreign IDs. It checks history/meal-resolution
-resources, Single Fetch isolation, owner-only catalogue/invitation controls,
-logout and cross-origin rejection. Empty-account failures use real PostgreSQL
+notes, ingredients/meals/templates, explicit targets, workout sets/RIR and
+private cues through saves/reloads and known foreign IDs. Template create/edit,
+apply, public sharing and owner revocation are checked, including anonymous
+published access and foreign edit/apply/revoke refusal. It checks history and
+meal-resolution resources, substitution access, Single Fetch isolation,
+owner-only catalogue/invitation controls, logout, post-logout private resource
+refusal and cross-origin rejection. Empty-account failures use real PostgreSQL
 errors to verify no neutral definition survives a failed weight save and database
 read failures do not become display defaults. Run this profile serially against
 its dedicated test database; its temporary table rename must not overlap another

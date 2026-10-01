@@ -118,6 +118,10 @@ test.afterAll(async () => {
     other,
   ]);
   await pool.query("delete from meal_logs where user_id=$1", [other]);
+  await pool.query("delete from meal_template_ingredients where user_id=$1", [
+    other,
+  ]);
+  await pool.query("delete from meal_templates where user_id=$1", [other]);
   await pool.query("delete from ingredients where user_id=$1", [other]);
   await pool.query("delete from targets where user_id=$1", [other]);
   await pool.query("delete from measures where user_id=$1", [other]);
@@ -280,6 +284,15 @@ test("native A and B retain separate histories and catalogue controls, and logou
     await expect(b.getByLabel("Email", { exact: true })).toBeVisible();
     await b.goto("/dashboard");
     await expect(b).toHaveURL(/\/sign-in$/);
+    for (const path of [
+      "/account/timezone",
+      `/api/exercises/history?exerciseId=${exercise}`,
+      "/api/nutrition/estimate-meal",
+    ]) {
+      const denied = await b.request.post(path, { form: {}, maxRedirects: 0 });
+      expect(denied.status()).toBe(302);
+      expect(denied.headers().location).toBe("/sign-in");
+    }
   } finally {
     await context.close();
   }
@@ -430,6 +443,100 @@ test("native B saves and reloads private habits, measurements, notes, meals, tar
     expect(
       (await a.request.get(`/nutrition/meal-builder?mealId=${meal}`)).status(),
     ).toBe(404);
+    const templateName = `Native B template ${other}`;
+    const templateResponse = await post("/nutrition/meal-builder", {
+      intent: "save-template",
+      name: templateName,
+      categories: JSON.stringify(["lunch"]),
+      ingredients: JSON.stringify([{ id: food, quantity: 100 }]),
+    });
+    expect(templateResponse.ok()).toBe(true);
+    const template = z
+      .uuid()
+      .parse(
+        (
+          await pool.query(
+            "select id from meal_templates where user_id=$1 and name=$2",
+            [other, templateName],
+          )
+        ).rows[0]?.id,
+      );
+    await page.goto("/nutrition/templates");
+    await expect(page.getByText(templateName, { exact: true })).toBeVisible();
+    const editedName = `${templateName} edited`;
+    const editTemplate = {
+      id: template,
+      name: editedName,
+      mealTimes: "lunch",
+      notes: "B private template note",
+      meal: "all",
+    };
+    expect((await post("/nutrition/templates", editTemplate)).status()).toBe(
+      302,
+    );
+    await page.reload();
+    await expect(page.getByText(editedName, { exact: true })).toBeVisible();
+    expect(
+      (await a.request.get(`/nutrition/templates?edit=${template}`)).status(),
+    ).toBe(404);
+    expect(
+      (
+        await a.request.post("/nutrition/templates", { form: editTemplate })
+      ).status(),
+    ).toBe(404);
+    const applyTemplate = {
+      intent: "apply-template",
+      templateId: template,
+      mealCategory: "lunch",
+      loggedDate: "1900-01-04",
+    };
+    expect((await post("/nutrition", applyTemplate)).ok()).toBe(true);
+    await a.request.post("/nutrition", { form: applyTemplate });
+    expect(
+      (
+        await pool.query(
+          "select user_id from meal_logs where meal_template_id=$1",
+          [template],
+        )
+      ).rows,
+    ).toEqual([{ user_id: other }]);
+    await page.goto("/nutrition?date=1900-01-04");
+    await expect(page.getByText(foodName, { exact: true })).toBeVisible();
+    const shareTemplate = {
+      intent: "toggle-template-public",
+      templateId: template,
+      isPublic: "true",
+    };
+    expect((await post("/nutrition", shareTemplate)).ok()).toBe(true);
+    const anonymous = await browser.newContext({
+      baseURL: process.env.E2E_BASE_URL,
+      storageState: { cookies: [], origins: [] },
+    });
+    try {
+      const published = await anonymous.request.get(`/share/meal/${template}`);
+      expect(published.ok()).toBe(true);
+      expect(await published.text()).toContain(editedName);
+      await a.request.post("/nutrition", {
+        form: { ...shareTemplate, isPublic: "false" },
+      });
+      expect(
+        (
+          await pool.query("select is_public from meal_templates where id=$1", [
+            template,
+          ])
+        ).rows,
+      ).toEqual([{ is_public: true }]);
+      expect(
+        (
+          await post("/nutrition", { ...shareTemplate, isPublic: "false" })
+        ).ok(),
+      ).toBe(true);
+      expect(
+        (await anonymous.request.get(`/share/meal/${template}`)).status(),
+      ).toBe(404);
+    } finally {
+      await anonymous.close();
+    }
     expect(
       (
         await post("/nutrition/calculate-targets", {
@@ -459,6 +566,12 @@ test("native B saves and reloads private habits, measurements, notes, meals, tar
         await post(location, { intent: "add-exercise", exerciseId: exercise })
       ).ok(),
     ).toBe(true);
+    const substitutePath = `${location}/substitute/${exercise}`;
+    expect((await page.request.get(substitutePath)).ok()).toBe(true);
+    expect((await a.request.get(substitutePath)).status()).toBe(404);
+    expect((await a.request.post(substitutePath, { form: {} })).status()).toBe(
+      404,
+    );
     expect(
       (
         await post(location, {
