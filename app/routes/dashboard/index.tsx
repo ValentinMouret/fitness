@@ -223,6 +223,12 @@ export default function DashboardPage({
       )}
 
       <DashboardStats stats={stats} />
+      {nutrition.targetSource === "default" && (
+        <Text as="p" size="2" color="gray">
+          Default nutrition targets.{" "}
+          <Link to="/nutrition/calculate-targets">Set your own</Link>.
+        </Text>
+      )}
 
       {/* Daily note */}
       <DailyNoteCard note={dailyNote} />

@@ -17,10 +17,7 @@ import { createWorkoutRepository } from "~/modules/fitness/infra/workout.reposit
 import { HabitService } from "~/modules/habits/application/service";
 import { type Habit, HabitCompletion } from "~/modules/habits/domain/entity";
 import { createHabitRepositories } from "~/modules/habits/infra/repository.server";
-import {
-  dailyTargetsFromCalories,
-  defaultDailyTargets,
-} from "~/modules/nutrition/domain/daily-targets";
+import { resolveDailyTargets } from "~/modules/nutrition/domain/daily-targets";
 import { createNutritionService } from "~/modules/nutrition/infra/service.server";
 import { isSameDay, today } from "~/time";
 import { createServerError } from "~/utils/errors";
@@ -42,6 +39,7 @@ export type DashboardData = {
     readonly calorieTarget: number;
     readonly protein: number;
     readonly proteinTarget: number;
+    readonly targetSource: "saved" | "default";
   };
   readonly dailyNote: DailyNote | undefined;
 };
@@ -119,9 +117,8 @@ export async function getDashboardData(userId: UserId): Promise<DashboardData> {
   const dailyCalorieTarget = targetsResult.find(
     (t) => t.measurement === baseMeasurements.dailyCalorieIntake.name,
   );
-  const nutritionTargets = dailyCalorieTarget
-    ? dailyTargetsFromCalories(dailyCalorieTarget.value)
-    : defaultDailyTargets;
+  const { targets: nutritionTargets, source: targetSource } =
+    resolveDailyTargets(dailyCalorieTarget?.value);
 
   const dailySummary = dailySummaryResult.dailyTotals;
 
@@ -140,6 +137,7 @@ export async function getDashboardData(userId: UserId): Promise<DashboardData> {
     completedHabitsCount,
     inProgressWorkout,
     nutrition: {
+      targetSource,
       calories: dailySummary.calories,
       calorieTarget: nutritionTargets.calories,
       protein: dailySummary.protein,
