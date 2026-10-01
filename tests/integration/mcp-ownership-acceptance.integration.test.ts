@@ -13,6 +13,10 @@ import {
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import type { OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import {
+  UNSAFE_decodeViaTurboStream,
+  UNSAFE_SingleFetchRedirectSymbol,
+} from "react-router";
 import { z } from "zod";
 import { hashCredential } from "../../app/modules/auth/infra/crypto.server";
 import { provisionReader } from "../../app/modules/mcp/infra/provision-reader.server";
@@ -411,38 +415,152 @@ describe.sequential("full-stack external HTTP SDK ownership acceptance", () => {
           .object({ user: z.object({ id: z.string() }) })
           .parse(await session.json()).user.id,
       ).toBe(id);
-      for (const path of [
+      const privatePages = [
+        "/",
+        "/dashboard",
         "/habits",
+        "/habits/week",
+        "/habits/new",
+        `/habits/${randomUUID()}/edit`,
         "/measurements",
+        "/measurements/new",
+        "/measurements/weight",
         "/workouts",
+        `/workouts/${ownWorkout}`,
+        `/workouts/${foreignWorkout}`,
+        `/workouts/${ownWorkout}/substitute/${legacyExercise}`,
+        "/workouts/exercises",
+        "/workouts/exercises/create",
+        `/workouts/exercises/${legacyExercise}/edit`,
         "/nutrition",
+        "/nutrition/templates",
+        "/nutrition/meal-builder",
+        "/nutrition/meals",
+        "/nutrition/calculate-targets",
+      ] as const;
+      for (const path of [
+        ...privatePages,
+        ...privatePages.map((page) =>
+          page === "/" ? "/_root.data" : `${page}.data`,
+        ),
+        `/api/exercises/history?exerciseId=${legacyExercise}`,
       ]) {
         const response = await fetch(`${origin}${path}`, {
           headers: { Cookie: cookie },
           redirect: "manual",
         });
+        if (response.status === 202) {
+          if (!response.body) throw new Error("Missing router response body");
+          const decoded = await UNSAFE_decodeViaTurboStream(
+            response.body,
+            globalThis,
+          );
+          const result = z
+            .custom<Record<symbol, unknown>>(
+              (value) =>
+                typeof value === "object" &&
+                value !== null &&
+                UNSAFE_SingleFetchRedirectSymbol in value,
+            )
+            .parse(decoded.value);
+          expect(Object.keys(result)).toHaveLength(0);
+          const redirect = z
+            .object({ redirect: z.string(), status: z.number() })
+            .parse(result[UNSAFE_SingleFetchRedirectSymbol]);
+          expect(redirect.status).toBe(302);
+          expect(new URL(redirect.redirect, origin).pathname).toBe("/login");
+        } else {
+          expect(response.status).toBe(302);
+          expect(response.headers.get("Location")).toContain("/login");
+        }
+      }
+      const authorization = new URLSearchParams({
+        response_type: "code",
+        client_id: clientId,
+        redirect_uri: "https://sdk.example.invalid/callback",
+        resource: `${origin}/mcp`,
+        scope: "fitness",
+        code_challenge: randomBytes(32).toString("base64url"),
+        code_challenge_method: "S256",
+        state: "native-admission-hold",
+      });
+      const beforeConsent = await databaseFixture().pool.query(
+        "select (select count(*) from oauth_connections)::int as connections, (select count(*) from oauth_authorization_codes)::int as codes",
+      );
+      for (const method of ["GET", "POST"] as const) {
+        const response = await fetch(
+          `${origin}/oauth/authorize?${authorization}`,
+          {
+            method,
+            redirect: "manual",
+            headers: {
+              Cookie: cookie,
+              Origin: origin,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            ...(method === "POST"
+              ? {
+                  body: new URLSearchParams({
+                    decision: "allow",
+                    consent: "native-hold-invalid-ticket",
+                  }),
+                }
+              : {}),
+          },
+        );
         expect(response.status).toBe(302);
         expect(response.headers.get("Location")).toContain("/login");
       }
+      expect(
+        (
+          await databaseFixture().pool.query(
+            "select (select count(*) from oauth_connections)::int as connections, (select count(*) from oauth_authorization_codes)::int as codes",
+          )
+        ).rows,
+      ).toEqual(beforeConsent.rows);
       const before = await databaseFixture().pool.query(
         "select name from workouts where id=$1",
         [ownWorkout],
       );
-      const mutation = await fetch(`${origin}/workouts/${ownWorkout}`, {
-        method: "POST",
-        redirect: "manual",
-        headers: {
-          Cookie: cookie,
-          Origin: origin,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          intent: "update-name",
-          name: "Native hold bypass",
-        }),
-      });
-      expect(mutation.status).toBe(302);
-      expect(mutation.headers.get("Location")).toContain("/login");
+      const privateActions = [
+        "/dashboard",
+        "/habits",
+        "/habits/week",
+        "/habits/new",
+        `/habits/${randomUUID()}/edit`,
+        "/measurements",
+        "/measurements/new",
+        "/measurements/weight",
+        "/workouts/create",
+        `/workouts/${ownWorkout}`,
+        `/workouts/${ownWorkout}/substitute/${legacyExercise}`,
+        "/workouts/exercises",
+        "/workouts/exercises/create",
+        `/workouts/exercises/${legacyExercise}/edit`,
+        "/nutrition",
+        "/nutrition/templates",
+        "/nutrition/meal-builder",
+        "/nutrition/meals",
+        "/nutrition/calculate-targets",
+        "/api/nutrition/estimate-meal",
+      ] as const;
+      for (const path of privateActions) {
+        const mutation = await fetch(`${origin}${path}`, {
+          method: "POST",
+          redirect: "manual",
+          headers: {
+            Cookie: cookie,
+            Origin: origin,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            intent: "update-name",
+            name: "Native hold bypass",
+          }),
+        });
+        expect(mutation.status).toBe(302);
+        expect(mutation.headers.get("Location")).toContain("/login");
+      }
       expect(
         (
           await databaseFixture().pool.query(
