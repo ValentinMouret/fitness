@@ -106,7 +106,7 @@ try {
     })
     .parse(JSON.parse(await readFile("drizzle/meta/_journal.json", "utf8")));
   const expected = journal.entries.filter((entry) => entry.idx < 13);
-  if (journal.entries.length !== 20)
+  if (journal.entries.length !== 21)
     throw new Error(
       "Review the rehearsal script for a changed migration stack",
     );
@@ -176,7 +176,7 @@ try {
     console.log(
       JSON.stringify({
         mode: "read-only preflight",
-        pendingMigrations: 7,
+        pendingMigrations: 8,
         tables: before,
         exerciseContent: exerciseContentBefore,
         orphans,

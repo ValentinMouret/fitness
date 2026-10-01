@@ -93,6 +93,7 @@ function getGreeting(): string {
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-US", {
+    timeZone: "UTC",
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -656,7 +657,7 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
                 marginBottom: 8,
               }}
             >
-              {formatDate(new Date())}
+              {formatDate(new Date(loaderData.todayDate))}
             </div>
             <div
               key={allDone ? "ad" : allMorningDone ? "md" : "gr"}

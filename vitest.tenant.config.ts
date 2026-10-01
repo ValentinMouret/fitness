@@ -8,6 +8,7 @@ export default defineConfig({
     env: {},
     include: [
       "tests/integration/ownership-stack.integration.test.ts",
+      "app/modules/auth/infra/account-settings.integration.test.ts",
       "app/modules/habits/**/*.integration.test.ts",
       "app/modules/core/**/*.integration.test.ts",
       "app/modules/fitness/infra/ownership.integration.test.ts",

@@ -32,6 +32,16 @@ export const authUsers = pgTable("auth_users", {
     .defaultNow(),
 });
 
+export const accountSettings = pgTable("account_settings", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => authUsers.id, { onDelete: "cascade" }),
+  timeZone: text("time_zone").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const authSessions = pgTable(
   "auth_sessions",
   {

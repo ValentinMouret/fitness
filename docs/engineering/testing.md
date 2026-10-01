@@ -103,3 +103,12 @@ Run focused checks while iterating, then `bun run gate`. For a changed user
 workflow, also run `bun run gate:e2e` when browsers are available and a test
 server is correctly configured. Formatting and lint commands write changes;
 inspect the working tree before and after running them.
+
+### Account timezone acceptance
+
+The `device-timezone` Playwright project runs after both `auth` and `chromium`,
+so its temporary account-wide timezone changes cannot race other workflow tests.
+Its tests run serially and restore prior settings. For a focused rerun against
+an already authenticated dedicated test server, use
+`bun run test:e2e --project=device-timezone --no-deps`; a full run keeps the
+project dependencies enabled.

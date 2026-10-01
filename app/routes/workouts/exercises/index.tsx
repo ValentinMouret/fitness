@@ -1,4 +1,3 @@
-import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { Box, Container, Flex, Kbd, Select, TextField } from "@radix-ui/themes";
 import { useEffect, useRef } from "react";
@@ -7,6 +6,7 @@ import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { EmptyState } from "~/components/EmptyState";
 import ExerciseCard from "~/components/ExerciseCard";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { exerciseTypes } from "~/modules/fitness/domain/workout";
 import {
   deleteExercise,
@@ -29,14 +29,16 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 };
 
 export const handle = {
-  header: () => ({
+  header: (data: Route.ComponentProps["loaderData"]) => ({
     title: "Exercises",
     backTo: "/workouts",
-    primaryAction: {
-      label: "Add Exercise",
-      to: "/workouts/exercises/create",
-      shortcut: "n",
-    },
+    primaryAction: data?.canManageCatalogue
+      ? {
+          label: "Add Exercise",
+          to: "/workouts/exercises/create",
+          shortcut: "n",
+        }
+      : undefined,
   }),
 };
 
@@ -57,7 +59,7 @@ export default function ExercisesIndexPage({
   loaderData,
 }: Route.ComponentProps) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { allExercises } = loaderData;
+  const { allExercises, canManageCatalogue } = loaderData;
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -154,9 +156,15 @@ export default function ExercisesIndexPage({
           <EmptyState
             icon="🏋️"
             title="No exercises yet"
-            description="Your exercise library is empty. Add your first exercise to start tracking your progress!"
-            actionLabel="Add Exercise"
-            actionTo="/workouts/exercises/create"
+            description={
+              canManageCatalogue
+                ? "Your exercise library is empty. Add your first exercise to start tracking your progress!"
+                : "The shared exercise catalogue is empty."
+            }
+            actionLabel={canManageCatalogue ? "Add Exercise" : undefined}
+            actionTo={
+              canManageCatalogue ? "/workouts/exercises/create" : undefined
+            }
           />
         )
       ) : (
@@ -165,6 +173,7 @@ export default function ExercisesIndexPage({
             <ExerciseCard
               key={exercise.exercise.id}
               exerciseMuscleGroup={exercise}
+              canManageCatalogue={canManageCatalogue}
             />
           ))}
         </Flex>

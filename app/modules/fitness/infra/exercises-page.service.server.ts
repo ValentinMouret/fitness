@@ -1,7 +1,10 @@
 import type { UserId } from "~/modules/auth/domain/user";
-import { requireCatalogueOwner } from "./exercise-catalogue-owner.server";
 import { parseExerciseType } from "~/modules/fitness/domain/workout";
 import { createExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
+import {
+  canManageCatalogue,
+  requireCatalogueOwner,
+} from "./exercise-catalogue-owner.server";
 
 export async function getExercisesPageData(
   userId: UserId,
@@ -24,7 +27,10 @@ export async function getExercisesPageData(
     throw new Error("Error fetching exercises");
   }
 
-  return { allExercises: allExercises.value };
+  return {
+    allExercises: allExercises.value,
+    canManageCatalogue: canManageCatalogue(userId),
+  };
 }
 
 export async function deleteExercise(userId: UserId, exerciseId: string) {

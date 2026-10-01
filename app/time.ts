@@ -1,3 +1,32 @@
+import { z } from "zod";
+
+export const timeZoneSchema = z
+  .string()
+  .min(1)
+  .max(100)
+  .refine((value) => {
+    try {
+      if (value.startsWith("+") || value.startsWith("-")) return false;
+      new Intl.DateTimeFormat("en", { timeZone: value });
+      return true;
+    } catch {
+      return false;
+    }
+  }, "Use a supported timezone");
+
+// Calendar dates use UTC midnight as a date-only value, never as a local instant.
+export function dateInTimeZone(instant: Date, timeZone: string): Date {
+  const parts = new Intl.DateTimeFormat("en", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(instant);
+  const part = (type: string) =>
+    parts.find((value) => value.type === type)?.value;
+  return fromDateString(`${part("year")}-${part("month")}-${part("day")}`);
+}
+
 export const allDays = [
   "Monday",
   "Tuesday",
@@ -36,6 +65,14 @@ export function isSameDay(t1: Date, t2: Date): boolean {
   );
 }
 
+export function isSameCalendarDay(t1: Date, t2: Date): boolean {
+  return (
+    t1.getUTCFullYear() === t2.getUTCFullYear() &&
+    t1.getUTCMonth() === t2.getUTCMonth() &&
+    t1.getUTCDate() === t2.getUTCDate()
+  );
+}
+
 export function toDate(d: Date): Date {
   const t = new Date(d);
   t.setUTCHours(0);
@@ -56,9 +93,21 @@ export function addOneDay(t: Date): Date {
   return n;
 }
 
+export function addCalendarDay(t: Date): Date {
+  const n = new Date(t);
+  n.setUTCDate(t.getUTCDate() + 1);
+  return n;
+}
+
 export function removeOneDay(t: Date): Date {
   const n = new Date(t);
   n.setDate(t.getDate() - 1);
+  return n;
+}
+
+export function removeCalendarDay(t: Date): Date {
+  const n = new Date(t);
+  n.setUTCDate(t.getUTCDate() - 1);
   return n;
 }
 

@@ -4,11 +4,15 @@ import { authInvitations } from "~/db/schema";
 import { env } from "~/env.server";
 import type { UserId } from "~/modules/auth/domain/user";
 
+export function canManageCatalogue(userId: UserId): boolean {
+  return env.AUTH_FOUNDATION_OWNER_USER_ID === userId;
+}
+
 export async function requireCatalogueOwner(
   userId: UserId,
   database: Pick<typeof db, "select"> = db,
 ): Promise<void> {
-  if (env.AUTH_FOUNDATION_OWNER_USER_ID !== userId)
+  if (!canManageCatalogue(userId))
     throw new Response("Catalogue correction requires the original owner", {
       status: 403,
     });

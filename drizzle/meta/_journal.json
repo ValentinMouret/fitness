@@ -141,6 +141,13 @@
       "when": 1790813060804,
       "tag": "0019_exercise_preferences",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790880479364,
+      "tag": "0020_happy_scarecrow",
+      "breakpoints": true
     }
   ]
 }

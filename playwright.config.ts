@@ -38,7 +38,21 @@ export default defineConfig({
     {
       name: "chromium",
       dependencies: ["setup"],
-      testIgnore: [/auth\.setup\.ts/, /auth\/.*\.spec\.ts/],
+      testIgnore: [
+        /auth\.setup\.ts/,
+        /auth\/.*\.spec\.ts/,
+        /device-timezone\.spec\.ts/,
+      ],
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: authFile,
+      },
+    },
+    {
+      name: "device-timezone",
+      dependencies: ["auth", "chromium"],
+      testMatch: /device-timezone\.spec\.ts/,
+      fullyParallel: false,
       use: {
         ...devices["Desktop Chrome"],
         storageState: authFile,
