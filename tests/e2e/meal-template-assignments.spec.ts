@@ -1,9 +1,9 @@
-import { fixtureOwnerId } from "./support/fixture-database";
 import { randomUUID } from "node:crypto";
 import { test as base, expect } from "@playwright/test";
 import pg from "pg";
 import {
   canWriteFixtureDatabase,
+  fixtureOwnerId,
   verifyFixtureServerDatabase,
 } from "./support/fixture-database";
 

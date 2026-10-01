@@ -1,8 +1,8 @@
-import type { UserId } from "~/modules/auth/domain/user";
 import Anthropic from "@anthropic-ai/sdk";
 import { err, ok, type Result } from "neverthrow";
 import { env } from "~/env.server";
 import { logger } from "~/logger.server";
+import type { UserId } from "~/modules/auth/domain/user";
 import type { CreateAIIngredientInput } from "../domain/ingredient";
 import { ingredientCategories, textureCategories } from "../domain/ingredient";
 import {

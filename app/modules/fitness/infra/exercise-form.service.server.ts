@@ -1,6 +1,5 @@
-import type { UserId } from "~/modules/auth/domain/user";
-import { requireCatalogueOwner } from "./exercise-catalogue-owner.server";
 import { redirect } from "react-router";
+import type { UserId } from "~/modules/auth/domain/user";
 import {
   type Exercise,
   ExerciseMuscleGroupsAggregate,
@@ -12,6 +11,7 @@ import {
 import { createExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 import { coerceEmpty, humanFormatting } from "~/strings";
 import { coerceInt } from "~/utils";
+import { requireCatalogueOwner } from "./exercise-catalogue-owner.server";
 
 export type MuscleGroupSplitInput = {
   readonly muscleGroup: string;

@@ -1,7 +1,7 @@
-import { fixtureOwnerId } from "./support/fixture-database";
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import pg from "pg";
+import { fixtureOwnerId } from "./support/fixture-database";
 
 const databaseUrl = process.env.E2E_DATABASE_URL;
 const pool = new pg.Pool({ connectionString: databaseUrl });

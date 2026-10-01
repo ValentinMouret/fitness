@@ -1,9 +1,9 @@
-import type { UserId } from "~/modules/auth/domain/user";
 import { and, eq, isNull } from "drizzle-orm";
 import { err, ok, Result, ResultAsync } from "neverthrow";
 import { db } from "~/db/index";
 import { ingredients } from "~/db/schema";
 import { logger } from "~/logger.server";
+import type { UserId } from "~/modules/auth/domain/user";
 import type { ErrRepository } from "~/repository";
 import {
   executeQuery,

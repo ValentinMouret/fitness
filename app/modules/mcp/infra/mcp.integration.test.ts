@@ -1,4 +1,3 @@
-import { env } from "~/env.server";
 import { randomUUID } from "node:crypto";
 import { Client as McpClient } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
@@ -8,6 +7,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Client, Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
+import { env } from "~/env.server";
 import { userIdSchema } from "~/modules/auth/domain/user";
 import { workoutOperations } from "~/modules/fitness/application/workout-operations";
 import {

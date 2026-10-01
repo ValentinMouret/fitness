@@ -1,6 +1,6 @@
-import { userIdSchema } from "~/modules/auth/domain/user";
 import { ResultAsync } from "neverthrow";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { userIdSchema } from "~/modules/auth/domain/user";
 import type {
   AdaptiveWorkoutRequest,
   EquipmentInstance,

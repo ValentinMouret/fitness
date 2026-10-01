@@ -1,4 +1,3 @@
-import type { UserId } from "~/modules/auth/domain/user";
 import { and, eq, gte, isNull, lte, notInArray, sql } from "drizzle-orm";
 import { err, ok, Result, ResultAsync } from "neverthrow";
 import { db } from "~/db/index";
@@ -9,6 +8,7 @@ import {
   mealTemplates,
 } from "~/db/schema";
 import { logger } from "~/logger.server";
+import type { UserId } from "~/modules/auth/domain/user";
 import type { ErrRepository } from "~/repository";
 import {
   executeQuery,

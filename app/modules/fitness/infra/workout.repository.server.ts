@@ -1,5 +1,3 @@
-import { projectExercisePreferences } from "./exercise-preferences.repository.server";
-import { requireCatalogueOwner } from "./exercise-catalogue-owner.server";
 import { isDeepStrictEqual } from "node:util";
 import {
   and,
@@ -47,6 +45,8 @@ import {
   ExerciseMuscleGroupsAggregate,
 } from "../domain/workout";
 import { failure, type WorkoutError } from "../domain/workout-commands";
+import { requireCatalogueOwner } from "./exercise-catalogue-owner.server";
+import { projectExercisePreferences } from "./exercise-preferences.repository.server";
 
 type ExerciseHistoryRow = {
   readonly workout_id: string;

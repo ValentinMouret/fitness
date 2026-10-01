@@ -1,7 +1,7 @@
-import type { UserId } from "~/modules/auth/domain/user";
 import { data, redirect } from "react-router";
-import type { CreateIngredientCommand } from "~/modules/nutrition/domain/nutrition-commands";
+import type { UserId } from "~/modules/auth/domain/user";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
+import type { CreateIngredientCommand } from "~/modules/nutrition/domain/nutrition-commands";
 import { createNutritionService } from "~/modules/nutrition/infra/service.server";
 import { fromDateString, toDateString } from "~/time";
 import { isSafePath } from "~/utils";

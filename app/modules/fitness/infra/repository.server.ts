@@ -2,12 +2,13 @@ import { and, eq, type InferSelectModel, isNull } from "drizzle-orm";
 import _ from "lodash";
 import { ResultAsync } from "neverthrow";
 import { db as defaultDatabase } from "~/db";
-import { exercisePreferences } from "~/db/schema";
-import type { UserId } from "~/modules/auth/domain/user";
-import { requireCatalogueOwner } from "./exercise-catalogue-owner.server";
-import { projectExercisePreferences } from "./exercise-preferences.repository.server";
-import { exerciseMuscleGroups, exercises } from "~/db/schema";
+import {
+  exerciseMuscleGroups,
+  exercisePreferences,
+  exercises,
+} from "~/db/schema";
 import { logger } from "~/logger.server";
+import type { UserId } from "~/modules/auth/domain/user";
 import type { ErrRepository } from "~/repository";
 import { executeQuery } from "~/repository.server";
 import {
@@ -17,6 +18,8 @@ import {
   type ExerciseType,
   type MuscleGroupSplit,
 } from "../domain/workout";
+import { requireCatalogueOwner } from "./exercise-catalogue-owner.server";
+import { projectExercisePreferences } from "./exercise-preferences.repository.server";
 
 export function createExerciseRepository(
   userId: UserId,

@@ -1,5 +1,5 @@
-import type { UserId } from "~/modules/auth/domain/user";
 import { err, type ResultAsync } from "neverthrow";
+import type { UserId } from "~/modules/auth/domain/user";
 import type { ErrRepository } from "~/repository";
 import type {
   CreateIngredientInput,

@@ -1,5 +1,3 @@
-import { projectExercisePreferences } from "./exercise-preferences.repository.server";
-import type { UserId } from "~/modules/auth/domain/user";
 import { and, eq, gte, type InferSelectModel, isNull } from "drizzle-orm";
 import { err, ok, ResultAsync } from "neverthrow";
 import { db } from "~/db";
@@ -11,6 +9,7 @@ import {
   exercises,
 } from "~/db/schema";
 import { logger } from "~/logger.server";
+import type { UserId } from "~/modules/auth/domain/user";
 import type {
   EquipmentInstance,
   ExerciseMuscleGroups,
@@ -18,6 +17,7 @@ import type {
 import { ExerciseMuscleGroupsAggregate } from "~/modules/fitness/domain/workout";
 import type { ErrRepository } from "~/repository";
 import { executeQuery } from "~/repository.server";
+import { projectExercisePreferences } from "./exercise-preferences.repository.server";
 
 export function createEquipmentRepository(userId: UserId, database = db) {
   return {

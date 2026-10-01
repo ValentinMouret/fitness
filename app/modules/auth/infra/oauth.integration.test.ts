@@ -37,14 +37,12 @@ beforeAll(async () => {
     await db
       .insert(authUsers)
       .values({ id, name: "OAuth fixture", email: `${id}@example.invalid` });
-    await db
-      .insert(authInvitations)
-      .values({
-        userId: id,
-        invitedBy: ownerId,
-        expiresAt: new Date(),
-        acceptedAt: new Date(),
-      });
+    await db.insert(authInvitations).values({
+      userId: id,
+      invitedBy: ownerId,
+      expiresAt: new Date(),
+      acceptedAt: new Date(),
+    });
   }
 });
 

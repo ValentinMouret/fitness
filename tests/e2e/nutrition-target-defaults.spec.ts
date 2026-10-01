@@ -65,9 +65,7 @@ test("labels unsaved defaults, ignores foreign targets, and preserves saved zero
       ).toHaveCount(0);
     }
     await page.goto("/nutrition");
-    await expect(
-      page.getByText(/\d+% of 2000 kcal target/),
-    ).toBeVisible();
+    await expect(page.getByText(/\d+% of 2000 kcal target/)).toBeVisible();
     await pool.query("update targets set value=0 where id=$1", [targetId]);
     await page.reload();
     await expect(

@@ -1,5 +1,5 @@
-import type { UserId } from "~/modules/auth/domain/user";
 import { err, ok, type Result, type ResultAsync } from "neverthrow";
+import type { UserId } from "~/modules/auth/domain/user";
 import type {
   AdaptiveWorkoutRequest,
   AdaptiveWorkoutResult,

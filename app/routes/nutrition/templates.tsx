@@ -1,9 +1,9 @@
-import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { Box, Button, Text, TextField } from "@radix-ui/themes";
 import { useId, useState } from "react";
 import { data, Form, Link, redirect, useNavigation } from "react-router";
 import { z } from "zod";
 import { PageHeader } from "~/components/PageHeader";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import {
   type MealCategory,
   mealAssignmentsSchema,

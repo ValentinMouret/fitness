@@ -1,4 +1,3 @@
-import { updateWorkoutExerciseCue } from "./exercise-preferences.repository.server";
 import { redirect } from "react-router";
 import { z } from "zod";
 import type { UserId } from "~/modules/auth/domain/user";
@@ -24,6 +23,7 @@ import {
   workoutExerciseSchema,
   workoutIdSchema,
 } from "../domain/workout-commands";
+import { updateWorkoutExerciseCue } from "./exercise-preferences.repository.server";
 import { createWorkoutCommands } from "./workout.repository.server";
 
 export async function getWorkoutSessionData(userId: UserId, id: string) {

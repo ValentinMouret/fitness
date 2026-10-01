@@ -1,4 +1,3 @@
-import { userIdSchema } from "~/modules/auth/domain/user";
 import { randomUUID } from "node:crypto";
 import { eq, inArray } from "drizzle-orm";
 import {
@@ -19,6 +18,7 @@ import {
   mealTemplateIngredients,
   mealTemplates,
 } from "~/db/schema";
+import { userIdSchema } from "~/modules/auth/domain/user";
 import type { Ingredient } from "../domain/ingredient";
 import { getMealBuilderData, saveMealLog } from "./meal-builder.service.server";
 import { createMealLogRepository } from "./meal-log.repository.server";
