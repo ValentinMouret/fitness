@@ -1,7 +1,7 @@
 import type { UserId } from "~/modules/auth/domain/user";
 import { baseMeasurements } from "~/modules/core/domain/measurements";
 import { createTargetService } from "~/modules/core/infra/measurement-service.server";
-import { dailyTargetsFromCalories } from "~/modules/nutrition/domain/daily-targets";
+import { resolveDailyTargets } from "~/modules/nutrition/domain/daily-targets";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import { createNutritionService } from "~/modules/nutrition/infra/service.server";
 import { handleResultError } from "~/utils/errors";
@@ -21,20 +21,21 @@ export async function getMealsPageData(userId: UserId, date: Date) {
     handleResultError(mealTemplatesResult, "Failed to load meal templates");
   }
 
-  let targets = null;
-  if (activeTargets.isOk()) {
-    const dailyCalorieTarget = activeTargets.value.find(
-      (t) => t.measurement === baseMeasurements.dailyCalorieIntake.name,
-    );
-    if (dailyCalorieTarget) {
-      targets = dailyTargetsFromCalories(dailyCalorieTarget.value);
-    }
+  if (activeTargets.isErr()) {
+    handleResultError(activeTargets, "Failed to load daily targets");
   }
+  const dailyCalorieTarget = activeTargets.value.find(
+    (t) => t.measurement === baseMeasurements.dailyCalorieIntake.name,
+  );
+  const { targets, source: targetSource } = resolveDailyTargets(
+    dailyCalorieTarget?.value,
+  );
 
   return {
     dailySummary: dailySummaryResult.value,
     mealTemplates: mealTemplatesResult.value,
     targets,
+    targetSource,
     currentDate: date.toISOString(),
   };
 }

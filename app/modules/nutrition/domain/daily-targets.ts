@@ -20,3 +20,16 @@ export function dailyTargetsFromCalories(calories: number): DailyTargets {
     fat: Math.round((calories * 0.3) / 9),
   };
 }
+
+export interface ResolvedDailyTargets {
+  readonly targets: DailyTargets;
+  readonly source: "saved" | "default";
+}
+
+export function resolveDailyTargets(
+  calories: number | undefined,
+): ResolvedDailyTargets {
+  return calories === undefined
+    ? { targets: defaultDailyTargets, source: "default" }
+    : { targets: dailyTargetsFromCalories(calories), source: "saved" };
+}

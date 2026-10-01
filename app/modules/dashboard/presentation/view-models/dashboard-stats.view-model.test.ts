@@ -49,7 +49,7 @@ describe("dashboard stats", () => {
   it("does not invent goals or divide by zero", () => {
     const [calories, protein, weight] = createDashboardStatsViewModel({
       ...input,
-      calorieTarget: 0,
+      calorieTarget: -1,
       proteinTarget: -1,
       weightTarget: undefined,
     });
@@ -82,5 +82,18 @@ describe("dashboard stats", () => {
     expect(
       createDashboardStatsViewModel({ ...input, weight: 75 })[2].detail,
     ).toBe("At goal");
+  });
+});
+
+it("retains a saved zero target without inventing a percentage", () => {
+  const [calories] = createDashboardStatsViewModel({
+    ...input,
+    calorieTarget: 0,
+  });
+  expect(calories).toMatchObject({
+    target: "0",
+    detail: "Zero target",
+    progress: null,
+    accessibleValue: "1,440 of 0 kcal",
   });
 });

@@ -58,3 +58,12 @@ export function createDailyProgressViewModel(
     },
   };
 }
+
+export function nutritionTargetPercentage(
+  current: number,
+  target: number,
+): number | null {
+  return target > 0 && Number.isFinite(target)
+    ? Math.round((current / target) * 100)
+    : null;
+}

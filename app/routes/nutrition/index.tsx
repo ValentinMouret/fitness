@@ -39,7 +39,6 @@ import { Celebration, SuccessPulse } from "~/components/Celebration";
 import { PageHeader } from "~/components/PageHeader";
 import RequiredStar from "~/components/RequiredStar";
 import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
-import { defaultDailyTargets } from "~/modules/nutrition/domain/daily-targets";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import {
@@ -56,6 +55,7 @@ import {
 } from "~/modules/nutrition/presentation";
 import { MealAssignments } from "~/modules/nutrition/presentation/components/MealAssignments/MealAssignments";
 import { NutritionNavigation } from "~/modules/nutrition/presentation/components/NutritionNavigation/NutritionNavigation";
+import { nutritionTargetPercentage } from "~/modules/nutrition/presentation/view-models/nutrition-totals.view-model";
 import { mealAssignmentsField } from "~/modules/nutrition/presentation/meal-builder-form";
 import {
   addOneDay,
@@ -187,7 +187,8 @@ const mealConfig: Record<string, { label: string; icon: string }> = {
 };
 
 function CalorieRing({ current, target }: { current: number; target: number }) {
-  const progress = Math.min(current / target, 1);
+  const progress =
+    Math.min(nutritionTargetPercentage(current, target) ?? 0, 100) / 100;
   const r = 58;
   const circumference = 2 * Math.PI * r;
 
@@ -195,9 +196,9 @@ function CalorieRing({ current, target }: { current: number; target: number }) {
     <div
       className="nutrition-hero__ring"
       role="progressbar"
-      aria-valuenow={Math.round(current)}
+      aria-valuenow={Math.round(progress * 100)}
       aria-valuemin={0}
-      aria-valuemax={Math.round(target)}
+      aria-valuemax={100}
       aria-label="Daily calorie progress"
       aria-valuetext={`${Math.round(current)} of ${Math.round(target)} calories`}
     >
@@ -249,7 +250,8 @@ function formatDateLabel(date: Date): string {
 }
 
 export default function NutritionPage({ loaderData }: Route.ComponentProps) {
-  const { mealTemplates, dailySummary, targets, currentDate } = loaderData;
+  const { mealTemplates, dailySummary, targets, targetSource, currentDate } =
+    loaderData;
   const [searchParams, setSearchParams] = useSearchParams();
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const templateOpenerRef = useRef<HTMLButtonElement>(null);
@@ -308,7 +310,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
 
   const parsedCurrentDate = new Date(currentDate);
   const dailyTotals = dailySummary.dailyTotals;
-  const dailyTargets = targets ?? defaultDailyTargets;
+  const dailyTargets = targets;
 
   const navigateToDate = useCallback(
     (newDate: Date) => {
@@ -429,8 +431,9 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
     );
   };
 
-  const caloriePercent = Math.round(
-    Math.min((dailyTotals.calories / dailyTargets.calories) * 100, 100),
+  const caloriePercent = nutritionTargetPercentage(
+    dailyTotals.calories,
+    dailyTargets.calories,
   );
 
   return (
@@ -483,6 +486,13 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
         )}
       </div>
 
+      {targetSource === "default" && (
+        <Text as="p" size="2" color="gray">
+          Default targets.{" "}
+          <Link to="/nutrition/calculate-targets">Set your own</Link>.
+        </Text>
+      )}
+
       {/* Hero */}
       <div className="nutrition-hero">
         <CalorieRing
@@ -490,7 +500,9 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
           target={dailyTargets.calories}
         />
         <span className="nutrition-hero__target">
-          {caloriePercent}% of {dailyTargets.calories} kcal target
+          {caloriePercent === null
+            ? `${dailyTargets.calories} kcal target`
+            : `${Math.min(caloriePercent, 100)}% of ${dailyTargets.calories} kcal target`}
         </span>
       </div>
 
@@ -522,7 +534,13 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
               </Text>
             </Flex>
             <Progress
-              value={(dailyTotals.calories / dailyTargets.calories) * 100}
+              value={Math.min(
+                nutritionTargetPercentage(
+                  dailyTotals.calories,
+                  dailyTargets.calories,
+                ) ?? 0,
+                100,
+              )}
               aria-label="Calories progress"
               aria-valuetext={`${Math.round(dailyTotals.calories)} of ${dailyTargets.calories} kcal`}
             />
@@ -535,7 +553,13 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
               </Text>
             </Flex>
             <Progress
-              value={(dailyTotals.protein / dailyTargets.protein) * 100}
+              value={Math.min(
+                nutritionTargetPercentage(
+                  dailyTotals.protein,
+                  dailyTargets.protein,
+                ) ?? 0,
+                100,
+              )}
               aria-label="Protein progress"
               aria-valuetext={`${Math.round(dailyTotals.protein)}g of ${dailyTargets.protein}g protein`}
             />
@@ -548,7 +572,13 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
               </Text>
             </Flex>
             <Progress
-              value={(dailyTotals.carbs / dailyTargets.carbs) * 100}
+              value={Math.min(
+                nutritionTargetPercentage(
+                  dailyTotals.carbs,
+                  dailyTargets.carbs,
+                ) ?? 0,
+                100,
+              )}
               aria-label="Carbs progress"
               aria-valuetext={`${Math.round(dailyTotals.carbs)}g of ${dailyTargets.carbs}g carbs`}
             />
@@ -561,7 +591,11 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
               </Text>
             </Flex>
             <Progress
-              value={(dailyTotals.fat / dailyTargets.fat) * 100}
+              value={Math.min(
+                nutritionTargetPercentage(dailyTotals.fat, dailyTargets.fat) ??
+                  0,
+                100,
+              )}
               aria-label="Fat progress"
               aria-valuetext={`${Math.round(dailyTotals.fat)}g of ${dailyTargets.fat}g fat`}
             />
