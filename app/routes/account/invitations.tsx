@@ -8,6 +8,7 @@ import {
   invitedEmailSchema,
 } from "~/modules/auth/domain/invitation";
 import { getAuthFoundation } from "~/modules/auth/infra/auth-foundation.server";
+import { requireLegacyOwnerIdentity } from "~/modules/auth/infra/legacy-owner.server";
 import { requireSameOrigin } from "~/modules/auth/infra/session.server";
 import {
   authenticatedUserContext,
@@ -20,6 +21,7 @@ import type { Route } from "./+types/invitations";
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
     const user = await requirePersonalUser(request);
+    await requireLegacyOwnerIdentity();
     if (!canManageInvitations(user.id, env.AUTH_FOUNDATION_OWNER_USER_ID ?? ""))
       throw new Response("Forbidden", { status: 403 });
     context.set(authenticatedUserContext, user);

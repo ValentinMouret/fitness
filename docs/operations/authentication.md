@@ -486,6 +486,10 @@ holds remain; this stage does not open private routes or B MCP access.
 
 ### External SDK acceptance and remaining boundary audit
 
+The admission-hold findings in this section describe the earlier held stack.
+See [local native identity cutover](#local-native-identity-cutover) for the current
+local runtime and acceptance evidence; production admission remains disabled.
+
 Run `bun run test:mcp:acceptance` with Bun, Node and local `initdb`, `pg_ctl`,
 `pg_dump`, `pg_restore` available. It builds the current app, creates a separate
 loopback PostgreSQL cluster (test trust authentication, synthetic data only),
@@ -540,7 +544,50 @@ data breach: onboarding stays disabled and owner-only browser/MCP safeguards
 remain. Martin's live query-string logging and trusted-IP remediation approval
 is still separate from the isolated SDK proof.
 
-### Native A/B rehearsal readiness (held)
+### Local native identity cutover
+
+The current local cutover supersedes the admission-hold audit above when
+`AUTH_FOUNDATION_ENABLED=true`. The foundation remains loopback-only,
+nonproduction and disabled by default. Production SMTP, the actual durable owner
+bootstrap, fresh restored-history rehearsal and integrated exact-head CI remain
+release prerequisites; local inbox capture is not production delivery proof.
+
+- `requireFitnessUser` validates the accepted original-owner bootstrap, then
+  requires the admitted native session for protected documents, Single Fetch,
+  private resources/actions and OAuth consent. Missing native sessions never
+  fall back to legacy credentials. With the foundation disabled, legacy owner
+  behavior remains in force.
+- OAuth grants bind to that native actor and cookie-bound consent ticket. MCP
+  admission uses the persisted credential account and invitation state; the
+  foundation-disabled path retains its owner-only restriction. Catalogue writes
+  and invitation administration still require the configured original owner.
+- Empty dashboards display a neutral weight definition without a database write.
+  An explicit weight log ensures only that account's neutral definition and saves
+  the actual timestamp in one transaction. Existing metadata is preserved.
+  Explicit calorie-target saves similarly ensure their neutral definition and
+  target atomically. Owner goals, definitions and history are never copied.
+- Native logout clears the actual native session. `/sign-in` exposes Open Fitness
+  for an admitted session. Device timezone synchronization and draft-preserving
+  revalidation continue unchanged; the narrower measurement policy above stands.
+
+The separate native phone browser profile redeems real local magic links in
+independent contexts. It checks private habits/completions, measurement dates,
+notes, ingredients/meals, explicit targets, workout sets/RIR and private cues
+through saves/reloads and known foreign IDs. It checks history/meal-resolution
+resources, Single Fetch isolation, owner-only catalogue/invitation controls,
+logout and cross-origin rejection. Empty-account failures use real PostgreSQL
+errors to verify no neutral definition survives a failed weight save and database
+read failures do not become display defaults. Run this profile serially against
+its dedicated test database; its temporary table rename must not overlap another
+suite using that database. The SDK suite separately checks native A/B OAuth,
+account-switch refusal, retained owner credentials, private writes/SQL reads,
+bootstrap failure, refresh replay and invitation/token revocation.
+
+These checks do not prove production email, the owner's stored ChatGPT/Claude
+connection, every template/substitution/equipment UI flow or live deployment.
+Those remain part of the integrated release acceptance matrix.
+
+### Historical native A/B rehearsal readiness (held)
 
 This is preparation at held target-defaults head
 `e6619d6f12520de2286176cae303565b3baba927`, not native workflow acceptance.

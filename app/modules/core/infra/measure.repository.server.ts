@@ -8,7 +8,10 @@ import type { ErrRepository, ErrValidation } from "~/repository";
 import { executeQuery } from "~/repository.server";
 import type { Measure } from "../domain/measure";
 
-export function createMeasureRepository(userId: UserId, database = db) {
+export function createMeasureRepository(
+  userId: UserId,
+  database: Pick<typeof db, "insert" | "select" | "delete"> = db,
+) {
   return {
     save(self: Measure) {
       return ResultAsync.fromPromise(

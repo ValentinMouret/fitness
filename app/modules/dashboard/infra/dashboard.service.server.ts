@@ -1,4 +1,5 @@
-import { ResultAsync } from "neverthrow";
+import { err, ok, ResultAsync } from "neverthrow";
+import { db } from "~/db";
 import type { UserId } from "~/modules/auth/domain/user";
 import {
   getAccountTimeZone,
@@ -57,7 +58,11 @@ export async function getDashboardData(userId: UserId): Promise<DashboardData> {
   const result = await ResultAsync.combine([
     createMeasureRepository(userId).fetchByMeasurementName("weight", 1),
     createMeasureRepository(userId).fetchByMeasurementName("weight", 200),
-    createMeasurementRepository(userId).fetchByName("weight"),
+    createMeasurementRepository(userId)
+      .fetchByName("weight")
+      .orElse((error) =>
+        error === "not_found" ? ok(baseMeasurements.weight) : err(error),
+      ),
     createMeasurementService(userId).fetchStreak("weight"),
     repositories.habits.fetchActive(todayDate),
     repositories.completions.fetchByDateRange(todayDate, todayDate),
@@ -183,11 +188,18 @@ export async function logWeight(
     readonly weight: number;
   },
 ): Promise<void> {
-  const result = await createMeasureRepository(userId).save(
-    Measure.create("weight", input.weight),
-  );
-
-  if (result.isErr()) {
-    throw createServerError("Failed to save weight", 500, result.error);
-  }
+  await db.transaction(async (transaction) => {
+    const definition = await createMeasurementRepository(userId).ensure(
+      baseMeasurements.weight,
+      transaction,
+    );
+    if (definition.isErr())
+      throw createServerError("Failed to save weight", 500, definition.error);
+    const result = await createMeasureRepository(userId, transaction).save(
+      Measure.create("weight", input.weight),
+    );
+    if (result.isErr()) {
+      throw createServerError("Failed to save weight", 500, result.error);
+    }
+  });
 }

@@ -1,3 +1,4 @@
+import { db } from "~/db";
 import type { UserId } from "~/modules/auth/domain/user";
 import {
   Age,
@@ -6,7 +7,8 @@ import {
   Weight,
 } from "~/modules/core/domain/measurements";
 import { Target } from "~/modules/core/domain/target";
-import { createTargetService } from "~/modules/core/infra/measurement-service.server";
+import { createMeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
+import { createTargetRepository } from "~/modules/core/infra/target.repository.server";
 import { Activity } from "~/modules/nutrition/domain/activity";
 import {
   type Gender,
@@ -73,11 +75,17 @@ export async function saveNutritionTarget(
     value: targetIntake,
   });
 
-  const saveResult = await createTargetService(userId).setTarget(target);
-
-  if (saveResult.isErr()) {
-    throw new Error(saveResult.error);
-  }
+  await db.transaction(async (transaction) => {
+    const definition = await createMeasurementRepository(userId).ensure(
+      baseMeasurements.dailyCalorieIntake,
+      transaction,
+    );
+    if (definition.isErr()) throw new Error(definition.error);
+    const saveResult = await createTargetRepository(userId, transaction).set(
+      target,
+    );
+    if (saveResult.isErr()) throw new Error(saveResult.error);
+  });
 
   return { success: true };
 }

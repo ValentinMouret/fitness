@@ -2,15 +2,13 @@ import { Button, Flex, Spinner, Text } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useFetcher } from "react-router";
 import { getAccountTimeZone } from "~/modules/auth/infra/account-settings.server";
-import { requireLegacyOwnerIdentity } from "~/modules/auth/infra/legacy-owner.server";
-import { requireAuth } from "~/modules/auth/infra/session.server";
+import { requireFitnessUser } from "~/modules/auth/infra/fitness-user.server";
 import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import type { Route } from "./+types/ProtectedLayout";
 
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
-    await requireAuth(request);
-    context.set(authenticatedUserContext, await requireLegacyOwnerIdentity());
+    context.set(authenticatedUserContext, await requireFitnessUser(request));
     return next();
   },
 ];

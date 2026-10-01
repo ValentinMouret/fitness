@@ -112,3 +112,21 @@ Its tests run serially and restore prior settings. For a focused rerun against
 an already authenticated dedicated test server, use
 `bun run test:e2e --project=device-timezone --no-deps`; a full run keeps the
 project dependencies enabled.
+
+### Native account browser acceptance
+
+`playwright.native.config.ts` is a separate serial phone browser profile with
+real local magic-link sessions and empty cookie contexts. Start a rebuilt local
+foundation-enabled server against a migrated dedicated test database, configure
+`E2E_BASE_URL`, `E2E_DATABASE_URL`, `AUTH_LOCAL_INBOX` and the test owner identity,
+then run `bunx playwright test --config playwright.native.config.ts`.
+It does not start, migrate or seed a server. Ordinary Chromium tests exclude it.
+Run it separately from other suites on the same database: its database-failure
+checks temporarily install a trigger and rename a table, restoring both in
+`finally`. Fixtures and new sessions are removed after the suite; existing owner
+settings are restored. Traces, video and automatic screenshots are disabled to
+avoid persisting sign-in links and session credentials. CI runs the legacy
+browser suite with the foundation disabled, then starts a native server and
+runs this separate profile against the same isolated job database. The unit and
+integration CI job also runs full HTTP SDK acceptance with its own PostgreSQL
+cluster.

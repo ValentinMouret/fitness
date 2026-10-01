@@ -1,9 +1,10 @@
-import { createNutritionCommands } from "~/modules/nutrition/infra/nutrition-commands.server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { createWorkoutCommands } from "~/modules/fitness/infra/workout.repository.server";
 import { createRuntimeQueryRunner } from "~/modules/mcp/infra/query.server";
 import { registerFitnessTools } from "~/modules/mcp/infra/tools.server";
+import { createNutritionCommands } from "~/modules/nutrition/infra/nutrition-commands.server";
+import { getAuthFoundation } from "./auth-foundation.server";
 import { requireLegacyOwnerIdentity } from "./legacy-owner.server";
 import { findAccess } from "./oauth.repository.server";
 import { oauthConfig } from "./oauth-config.server";
@@ -34,7 +35,8 @@ export async function handleMcp(request: Request) {
   if (access.isErr()) return oauthError(access.error);
   if (!access.value) return challenge();
   const owner = await requireLegacyOwnerIdentity();
-  if (access.value.user.id !== owner.id) return challenge();
+  if (!getAuthFoundation() && access.value.user.id !== owner.id)
+    return challenge();
   const server = new McpServer(
     { name: "Fitness", version: "1.0.0" },
     { capabilities: { tools: {} } },

@@ -42,6 +42,7 @@ export default defineConfig({
         /auth\.setup\.ts/,
         /auth\/.*\.spec\.ts/,
         /device-timezone\.spec\.ts/,
+        /native\/.*\.spec\.ts/,
       ],
       use: {
         ...devices["Desktop Chrome"],
