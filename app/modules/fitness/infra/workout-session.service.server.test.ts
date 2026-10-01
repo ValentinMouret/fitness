@@ -17,9 +17,7 @@ vi.mock("~/modules/fitness/infra/workout.repository.server", () => {
 });
 
 vi.mock("~/modules/fitness/infra/repository.server", () => ({
-  ExerciseRepository: {
-    listAll: vi.fn(),
-  },
+  createExerciseRepository: () => ({ listAll: vi.fn() }),
 }));
 
 vi.mock("~/logger.server", () => ({

@@ -446,6 +446,38 @@ all1,003 rows in21 owner-bearing tables had the sole owner, with zero unvalidate
 foreign keys. This clears the historical FK blocker, not the fresh current
 snapshot, production identity/authorization or admission release gates.
 
+### Held private exercise content boundary
+
+Migration0019 adds one account preference row per exercise, preserving legacy
+descriptions and mind-muscle cues for the sole explicitly bootstrapped owner,
+including archived exercises. Missing or ambiguous bootstrap with legacy
+content fails transactionally. It clears those fields on the shared exercise
+row; browser/session/substitution reads and the MCP view project only the
+actor's preference. Exercise IDs and names are preserved. Shared names still
+need neutral-publication review before admitting another account.
+
+Cue changes require membership in an active actor-owned workout and update
+only that actor's preference. Shared create/correction/archive operations
+require the configured accepted original owner. Corrections retain the exercise
+ID; archive removes it from active catalogue listings while retaining historical
+workout links and private cues. No private exercise creation or preferred-label
+search behavior is introduced.
+
+The isolated rehearsal command now expects the reviewed20-entry journal and
+seven pending ownership migrations. Alongside its25 retained-table fingerprints,
+it compares complete exercise content after joining the owner's migrated
+preferences and verifies preference ownership. The SDK fixture includes a legacy
+private cue and exercises owner-only catalogue creation without copying private
+content into shared columns. The synthetic PostgreSQL tests verify A/B and
+missing-GUC projections, forged membership refusal, cue clearing, archive/history
+parity and ambiguous-owner rollback; browser acceptance checks cue save/reload.
+
+This new stage requires its own independent final restored-history rehearsal.
+Martin's passed10bc3d8 rehearsal covers0010–0018 only. Keep schema and its matching
+app release coordinated: an older app cannot read account preference cues.
+Current snapshot/identity authorization, publication review and native admission
+holds remain; this stage does not open private routes or B MCP access.
+
 ### External SDK acceptance and remaining boundary audit
 
 Run `bun run test:mcp:acceptance` with Bun, Node and local `initdb`, `pg_ctl`,

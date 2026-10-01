@@ -1,3 +1,4 @@
+import { env } from "~/env.server";
 import { randomUUID } from "node:crypto";
 import { Client as McpClient } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
@@ -49,7 +50,7 @@ const reader = new Pool({
   query_timeout: 4000,
 });
 const database = drizzle(writer);
-const ownerUserId = userIdSchema.parse(randomUUID());
+const ownerUserId = userIdSchema.parse(env.AUTH_FOUNDATION_OWNER_USER_ID);
 const repository = createWorkoutRepository(ownerUserId, database);
 const operations = workoutOperations(repository);
 const nutrition = nutritionOperations(
@@ -71,6 +72,10 @@ beforeAll(async () => {
   await migrate(database, { migrationsFolder: "./drizzle" });
   await writer.query(
     "insert into auth_users (id, name, email) values ($1, 'MCP test owner', 'owner@example.invalid')",
+    [ownerUserId],
+  );
+  await writer.query(
+    "insert into auth_invitations(user_id,invited_by,expires_at,accepted_at) values ($1,$1,now(),now())",
     [ownerUserId],
   );
   await writer.query("revoke create on schema public from public");
@@ -1418,6 +1423,10 @@ it("isolates workout sessions, ordered groups, sets and volume for the real A/B 
     await writer.query("delete from exercise_muscle_groups where exercise=$1", [
       entry.id,
     ]);
+    await writer.query(
+      "delete from exercise_preferences where exercise_id=$1",
+      [entry.id],
+    );
     await writer.query("delete from exercises where id=$1", [entry.id]);
     await writer.query("delete from auth_users where id=$1", [otherUserId]);
   }

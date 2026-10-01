@@ -79,6 +79,24 @@ const summary = async () =>
         ),
     })),
   );
+const exerciseContentSummary = async (migrated: boolean) => {
+  const content = migrated
+    ? `(to_jsonb(e)-'description'-'mmc_instructions') || jsonb_build_object('description',p.description,'mmc_instructions',p.mmc_instructions)`
+    : "to_jsonb(e)";
+  const join = migrated
+    ? "left join exercise_preferences p on p.exercise_id=e.id and p.user_id=$1"
+    : "";
+  return z
+    .object({ count: z.string(), digest: z.string() })
+    .parse(
+      (
+        await pool.query(
+          `select count(*)::text as count, md5(coalesce(string_agg((${content})::text,E'\\n' order by e.id),'')) as digest from exercises e ${join}`,
+          migrated ? [config.OWNERSHIP_REHEARSAL_OWNER_ID] : [],
+        )
+      ).rows[0],
+    );
+};
 try {
   const journal = z
     .object({
@@ -88,7 +106,7 @@ try {
     })
     .parse(JSON.parse(await readFile("drizzle/meta/_journal.json", "utf8")));
   const expected = journal.entries.filter((entry) => entry.idx < 13);
-  if (journal.entries.length !== 19)
+  if (journal.entries.length !== 20)
     throw new Error(
       "Review the rehearsal script for a changed migration stack",
     );
@@ -153,12 +171,14 @@ try {
   if (orphans.some((row) => row.count !== 0))
     throw new Error(`Orphan preflight failed: ${JSON.stringify(orphans)}`);
   const before = await summary();
+  const exerciseContentBefore = await exerciseContentSummary(false);
   if (!apply) {
     console.log(
       JSON.stringify({
         mode: "read-only preflight",
-        pendingMigrations: 6,
+        pendingMigrations: 7,
         tables: before,
+        exerciseContent: exerciseContentBefore,
         orphans,
       }),
     );
@@ -218,11 +238,19 @@ try {
       );
     await migrate(drizzle(pool), { migrationsFolder: "./drizzle" });
     const after = await summary();
+    const exerciseContentAfter = await exerciseContentSummary(true);
+    if (
+      JSON.stringify(exerciseContentBefore) !==
+      JSON.stringify(exerciseContentAfter)
+    )
+      throw new Error(
+        `Private exercise content reconciliation failed; preserve backup ${backup}`,
+      );
     if (JSON.stringify(before) !== JSON.stringify(after))
       throw new Error(
         `History reconciliation failed; preserve copy and recover into a new isolated database from ${backup}`,
       );
-    for (const table of owned) {
+    for (const table of [...owned, "exercise_preferences"]) {
       const rows = (
         await pool.query(
           `select count(*)::int as foreign from ${table} where user_id is distinct from $1`,
@@ -242,6 +270,8 @@ try {
           backup,
           before,
           after,
+          exerciseContentBefore,
+          exerciseContentAfter,
           orphans,
           ownerId: config.OWNERSHIP_REHEARSAL_OWNER_ID,
         },

@@ -8,6 +8,7 @@ import type { MuscleGroup } from "~/modules/fitness/domain/workout";
 import {
   equipmentPreferences,
   exerciseMuscleGroups,
+  exercisePreferences,
   exerciseSubstitutions,
   exercises,
 } from "./schema";
@@ -1035,7 +1036,13 @@ async function main() {
     logger.info("Seeding exercises...");
     const insertedExercises = await tx
       .insert(exercises)
-      .values(exerciseData)
+      .values(
+        exerciseData.map((entry) => ({
+          ...entry,
+          description: null,
+          mmc_instructions: null,
+        })),
+      )
       .onConflictDoUpdate({
         target: [exercises.name, exercises.type],
         targetWhere: sql`${exercises.deleted_at} IS NULL`,
@@ -1051,6 +1058,29 @@ async function main() {
         },
       })
       .returning();
+    for (const exercise of insertedExercises) {
+      const source = exerciseData.find(
+        (entry) => entry.name === exercise.name && entry.type === exercise.type,
+      );
+      if (!source) throw new Error("Seed exercise content is missing");
+      await tx
+        .insert(exercisePreferences)
+        .values({
+          userId: owner.id,
+          exerciseId: exercise.id,
+          description: source.description ?? null,
+          mmcInstructions: source.mmc_instructions ?? null,
+        })
+        .onConflictDoUpdate({
+          target: [exercisePreferences.userId, exercisePreferences.exerciseId],
+          set: {
+            description: source.description ?? null,
+            mmcInstructions: source.mmc_instructions ?? null,
+            deleted_at: null,
+            updated_at: new Date(),
+          },
+        });
+    }
     logger.info({ count: insertedExercises.length }, "Inserted exercises");
 
     logger.info("Seeding equipment preferences...");

@@ -1,3 +1,4 @@
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import ExerciseForm from "~/components/ExerciseForm";
@@ -9,10 +10,13 @@ import {
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/edit";
 
-export const loader = async ({ params }: Route.LoaderArgs) => {
+export const loader = async ({ params, context }: Route.LoaderArgs) => {
   const exerciseId = params["exercise-id"];
 
-  const exercise = await getExerciseForEdit(exerciseId);
+  const exercise = await getExerciseForEdit(
+    context.get(authenticatedUserContext).id,
+    exerciseId,
+  );
   return { exercise };
 };
 
@@ -23,7 +27,11 @@ export const handle = {
   }),
 };
 
-export const action = async ({ request, params }: Route.ActionArgs) => {
+export const action = async ({
+  request,
+  params,
+  context,
+}: Route.ActionArgs) => {
   const exerciseId = params["exercise-id"];
 
   const form = await request.formData();
@@ -51,7 +59,7 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
     i++;
   }
 
-  return updateExercise({
+  return updateExercise(context.get(authenticatedUserContext).id, {
     id: exerciseId ?? "",
     name: parsed.name,
     type: parsed.type,

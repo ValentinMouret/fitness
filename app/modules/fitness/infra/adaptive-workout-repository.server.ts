@@ -1,3 +1,4 @@
+import { projectExercisePreferences } from "./exercise-preferences.repository.server";
 import type { UserId } from "~/modules/auth/domain/user";
 import { and, eq, gte, type InferSelectModel, isNull } from "drizzle-orm";
 import { err, ok, ResultAsync } from "neverthrow";
@@ -102,6 +103,7 @@ export function createEquipmentRepository(userId: UserId, database = db) {
 
 export const AdaptiveWorkoutRepository = {
   findSubstitutes(
+    userId: UserId,
     exerciseId: string,
   ): ResultAsync<ReadonlyArray<ExerciseMuscleGroups>, ErrRepository> {
     const query = db
@@ -129,55 +131,70 @@ export const AdaptiveWorkoutRepository = {
       )
       .orderBy(exerciseSubstitutions.similarity_score);
 
-    return executeQuery(query, "findSubstitutes").map((records) => {
-      const exerciseGroups = new Map<
-        string,
-        {
-          exercise: InferSelectModel<typeof exercises>;
-          muscleGroups: InferSelectModel<typeof exerciseMuscleGroups>[];
+    return executeQuery(query, "findSubstitutes")
+      .map((records) => {
+        const exerciseGroups = new Map<
+          string,
+          {
+            exercise: InferSelectModel<typeof exercises>;
+            muscleGroups: InferSelectModel<typeof exerciseMuscleGroups>[];
+          }
+        >();
+
+        for (const record of records) {
+          const exerciseId = record.exercises.id;
+          if (!exerciseGroups.has(exerciseId)) {
+            exerciseGroups.set(exerciseId, {
+              exercise: record.exercises,
+              muscleGroups: [],
+            });
+          }
+          exerciseGroups
+            .get(exerciseId)
+            ?.muscleGroups.push(record.exercise_muscle_groups);
         }
-      >();
 
-      for (const record of records) {
-        const exerciseId = record.exercises.id;
-        if (!exerciseGroups.has(exerciseId)) {
-          exerciseGroups.set(exerciseId, {
-            exercise: record.exercises,
-            muscleGroups: [],
-          });
+        const results: ExerciseMuscleGroups[] = [];
+        for (const { exercise, muscleGroups } of exerciseGroups.values()) {
+          const exerciseObject = {
+            id: exercise.id,
+            name: exercise.name,
+            type: exercise.type,
+            movementPattern: exercise.movement_pattern,
+            description: undefined,
+          };
+
+          const muscleGroupSplits = muscleGroups.map((mg) => ({
+            muscleGroup: mg.muscle_group,
+            split: mg.split,
+          }));
+
+          const result = ExerciseMuscleGroupsAggregate.create(
+            exerciseObject,
+            muscleGroupSplits,
+          );
+
+          if (result.isOk()) {
+            results.push(result.value);
+          }
         }
-        exerciseGroups
-          .get(exerciseId)
-          ?.muscleGroups.push(record.exercise_muscle_groups);
-      }
 
-      const results: ExerciseMuscleGroups[] = [];
-      for (const { exercise, muscleGroups } of exerciseGroups.values()) {
-        const exerciseObject = {
-          id: exercise.id,
-          name: exercise.name,
-          type: exercise.type,
-          movementPattern: exercise.movement_pattern,
-          description: exercise.description ?? undefined,
-        };
-
-        const muscleGroupSplits = muscleGroups.map((mg) => ({
-          muscleGroup: mg.muscle_group,
-          split: mg.split,
-        }));
-
-        const result = ExerciseMuscleGroupsAggregate.create(
-          exerciseObject,
-          muscleGroupSplits,
-        );
-
-        if (result.isOk()) {
-          results.push(result.value);
-        }
-      }
-
-      return results;
-    });
+        return results;
+      })
+      .andThen((entries) =>
+        ResultAsync.fromPromise(
+          projectExercisePreferences(
+            userId,
+            entries.map((entry) => entry.exercise),
+          ).then((projected) =>
+            entries.map((entry, index) => ({
+              ...entry,
+              exercise: projected[index],
+            })),
+          ),
+          () => "database_error" as const,
+        ),
+      );
   },
 };
 

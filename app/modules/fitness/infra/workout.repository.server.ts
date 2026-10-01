@@ -1,3 +1,5 @@
+import { projectExercisePreferences } from "./exercise-preferences.repository.server";
+import { requireCatalogueOwner } from "./exercise-catalogue-owner.server";
 import { isDeepStrictEqual } from "node:util";
 import {
   and,
@@ -19,6 +21,7 @@ import {
 import { db } from "~/db";
 import {
   exerciseMuscleGroups,
+  exercisePreferences,
   exercises,
   workoutExercises,
   workoutSets,
@@ -83,6 +86,7 @@ function databaseError(error: unknown): WorkoutError {
 
 async function catalogue(
   tx: Transaction,
+  userId: UserId,
   ids: readonly string[],
   includeArchived = false,
 ): Promise<readonly Exercise[]> {
@@ -97,14 +101,18 @@ async function catalogue(
       ),
     )
     .for("share");
-  return rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    type: row.type,
-    movementPattern: row.movement_pattern,
-    description: row.description ?? undefined,
-    mmcInstructions: row.mmc_instructions ?? undefined,
-  }));
+  return projectExercisePreferences(
+    userId,
+    rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      type: row.type,
+      movementPattern: row.movement_pattern,
+      description: undefined,
+      mmcInstructions: undefined,
+    })),
+    tx,
+  );
 }
 
 async function loadSession(
@@ -136,6 +144,7 @@ async function loadSession(
     .orderBy(workoutExercises.order_index);
   const entries = await catalogue(
     tx,
+    userId,
     groups.map((group) => group.exercise_id),
     true,
   );
@@ -339,7 +348,7 @@ export function createWorkoutRepository(
   const repository: IWorkoutRepository = {
     createSession: (build, ids) =>
       transaction(async (tx) => {
-        const result = build(await catalogue(tx, ids));
+        const result = build(await catalogue(tx, userId, ids));
         if (result.isErr()) return result;
         await persist(tx, userId, result.value);
         return result;
@@ -349,7 +358,7 @@ export function createWorkoutRepository(
         const session = await loadSession(tx, userId, id);
         if (!session)
           return err(failure("not_found", "Workout does not exist"));
-        const result = change(session, await catalogue(tx, ids));
+        const result = change(session, await catalogue(tx, userId, ids));
         if (result.isErr()) return result;
         await persist(tx, userId, result.value, session);
         return result;
@@ -376,6 +385,7 @@ export function createWorkoutRepository(
       }),
     createExercise: (input) =>
       transaction(async (tx) => {
+        await requireCatalogueOwner(userId, tx);
         const exercise = {
           id: crypto.randomUUID(),
           name: input.name,
@@ -395,8 +405,14 @@ export function createWorkoutRepository(
           name: exercise.name,
           type: exercise.type,
           movement_pattern: exercise.movementPattern,
-          description: exercise.description,
-          mmc_instructions: exercise.mmcInstructions,
+          description: null,
+          mmc_instructions: null,
+        });
+        await tx.insert(exercisePreferences).values({
+          userId,
+          exerciseId: exercise.id,
+          description: exercise.description ?? null,
+          mmcInstructions: exercise.mmcInstructions ?? null,
         });
         await tx.insert(exerciseMuscleGroups).values(
           input.muscleGroupSplits.map((group) => ({
@@ -788,73 +804,96 @@ export function createWorkoutSessionRepository(
         )
         .orderBy(workoutExercises.order_index, workoutSets.set);
 
-      return executeQuery(query, "findWorkoutSessionById").map((records) => {
-        if (records.length === 0) {
-          return null;
-        }
-
-        const workout = workoutRecordToDomain(records[0].workouts);
-
-        // Group by exercise
-        const exerciseMap = new Map<
-          string,
-          {
-            exercise: Exercise;
-            orderIndex: number;
-            notes?: string;
-            sets: WorkoutSet[];
-          }
-        >();
-
-        for (const record of records) {
-          if (!record.workout_exercises || !record.exercises) {
-            continue;
+      return executeQuery(query, "findWorkoutSessionById")
+        .map((records) => {
+          if (records.length === 0) {
+            return null;
           }
 
-          const exerciseId = record.exercises.id;
+          const workout = workoutRecordToDomain(records[0].workouts);
 
-          if (!exerciseMap.has(exerciseId)) {
-            exerciseMap.set(exerciseId, {
-              exercise: exerciseRecordToDomain(record.exercises),
-              orderIndex: record.workout_exercises.order_index,
-              notes: record.workout_exercises.notes ?? undefined,
-              sets: [],
-            });
-          }
+          // Group by exercise
+          const exerciseMap = new Map<
+            string,
+            {
+              exercise: Exercise;
+              orderIndex: number;
+              notes?: string;
+              sets: WorkoutSet[];
+            }
+          >();
 
-          const exerciseData = exerciseMap.get(exerciseId);
-          if (!exerciseData) continue;
+          for (const record of records) {
+            if (!record.workout_exercises || !record.exercises) {
+              continue;
+            }
 
-          if (record.workout_sets) {
-            const existingSet = exerciseData.sets.find(
-              (s) => s.set === record.workout_sets?.set,
-            );
+            const exerciseId = record.exercises.id;
 
-            if (!existingSet) {
-              const workoutSet = workoutSetRecordToDomain(record.workout_sets);
-              // console.log(`[Workout Repository] Retrieved set from database...`);
-              exerciseData.sets.push(workoutSet);
+            if (!exerciseMap.has(exerciseId)) {
+              exerciseMap.set(exerciseId, {
+                exercise: exerciseRecordToDomain(record.exercises),
+                orderIndex: record.workout_exercises.order_index,
+                notes: record.workout_exercises.notes ?? undefined,
+                sets: [],
+              });
+            }
+
+            const exerciseData = exerciseMap.get(exerciseId);
+            if (!exerciseData) continue;
+
+            if (record.workout_sets) {
+              const existingSet = exerciseData.sets.find(
+                (s) => s.set === record.workout_sets?.set,
+              );
+
+              if (!existingSet) {
+                const workoutSet = workoutSetRecordToDomain(
+                  record.workout_sets,
+                );
+                // console.log(`[Workout Repository] Retrieved set from database...`);
+                exerciseData.sets.push(workoutSet);
+              }
             }
           }
-        }
 
-        // Convert to exercise groups
-        const exerciseGroups: WorkoutExerciseGroup[] = Array.from(
-          exerciseMap.values(),
-        )
-          .sort((a, b) => a.orderIndex - b.orderIndex)
-          .map(({ exercise, orderIndex, notes, sets }) => ({
-            exercise,
-            orderIndex,
-            notes,
-            sets: sets.sort((a, b) => a.set - b.set),
-          }));
+          // Convert to exercise groups
+          const exerciseGroups: WorkoutExerciseGroup[] = Array.from(
+            exerciseMap.values(),
+          )
+            .sort((a, b) => a.orderIndex - b.orderIndex)
+            .map(({ exercise, orderIndex, notes, sets }) => ({
+              exercise,
+              orderIndex,
+              notes,
+              sets: sets.sort((a, b) => a.set - b.set),
+            }));
 
-        return {
-          workout,
-          exerciseGroups,
-        };
-      });
+          return {
+            workout,
+            exerciseGroups,
+          };
+        })
+        .andThen((session) =>
+          ResultAsync.fromPromise(
+            session
+              ? projectExercisePreferences(
+                  userId,
+                  session.exerciseGroups.map((group) => group.exercise),
+                  database,
+                ).then((projected) => ({
+                  ...session,
+                  exerciseGroups: session.exerciseGroups.map(
+                    (group, index) => ({
+                      ...group,
+                      exercise: projected[index],
+                    }),
+                  ),
+                }))
+              : Promise.resolve(null),
+            () => "database_error" as const,
+          ),
+        );
     },
 
     addExercise(
@@ -1253,8 +1292,8 @@ function exerciseRecordToDomain(
     name: record.name,
     type: record.type,
     movementPattern: record.movement_pattern,
-    description: record.description ?? undefined,
-    mmcInstructions: record.mmc_instructions ?? undefined,
+    description: undefined,
+    mmcInstructions: undefined,
   };
 }
 

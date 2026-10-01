@@ -1,3 +1,4 @@
+import { updateWorkoutExerciseCue } from "./exercise-preferences.repository.server";
 import { redirect } from "react-router";
 import { z } from "zod";
 import type { UserId } from "~/modules/auth/domain/user";
@@ -7,10 +8,7 @@ import {
   type Workout,
   WorkoutSet,
 } from "~/modules/fitness/domain/workout";
-import {
-  ExerciseMuscleGroupsRepository,
-  ExerciseRepository,
-} from "~/modules/fitness/infra/repository.server";
+import { createExerciseRepository } from "~/modules/fitness/infra/repository.server";
 import {
   createWorkoutRepository,
   createWorkoutSessionRepository,
@@ -40,7 +38,7 @@ export async function getWorkoutSessionData(userId: UserId, id: string) {
     throw createNotFoundError("Workout");
   }
 
-  const exercisesResult = await ExerciseRepository.listAll();
+  const exercisesResult = await createExerciseRepository(userId).listAll();
 
   if (exercisesResult.isErr()) {
     handleResultError(exercisesResult, "Failed to load exercises");
@@ -542,35 +540,15 @@ export async function destroyWorkout(
   return redirect("/workouts");
 }
 
-export async function updateExerciseMmcInstructions(input: {
-  readonly exerciseId: string;
-  readonly mmcInstructions?: string;
-}): Promise<WorkoutActionResult> {
-  const exerciseResult = await ExerciseMuscleGroupsRepository.findById(
-    input.exerciseId,
-  );
-
-  if (exerciseResult.isErr()) {
-    return { error: "Failed to fetch exercise" };
-  }
-
-  if (!exerciseResult.value) {
-    return { error: "Exercise not found" };
-  }
-
-  const updated = {
-    ...exerciseResult.value,
-    exercise: {
-      ...exerciseResult.value.exercise,
-      mmcInstructions: input.mmcInstructions || undefined,
-    },
-  };
-
-  const result = await ExerciseMuscleGroupsRepository.save(updated);
-
-  if (result.isErr()) {
-    return { error: "Failed to update MMC instructions" };
-  }
-
+export async function updateExerciseMmcInstructions(
+  userId: UserId,
+  input: {
+    readonly workoutId: string;
+    readonly exerciseId: string;
+    readonly mmcInstructions?: string;
+  },
+): Promise<WorkoutActionResult> {
+  const saved = await updateWorkoutExerciseCue(userId, input);
+  if (!saved) throw createNotFoundError("Workout exercise");
   return { success: true };
 }
