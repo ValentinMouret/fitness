@@ -3,11 +3,10 @@ import { z } from "zod";
 import { env } from "~/env.server";
 import { authorizationSchema, validateAuthorization } from "../domain/oauth";
 import { hashCredential } from "./crypto.server";
-import { requireLegacyOwnerIdentity } from "./legacy-owner.server";
+import { requireFitnessUser } from "./fitness-user.server";
 import { issueAuthorizationCode } from "./oauth.repository.server";
 import { oauthConfig } from "./oauth-config.server";
 import { oauthError, privateHeaders, readOAuthForm } from "./oauth-http.server";
-import { requireAuth } from "./session.server";
 
 const ticket = createCookie("fitness-consent", {
   secrets: [env.AUTH_SESSION_SECRET],
@@ -31,8 +30,7 @@ export async function consentLoader(request: Request) {
     config.resource,
   );
   if (authorization.isErr()) throw oauthError(authorization.error);
-  await requireAuth(request);
-  await requireLegacyOwnerIdentity();
+  await requireFitnessUser(request);
   const consent = await ticket.serialize({
     params: authorization.value.params,
     session: binding(request),
@@ -46,8 +44,7 @@ export async function consentLoader(request: Request) {
 
 export async function consentAction(request: Request) {
   const config = oauthConfig();
-  await requireAuth(request);
-  const owner = await requireLegacyOwnerIdentity();
+  const actor = await requireFitnessUser(request);
   const form = await readOAuthForm(request);
   if (form.isErr()) return oauthError(form.error);
   let value: unknown;
@@ -76,7 +73,7 @@ export async function consentAction(request: Request) {
   if (form.value.decision === "deny") {
     destination.searchParams.set("error", "access_denied");
   } else if (form.value.decision === "allow") {
-    const result = await issueAuthorizationCode(owner.id, params, client);
+    const result = await issueAuthorizationCode(actor.id, params, client);
     if (result.isErr()) return oauthError(result.error);
     destination.searchParams.set("code", result.value);
   } else return oauthError("invalid_request");

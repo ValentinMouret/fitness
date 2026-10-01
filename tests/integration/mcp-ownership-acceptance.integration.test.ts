@@ -1,5 +1,5 @@
 import { type ChildProcess, execFile, spawn } from "node:child_process";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
@@ -12,10 +12,6 @@ import {
   StreamableHTTPError,
 } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
-import {
-  UNSAFE_decodeViaTurboStream,
-  UNSAFE_SingleFetchRedirectSymbol,
-} from "react-router";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { hashCredential } from "../../app/modules/auth/infra/crypto.server";
@@ -92,6 +88,32 @@ const tokenPost = (path: string, params: Readonly<Record<string, string>>) =>
     body: new URLSearchParams(params),
   });
 
+async function nativeCookie(email: string): Promise<string> {
+  const requested = await fetch(`${origin}/sign-in`, {
+    method: "POST",
+    headers: {
+      Origin: origin,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ intent: "request-link", email }),
+  });
+  expect(requested.status).toBe(200);
+  const messages = (await readFile(join(folder, "inbox.jsonl"), "utf8"))
+    .trim()
+    .split("\n")
+    .map((line) =>
+      z.object({ to: z.string(), url: z.url() }).parse(JSON.parse(line)),
+    );
+  const message = messages.findLast((entry) => entry.to === email);
+  if (!message) throw new Error("Native link missing");
+  const verified = await fetch(message.url, { redirect: "manual" });
+  expect(verified.status).toBe(302);
+  return verified.headers
+    .getSetCookie()
+    .map((value) => value.split(";")[0])
+    .join("; ");
+}
+
 beforeAll(async () => {
   folder = await mkdtemp(join(tmpdir(), "fitness-sdk-acceptance-"));
   const pgPort = await freePort();
@@ -151,6 +173,10 @@ beforeAll(async () => {
   const before = (await fixture.pool.query("select * from oauth_tokens")).rows;
   await fixture.pool.query(
     "insert into exercises(id,name,type,movement_pattern,description,mmc_instructions) values ($1,'Retained legacy lift','dumbbells','push','Retained private description','Retained private cue')",
+    [legacyExercise],
+  );
+  await fixture.pool.query(
+    "insert into exercise_muscle_groups(exercise,muscle_group,split) values($1,'pecs',100)",
     [legacyExercise],
   );
   const rehearsalEnv = {
@@ -378,197 +404,244 @@ afterAll(async () => {
 });
 
 describe.sequential("full-stack external HTTP SDK ownership acceptance", () => {
-  it("keeps private routes closed to real native A/B sessions before identity cutover", async () => {
-    for (const [id, email] of [
-      [owner, "owner@example.invalid"],
-      [other, "other@example.invalid"],
+  it("admits real native A/B sessions with independent dates and owner-only catalogue permissions", async () => {
+    await databaseFixture().pool.query(
+      "insert into measurements(user_id,name,unit,description) values($1,'weight','kg','Owner retained weight definition')",
+      [owner],
+    );
+    for (const [id, email, zone, own, foreign] of [
+      [
+        owner,
+        "owner@example.invalid",
+        "Pacific/Auckland",
+        ownWorkout,
+        foreignWorkout,
+      ],
+      [
+        other,
+        "other@example.invalid",
+        "America/Los_Angeles",
+        foreignWorkout,
+        ownWorkout,
+      ],
     ] as const) {
-      const requested = await fetch(`${origin}/sign-in`, {
-        method: "POST",
-        headers: {
-          Origin: origin,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({ intent: "request-link", email }),
-      });
-      expect(requested.status).toBe(200);
-      const messages = (await readFile(join(folder, "inbox.jsonl"), "utf8"))
-        .trim()
-        .split("\n")
-        .map((line) =>
-          z.object({ to: z.string(), url: z.url() }).parse(JSON.parse(line)),
-        );
-      const message = messages.findLast((entry) => entry.to === email);
-      if (!message) throw new Error("Native acceptance link was not delivered");
-      const verified = await fetch(message.url, { redirect: "manual" });
-      expect(verified.status).toBe(302);
-      const cookie = verified.headers
-        .getSetCookie()
-        .map((value) => value.split(";")[0])
-        .join("; ");
-      expect(cookie).toContain("better-auth.session_token=");
-      const session = await fetch(`${origin}/api/auth/get-session`, {
-        headers: { Cookie: cookie },
-      });
+      const cookie = await nativeCookie(email);
+      const headers = {
+        Cookie: cookie,
+        Origin: origin,
+        "Content-Type": "application/x-www-form-urlencoded",
+      };
+      const post = (path: string, form: Readonly<Record<string, string>>) =>
+        fetch(`${origin}${path}`, {
+          method: "POST",
+          redirect: "manual",
+          headers,
+          body: new URLSearchParams(form),
+        });
+      const get = (path: string) =>
+        fetch(`${origin}${path}`, {
+          redirect: "manual",
+          headers: { Cookie: cookie },
+        });
+      const session = await get("/api/auth/get-session");
       expect(
         z
           .object({ user: z.object({ id: z.string() }) })
           .parse(await session.json()).user.id,
       ).toBe(id);
-      const privatePages = [
-        "/",
+      expect((await post("/account/timezone", { timeZone: zone })).status).toBe(
+        200,
+      );
+      expect(
+        (
+          await databaseFixture().pool.query(
+            "select time_zone from account_settings where user_id=$1",
+            [id],
+          )
+        ).rows,
+      ).toEqual([{ time_zone: zone }]);
+      for (const path of [
         "/dashboard",
         "/habits",
         "/habits/week",
-        "/habits/new",
-        `/habits/${randomUUID()}/edit`,
         "/measurements",
-        "/measurements/new",
-        "/measurements/weight",
         "/workouts",
-        `/workouts/${ownWorkout}`,
-        `/workouts/${foreignWorkout}`,
-        `/workouts/${ownWorkout}/substitute/${legacyExercise}`,
+        `/workouts/${own}`,
         "/workouts/exercises",
-        "/workouts/exercises/create",
-        `/workouts/exercises/${legacyExercise}/edit`,
         "/nutrition",
         "/nutrition/templates",
-        "/nutrition/meal-builder",
-        "/nutrition/meals",
-        "/nutrition/calculate-targets",
-      ] as const;
-      for (const path of [
-        ...privatePages,
-        ...privatePages.map((page) =>
-          page === "/" ? "/_root.data" : `${page}.data`,
-        ),
-        `/api/exercises/history?exerciseId=${legacyExercise}`,
       ]) {
-        const response = await fetch(`${origin}${path}`, {
-          headers: { Cookie: cookie },
-          redirect: "manual",
-        });
-        if (response.status === 202) {
-          if (!response.body) throw new Error("Missing router response body");
-          const decoded = await UNSAFE_decodeViaTurboStream(
-            response.body,
-            globalThis,
-          );
-          const result = z
-            .custom<Record<symbol, unknown>>(
-              (value) =>
-                typeof value === "object" &&
-                value !== null &&
-                UNSAFE_SingleFetchRedirectSymbol in value,
-            )
-            .parse(decoded.value);
-          expect(Object.keys(result)).toHaveLength(0);
-          const redirect = z
-            .object({ redirect: z.string(), status: z.number() })
-            .parse(result[UNSAFE_SingleFetchRedirectSymbol]);
-          expect(redirect.status).toBe(302);
-          expect(new URL(redirect.redirect, origin).pathname).toBe("/login");
-        } else {
-          expect(response.status).toBe(302);
-          expect(response.headers.get("Location")).toContain("/login");
+        const response = await get(path);
+        expect(response.status, path).toBe(200);
+        if (id === other) {
+          const body = await response.text();
+          expect(body).not.toContain("Retained private cue");
+          expect(body).not.toContain("Retained private description");
+          expect(body).not.toContain("Retained owner workout");
         }
       }
-      const authorization = new URLSearchParams({
+      for (const path of [
+        `/workouts/${foreign}`,
+        `/workouts/${foreign}/substitute/${legacyExercise}`,
+      ]) {
+        expect((await get(path)).status).toBe(404);
+        expect(
+          (
+            await post(path, {
+              intent: "update-name",
+              name: "Cross-account bypass",
+            })
+          ).status,
+        ).toBe(404);
+      }
+      for (const path of [
+        "/workouts/exercises/create",
+        `/workouts/exercises/${legacyExercise}/edit`,
+      ]) {
+        expect((await get(path)).status).toBe(id === owner ? 200 : 403);
+        if (id === other)
+          expect(
+            (await post(path, { name: "Unapproved catalogue edit" })).status,
+          ).toBe(403);
+      }
+      const definition = (
+        await databaseFixture().pool.query(
+          "select * from measurements where user_id=$1 and name='weight'",
+          [id],
+        )
+      ).rows;
+      if (id === other) expect(definition).toEqual([]);
+      expect((await post("/dashboard", { weight: "76.123" })).status).toBe(200);
+      expect(
+        (
+          await databaseFixture().pool.query(
+            "select value from measures where user_id=$1 and measurement_name='weight' and value=76.123",
+            [id],
+          )
+        ).rows,
+      ).toEqual([{ value: 76.123 }]);
+      if (id === other)
+        expect(
+          (
+            await databaseFixture().pool.query(
+              "select name,unit from measurements where user_id=$1 and name='weight'",
+              [id],
+            )
+          ).rows,
+        ).toEqual([{ name: "weight", unit: "kg" }]);
+      if (id === owner)
+        expect(
+          (
+            await databaseFixture().pool.query(
+              "select * from measurements where user_id=$1 and name='weight'",
+              [id],
+            )
+          ).rows,
+        ).toEqual(definition);
+      expect((await get("/dashboard")).status).toBe(200);
+      const rejectedOrigin = await fetch(`${origin}/account/timezone`, {
+        method: "POST",
+        headers: { ...headers, Origin: "https://untrusted.invalid" },
+        body: new URLSearchParams({ timeZone: "UTC" }),
+      });
+      expect(rejectedOrigin.status).toBe(403);
+      const signedOut = await post("/logout", {});
+      expect(signedOut.status).toBe(302);
+      expect(signedOut.headers.get("Location")).toBe("/sign-in");
+      expect((await get("/dashboard")).headers.get("Location")).toContain(
+        "/sign-in",
+      );
+    }
+  });
+
+  it("native OAuth consent binds grants to actual A/B accounts and rejects account switching", async () => {
+    const cookies = [
+      await nativeCookie("owner@example.invalid"),
+      await nativeCookie("other@example.invalid"),
+    ];
+    for (const [index, id] of [owner, other].entries()) {
+      const cookie = cookies[index];
+      const verifier = randomBytes(32).toString("base64url");
+      const params = new URLSearchParams({
         response_type: "code",
         client_id: clientId,
         redirect_uri: "https://sdk.example.invalid/callback",
         resource: `${origin}/mcp`,
         scope: "fitness",
-        code_challenge: randomBytes(32).toString("base64url"),
+        code_challenge: createHash("sha256")
+          .update(verifier)
+          .digest("base64url"),
         code_challenge_method: "S256",
-        state: "native-admission-hold",
+        state: "native-account-consent",
       });
-      const beforeConsent = await databaseFixture().pool.query(
-        "select (select count(*) from oauth_connections)::int as connections, (select count(*) from oauth_authorization_codes)::int as codes",
+      const consentResponse = await fetch(
+        `${origin}/oauth/authorize?${params}`,
+        { headers: { Cookie: cookie }, redirect: "manual" },
       );
-      for (const method of ["GET", "POST"] as const) {
-        const response = await fetch(
-          `${origin}/oauth/authorize?${authorization}`,
-          {
-            method,
-            redirect: "manual",
-            headers: {
-              Cookie: cookie,
-              Origin: origin,
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            ...(method === "POST"
-              ? {
-                  body: new URLSearchParams({
-                    decision: "allow",
-                    consent: "native-hold-invalid-ticket",
-                  }),
-                }
-              : {}),
-          },
-        );
-        expect(response.status).toBe(302);
-        expect(response.headers.get("Location")).toContain("/login");
-      }
-      expect(
-        (
-          await databaseFixture().pool.query(
-            "select (select count(*) from oauth_connections)::int as connections, (select count(*) from oauth_authorization_codes)::int as codes",
-          )
-        ).rows,
-      ).toEqual(beforeConsent.rows);
-      const before = await databaseFixture().pool.query(
-        "select name from workouts where id=$1",
-        [ownWorkout],
-      );
-      const privateActions = [
-        "/dashboard",
-        "/habits",
-        "/habits/week",
-        "/habits/new",
-        `/habits/${randomUUID()}/edit`,
-        "/measurements",
-        "/measurements/new",
-        "/measurements/weight",
-        "/workouts/create",
-        `/workouts/${ownWorkout}`,
-        `/workouts/${ownWorkout}/substitute/${legacyExercise}`,
-        "/workouts/exercises",
-        "/workouts/exercises/create",
-        `/workouts/exercises/${legacyExercise}/edit`,
-        "/nutrition",
-        "/nutrition/templates",
-        "/nutrition/meal-builder",
-        "/nutrition/meals",
-        "/nutrition/calculate-targets",
-        "/api/nutrition/estimate-meal",
-      ] as const;
-      for (const path of privateActions) {
-        const mutation = await fetch(`${origin}${path}`, {
+      expect(consentResponse.status).toBe(200);
+      const consent = /name="consent" value="([^"]+)"/.exec(
+        await consentResponse.text(),
+      )?.[1];
+      if (!consent) throw new Error("Consent field missing");
+      const grant = (actorCookie: string) =>
+        fetch(`${origin}/oauth/authorize?${params}`, {
           method: "POST",
           redirect: "manual",
           headers: {
-            Cookie: cookie,
+            Cookie: actorCookie,
             Origin: origin,
             "Content-Type": "application/x-www-form-urlencoded",
           },
-          body: new URLSearchParams({
-            intent: "update-name",
-            name: "Native hold bypass",
-          }),
+          body: new URLSearchParams({ decision: "allow", consent }),
         });
-        expect(mutation.status).toBe(302);
-        expect(mutation.headers.get("Location")).toContain("/login");
-      }
+      expect((await grant(cookies[1 - index])).status).toBe(400);
+      const approved = await grant(cookie);
+      expect(approved.status).toBe(303);
+      const destination = new URL(approved.headers.get("Location") ?? "");
+      const code = destination.searchParams.get("code");
+      if (!code) throw new Error("Authorization code missing");
+      const token = await tokenPost("/oauth/token", {
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: "https://sdk.example.invalid/callback",
+        resource: `${origin}/mcp`,
+        code_verifier: verifier,
+      });
+      expect(token.status).toBe(200);
+      const issued = z
+        .object({ access_token: z.string(), refresh_token: z.string() })
+        .parse(await token.json());
       expect(
         (
           await databaseFixture().pool.query(
-            "select name from workouts where id=$1",
-            [ownWorkout],
+            "select c.user_id from oauth_tokens t join oauth_connections c on c.id=t.connection_id where t.access_hash=$1",
+            [hashCredential(issued.access_token)],
           )
         ).rows,
-      ).toEqual(before.rows);
+      ).toEqual([{ user_id: id }]);
+      const connected = sdk(issued.access_token);
+      try {
+        await connected.value.connect(connected.transport);
+        const rows = payload(
+          await connected.value.callTool({
+            name: "query",
+            arguments: { sql: "select id from fitness_data.workouts" },
+          }),
+        );
+        expect(rows.structuredContent.rows).toEqual([
+          { id: id === owner ? ownWorkout : foreignWorkout },
+        ]);
+      } finally {
+        await connected.value.close();
+      }
+      expect(
+        (
+          await tokenPost("/oauth/revoke", {
+            token: issued.refresh_token,
+            token_type_hint: "refresh_token",
+          })
+        ).status,
+      ).toBe(200);
     }
   });
 
@@ -743,12 +816,96 @@ describe.sequential("full-stack external HTTP SDK ownership acceptance", () => {
       { id: ownIngredient, name: "SDK own food" },
     ]);
   });
-  it("denies accepted B, missing bearer and revoked owner identity before private tools", async () => {
-    for (const token of [
-      foreignAccess,
-      "",
-      randomBytes(32).toString("base64url"),
-    ]) {
+  it("admits B's actual SDK credential while keeping private reads and mutations scoped", async () => {
+    const connected = sdk(foreignAccess);
+    try {
+      await connected.value.connect(connected.transport);
+      const query = async (sql: string) =>
+        payload(
+          await connected.value.callTool({ name: "query", arguments: { sql } }),
+        );
+      expect(
+        (await query("select id,name from fitness_data.workouts"))
+          .structuredContent.rows,
+      ).toEqual([{ id: foreignWorkout, name: "Other private workout" }]);
+      expect(
+        (
+          await query(
+            `select description,mmc_instructions from fitness_data.exercises where id='${legacyExercise}'`,
+          )
+        ).structuredContent.rows,
+      ).toEqual([{ description: null, mmc_instructions: null }]);
+      expect(
+        (
+          await query(
+            `select id from fitness_data.workouts where id='${ownWorkout}'`,
+          )
+        ).structuredContent.rows,
+      ).toEqual([]);
+      const forbidden = payload(
+        await connected.value.callTool({
+          name: "delete_workout",
+          arguments: { workoutId: ownWorkout },
+        }),
+      );
+      expect(forbidden.isError).toBe(true);
+      const canonical = payload(
+        await connected.value.callTool({
+          name: "create_exercise",
+          arguments: {
+            name: "B unapproved exercise",
+            type: "barbell",
+            movementPattern: "push",
+            muscleGroupSplits: [{ muscleGroup: "pecs", split: 100 }],
+          },
+        }),
+      );
+      expect(canonical.isError).toBe(true);
+      expect(
+        (
+          await databaseFixture().pool.query(
+            "select id from exercises where name='B unapproved exercise'",
+          )
+        ).rows,
+      ).toEqual([]);
+      const created = payload(
+        await connected.value.callTool({
+          name: "create_workout",
+          arguments: {
+            name: "SDK B owned write",
+            start: "1900-01-05T10:00:00Z",
+          },
+        }),
+      );
+      expect(created.isError).toBe(false);
+      expect(
+        (
+          await databaseFixture().pool.query(
+            "select user_id from workouts where name='SDK B owned write'",
+          )
+        ).rows,
+      ).toEqual([{ user_id: other }]);
+      await databaseFixture().pool.query(
+        "update auth_invitations set revoked_at=now() where user_id=$1",
+        [other],
+      );
+      try {
+        await expect(connected.value.listTools()).rejects.toMatchObject({
+          code: 401,
+        });
+      } finally {
+        await databaseFixture().pool.query(
+          "update auth_invitations set revoked_at=null where user_id=$1",
+          [other],
+        );
+      }
+    } finally {
+      await connected.value.close();
+    }
+  });
+
+  it("denies missing bearer and revoked owner identity before private tools", async () => {
+    for (const token of ["", randomBytes(32).toString("base64url")]) {
       const attempt = sdk(token);
       try {
         await expect(

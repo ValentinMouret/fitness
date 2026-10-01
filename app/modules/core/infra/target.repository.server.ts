@@ -15,7 +15,10 @@ import type { ErrValidation } from "~/repository";
 import { executeQuery } from "~/repository.server";
 import type { Target } from "../domain/target";
 
-export function createTargetRepository(userId: UserId, database = db) {
+export function createTargetRepository(
+  userId: UserId,
+  database: Pick<typeof db, "select" | "transaction"> = db,
+) {
   return {
     set(target: Target) {
       return ResultAsync.fromPromise(

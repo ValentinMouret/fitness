@@ -39,6 +39,19 @@ export function createMeasurementRepository(userId: UserId, database = db) {
       );
     },
 
+    ensure(self: Measurement, tx?: Transaction) {
+      return ResultAsync.fromPromise(
+        (tx ?? database)
+          .insert(measurements)
+          .values({ ...self, userId })
+          .onConflictDoNothing(),
+        (error) => {
+          logger.error({ err: error }, "Failed to ensure measurement");
+          return "database_error" as const;
+        },
+      );
+    },
+
     save(self: Measurement, tx?: Transaction) {
       return ResultAsync.fromPromise(
         (tx ?? database)
