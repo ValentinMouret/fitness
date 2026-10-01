@@ -1,4 +1,5 @@
 import type { UserId } from "~/modules/auth/domain/user";
+import { requireAccountToday } from "~/modules/auth/infra/account-settings.server";
 import { type Habit, Habit as HabitEntity } from "../domain/entity";
 import { createHabitRepositories } from "./repository.server";
 
@@ -26,6 +27,7 @@ export async function createHabit(
     input.frequencyType,
     input.frequencyConfig,
     {
+      startDate: await requireAccountToday(userId),
       identityPhrase: input.identityPhrase,
       timeOfDay: input.timeOfDay,
       location: input.location,

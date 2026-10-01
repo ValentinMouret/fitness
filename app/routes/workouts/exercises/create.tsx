@@ -1,13 +1,21 @@
-import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import ExerciseForm from "~/components/ExerciseForm";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
+import { requireCatalogueOwner } from "~/modules/fitness/infra/exercise-catalogue-owner.server";
 import {
   createExercise,
   type MuscleGroupSplitInput,
 } from "~/modules/fitness/infra/exercise-form.service.server";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types";
+
+export const middleware: Route.MiddlewareFunction[] = [
+  async ({ context }, next) => {
+    await requireCatalogueOwner(context.get(authenticatedUserContext).id);
+    return next();
+  },
+];
 
 export const action = async ({ request, context }: Route.ActionArgs) => {
   const form = await request.formData();

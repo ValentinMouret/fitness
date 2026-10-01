@@ -1,5 +1,9 @@
 import type { UserId } from "~/modules/auth/domain/user";
-import { isSameDay, today } from "~/time";
+import {
+  getAccountToday,
+  requireAccountToday,
+} from "~/modules/auth/infra/account-settings.server";
+import { isSameCalendarDay } from "~/time";
 import { handleResultError } from "~/utils/errors";
 import { HabitService } from "../application/service";
 import { groupDailyHabits } from "../domain/daily-habit-order";
@@ -9,14 +13,14 @@ import { createHabitRepositories } from "./repository.server";
 const STREAK_MILESTONES = [7, 30, 90, 365];
 
 export async function getHabitsPageData(userId: UserId) {
+  const todayDate = await getAccountToday(userId);
   const repositories = createHabitRepositories(userId);
-  const habitsResult = await repositories.habits.fetchActive();
+  const habitsResult = await repositories.habits.fetchActive(todayDate);
   if (habitsResult.isErr()) {
     handleResultError(habitsResult, "Failed to load habits");
   }
 
   const habits = habitsResult.value;
-  const todayDate = today();
 
   const earliestDate = habits.reduce(
     (min, h) => (h.startDate < min ? h.startDate : min),
@@ -48,7 +52,7 @@ export async function getHabitsPageData(userId: UserId) {
     );
 
     const todayCompletion = habitCompletions.find((c) =>
-      isSameDay(c.completionDate, todayDate),
+      isSameCalendarDay(c.completionDate, todayDate),
     );
     if (todayCompletion) {
       completionMap[habit.id] = todayCompletion.completed;
@@ -86,6 +90,7 @@ export async function getHabitsPageData(userId: UserId) {
   }
 
   return {
+    todayDate,
     habits,
     todayHabits,
     todayHabitGroups: groupDailyHabits(todayHabits),
@@ -111,10 +116,11 @@ export async function toggleHabitCompletion(
     readonly notes?: string;
   },
 ): Promise<ToggleCompletionResult> {
+  const todayDate = await requireAccountToday(userId);
   const repositories = createHabitRepositories(userId);
   const completion = HabitCompletion.create(
     input.habitId,
-    today(),
+    todayDate,
     !input.completed,
     input.notes,
   );
@@ -139,13 +145,13 @@ export async function toggleHabitCompletion(
       const completions = await repositories.completions.fetchByHabitBetween(
         input.habitId,
         new Date(habit.value.startDate),
-        today(),
+        todayDate,
       );
       if (completions.isOk()) {
         const newStreak = HabitService.calculateStreak(
           habit.value,
           completions.value,
-          today(),
+          todayDate,
         );
         if (STREAK_MILESTONES.includes(newStreak)) {
           hitMilestone = newStreak;

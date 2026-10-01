@@ -139,7 +139,7 @@ export function createHabitRepositories(userId: UserId, database = db) {
         .andThen((record) => recordToHabit(record));
     },
 
-    fetchActive(): ResultAsync<Habit[], ErrRepository> {
+    fetchActive(asOf: Date = today()): ResultAsync<Habit[], ErrRepository> {
       const query = database
         .select()
         .from(habits)
@@ -147,7 +147,7 @@ export function createHabitRepositories(userId: UserId, database = db) {
           and(
             eq(habits.userId, userId),
             eq(habits.is_active, true),
-            lte(habits.start_date, today().toISOString().split("T")[0]),
+            lte(habits.start_date, asOf.toISOString().split("T")[0]),
           ),
         )
         .orderBy(desc(habits.is_keystone), habits.name);

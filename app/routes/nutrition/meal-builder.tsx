@@ -1,5 +1,3 @@
-import { createIngredientSchema } from "~/modules/nutrition/domain/nutrition-commands";
-import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import {
   Cross2Icon,
   DownloadIcon,
@@ -30,6 +28,7 @@ import { zfd } from "zod-form-data";
 import { PageHeader } from "~/components/PageHeader";
 import RequiredStar from "~/components/RequiredStar";
 import { SectionHeader } from "~/components/SectionHeader";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import type {
   CreateAIIngredientInput,
   Ingredient,
@@ -39,6 +38,7 @@ import {
   ingredientCategories,
 } from "~/modules/nutrition/domain/ingredient";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
+import { createIngredientSchema } from "~/modules/nutrition/domain/nutrition-commands";
 import {
   getMealBuilderData,
   saveAiIngredient,
@@ -371,7 +371,7 @@ function MealBuilderEditor({
   }, [fetcher.data, handleAddIngredient]);
 
   const title = mealLoggingMode.isEnabled
-    ? `${mealLoggingMode.existingMeal ? "Edit" : "Add"} ${mealLoggingMode.mealCategory?.charAt(0).toUpperCase()}${mealLoggingMode.mealCategory?.slice(1)}${mealLoggingMode.date ? ` for ${new Date(mealLoggingMode.date).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}` : ""}`
+    ? `${mealLoggingMode.existingMeal ? "Edit" : "Add"} ${mealLoggingMode.mealCategory?.charAt(0).toUpperCase()}${mealLoggingMode.mealCategory?.slice(1)}${mealLoggingMode.date ? ` for ${new Date(mealLoggingMode.date).toLocaleDateString("en-US", { timeZone: "UTC", weekday: "long", month: "short", day: "numeric" })}` : ""}`
     : "Meal Builder";
 
   return (

@@ -1,5 +1,9 @@
 import { ResultAsync } from "neverthrow";
 import type { UserId } from "~/modules/auth/domain/user";
+import {
+  getAccountTimeZone,
+  requireAccountToday,
+} from "~/modules/auth/infra/account-settings.server";
 import type { Measure as MeasureRecord } from "~/modules/core/domain/measure";
 import { Measure } from "~/modules/core/domain/measure";
 import type { Measurement } from "~/modules/core/domain/measurements";
@@ -19,7 +23,7 @@ import { type Habit, HabitCompletion } from "~/modules/habits/domain/entity";
 import { createHabitRepositories } from "~/modules/habits/infra/repository.server";
 import { resolveDailyTargets } from "~/modules/nutrition/domain/daily-targets";
 import { createNutritionService } from "~/modules/nutrition/infra/service.server";
-import { isSameDay, today } from "~/time";
+import { dateInTimeZone, isSameDay } from "~/time";
 import { createServerError } from "~/utils/errors";
 
 export type DashboardData = {
@@ -47,14 +51,15 @@ export type DashboardData = {
 export async function getDashboardData(userId: UserId): Promise<DashboardData> {
   const repositories = createHabitRepositories(userId);
   const now = new Date();
-  const todayDate = today();
+  const timeZone = (await getAccountTimeZone(userId)) ?? "UTC";
+  const todayDate = dateInTimeZone(now, timeZone);
 
   const result = await ResultAsync.combine([
     createMeasureRepository(userId).fetchByMeasurementName("weight", 1),
     createMeasureRepository(userId).fetchByMeasurementName("weight", 200),
     createMeasurementRepository(userId).fetchByName("weight"),
     createMeasurementService(userId).fetchStreak("weight"),
-    repositories.habits.fetchActive(),
+    repositories.habits.fetchActive(todayDate),
     repositories.completions.fetchByDateRange(todayDate, todayDate),
     createWorkoutRepository(userId).findInProgress(),
     createNutritionService(userId).getDailySummary(todayDate),
@@ -157,7 +162,7 @@ export async function toggleHabitCompletion(
   const repositories = createHabitRepositories(userId);
   const completion = HabitCompletion.create(
     input.habitId,
-    today(),
+    await requireAccountToday(userId),
     !input.completed,
   );
 

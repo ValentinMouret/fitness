@@ -1,22 +1,22 @@
-import { execFile, spawn, type ChildProcess } from "node:child_process";
+import { type ChildProcess, execFile, spawn } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
+import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import {
   StreamableHTTPClientTransport,
   StreamableHTTPError,
 } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import type { OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   UNSAFE_decodeViaTurboStream,
   UNSAFE_SingleFetchRedirectSymbol,
 } from "react-router";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { hashCredential } from "../../app/modules/auth/infra/crypto.server";
 import { provisionReader } from "../../app/modules/mcp/infra/provision-reader.server";
@@ -168,7 +168,7 @@ beforeAll(async () => {
     z
       .object({
         mode: z.literal("read-only preflight"),
-        pendingMigrations: z.literal(7),
+        pendingMigrations: z.literal(8),
       })
       .parse(JSON.parse(preflight.stdout)).mode,
   ).toBe("read-only preflight");
@@ -572,7 +572,7 @@ describe.sequential("full-stack external HTTP SDK ownership acceptance", () => {
     }
   });
 
-  it("retains an owner credential across0013–0019 and scopes query and private writes", async () => {
+  it("retains an owner credential across0013–0020 and scopes query and private writes", async () => {
     const connected = sdk(access);
     client = connected.value;
     await client.connect(connected.transport);

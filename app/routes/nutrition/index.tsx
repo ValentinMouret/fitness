@@ -38,6 +38,7 @@ import { zfd } from "zod-form-data";
 import { Celebration, SuccessPulse } from "~/components/Celebration";
 import { PageHeader } from "~/components/PageHeader";
 import RequiredStar from "~/components/RequiredStar";
+import { getAccountToday } from "~/modules/auth/infra/account-settings.server";
 import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
@@ -55,14 +56,13 @@ import {
 } from "~/modules/nutrition/presentation";
 import { MealAssignments } from "~/modules/nutrition/presentation/components/MealAssignments/MealAssignments";
 import { NutritionNavigation } from "~/modules/nutrition/presentation/components/NutritionNavigation/NutritionNavigation";
-import { nutritionTargetPercentage } from "~/modules/nutrition/presentation/view-models/nutrition-totals.view-model";
 import { mealAssignmentsField } from "~/modules/nutrition/presentation/meal-builder-form";
+import { nutritionTargetPercentage } from "~/modules/nutrition/presentation/view-models/nutrition-totals.view-model";
 import {
-  addOneDay,
-  isSameDay,
-  removeOneDay,
+  addCalendarDay,
+  isSameCalendarDay,
+  removeCalendarDay,
   toDateString,
-  today,
 } from "~/time";
 import { isEditableTarget } from "~/utils/dom";
 import { formOptionalText, formText } from "~/utils/form-data";
@@ -72,11 +72,17 @@ import "./index.css";
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const dateParam = url.searchParams.get("date");
-  const currentDate = dateParam ? new Date(dateParam) : today();
-  return getMealsPageData(
+  const todayDate = await getAccountToday(
     context.get(authenticatedUserContext).id,
-    currentDate,
   );
+  const currentDate = dateParam ? new Date(dateParam) : todayDate;
+  return {
+    ...(await getMealsPageData(
+      context.get(authenticatedUserContext).id,
+      currentDate,
+    )),
+    todayDate,
+  };
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
@@ -234,15 +240,16 @@ function CalorieRing({ current, target }: { current: number; target: number }) {
   );
 }
 
-function formatDateLabel(date: Date): string {
-  const isToday = date.toDateString() === today().toDateString();
+function formatDateLabel(date: Date, todayDate: Date): string {
+  const isToday = isSameCalendarDay(date, todayDate);
   if (isToday) return "Today";
 
-  const yesterday = removeOneDay(today());
-  const isYesterday = date.toDateString() === yesterday.toDateString();
+  const yesterday = removeCalendarDay(todayDate);
+  const isYesterday = isSameCalendarDay(date, yesterday);
   if (isYesterday) return "Yesterday";
 
   return date.toLocaleDateString("en-US", {
+    timeZone: "UTC",
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -309,6 +316,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
     : null;
 
   const parsedCurrentDate = new Date(currentDate);
+  const todayDate = new Date(loaderData.todayDate);
   const dailyTotals = dailySummary.dailyTotals;
   const dailyTargets = targets;
 
@@ -322,16 +330,16 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
   );
 
   const previousDay = useCallback(
-    () => navigateToDate(removeOneDay(parsedCurrentDate)),
+    () => navigateToDate(removeCalendarDay(parsedCurrentDate)),
     [navigateToDate, parsedCurrentDate],
   );
   const nextDay = useCallback(
-    () => navigateToDate(addOneDay(parsedCurrentDate)),
+    () => navigateToDate(addCalendarDay(parsedCurrentDate)),
     [navigateToDate, parsedCurrentDate],
   );
   const goToToday = useCallback(
-    () => navigateToDate(today()),
-    [navigateToDate],
+    () => navigateToDate(todayDate),
+    [navigateToDate, todayDate],
   );
 
   useEffect(() => {
@@ -453,7 +461,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
           </IconButton>
         </Tooltip>
         <Heading as="h2" size="5">
-          {formatDateLabel(parsedCurrentDate)}
+          {formatDateLabel(parsedCurrentDate, todayDate)}
         </Heading>
         <Tooltip content="Next day (Right Arrow)">
           <IconButton
@@ -466,7 +474,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
           </IconButton>
         </Tooltip>
 
-        {!isSameDay(parsedCurrentDate, today()) && (
+        {!isSameCalendarDay(parsedCurrentDate, todayDate) && (
           <div className="nutrition-date-nav__today">
             <Tooltip content="Go to Today (T)">
               <Button

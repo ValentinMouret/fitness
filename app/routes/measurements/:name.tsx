@@ -21,13 +21,17 @@ import { SuccessPulse } from "~/components/Celebration";
 import MeasurementChart from "~/components/MeasurementChart";
 import { NumberInput } from "~/components/NumberInput";
 import { SectionHeader } from "~/components/SectionHeader";
+import {
+  getAccountToday,
+  requireAccountToday,
+} from "~/modules/auth/infra/account-settings.server";
 import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import {
   addMeasure,
   deleteMeasure,
   getMeasurementDetail,
 } from "~/modules/core/infra/measurement-detail.service.server";
-import { today } from "~/time";
+
 import { isEditableTarget } from "~/utils/dom";
 import { formNumber, formOptionalText } from "~/utils/form-data";
 import type { Route } from "./+types/:name";
@@ -35,7 +39,13 @@ import "./measurement-detail.css";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const { name } = params;
-  return getMeasurementDetail(context.get(authenticatedUserContext).id, name);
+  return {
+    ...(await getMeasurementDetail(
+      context.get(authenticatedUserContext).id,
+      name,
+    )),
+    todayDate: await getAccountToday(context.get(authenticatedUserContext).id),
+  };
 }
 
 export const handle = {
@@ -69,7 +79,9 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       return data({ error: "Invalid value" }, { status: 400 });
     }
 
-    const measureDate = parsed.data.date ? new Date(parsed.data.date) : today();
+    const measureDate = parsed.data.date
+      ? new Date(parsed.data.date)
+      : await requireAccountToday(context.get(authenticatedUserContext).id);
     const result = await addMeasure(context.get(authenticatedUserContext).id, {
       name,
       value: parsed.data.value,
@@ -105,7 +117,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 }
 
 export default function MeasurementPage(_: Route.ComponentProps) {
-  const { measurement, measures } = useLoaderData<typeof loader>();
+  const { measurement, measures, todayDate } = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
   const addFetcher = useFetcher();
   const valueInputId = useId();
@@ -201,7 +213,7 @@ export default function MeasurementPage(_: Route.ComponentProps) {
                   id={dateInputId}
                   name="date"
                   type="date"
-                  defaultValue={today().toISOString().split("T")[0]}
+                  defaultValue={new Date(todayDate).toISOString().split("T")[0]}
                   disabled={isSubmitting}
                 />
               </Box>

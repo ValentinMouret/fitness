@@ -528,9 +528,9 @@ Code audit at the held stack identifies the following admission gates:
 | --- | --- |
 | Protected browser routes and private APIs | `ProtectedLayout` accepts the signed legacy browser session and resolves the configured accepted original owner. It does not use native B sessions. Habits, measurements/targets/notes, workouts/history/dashboard, nutrition/AI context and equipment use that explicit actor. Native identity cutover and real native A/B workflows remain required. |
 | MCP private writes and SQL reads | `handleMcp` resolves the credential account and compares it with the configured owner before registering tools. Workout/nutrition factories and SQL transaction GUC receive that account. B initialization is denied; base-table reads are denied by the restricted role. Keep this gate until catalogue/private-cue scope is complete. |
-| Shared exercise catalogue reads | Actor repository factories, selectors/history/session mapping, substitutes and `fitness_data.exercises` now project descriptions/MMC only from that account's preferences. Global names/type/movement remain visible catalogue fields with no publication marker or approved neutral ID set. Existing owner labels may still be private. Neutral publication remains required before B access. |
-| Catalogue writes | Browser canonical create/correction/archive and MCP `create_exercise` require the configured accepted original owner. Corrections preserve IDs and archive retains history. Session cue edits lock the owned workout, require active exercise membership and write only account preferences. B canonical creation is denied; private missing-exercise creation remains deferred. The owner-controlled missing-entry support path and its effect on invited-user parity still need acceptance. |
-| Empty-account targets and dates | Dashboard and nutrition resolve only account targets and visibly label unsaved display defaults; saved zero stays zero and read errors are not missing-target fallback. No account timezone is stored. `today()` derives a UTC date while other calendar comparisons/arithmetic use local getters/setters; browser and server can disagree near midnight/DST. Explicit timezone source/edit/unset policy and account date-boundary acceptance remain required. Empty dashboard still requires a neutral weight definition; no implicit copy of owner definitions/goals is approved. |
+| Shared exercise catalogue reads | Actor repository factories, selectors/history/session mapping, substitutes and `fitness_data.exercises` now project descriptions/MMC only from that account's preferences. The owner approved sharing all exercise catalogue rows on October 1, 2026. Global names/type/movement are shared; descriptions and personal cues remain account-private. No publication subset is required. |
+| Catalogue writes | Browser canonical create/correction/archive and MCP `create_exercise` require the configured accepted original owner. Corrections preserve IDs and archive retains history. Session cue edits lock the owned workout, require active exercise membership and write only account preferences. B canonical creation is denied; private missing-exercise creation remains deferred. Owner-only create/edit controls and GET/POST authorization are implemented; admitted native B browser acceptance remains required. |
+| Empty-account targets and dates | Dashboard and nutrition resolve only account targets and visibly label unsaved display defaults; saved zero stays zero and read errors are not missing-target fallback. Migration0020 stores each account device timezone. Protected UI synchronizes the device IANA zone before calendar interaction, then preserves mounted drafts during revalidation. Initial read-only requests use UTC when unset; date-default writes reject with409 until configured. Habits/nutrition use UTC date tokens derived from the account zone. Measurement history, streaks and logged-today checks retain existing server-local day semantics in this release; manual date defaults use the account day and explicit dates remain unchanged. Quick weight logs retain actual timestamps. Historical date-only and instant rows are not reclassified or converted. A future explicit distinction is required before device-local measurement aggregation. Empty dashboard still requires a neutral weight definition; no implicit copy of owner definitions/goals is approved. |
 | Native auth and invitation administration | `/api/auth/*` and `/sign-in` use admitted native sessions when the foundation is enabled; invitation administration requires the configured owner. They do not open protected fitness routes. SMTP/fresh-link recovery, invitation revocation and cutover acceptance remain release gates. |
 | OAuth/public endpoints | Discovery exposes protocol metadata only. Authorization still requires the legacy session and accepted owner; token/refresh/revoke bind the stored connection/account. `/healthz` reports source/database health without private history. Anonymous `/share/meal/:id` is the explicit active published-recipe exception; private lists and SQL views still exclude another account's recipe. |
 | Retired data and operator scripts | Stored training preferences and generation conversations are owned and preserved but have no enabled route/tool consumer. Gym/equipment preference/measurement seeds require the actual accepted owner; the exercise seed still writes the shared catalogue and needs publication review. No tracked active scheduler/import worker adds a separate private-data execution path. |
@@ -547,39 +547,20 @@ This is preparation at held target-defaults head
 The actual HTTP fixture establishes two invitation/magic-link identities and
 checks the closed private boundary. Do not inject route contexts, monkeypatch
 identity, use legacy cookies as B, or count direct repository tests as native
-browser acceptance. Admission depends on the unresolved catalogue/timezone
-choices below; there is no new bypass flag in this stage.
+browser acceptance. The owner resolved catalogue sharing and device timezone on October 1, 2026;
+admission still depends on implementation and acceptance below; there is no new bypass flag in this stage.
 
-#### Neutral catalogue publication candidates
+#### Approved shared catalogue scope
 
-The checked-in seed contains the following review candidates. They are generic
-labels in source, **not approved public rows** and not evidence that a production
-row with the same name/type is neutral. No owner database was queried for this
-audit; IDs, aliases, muscle splits and metadata must be reconciled explicitly.
-
-| Candidate name | Equipment type | Source location |
-| --- | --- | --- |
-| Bench Press | barbell | `app/db/seed-exercises.ts` |
-| Dumbbell Bench Press | dumbbells | `app/db/seed-exercises.ts` |
-| Cable Row | cable | `app/db/seed-exercises.ts` |
-| Lat Pulldown | cable | `app/db/seed-exercises.ts` |
-| Goblet Squat | dumbbells | `app/db/seed-exercises.ts` |
-| Romanian Deadlift | barbell | `app/db/seed-exercises.ts` |
-
-Review an exact ID/name/type/movement/muscle-split list before publication. Keep
-legacy names and historical relationships intact; matching a seed string is not
-publication permission. Descriptions and cues stay private, including seed cues.
-Do not run the seeder against restored/live owner data to manufacture a neutral
-catalogue: it updates canonical rows and owner preferences. The current schema
-has no approved-public subset, so opening B now exposes every active global name.
-Controlled missing-entry support remains an operational/parity decision; no
-private exercise creation is authorized. Preferred labels/search/sort remain a
-separate pending choice. Any publication filter or mapping needs one consistent
-policy across selectors, session/history/template reads, substitutes and SQL/MCP.
+On October 1, 2026, the owner approved sharing all exercise catalogue rows.
+Preserve canonical IDs and historical relationships. Description and personal
+cues remain private. Only the original accepted owner can create, correct or
+archive catalogue entries; private exercise creation remains deferred. Browser
+controls and GET/POST authorization must enforce the same policy as MCP.
 
 #### Minimal identity cutover and acceptance order
 
-1. Resolve neutral publication and timezone source/edit/unset semantics. Preserve
+1. Verify the approved shared catalogue and device timezone implementation. Preserve
    original owner history and existing defaults; seed only required neutral
    measurement definitions for an empty account, never owner logs or targets.
 2. Review a local-only cutover changing `ProtectedLayout` actor acquisition and

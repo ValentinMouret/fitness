@@ -1,23 +1,27 @@
 import type { UserId } from "~/modules/auth/domain/user";
-import { today } from "~/time";
+import {
+  getAccountToday,
+  requireAccountToday,
+} from "~/modules/auth/infra/account-settings.server";
+
 import { handleResultError } from "~/utils/errors";
 import { HabitCompletion } from "../domain/entity";
 import { createHabitRepositories } from "./repository.server";
 
 export async function getHabitsWeekData(userId: UserId) {
+  const todayDate = await getAccountToday(userId);
   const repositories = createHabitRepositories(userId);
-  const habitsResult = await repositories.habits.fetchActive();
+  const habitsResult = await repositories.habits.fetchActive(todayDate);
   if (habitsResult.isErr()) {
     handleResultError(habitsResult, "Failed to load habits");
   }
 
   const habits = habitsResult.value;
-  const todayDate = today();
 
-  const dayOfWeek = todayDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const dayOfWeek = todayDate.getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
   const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   const weekStart = new Date(todayDate);
-  weekStart.setDate(weekStart.getDate() + mondayOffset);
+  weekStart.setUTCDate(weekStart.getUTCDate() + mondayOffset);
 
   // 0=Mon, 6=Sun
   const todayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -38,7 +42,7 @@ export async function getHabitsWeekData(userId: UserId) {
   for (const completion of completionsResult.value) {
     if (!completionMap[completion.habitId]) continue;
     const d = new Date(completion.completionDate);
-    const dow = d.getDay(); // 0=Sun
+    const dow = d.getUTCDay(); // 0=Sun
     const idx = dow === 0 ? 6 : dow - 1; // 0=Mon
     completionMap[completion.habitId][idx] = completion.completed;
   }
@@ -61,10 +65,11 @@ export async function toggleWeekHabitCompletion(
     readonly notes?: string;
   },
 ): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
+  const targetDate = input.date ?? (await requireAccountToday(userId));
   const repositories = createHabitRepositories(userId);
   const completion = HabitCompletion.create(
     input.habitId,
-    input.date ?? today(),
+    targetDate,
     !input.completed,
     input.notes,
   );

@@ -97,12 +97,14 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 function formatWeekRange(weekStart: Date): string {
   const end = new Date(weekStart);
-  end.setDate(end.getDate() + 6);
+  end.setUTCDate(end.getUTCDate() + 6);
   const startStr = weekStart.toLocaleDateString("en-US", {
+    timeZone: "UTC",
     month: "short",
     day: "numeric",
   });
   const endStr = end.toLocaleDateString("en-US", {
+    timeZone: "UTC",
     month: "short",
     day: "numeric",
   });
@@ -678,7 +680,7 @@ export default function HabitsWeekPage({ loaderData }: Route.ComponentProps) {
                   const cellDate = new Date(
                     weekStart instanceof Date ? weekStart : new Date(weekStart),
                   );
-                  cellDate.setDate(cellDate.getDate() + dayIndex);
+                  cellDate.setUTCDate(cellDate.getUTCDate() + dayIndex);
                   return (
                     <PastCell
                       key={day}
