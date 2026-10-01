@@ -1,3 +1,4 @@
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { Box, Container, Flex, Kbd, Select, TextField } from "@radix-ui/themes";
 import { useEffect, useRef } from "react";
@@ -16,12 +17,12 @@ import { isEditableTarget } from "~/utils/dom";
 import { formText } from "~/utils/form-data";
 import type { Route } from "./+types";
 
-export const loader = async ({ request }: Route.LoaderArgs) => {
+export const loader = async ({ request, context }: Route.LoaderArgs) => {
   const url = new URL(request.url);
 
   const searchParams = url.searchParams;
 
-  return getExercisesPageData({
+  return getExercisesPageData(context.get(authenticatedUserContext).id, {
     typeParam: searchParams.get("type"),
     query: searchParams.get("q"),
   });
@@ -39,14 +40,17 @@ export const handle = {
   }),
 };
 
-export const action = async ({ request }: Route.ActionArgs) => {
+export const action = async ({ request, context }: Route.ActionArgs) => {
   const formData = await request.formData();
   const schema = zfd.formData({
     exerciseId: formText(z.string().min(1)),
   });
   const parsed = schema.parse(formData);
 
-  return deleteExercise(parsed.exerciseId);
+  return deleteExercise(
+    context.get(authenticatedUserContext).id,
+    parsed.exerciseId,
+  );
 };
 
 export default function ExercisesIndexPage({

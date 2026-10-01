@@ -1,3 +1,4 @@
+import type { UserId } from "~/modules/auth/domain/user";
 import { err, ok, type Result, type ResultAsync } from "neverthrow";
 import type {
   AdaptiveWorkoutRequest,
@@ -14,7 +15,7 @@ import {
   WorkoutSession as WorkoutSessionNamespace,
 } from "~/modules/fitness/domain/workout";
 import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
-import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
+import { createExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 import type { ErrRepository } from "~/repository";
 
 type ErrWorkoutGeneration =
@@ -29,90 +30,97 @@ type ErrSubstitution =
 
 export const AdaptiveWorkoutService = {
   generateWorkout(
+    userId: UserId,
     request: AdaptiveWorkoutRequest,
   ): ResultAsync<AdaptiveWorkoutResult, ErrWorkoutGeneration | ErrRepository> {
-    return ExerciseMuscleGroupsRepository.listAll().andThen((allExercises) => {
-      const availableExercises = this.filterByAvailableEquipment(
-        allExercises,
-        request.availableEquipment,
-      );
+    return createExerciseMuscleGroupsRepository(userId)
+      .listAll()
+      .andThen((allExercises) => {
+        const availableExercises = this.filterByAvailableEquipment(
+          allExercises,
+          request.availableEquipment,
+        );
 
-      if (availableExercises.length === 0) {
-        return err("no_available_equipment" as const);
-      }
+        if (availableExercises.length === 0) {
+          return err("no_available_equipment" as const);
+        }
 
-      const selectedExercises = this.selectOptimalExercises(
-        availableExercises,
-        request,
-      );
+        const selectedExercises = this.selectOptimalExercises(
+          availableExercises,
+          request,
+        );
 
-      if (selectedExercises.isErr()) {
-        return err(selectedExercises.error);
-      }
+        if (selectedExercises.isErr()) {
+          return err(selectedExercises.error);
+        }
 
-      const workout = WorkoutNamespace.create({
-        name: `Adaptive Workout - ${new Date().toLocaleDateString()}`,
+        const workout = WorkoutNamespace.create({
+          name: `Adaptive Workout - ${new Date().toLocaleDateString()}`,
+        });
+
+        const workoutSession = WorkoutSessionNamespace.create({
+          workout: { ...workout, id: "temp-id" },
+          exercises: selectedExercises.value.map((exercise, index) => ({
+            exercise: exercise.exercise,
+            orderIndex: index,
+          })),
+        });
+
+        const alternatives = this.generateAlternatives(
+          selectedExercises.value,
+          availableExercises,
+        );
+
+        const floorSwitches = this.calculateFloorSwitches(
+          selectedExercises.value,
+          request.availableEquipment,
+        );
+
+        const estimatedDuration = this.estimateDuration(
+          selectedExercises.value,
+        );
+
+        const result: AdaptiveWorkoutResult = {
+          workout: workoutSession,
+          alternatives,
+          floorSwitches,
+          estimatedDuration,
+        };
+
+        return ok(result);
       });
-
-      const workoutSession = WorkoutSessionNamespace.create({
-        workout: { ...workout, id: "temp-id" },
-        exercises: selectedExercises.value.map((exercise, index) => ({
-          exercise: exercise.exercise,
-          orderIndex: index,
-        })),
-      });
-
-      const alternatives = this.generateAlternatives(
-        selectedExercises.value,
-        availableExercises,
-      );
-
-      const floorSwitches = this.calculateFloorSwitches(
-        selectedExercises.value,
-        request.availableEquipment,
-      );
-
-      const estimatedDuration = this.estimateDuration(selectedExercises.value);
-
-      const result: AdaptiveWorkoutResult = {
-        workout: workoutSession,
-        alternatives,
-        floorSwitches,
-        estimatedDuration,
-      };
-
-      return ok(result);
-    });
   },
 
   replaceExercise(
+    userId: UserId,
     _workoutId: string,
     exerciseId: string,
     availableEquipment: ReadonlyArray<EquipmentInstance>,
   ): ResultAsync<Exercise, ErrSubstitution | ErrRepository> {
-    return AdaptiveWorkoutRepository.findSubstitutes(exerciseId).andThen(
-      (substitutes) => {
-        if (substitutes.length === 0) {
-          return err("no_suitable_substitutes" as const);
-        }
+    return AdaptiveWorkoutRepository.findSubstitutes(
+      userId,
+      exerciseId,
+    ).andThen((substitutes) => {
+      if (substitutes.length === 0) {
+        return err("no_suitable_substitutes" as const);
+      }
 
-        const availableSubstitutes = this.filterByAvailableEquipment(
-          substitutes,
-          availableEquipment,
-        );
+      const availableSubstitutes = this.filterByAvailableEquipment(
+        substitutes,
+        availableEquipment,
+      );
 
-        if (availableSubstitutes.length === 0) {
-          return err("equipment_unavailable" as const);
-        }
+      if (availableSubstitutes.length === 0) {
+        return err("equipment_unavailable" as const);
+      }
 
-        // Select best substitute based on similarity score
-        const bestSubstitute = availableSubstitutes.reduce((best, current) =>
-          this.compareSubstitutes(best, current) > 0 ? best : current,
-        );
+      // Select best substitute based on similarity score
+      const bestSubstitute = availableSubstitutes.reduce((best, current) =>
+        this.compareSubstitutes(best, current) > 0 ? best : current,
+      );
 
-        return ok(bestSubstitute.exercise);
-      },
-    );
+      return ok(bestSubstitute.exercise);
+    });
   },
 
   filterByAvailableEquipment(

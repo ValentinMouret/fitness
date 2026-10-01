@@ -31,6 +31,7 @@ export async function getSubstituteExerciseData(
   }
 
   const substitutesResult = await AdaptiveWorkoutRepository.findSubstitutes(
+    userId,
     input.exerciseId,
   );
   if (substitutesResult.isErr()) {
@@ -80,6 +81,7 @@ export async function substituteExercise(
   );
 
   const substituteResult = await AdaptiveWorkoutService.replaceExercise(
+    userId,
     input.workoutId,
     input.exerciseId,
     selectedEquipmentInstances,

@@ -149,10 +149,14 @@ export async function action({ request, params, context }: Route.ActionArgs) {
           mmcInstructions: formOptionalText(),
         });
         const parsed = schema.parse(formData);
-        return updateExerciseMmcInstructions({
-          exerciseId: parsed.exerciseId,
-          mmcInstructions: parsed.mmcInstructions,
-        });
+        return updateExerciseMmcInstructions(
+          context.get(authenticatedUserContext).id,
+          {
+            workoutId: id,
+            exerciseId: parsed.exerciseId,
+            mmcInstructions: parsed.mmcInstructions,
+          },
+        );
       }
 
       case "update-exercise-notes": {

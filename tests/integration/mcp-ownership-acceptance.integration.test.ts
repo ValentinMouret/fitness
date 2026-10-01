@@ -36,6 +36,7 @@ const owner = randomUUID();
 const other = randomUUID();
 const connection = randomUUID();
 const ownWorkout = randomUUID();
+const legacyExercise = randomUUID();
 const foreignWorkout = randomUUID();
 const foreignIngredient = randomUUID();
 const access = randomBytes(32).toString("base64url");
@@ -144,6 +145,10 @@ beforeAll(async () => {
     [ownWorkout],
   );
   const before = (await fixture.pool.query("select * from oauth_tokens")).rows;
+  await fixture.pool.query(
+    "insert into exercises(id,name,type,movement_pattern,description,mmc_instructions) values ($1,'Retained legacy lift','dumbbells','push','Retained private description','Retained private cue')",
+    [legacyExercise],
+  );
   const rehearsalEnv = {
     ...process.env,
     OWNERSHIP_REHEARSAL_DATABASE_URL: fixture.databaseUrl.toString(),
@@ -159,7 +164,7 @@ beforeAll(async () => {
     z
       .object({
         mode: z.literal("read-only preflight"),
-        pendingMigrations: z.literal(6),
+        pendingMigrations: z.literal(7),
       })
       .parse(JSON.parse(preflight.stdout)).mode,
   ).toBe("read-only preflight");
@@ -449,7 +454,7 @@ describe.sequential("full-stack external HTTP SDK ownership acceptance", () => {
     }
   });
 
-  it("retains an owner credential across0013–0018 and scopes query and private writes", async () => {
+  it("retains an owner credential across0013–0019 and scopes query and private writes", async () => {
     const connected = sdk(access);
     client = connected.value;
     await client.connect(connected.transport);
@@ -457,6 +462,60 @@ describe.sequential("full-stack external HTTP SDK ownership acceptance", () => {
     expect(names).toContain("query");
     expect(names).toContain("create_workout");
     expect(names).toContain("log_meal");
+    const createdExercise = payload(
+      await client.callTool({
+        name: "create_exercise",
+        arguments: {
+          name: "Reviewed neutral SDK exercise",
+          type: "dumbbells",
+          movementPattern: "push",
+          description: "Private SDK description",
+          mmcInstructions: "Private SDK cue",
+          muscleGroupSplits: [{ muscleGroup: "pecs", split: 100 }],
+        },
+      }),
+    );
+    expect(createdExercise.isError).toBe(false);
+    const createdExerciseId = z
+      .object({ exercise: z.object({ id: z.uuid() }) })
+      .parse(createdExercise.structuredContent).exercise.id;
+    expect(
+      (
+        await databaseFixture().pool.query(
+          "select description,mmc_instructions from exercises where id=$1",
+          [createdExerciseId],
+        )
+      ).rows,
+    ).toEqual([{ description: null, mmc_instructions: null }]);
+    expect(
+      (
+        await databaseFixture().pool.query(
+          "select user_id,description,mmc_instructions from exercise_preferences where exercise_id=$1",
+          [createdExerciseId],
+        )
+      ).rows,
+    ).toEqual([
+      {
+        user_id: owner,
+        description: "Private SDK description",
+        mmc_instructions: "Private SDK cue",
+      },
+    ]);
+    expect(
+      payload(
+        await client.callTool({
+          name: "query",
+          arguments: {
+            sql: `select description,mmc_instructions from fitness_data.exercises where id='${legacyExercise}'`,
+          },
+        }),
+      ).structuredContent.rows,
+    ).toEqual([
+      {
+        description: "Retained private description",
+        mmc_instructions: "Retained private cue",
+      },
+    ]);
     const rows = payload(
       await client.callTool({
         name: "query",

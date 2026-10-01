@@ -196,7 +196,7 @@ it("rehearses the complete held ownership stack against one mixed legacy owner d
           "select count(*)::int as migrations from drizzle.__drizzle_migrations",
         )
       ).rows[0].migrations,
-    ).toBe(19);
+    ).toBe(20);
   } finally {
     await fixture.close();
   }

@@ -135,3 +135,97 @@ test("foreign workout routes, actions, history and dashboard stay private and pr
     await pool.end();
   }
 });
+
+test("workout cue editing requires exercise membership and keeps saved content private", async ({
+  page,
+  request,
+}) => {
+  const pool = new pg.Pool({ connectionString: process.env.E2E_DATABASE_URL });
+  const workoutId = randomUUID();
+  const exerciseId = randomUUID();
+  const unrelatedId = randomUUID();
+  const owner = fixtureOwnerId();
+  const cue = `Private cue ${randomUUID()}`;
+  try {
+    await verifyFixtureServerDatabase(request, pool);
+    await pool.query(
+      "insert into exercises(id,name,type,movement_pattern) values ($1,$3,'dumbbells','push'),($2,$4,'dumbbells','push')",
+      [
+        exerciseId,
+        unrelatedId,
+        `Cue lift ${exerciseId}`,
+        `Unrelated lift ${unrelatedId}`,
+      ],
+    );
+    await pool.query(
+      "insert into exercise_muscle_groups(exercise,muscle_group,split) values ($1,'pecs',100),($2,'pecs',100)",
+      [exerciseId, unrelatedId],
+    );
+    await pool.query(
+      "insert into workouts(id,user_id,name,start) values ($1,$2,'Private cue test workout',now())",
+      [workoutId, owner],
+    );
+    await pool.query(
+      "insert into workout_exercises(workout_id,exercise_id,order_index) values ($1,$2,0)",
+      [workoutId, exerciseId],
+    );
+    const rejected = await request.post(`/workouts/${workoutId}`, {
+      form: {
+        intent: "update-exercise-mmc",
+        exerciseId: unrelatedId,
+        mmcInstructions: "Forged cue",
+      },
+    });
+    expect(rejected.status()).toBe(404);
+    expect(
+      (
+        await pool.query(
+          "select exercise_id from exercise_preferences where exercise_id=$1",
+          [unrelatedId],
+        )
+      ).rows,
+    ).toEqual([]);
+    await page.goto(`/workouts/${workoutId}?exercise=${exerciseId}`);
+    await page.getByRole("button", { name: "+ Add mind-muscle cue" }).click();
+    await page.getByLabel("Focus Cues & Instructions").fill(cue);
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByText(cue, { exact: true })).toBeVisible();
+    await page.reload();
+    await expect(page.getByText(cue, { exact: true })).toBeVisible();
+    expect(
+      (
+        await pool.query(
+          "select user_id,mmc_instructions from exercise_preferences where exercise_id=$1",
+          [exerciseId],
+        )
+      ).rows,
+    ).toEqual([{ user_id: owner, mmc_instructions: cue }]);
+    expect(
+      (
+        await pool.query(
+          "select description,mmc_instructions from exercises where id=$1",
+          [exerciseId],
+        )
+      ).rows,
+    ).toEqual([{ description: null, mmc_instructions: null }]);
+  } finally {
+    await pool.query(
+      "delete from exercise_preferences where exercise_id=any($1::uuid[])",
+      [[exerciseId, unrelatedId]],
+    );
+    await pool.query("delete from workout_sets where workout=$1", [workoutId]);
+    await pool.query("delete from workout_exercises where workout_id=$1", [
+      workoutId,
+    ]);
+    await pool.query("delete from workouts where id=$1", [workoutId]);
+    await pool.query(
+      "delete from exercise_muscle_groups where exercise=any($1::uuid[])",
+      [[exerciseId, unrelatedId]],
+    );
+    await pool.query("delete from exercises where id=any($1::uuid[])", [
+      [exerciseId, unrelatedId],
+    ]);
+    await pool.end();
+  }
+});

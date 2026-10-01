@@ -253,6 +253,22 @@ export const exercises = pgTable(
   ],
 );
 
+export const exercisePreferences = pgTable(
+  "exercise_preferences",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id),
+    exerciseId: uuid("exercise_id")
+      .notNull()
+      .references(() => exercises.id),
+    description: text(),
+    mmcInstructions: text("mmc_instructions"),
+    ...timestampColumns(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.exerciseId] })],
+);
+
 export const muscleGroupsEnum = pgEnum("muscle_group", muscleGroups);
 export const exerciseMuscleGroups = pgTable(
   "exercise_muscle_groups",

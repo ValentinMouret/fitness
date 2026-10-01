@@ -1,3 +1,4 @@
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import ExerciseForm from "~/components/ExerciseForm";
@@ -8,7 +9,7 @@ import {
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types";
 
-export const action = async ({ request }: Route.ActionArgs) => {
+export const action = async ({ request, context }: Route.ActionArgs) => {
   const form = await request.formData();
   const schema = zfd.formData({
     name: formText(z.string().min(1)),
@@ -34,7 +35,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
     i++;
   }
 
-  return createExercise({
+  return createExercise(context.get(authenticatedUserContext).id, {
     name: parsed.name,
     type: parsed.type,
     movementPattern: parsed.movementPattern,
