@@ -76,6 +76,9 @@ jobs:
             -e NODE_ENV=production \
             fitness-ci bun -e 'console.log("Runtime migration smoke check passed")'
 
+      - name: Verify retained asset startup and preview isolation
+        run: bash deploy/test-retention.sh
+
       - uses: actions/upload-artifact@v4
         with:
           name: build-output
