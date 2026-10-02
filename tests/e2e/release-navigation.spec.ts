@@ -13,18 +13,66 @@ for (const path of ["/workouts", "/measurements"]) {
         documents.push(new URL(request.url()).pathname);
     });
     const tabs = page.locator(".bottom-tabs");
-    const sameTab = tabs.locator(`a[href="${path}"]`);
-    const samePage = page.waitForResponse(
-      (response) => new URL(response.url()).pathname === `${path}.data`,
-    );
-    await sameTab.click();
-    await samePage;
-    expect(documents).toEqual([]);
     await tabs.getByRole("link", { name: "Nutrition", exact: true }).click();
     await expect(page).toHaveURL("/nutrition");
     expect(documents).toEqual(["/nutrition"]);
   });
+
+  test(`${path} keeps same-tab revalidation on client navigation`, async ({
+    page,
+  }) => {
+    await page.goto(path);
+    const documents: string[] = [];
+    page.on("request", (request) => {
+      if (request.isNavigationRequest() && request.frame() === page.mainFrame())
+        documents.push(new URL(request.url()).pathname);
+    });
+    const samePage = page.waitForResponse(
+      (response) => new URL(response.url()).pathname === `${path}.data`,
+    );
+    await page.locator(".bottom-tabs").locator(`a[href="${path}"]`).click();
+    await samePage;
+    await expect(page).toHaveURL(path);
+    expect(documents).toEqual([]);
+  });
 }
+
+test("a pending list revalidation keeps outgoing tabs on client navigation", async ({
+  page,
+}) => {
+  await page.goto("/workouts");
+  let received = () => {};
+  const pending = new Promise<void>((resolve) => {
+    received = resolve;
+  });
+  let release = () => {};
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/workouts.data*", async (route) => {
+    received();
+    await held;
+    await route.abort().catch(() => {});
+  });
+  const documents: string[] = [];
+  page.on("request", (request) => {
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame())
+      documents.push(new URL(request.url()).pathname);
+  });
+  await page
+    .locator(".bottom-tabs")
+    .getByRole("link", { name: "Workouts", exact: true })
+    .click();
+  await pending;
+  await page
+    .locator(".bottom-tabs")
+    .getByRole("link", { name: "Nutrition", exact: true })
+    .click();
+  await expect(page).toHaveURL("/nutrition");
+  expect(documents).toEqual([]);
+  release();
+  await page.unrouteAll({ behavior: "wait" });
+});
 
 test("leaving a meal builder keeps client navigation", async ({ page }) => {
   await page.goto("/nutrition/meal-builder");
