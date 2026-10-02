@@ -10,6 +10,7 @@ for setup and verification commands, then read the guides relevant to your task.
 | Add or change a feature | [Architecture](engineering/architecture.md), then the [feature index](features/README.md) |
 | Add or change a route | [React Router](engineering/react-router.md) |
 | Build UI components | [Frontend](engineering/frontend.md) and [design system](design/design-system.md) |
+| Propose and review designs | [Design process](design/process.md) |
 | Model or persist data | [Database](engineering/database.md) |
 | Write or run tests | [Testing](engineering/testing.md) |
 | Configure login or external clients | [Authentication](operations/authentication.md) |
