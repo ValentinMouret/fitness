@@ -22,7 +22,16 @@ import {
 import type React from "react";
 import "./AppLayout.css";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Form, NavLink, Outlet, useMatches, useNavigate } from "react-router";
+import {
+  Form,
+  NavLink,
+  Outlet,
+  useFetchers,
+  useLocation,
+  useMatches,
+  useNavigate,
+  useNavigation,
+} from "react-router";
 import { z } from "zod";
 import { PageHeader, type PageHeaderProps } from "~/components/PageHeader";
 import { PageTransition } from "~/components/PageTransition";
@@ -36,12 +45,19 @@ const navItems = [
   { path: "/measurements", label: "Meas.", icon: <RulerSquareIcon /> },
 ];
 
-const BottomTabBar: React.FC = () => (
+const BottomTabBar = ({
+  pathname,
+  canReloadDocument,
+}: {
+  readonly pathname: string;
+  readonly canReloadDocument: boolean;
+}) => (
   <nav className="bottom-tabs">
     {navItems.map(({ path, label, icon }) => (
       <NavLink
         key={path}
         to={path}
+        reloadDocument={canReloadDocument && pathname !== path}
         className={({ isActive }) => (isActive ? "active" : "")}
       >
         {icon}
@@ -60,6 +76,13 @@ const HeaderHandleSchema = z.object({
 
 const AppLayout: React.FC = () => {
   const matches = useMatches();
+  const { pathname } = useLocation();
+  const navigation = useNavigation();
+  const fetchers = useFetchers();
+  const canReloadDocument =
+    (pathname === "/workouts" || pathname === "/measurements") &&
+    navigation.state === "idle" &&
+    fetchers.every((fetcher) => fetcher.state === "idle");
 
   const headerConfig = matches
     .map((match) => {
@@ -188,6 +211,7 @@ const AppLayout: React.FC = () => {
                 >
                   <NavLink
                     to={path}
+                    reloadDocument={canReloadDocument && pathname !== path}
                     onClick={closeMobileSidebar}
                     className="app-layout__nav-link"
                   >
@@ -279,7 +303,7 @@ const AppLayout: React.FC = () => {
         </Container>
       </Box>
 
-      <BottomTabBar />
+      <BottomTabBar pathname={pathname} canReloadDocument={canReloadDocument} />
     </Flex>
   );
 };

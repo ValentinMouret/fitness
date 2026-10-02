@@ -39,11 +39,21 @@ COPY --from=build --chown=bun:bun /app/app/logger.server.ts ./app/logger.server.
 COPY --from=build --chown=bun:bun /app/scripts/provision-mcp-reader.ts ./scripts/provision-mcp-reader.ts
 COPY --from=build --chown=bun:bun /app/app/modules/mcp/infra/provision-reader.server.ts ./app/modules/mcp/infra/provision-reader.server.ts
 COPY --from=build --chown=bun:bun /app/app/modules/mcp/domain/query-policy.ts ./app/modules/mcp/domain/query-policy.ts
-COPY --chown=bun:bun deploy/preview-entrypoint.sh ./deploy/preview-entrypoint.sh
+COPY --chown=root:root deploy/preview-entrypoint.sh ./deploy/preview-entrypoint.sh
+COPY --chown=root:root deploy/retained-entrypoint.sh deploy/publish-assets.ts ./deploy/
+RUN chown root:root ./deploy && chmod 0755 ./deploy \
+    && chmod 0555 ./deploy/retained-entrypoint.sh ./deploy/preview-entrypoint.sh \
+    && chmod 0444 ./deploy/publish-assets.ts
 
-USER bun
+ARG RETENTION_STARTUP_USER=bun
+ARG RETAIN_PRODUCTION_ASSETS=false
+ENV RETAIN_PRODUCTION_ASSETS=${RETAIN_PRODUCTION_ASSETS}
+USER ${RETENTION_STARTUP_USER}
 
 EXPOSE 5174
 
-ENTRYPOINT ["./deploy/preview-entrypoint.sh"]
+HEALTHCHECK --interval=5s --timeout=3s --start-period=30s --retries=3 \
+    CMD ["node", "-e", "fetch('http://127.0.0.1:' + (process.env.PORT || '3000') + '/healthz').then(async r => { const v = await r.json(); if (!r.ok || v.status !== 'ok' || v.checks?.database !== 'ok') process.exit(1); }).catch(() => process.exit(1))"]
+
+ENTRYPOINT ["./deploy/retained-entrypoint.sh"]
 CMD ["node", "--require", "./server/request-logging.cjs", "./node_modules/.bin/react-router-serve", "./build/server/index.js"]

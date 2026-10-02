@@ -432,3 +432,168 @@ The database scripts should write one timestamped log file per run under `/srv/f
 - public unauthenticated routes;
 - review apps for forks;
 - manual review apps for draft pull requests.
+
+## Release asset retention (ENSO-92, activation held)
+
+The application loads initial route metadata while keeping route modules lazy.
+Only outgoing sidebar/bottom-tab navigation from an idle `/workouts` or
+`/measurements` index starts a document request to adopt the current frontend.
+Same-tab clicks, active workouts, builders, editors and pending operations retain
+client navigation. This does not update every old tab automatically, and it does
+not preserve drafts across manual refresh or deliberately leaving their route.
+
+Old hashed modules must remain available: initial metadata does not download
+those modules, and a removed module can still cause React Router to reload and
+lose mounted drafts. Retention is a release prerequisite, not an app fallback.
+
+### Publish before serving traffic
+
+The opt-in [startup wrapper](retained-entrypoint.sh) runs the
+[publisher](publish-assets.ts) before the existing migration/server entrypoint.
+Production build arguments are `RETENTION_STARTUP_USER=root` and
+`RETAIN_PRODUCTION_ASSETS=true`. Both default to the current nonpublishing `bun`
+startup. The wrapper always drops root to `bun` before migrations or HTTP,
+including when publication is disabled. Startup code and its parent directory
+are root-owned and cannot be modified by the app.
+
+The publisher requires a real mount at `/retained-production`, owned by root
+with mode 0755. It accepts only flat fingerprinted regular files from the image's
+`/app/build/client/assets`, rejects symlinks, hard links and differing bytes at an
+existing name, verifies staged SHA-256 hashes, and publishes via atomic
+no-overwrite hard links. Files are 0644; manifests are 0600 in a 0700 directory
+outside `assets`. It syncs files and publication directories before starting the
+app. A failure stops startup. Publication is additive: a failed candidate may
+leave valid unused files, and no deploy deletes old assets.
+
+The image health check waits for successful HTTP and database readiness. In a
+start-first Swarm update, this prevents a failing publisher from replacing the
+healthy task merely because its container process started. The isolated Swarm
+rehearsal uses production's rollback policy and five-second monitor/restart delay;
+without the health check the original task was retired, whereas the reviewed
+health check kept that same task running through publisher failure and rollback.
+
+Dokploy v0.29.2 supports separate `buildArgs` and `previewBuildArgs`; preview
+builds replace production arguments. Keep preview arguments at their defaults,
+and do not put the retention flag in the shared runtime environment. A retained
+mount may still be inherited by previews. The default preview process is `bun`
+and cannot modify root-owned retained files or read private manifests; an
+explicit retention flag in a preview stops startup before publication. Caddy's
+retained handler belongs only to the production site. Do not claim the mount is
+absent from previews.
+
+Verify with `bash deploy/test-retention.sh`. It builds default and publishing
+images, uses an isolated disposable PostgreSQL container and volume, verifies
+image/store hashes, missing-mount and flagged-preview failures, PID 1 running as
+UID 1000, protected startup/store paths, and an actual preview database copy and
+server even with an inherited mount. CI runs the same acceptance check. The
+filesystem tests also cover concurrent identical/conflicting publishers.
+The same command verifies the production-only Caddy handler using a read-only
+store, including old-only bytes/MIME/immutable headers, proxy misses, preview
+isolation and HTML no-store. It then runs a disposable Docker-in-Docker Swarm;
+the developer/CI Docker daemon's Swarm state is unchanged. This test needs Docker
+with privileged test-container support. Its PostgreSQL, volumes and inner daemon
+are disposable and never use production data.
+
+### Activation and rollback (held for review)
+
+1. Complete independent operational review and verify the live configuration
+   for the brief root startup publisher, bind mount and Caddy change. Existing
+   idiomatic implementation authorization remains valid; routine preparation
+   needs no new generic approval. Resolve any actual saved Dokploy access
+   restriction through the permitted user settings, without bypassing it. Save
+   fresh Dokploy settings, Caddy config, full Swarm service spec and immutable
+   current/rollback image IDs. Disable autoDeploy and drain all production jobs
+   before merging or installing; keep automatic/manual releases suspended while
+   seeding. Do not change native authentication or ownership migrations.
+2. Create `/srv/fitness/retained-production` as root:root 0755. Pin the sole
+   desired-running production task/container by exact Swarm labels. Export its
+   `/app/build/client/assets` from that full container ID to private staging,
+   then use the reviewed publishing image's `bun /app/deploy/publish-assets.ts`
+   command with staging mounted read-only at `/app/build/client/assets` and the
+   host store mounted at `/retained-production`. Set `GIT_SHA=unknown` if the
+   source cannot identify its revision; record the actual source container and
+   immutable image ID separately. Recheck the task/container after seed and
+   compare every exported/retained hash. Abort if routing changed or is ambiguous.
+   Seed any older image intended for rollback as well.
+3. Configure production build arguments above and a bind mount from
+   `/srv/fitness/retained-production` to `/retained-production`. Preserve default
+   preview build arguments. Check the actual production image user/flag, mounted
+   host path and root ownership. The publisher must complete before HTTP starts;
+   the resulting server must run as `bun`. Test a preview cannot modify the store.
+4. After the seed and publishing startup are verified, copy
+   the reviewed snippet to `/srv/fitness/retained-assets.caddy` and import that
+   absolute path inside only the production site in the live
+   `/home/valentin/fitness/deploy/Caddyfile`, before its proxy fallback. Preserve
+   both that file and `/etc/caddy/Caddyfile`; validate the complete effective
+   configuration before reload. Compare retained asset bytes, MIME and
+   immutable headers. Missing assets must proxy, HTML/private data must retain
+   their existing policy, and preview routing must be unchanged. Perform the
+   cold old-tab/new-release draft-preservation test through the public route.
+5. Keep all retained files during deployments. Retain retired releases for at
+   least 30 days from retirement and preserve current/rollback releases. Cleanup
+   is separate reviewed operator work using manifests and retirement timestamps,
+   never original file mtimes; no pruning is included here.
+
+On publisher failure, the candidate must not become healthy; verify the original
+healthy task continues serving through rollback. The live service currently has
+no health check: the reviewed image's probe must be present and must not be
+disabled by a service override before activation.
+On Caddy failure, restore its saved production site and reload; do not remove
+retained files. To roll back the image/startup settings, first remove the retained
+Caddy handler, then restore the saved build arguments/mount and previously routed
+image using an operator-rehearsed exact service rollback command. Dokploy's
+ordinary Deploy button builds current Git and is not proof of immutable image
+rollback. Preserve the full service spec and rehearse restoring its saved image
+and startup/mount settings before activation. An older rollback image may lack
+the readiness probe: preserve a working HTTP/database health check as a service
+override when restoring it, and rehearse that exact command. Removing the handler ends the
+old-tab retention guarantee.
+Already retained bytes need no rollback or deletion.
+
+### Separate deployment control hold
+
+The October 2 audit found `autoDeploy=true` on GitHub `main` plus manual Deploy.
+Dokploy v0.29.2 has no shared before-traffic host hook, no per-application runtime
+user override, and no commit SHA parameter on `application.deploy`. The startup
+publisher covers asset publication for every configured candidate without a
+custom deploy orchestrator. It does **not** establish CI-gated exact-commit
+releases. That release requirement remains a separate activation hold: an API
+call alone cannot prove which commit Dokploy clones. Do not claim a serialized
+CI export gate exists, or activate production while operational review, access
+restrictions or live control checks remain unresolved. An earlier automatic
+approval review rejected Dokploy access because of a saved browser preference;
+resolve that actual restriction through permitted user settings, without using
+an alternate route to perform the blocked access/configuration action.
+
+A supervised release can keep the application branch at `main`, preserving PR
+preview selection: with autoDeploy disabled and production jobs drained, install
+an active GitHub ruleset for exactly `refs/heads/main` that restricts updates and
+deletion with no bypass actors. Record the created rule ID and read back its full
+configuration and effective branch rules. Only then select the frozen **postmerge
+main** revision and require successful CI on that exact SHA; PR-head CI is not a
+substitute. Keep the lock through Dokploy clone/build, verified image/task/HTTP
+readiness and any recovery. Check the actual clone SHA and immutable image/task
+identity; a supplied `GIT_SHA` build argument alone proves no source identity.
+Remove only that recorded rule after successful verification or reconciled
+recovery with no pending production jobs. Leave autoDeploy disabled. This is a
+supervised release procedure, not an ongoing automatic CI gate; no rule has been
+installed by this change.
+
+The original older amd64 image passed a disposable-service rehearsal on its
+native host using synthetic PostgreSQL and a private network: HTTP/database
+readiness, UID 1000, retention of the original test task through a failed
+readiness candidate, and recovery of a new healthy task from the same immutable
+image with the port-5174 health override. Owned test resources were removed and
+the live Fitness task/service spec stayed unchanged. This establishes actual
+older-binary disposable recovery; fresh image/settings capture, asset seed and
+live cutover/reconciliation remain activation checks. Martin has not returned
+his independent SRE review; the source review does not represent his approval.
+
+The local two-version regression used distinct A/B lazy modules, an empty browser
+cache and real Caddy serving retained files read-only. B alone returned 404 for
+A's old module; Caddy returned retained bytes without a document reload. Builder
+objectives/selected ingredients and genuinely unsaved completed-set edits stayed
+mounted across replacement/revalidation, including the active rest timer.
+Leaving an idle workout index adopted B. Combined with the container acceptance,
+this verifies the candidate mechanism locally; it does not establish live
+Dokploy settings, production activation or exact-commit deployment control.

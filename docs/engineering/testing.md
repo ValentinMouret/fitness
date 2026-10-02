@@ -58,11 +58,14 @@ needed, and stop servers you started when finished. Set `TEST_PORT` or
 server and test fixtures use the same dedicated test database; do not use
 production or personal data.
 
-For a local production-build server, restart it after rebuilding changed source
-before running E2E tests. A running server retains the previous asset manifest;
+For a local production-build server, stop the server you own before rebuilding
+changed source, then restart it from the completed build before running E2E tests. A running server retains the previous asset manifest;
 the new build can remove those assets and cause navigation failures. Run
 `bun run gate`, restart the server from that build, then `bun run test:e2e`.
-If using `bun run gate:e2e`, keep the source unchanged after the server's build.
+If using `bun run gate:e2e` with a separately running server, its build step still
+replaces the served assets. Use the separated gate/build → server start → E2E
+sequence locally; do not rebuild underneath a running server. Match the OAuth
+issuer and test base URL to that server's port.
 
 [playwright.config.ts](../../playwright.config.ts) requires a reachable existing
 test server locally and fails before browser tests when `/login` is unavailable.
