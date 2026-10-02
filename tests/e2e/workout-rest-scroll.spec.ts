@@ -84,6 +84,44 @@ async function expectUncovered(page: Page, selector: string) {
     .toBe(true);
 }
 
+test("manual Start counts down and rest controls remain usable", async ({
+  page,
+  sessionId,
+}) => {
+  await page.goto(`/workouts/${sessionId}`);
+  await page
+    .getByRole("link", { name: /^Open / })
+    .first()
+    .click();
+  await expect(page.locator(".exercise-card--focused:visible")).toBeVisible();
+  const focusedUrl = page.url();
+  await page.clock.install({ time: new Date("2030-01-01T12:00:00Z") });
+  await page.clock.pauseAt(new Date("2030-01-01T12:01:00Z"));
+  const timer = page.getByRole("region", { name: "Rest timer" });
+  const countdown = timer.getByRole("button", { name: "Choose rest duration" });
+  await expect(countdown).toHaveText("1:30");
+  await timer.getByRole("button", { name: "Start", exact: true }).click();
+  await expect(countdown).toHaveText("1:30");
+  await page.clock.runFor(1100);
+  await expect(countdown).toHaveText("1:29");
+  await timer.getByRole("button", { name: "Skip", exact: true }).click();
+  await expect(countdown).toHaveText("1:30");
+  await countdown.click();
+  await timer.locator('[aria-keyshortcuts="3"]').click();
+  await expect(countdown).toHaveText("2:00");
+  await timer.getByRole("button", { name: "Skip", exact: true }).click();
+  await timer.getByRole("button", { name: "Start", exact: true }).click();
+  await expect(countdown).toHaveText("2:00");
+  await page.clock.runFor(120_000);
+  await expect(countdown).toHaveText("0:00");
+  await timer.getByRole("button", { name: "OK", exact: true }).click();
+  await expect(
+    timer.getByRole("button", { name: "Start", exact: true }),
+  ).toBeVisible();
+  await expect(countdown).toHaveText("2:00");
+  expect(page.url()).toBe(focusedUrl);
+});
+
 test("rest stays visible and usable while scrolling, resizing and logging", async ({
   page,
   sessionId,

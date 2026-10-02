@@ -269,7 +269,7 @@ export function RestTimer({
             size="1"
             variant={onStart || isFinished ? "solid" : "soft"}
             color={isFinished ? "green" : onStart ? undefined : "gray"}
-            onClick={isActive ? onDismiss : onStart}
+            onClick={() => (isActive ? onDismiss() : onStart?.())}
             className="rest-timer__action"
           >
             {isFinished ? "OK" : isActive ? "Skip" : "Start"}
