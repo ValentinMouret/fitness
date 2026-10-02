@@ -9,6 +9,11 @@ import { Pool } from "pg";
 import { z } from "zod";
 import { invitedEmailSchema } from "../app/modules/auth/domain/invitation";
 import { bootstrapAuthOwner } from "../app/modules/auth/infra/owner-bootstrap.server";
+import {
+  foundationCatalogFingerprint,
+  foundationCatalogSql,
+  verifyFoundationJournal,
+} from "./ownership-foundation";
 
 const config = z
   .object({
@@ -105,28 +110,52 @@ try {
       ),
     })
     .parse(JSON.parse(await readFile("drizzle/meta/_journal.json", "utf8")));
-  const expected = journal.entries.filter((entry) => entry.idx < 13);
-  if (journal.entries.length !== 21)
+  if (
+    journal.entries.length !== 21 ||
+    journal.entries.some((entry, index) => entry.idx !== index)
+  )
     throw new Error(
       "Review the rehearsal script for a changed migration stack",
     );
-  const applied = (
-    await pool.query(
-      "select hash,created_at from drizzle.__drizzle_migrations order by created_at",
+  const expected = await Promise.all(
+    journal.entries.slice(0, 13).map(async (entry) => ({
+      hash: createHash("sha256")
+        .update(await readFile(`drizzle/${entry.tag}.sql`, "utf8"))
+        .digest("hex"),
+      createdAt: entry.when,
+    })),
+  );
+  const applied = z
+    .array(z.object({ hash: z.string(), created_at: z.coerce.number().int() }))
+    .parse(
+      (
+        await pool.query(
+          "select hash,created_at from drizzle.__drizzle_migrations order by created_at",
+        )
+      ).rows,
     )
-  ).rows;
-  if (applied.length !== expected.length)
-    throw new Error("Rehearsal source must end exactly at foundation0012");
-  for (const [index, entry] of expected.entries()) {
-    const sql = await readFile(`drizzle/${entry.tag}.sql`, "utf8");
-    if (
-      applied[index].hash !== createHash("sha256").update(sql).digest("hex") ||
-      Number(applied[index].created_at) !== entry.when
+    .map((entry) => ({ hash: entry.hash, createdAt: entry.created_at }));
+  const sourceJournal = verifyFoundationJournal(applied, expected);
+  const catalog = z
+    .array(
+      z.object({
+        kind: z.enum(["table", "column", "constraint", "index", "enum"]),
+        name: z.string(),
+        detail: z.union([
+          z.array(z.string()),
+          z.record(z.string(), z.union([z.string(), z.boolean(), z.null()])),
+        ]),
+      }),
     )
-      throw new Error(
-        "Source migration journal does not match the reviewed foundation stack",
-      );
-  }
+    .parse((await pool.query(foundationCatalogSql)).rows);
+  const sourceCatalog = foundationCatalogFingerprint(catalog);
+  if (
+    sourceCatalog !==
+    "993241e9ea35e200578920ea1dd7edb17c03842ffdfe0000e292a788bc621625"
+  )
+    throw new Error(
+      `Unreviewed foundation schema fingerprint: ${sourceCatalog}`,
+    );
   const owners = (
     await pool.query(
       "select user_id from auth_invitations where user_id=invited_by and accepted_at is not null and revoked_at is null",
@@ -176,6 +205,8 @@ try {
     console.log(
       JSON.stringify({
         mode: "read-only preflight",
+        sourceJournal,
+        sourceCatalog,
         pendingMigrations: 8,
         tables: before,
         exerciseContent: exerciseContentBefore,
@@ -266,6 +297,8 @@ try {
       JSON.stringify(
         {
           mode: "isolated-copy rehearsal",
+          sourceJournal,
+          sourceCatalog,
           migrationMs: Date.now() - started,
           backup,
           before,

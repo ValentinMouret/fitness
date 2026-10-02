@@ -1,6 +1,6 @@
 import { type ChildProcess, execFile, spawn } from "node:child_process";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -202,6 +202,119 @@ beforeAll(async () => {
     (await fixture.pool.query("select count(*)::int as count from auth_users"))
       .rows,
   ).toEqual([{ count: 0 }]);
+  const journalBefore = (
+    await fixture.pool.query(
+      "select id,hash,created_at from drizzle.__drizzle_migrations order by created_at",
+    )
+  ).rows;
+  for (const [index, hash, createdAt] of [
+    [0, "0000_spicy_randall_flagg", 1770755498152],
+    [1, "0001_solid_doctor_doom", 1772781615263],
+  ] as const)
+    await fixture.pool.query(
+      "update drizzle.__drizzle_migrations set hash=$1,created_at=$2 where id=$3",
+      [hash, createdAt, journalBefore[index].id],
+    );
+  await fixture.pool.query(
+    "alter table workout_template_exercises rename constraint workout_template_exercises_template_id_exercise_id_pk to workout_template_exercises_pk; alter table workout_template_exercises rename constraint workout_template_exercises_exercise_id_exercises_id_fk to workout_template_exercises_exercise_id_fkey; alter table workout_template_exercises rename constraint workout_template_exercises_template_id_workout_templates_id_fk to workout_template_exercises_template_id_fkey; alter table workout_template_sets rename constraint workout_template_sets_template_id_exercise_id_set_pk to workout_template_sets_pk; alter table workout_template_sets rename constraint workout_template_sets_exercise_id_exercises_id_fk to workout_template_sets_exercise_id_fkey; alter table workout_template_sets rename constraint workout_template_sets_template_id_workout_templates_id_fk to workout_template_sets_template_id_fkey",
+  );
+  const historicalJournal = (
+    await fixture.pool.query(
+      "select hash,created_at from drizzle.__drizzle_migrations order by created_at",
+    )
+  ).rows;
+  const refusedChanges = [
+    {
+      change:
+        "update drizzle.__drizzle_migrations set hash='0000_spicy_randall_flagh' where hash='0000_spicy_randall_flagg'",
+      restore:
+        "update drizzle.__drizzle_migrations set hash='0000_spicy_randall_flagg' where hash='0000_spicy_randall_flagh'",
+      error: "Source migration journal does not match",
+    },
+    {
+      change:
+        "update drizzle.__drizzle_migrations set created_at=1772781615264 where hash='0001_solid_doctor_doom'",
+      restore:
+        "update drizzle.__drizzle_migrations set created_at=1772781615263 where hash='0001_solid_doctor_doom'",
+      error: "Source migration journal does not match",
+    },
+    {
+      change:
+        "update drizzle.__drizzle_migrations set hash='9187eca34cbda7b1bba1eefe8360d95e37fac492390c020f0888fe19ad492b7d',created_at=1770881599790 where hash='0001_solid_doctor_doom'",
+      restore:
+        "update drizzle.__drizzle_migrations set hash='0001_solid_doctor_doom',created_at=1772781615263 where hash='9187eca34cbda7b1bba1eefe8360d95e37fac492390c020f0888fe19ad492b7d'",
+      error: "Source migration journal does not match",
+    },
+    {
+      change:
+        "alter table generation_conversations alter column model drop not null",
+      restore:
+        "alter table generation_conversations alter column model set not null",
+      error: "Unreviewed foundation schema fingerprint",
+    },
+    {
+      change:
+        "alter table workout_template_sets rename constraint workout_template_sets_template_id_fkey to unreviewed_template_fk",
+      restore:
+        "alter table workout_template_sets rename constraint unreviewed_template_fk to workout_template_sets_template_id_fkey",
+      error: "Unreviewed foundation schema fingerprint",
+    },
+    {
+      change:
+        "alter index ingredients_name_unique_idx rename to unreviewed_food_index",
+      restore:
+        "alter index unreviewed_food_index rename to ingredients_name_unique_idx",
+      error: "Unreviewed foundation schema fingerprint",
+    },
+    {
+      change:
+        "alter table workout_sets drop constraint rpe_range; alter table workout_sets add constraint rpe_range check (rpe is null or (rpe >= 5 and rpe <= 10))",
+      restore:
+        "alter table workout_sets drop constraint rpe_range; alter table workout_sets add constraint rpe_range check (rpe is null or (rpe >= 6 and rpe <= 10))",
+      error: "Unreviewed foundation schema fingerprint",
+    },
+  ];
+  for (const refused of refusedChanges) {
+    await fixture.pool.query(refused.change);
+    try {
+      await expect(
+        run("bun", ["scripts/rehearse-ownership.ts", "--apply"], {
+          env: rehearsalEnv,
+          timeout: 5000,
+        }),
+      ).rejects.toThrow(refused.error);
+      expect(
+        (
+          await fixture.pool.query(
+            "select count(*)::int as count from auth_users",
+          )
+        ).rows,
+      ).toEqual([{ count: 0 }]);
+      expect(
+        (await readdir(folder)).filter((name) => name.startsWith("ownership-")),
+      ).toEqual([]);
+    } finally {
+      await fixture.pool.query(refused.restore);
+    }
+  }
+  const historicalPreflight = await run(
+    "bun",
+    ["scripts/rehearse-ownership.ts"],
+    {
+      env: rehearsalEnv,
+      timeout: 15000,
+    },
+  );
+  expect(JSON.parse(historicalPreflight.stdout).sourceJournal).toBe(
+    "historical tag journal",
+  );
+  expect(
+    (
+      await fixture.pool.query(
+        "select hash,created_at from drizzle.__drizzle_migrations order by created_at",
+      )
+    ).rows,
+  ).toEqual(historicalJournal);
   for (const refused of [
     "postgresql://postgres@remote.invalid/fitness_ownership_rehearsal_test_copy",
     `${fixture.databaseUrl}?host=remote.invalid`,
@@ -237,6 +350,13 @@ beforeAll(async () => {
     .parse(JSON.parse(await readFile(artifacts.report, "utf8")));
   expect(report.after).toEqual(report.before);
   expect(report.before).toHaveLength(25);
+  expect(
+    (
+      await fixture.pool.query(
+        "select hash,created_at from drizzle.__drizzle_migrations order by created_at limit 13",
+      )
+    ).rows,
+  ).toEqual(historicalJournal);
   const recovery = createDisposablePostgres(
     new URL(`postgresql://postgres@127.0.0.1:${pgPort}/postgres`),
   );

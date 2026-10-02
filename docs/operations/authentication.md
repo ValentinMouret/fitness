@@ -474,8 +474,8 @@ ID; archive removes it from active catalogue listings while retaining historical
 workout links and private cues. No private exercise creation or preferred-label
 search behavior is introduced.
 
-The isolated rehearsal command now expects the reviewed20-entry journal and
-seven pending ownership migrations. Alongside its25 retained-table fingerprints,
+The isolated rehearsal command now expects the reviewed21-entry journal and
+eight pending ownership migrations. Alongside its25 retained-table fingerprints,
 it compares complete exercise content after joining the owner's migrated
 preferences and verifies preference ownership. The SDK fixture includes a legacy
 private cue and exercises owner-only catalogue creation without copying private
@@ -494,6 +494,50 @@ fresh current snapshot/rehearsal before live cutover. Keep schema and its matchi
 app release coordinated: an older app cannot read account preference cues.
 Current snapshot/identity authorization, publication review and native admission
 holds remain; this stage does not open private routes or B MCP access.
+
+### Historical foundation journal compatibility
+
+The operator runner accepts a canonical journal through0012 or the exact
+historical pair below, followed by canonical0002–0012 hashes/timestamps. It
+requires13 entries in order. Mixed pairs, changed tags/timestamps, later drift
+and changed reviewed0000/0001 SQL fail before bootstrap or backup creation.
+It never rewrites the source journal.
+
+| Entry | Historical stored hash | Historical timestamp |
+| --- | --- | --- |
+| 0000 | `0000_spicy_randall_flagg` | `1770755498152` |
+| 0001 | `0001_solid_doctor_doom` | `1772781615263` |
+
+The exception is pinned to current0000 SHA-256
+`ac6d13c1c33b7593c3db4cfd200cc971d6b35eae04fe910b9c883d98f297156c`
+and0001 SHA-256
+`9187eca34cbda7b1bba1eefe8360d95e37fac492390c020f0888fe19ad492b7d`
+with canonical timestamps1770755498152 and1770881599790. Martin confirmed the
+historical pair in the unmodified October1 archive and a read-only production
+query on October2. The encrypted source archive SHA-256 is
+`137ad7ef455b50e7a2c2d9932d7e3e2f9ba3942eef7fa5406d7e43ac827871b5`.
+
+A read-only catalog guard also requires the reviewed schema fingerprint
+`993241e9ea35e200578920ea1dd7edb17c03842ffdfe0000e292a788bc621625`:
+33 tables,279 columns,92 structural constraints,50 indexes and6 enums. It
+includes types, defaults, nullability, RLS, full constraint/index definitions,
+predicates, validity and enum order. Only these observed representations
+normalize to the same fingerprint:
+
+- The known workouts-template FK name and six workout-template PK/FK names;
+  the two corresponding PK index names/definitions normalize to canonical names.
+- PostgreSQL18's additional NOT NULL constraint rows, only when validated and
+  backed by a guarded column with `notNull:true`.
+- Exactly two recorded renderings of `meal_assignments_valid`, whose hashes
+  are pinned in the helper; no general expression simplification is performed.
+
+The untouched PostgreSQL18 restore catalog and a fresh canonical0012 fixture
+matched after those normalizations. The corrected metadata capture SHA-256 is
+`3786415fb04e1ff13d90bd7ea3f90b327eb84113e2de6dcd5ebb525bb1da5f5c`;
+metadata is private operator evidence. Unknown names, definitions, columns or
+other structural drift fail closed. This evidence and synthetic regressions
+do not replace a fresh unmodified restore run at the final reviewed candidate,
+the final write-free backup or production release authorization.
 
 ### External SDK acceptance and remaining boundary audit
 
