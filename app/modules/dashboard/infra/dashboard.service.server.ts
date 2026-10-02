@@ -24,15 +24,15 @@ import {
   defaultDailyTargets,
 } from "~/modules/nutrition/domain/daily-targets";
 import { NutritionService } from "~/modules/nutrition/infra/service";
-import { isSameDay, today } from "~/time";
+import { toDateString } from "~/time";
 import { createServerError } from "~/utils/errors";
 
 export type DashboardData = {
+  readonly day: string;
   readonly weight: Measurement;
   readonly lastWeight: MeasureRecord | undefined;
   readonly weightTarget: number | undefined;
   readonly weightData: MeasureRecord[];
-  readonly loggedToday: boolean;
   readonly streak: number;
   readonly todayHabits: Habit[];
   readonly completionMap: Map<string, boolean>;
@@ -48,16 +48,15 @@ export type DashboardData = {
   readonly dailyNote: DailyNote | undefined;
 };
 
-export async function getDashboardData(): Promise<DashboardData> {
-  const now = new Date();
-  const todayDate = today();
-
+export async function getDashboardData(
+  todayDate: Date,
+): Promise<DashboardData> {
   const result = await ResultAsync.combine([
     MeasureRepository.fetchByMeasurementName("weight", 1),
     MeasureRepository.fetchByMeasurementName("weight", 200),
     MeasurementRepository.fetchByName("weight"),
     MeasurementService.fetchStreak("weight"),
-    HabitRepository.fetchActive(),
+    HabitRepository.fetchActive(todayDate),
     HabitCompletionRepository.fetchByDateRange(todayDate, todayDate),
     WorkoutRepository.findInProgress(),
     NutritionService.getDailySummary(todayDate),
@@ -128,6 +127,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   const dailySummary = dailySummaryResult.dailyTotals;
 
   return {
+    day: toDateString(todayDate),
     weight,
     streak,
     lastWeight: weights?.[0],
@@ -135,7 +135,6 @@ export async function getDashboardData(): Promise<DashboardData> {
       (target) => target.measurement === weight.name,
     )?.value,
     weightData,
-    loggedToday: Boolean(weights?.[0] && isSameDay(weights[0].t, now)),
     todayHabits,
     completionMap,
     habitStreaks,
@@ -154,10 +153,11 @@ export async function getDashboardData(): Promise<DashboardData> {
 export async function toggleHabitCompletion(input: {
   readonly habitId: string;
   readonly completed: boolean;
+  readonly date: Date;
 }): Promise<void> {
   const completion = HabitCompletion.create(
     input.habitId,
-    today(),
+    input.date,
     !input.completed,
   );
 

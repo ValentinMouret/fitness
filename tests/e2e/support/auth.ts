@@ -31,9 +31,20 @@ export async function login(page: Page, redirectTo = "/dashboard") {
   await page.getByPlaceholder("Enter your username").fill(credentials.username);
   await page.getByPlaceholder("Enter your password").fill(credentials.password);
   await page.getByRole("button", { name: "Login", exact: true }).click();
-  await expect(page).toHaveURL(
-    new URL(redirectTo, authTestEnv.E2E_BASE_URL).href,
-  );
+  const destination = new URL(redirectTo, authTestEnv.E2E_BASE_URL);
+  if (["/dashboard", "/habits"].includes(destination.pathname)) {
+    await expect(page).toHaveURL((url) => {
+      const selectedDay = url.searchParams.get("day");
+      const target = new URL(url);
+      target.searchParams.delete("day");
+      return (
+        z.iso.date().safeParse(selectedDay).success &&
+        target.href === destination.href
+      );
+    });
+  } else {
+    await expect(page).toHaveURL(destination.href);
+  }
 }
 
 export async function loginWithRequest(request: APIRequestContext) {

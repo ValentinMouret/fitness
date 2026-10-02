@@ -17,6 +17,11 @@ A completion belongs to a habit and date, records whether it was completed, and
 can include notes. Keep the behaviour being scheduled distinct from its dated
 completion history.
 
+Habits Today and Dashboard use the device's calendar day, carried in the `day`
+search parameter. Browser loading resolves that day before displaying its rows;
+open pages refresh at local midnight and when resumed. Habit toggles save the
+displayed day. Stored date-only completion history keeps its original dates.
+
 The [daily page](../../../app/routes/habits/index.tsx) supports completion toggles,
 streak and total-completion feedback, and logging a minimum version. The
 [weekly page](../../../app/routes/habits/week.tsx) provides a calendar-oriented
