@@ -10,7 +10,6 @@ import {
 } from "react-router";
 import { EmptyState } from "~/components/EmptyState";
 import { Pagination } from "~/components/Pagination";
-import type { WorkoutWithSummary } from "~/modules/fitness/domain/workout";
 import { getWorkoutsPageData } from "~/modules/fitness/infra/workouts-page.service.server";
 import { isEditableTarget } from "~/utils/dom";
 import type { Route } from "./+types/index";
@@ -21,7 +20,16 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   const page = Number.parseInt(url.searchParams.get("page") ?? "1", 10);
   const limit = Number.parseInt(url.searchParams.get("limit") ?? "20", 10);
 
-  return getWorkoutsPageData({ page, limit });
+  const data = await getWorkoutsPageData({ page, limit });
+  return {
+    ...data,
+    workoutDateLabels: Object.fromEntries(
+      data.workouts.map((workout) => [
+        workout.id,
+        formatWorkoutDate(workout.start),
+      ]),
+    ),
+  };
 };
 
 export const handle = {
@@ -105,7 +113,9 @@ function formatVolume(kg: number): string {
 }
 
 export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
-  const { workouts, pagination } = loaderData;
+  const { workouts, pagination, workoutDateLabels } = loaderData;
+  const [isHydrated, setIsHydrated] = useState(false);
+  useEffect(() => setIsHydrated(true), []);
   const [_searchParams, setSearchParams] = useSearchParams();
   const submit = useSubmit();
   const navigation = useNavigation();
@@ -128,7 +138,7 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
             }}
           />
         ) : (
-          workouts.map((workout: WorkoutWithSummary, i: number) => {
+          workouts.map((workout, i) => {
             const isActive = !workout.stop;
             return (
               <Box key={workout.id}>
@@ -153,7 +163,9 @@ export default function WorkoutsPage({ loaderData }: Route.ComponentProps) {
                           mt="1"
                           className="workouts-index__muted"
                         >
-                          {formatWorkoutDate(workout.start)}
+                          {isHydrated
+                            ? formatWorkoutDate(workout.start)
+                            : workoutDateLabels[workout.id]}
                         </Text>
                         <Flex gap="3" mt="1">
                           {workout.exerciseCount > 0 && (
