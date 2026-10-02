@@ -18,9 +18,11 @@ import {
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { Celebration, SuccessPulse } from "~/components/Celebration";
+import DeviceDayFallback from "~/components/DeviceDayFallback";
 import HabitCheckbox from "~/components/HabitCheckbox";
 import MeasurementChart from "~/components/MeasurementChart";
 import { NumberInput } from "~/components/NumberInput";
+import { loadDeviceDay, useDeviceDayRollover } from "~/hooks/device-day";
 import { saveDailyNote } from "~/modules/daily-note/infra/daily-note.service.server";
 import { DailyNoteCard } from "~/modules/daily-note/presentation/components/DailyNoteCard/DailyNoteCard";
 import { DailyNoteModal } from "~/modules/daily-note/presentation/components/DailyNoteModal/DailyNoteModal";
@@ -31,16 +33,23 @@ import {
 } from "~/modules/dashboard/infra/dashboard.service.server";
 import { DashboardStats } from "~/modules/dashboard/presentation/components/DashboardStats/DashboardStats";
 import { createDashboardStatsViewModel } from "~/modules/dashboard/presentation/view-models/dashboard-stats.view-model";
-import { formatStartedAgo } from "~/time";
+import { formatStartedAgo, fromDateString, toLocalDateString } from "~/time";
 import { isEditableTarget } from "~/utils/dom";
 import { createValidationError } from "~/utils/errors";
 import { formBoolean, formNumber, formText } from "~/utils/form-data";
+import { requestDay } from "~/utils/request-day";
 import type { Route } from "./+types/index";
 import "./index.css";
 
-export async function loader() {
-  return getDashboardData();
+export async function loader({ request }: Route.LoaderArgs) {
+  return getDashboardData(requestDay(request));
 }
+
+export async function clientLoader(args: Route.ClientLoaderArgs) {
+  return loadDeviceDay(args);
+}
+clientLoader.hydrate = true as const;
+export const HydrateFallback = DeviceDayFallback;
 
 export async function action({ request }: Route.ActionArgs) {
   const form = await request.formData();
@@ -56,6 +65,7 @@ export async function action({ request }: Route.ActionArgs) {
     await toggleHabitCompletion({
       habitId: parsed.habitId,
       completed: parsed.completed,
+      date: requestDay(request),
     });
 
     return null;
@@ -83,22 +93,28 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export const handle = {
-  header: () => ({
-    title: new Date().toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    }),
-  }),
+  header: (loaderData: unknown) => {
+    const loaded = z.object({ day: z.iso.date() }).safeParse(loaderData);
+    return {
+      title: loaded.success
+        ? fromDateString(loaded.data.day).toLocaleDateString("en-US", {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            timeZone: "UTC",
+          })
+        : "Today",
+    };
+  },
 };
 
 export default function DashboardPage({
   loaderData: {
+    day,
     weight,
     lastWeight,
     weightTarget,
     weightData,
-    loggedToday,
     streak,
     todayHabits,
     completionMap,
@@ -109,6 +125,10 @@ export default function DashboardPage({
     dailyNote,
   },
 }: Route.ComponentProps) {
+  useDeviceDayRollover(day);
+  const loggedToday = Boolean(
+    lastWeight && toLocalDateString(new Date(lastWeight.t)) === day,
+  );
   const weightFetcher = useFetcher();
   const weightInputRef = useRef<HTMLInputElement>(null);
   const fetchers = useFetchers();

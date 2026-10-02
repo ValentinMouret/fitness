@@ -115,14 +115,14 @@ export const HabitRepository = {
       .andThen((record) => recordToHabit(record));
   },
 
-  fetchActive(): ResultAsync<Habit[], ErrRepository> {
+  fetchActive(date: Date = today()): ResultAsync<Habit[], ErrRepository> {
     const query = db
       .select()
       .from(habits)
       .where(
         and(
           eq(habits.is_active, true),
-          lte(habits.start_date, today().toISOString().split("T")[0]),
+          lte(habits.start_date, date.toISOString().split("T")[0]),
         ),
       )
       .orderBy(desc(habits.is_keystone), habits.name);

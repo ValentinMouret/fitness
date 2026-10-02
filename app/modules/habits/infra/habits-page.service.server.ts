@@ -1,4 +1,4 @@
-import { isSameDay, today } from "~/time";
+import { isSameDay, toDateString } from "~/time";
 import { handleResultError } from "~/utils/errors";
 import { HabitService } from "../application/service";
 import { groupDailyHabits } from "../domain/daily-habit-order";
@@ -10,14 +10,13 @@ import {
 
 const STREAK_MILESTONES = [7, 30, 90, 365];
 
-export async function getHabitsPageData() {
-  const habitsResult = await HabitRepository.fetchActive();
+export async function getHabitsPageData(todayDate: Date) {
+  const habitsResult = await HabitRepository.fetchActive(todayDate);
   if (habitsResult.isErr()) {
     handleResultError(habitsResult, "Failed to load habits");
   }
 
   const habits = habitsResult.value;
-  const todayDate = today();
 
   const earliestDate = habits.reduce(
     (min, h) => (h.startDate < min ? h.startDate : min),
@@ -87,6 +86,7 @@ export async function getHabitsPageData() {
   }
 
   return {
+    day: toDateString(todayDate),
     habits,
     todayHabits,
     todayHabitGroups: groupDailyHabits(todayHabits),
@@ -108,10 +108,11 @@ export async function toggleHabitCompletion(input: {
   readonly habitId: string;
   readonly completed: boolean;
   readonly notes?: string;
+  readonly date: Date;
 }): Promise<ToggleCompletionResult> {
   const completion = HabitCompletion.create(
     input.habitId,
-    today(),
+    input.date,
     !input.completed,
     input.notes,
   );
@@ -129,13 +130,13 @@ export async function toggleHabitCompletion(input: {
       const completions = await HabitCompletionRepository.fetchByHabitBetween(
         input.habitId,
         new Date(habit.value.startDate),
-        today(),
+        input.date,
       );
       if (completions.isOk()) {
         const newStreak = HabitService.calculateStreak(
           habit.value,
           completions.value,
-          today(),
+          input.date,
         );
         if (STREAK_MILESTONES.includes(newStreak)) {
           hitMilestone = newStreak;
