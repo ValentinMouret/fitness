@@ -305,8 +305,13 @@ test("completed sessions use read-only overview and focus without changing histo
         .filter({ visible: true }),
     ).toHaveCount(8);
     await page.reload();
+    await page.waitForLoadState("networkidle");
     await expect(page).toHaveURL(firstHref!);
-    await page.getByRole("link", { name: "Next" }).click();
+    const next = page.getByRole("link", { name: "Next" });
+    const nextHref = await next.getAttribute("href");
+    if (!nextHref) throw new Error("Next exercise link requires a destination");
+    await next.click();
+    await expect(page).toHaveURL(nextHref);
     await expect(
       page.getByText("1 of 2 sets saved", { exact: true }),
     ).toBeVisible();

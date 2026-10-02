@@ -400,3 +400,76 @@ test("last-set completion and returning to the tab never scroll to another exerc
       .evaluate((element) => element.scrollTop),
   ).toBeCloseTo(before, 0);
 });
+
+test("cleared numeric drafts survive autosave and unrelated set updates", async ({
+  page,
+  sessionId,
+}) => {
+  await page.goto(`/workouts/${sessionId}`);
+  await page
+    .getByRole("link", { name: /^Open / })
+    .first()
+    .click();
+  const weight = page.getByRole("textbox", {
+    name: "Set 1 weight",
+    exact: true,
+  });
+  const reps = page.getByRole("textbox", { name: "Set 1 reps", exact: true });
+  const saveField = async (name: string, value: string) => {
+    const saved = page.waitForResponse((response) => {
+      return (
+        response.request().method() === "POST" &&
+        response.url().includes(`/workouts/${sessionId}`)
+      );
+    });
+    await page
+      .getByRole("textbox", { name: `Set 1 ${name}`, exact: true })
+      .fill(value);
+    await saved;
+    await page.waitForLoadState("networkidle");
+  };
+  await saveField("weight", "35");
+  await saveField("reps", "35");
+  await weight.press("ControlOrMeta+ArrowRight");
+  await weight.press("Backspace");
+  await expect(weight).toHaveValue("3");
+  await weight.press("Backspace");
+  await expect(weight).toHaveValue("");
+  await reps.press("ControlOrMeta+ArrowRight");
+  await reps.press("Backspace");
+  await expect(reps).toHaveValue("3");
+  await reps.press("Backspace");
+  await expect(reps).toHaveValue("");
+  const toggled = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      response.url().includes(`/workouts/${sessionId}`),
+  );
+  await page.getByRole("button", { name: "Toggle warmup for set 1" }).click();
+  await toggled;
+  await expect(
+    page.getByRole("button", { name: "Toggle warmup for set 1" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(weight).toHaveValue("");
+  await expect(reps).toHaveValue("");
+  await saveField("weight", "42.5");
+  await saveField("reps", "12");
+  await page
+    .getByRole("button", { name: "Complete set 1", exact: true })
+    .click();
+  const saved = page
+    .locator(".exercise-card--focused .set-row--warmup")
+    .first();
+  await expect(
+    saved.getByRole("button", { name: "Edit set 1", exact: true }),
+  ).toBeVisible();
+  await expect(saved).toContainText("42.5");
+  await expect(saved).toContainText("12");
+  await page.reload();
+  await expect(
+    page.locator(".exercise-card--focused .set-row--warmup").first(),
+  ).toContainText("42.5");
+  await expect(
+    page.locator(".exercise-card--focused .set-row--warmup").first(),
+  ).toContainText("12");
+});
