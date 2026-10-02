@@ -313,11 +313,20 @@
   display: none;
 }
 .exercise-card--focused .set-row {
+  box-sizing: border-box;
   min-height: 56px;
 }
 .exercise-card--focused .set-row__actions {
   grid-column: 4;
   grid-row: 1;
+}
+.exercise-card--focused .set-row__actions form {
+  display: flex;
+  margin: 0;
+}
+.exercise-card--focused .set-row__actions .rt-IconButton {
+  box-sizing: border-box;
+  margin: 0;
 }
 .exercise-card--focused .set-row__report-value {
   grid-row: 2;
