@@ -308,9 +308,10 @@ function SetRow({
   const isBusy = actionFetcher.state !== "idle";
 
   useEffect(() => {
+    if (!set.isCompleted || editingCompleted) return;
     setLocalReps(set.reps?.toString() ?? "");
     setLocalWeight(set.weight?.toString() ?? "");
-  }, [set.reps, set.weight]);
+  }, [set.reps, set.weight, set.isCompleted, editingCompleted]);
 
   useEffect(() => {
     if (!completionSubmitted || actionFetcher.state !== "idle") return;
