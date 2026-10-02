@@ -124,7 +124,7 @@ function formatCountdown(seconds: number): string {
 function formatPreset(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
   const m = seconds / 60;
-  return Number.isInteger(m) ? `${m}m` : `${m.toFixed(0.5)}m`;
+  return Number.isInteger(m) ? `${m}m` : `${m.toFixed(1)}m`;
 }
 
 const BELL_SIZE = 14;
