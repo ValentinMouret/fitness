@@ -58,7 +58,7 @@
     "@react-router/node": "^7.11.0",
     "@react-router/serve": "^7.11.0",
     "@types/lodash": "^4.17.21",
-    "better-auth": "1.7.6",
+    "better-auth": "1.7.7",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "fuse.js": "^7.1.0",
