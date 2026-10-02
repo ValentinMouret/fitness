@@ -115,7 +115,10 @@ test("manual Start counts down and rest controls remain usable", async ({
   await timer.getByRole("button", { name: "Skip", exact: true }).click();
   await timer.getByRole("button", { name: "Start", exact: true }).click();
   await expect(countdown).toHaveText("2:00");
-  await page.clock.runFor(120_000);
+  await expect(
+    timer.getByRole("button", { name: "Skip", exact: true }),
+  ).toBeVisible();
+  await page.clock.fastForward(120_000);
   await expect(countdown).toHaveText("0:00");
   await timer.getByRole("button", { name: "OK", exact: true }).click();
   await expect(
