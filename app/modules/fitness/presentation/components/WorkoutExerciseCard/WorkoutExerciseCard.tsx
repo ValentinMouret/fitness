@@ -427,32 +427,39 @@ function SetRow({
           <Text size="2" className="set-row__value">
             {set.reps ?? "—"}
           </Text>
-          <div className="set-row__report-value">
-            {canEdit && !set.isWarmup ? (
-              <button
-                type="button"
-                onClick={() => onReportPromptChange?.(reportSetKey, true)}
-                aria-label={`${set.reportedRir ? "Edit" : "Add"} set ${set.set} reported effort`}
-              >
-                {set.reportedRir === "unsure"
-                  ? "Unsure"
-                  : set.reportedRir
-                    ? `~${set.reportedRir} left`
-                    : focused
-                      ? "Add effort · optional"
-                      : "Add"}
-              </button>
-            ) : (
-              <span>
-                {set.reportedRir === "unsure"
-                  ? "Unsure"
-                  : set.reportedRir
-                    ? `~${set.reportedRir} left`
-                    : "—"}
-              </span>
-            )}
-            {set.rpe !== undefined && <small>RPE {set.rpe} (legacy)</small>}
-          </div>
+          {(!focused ||
+            set.reportedRir !== undefined ||
+            set.rpe !== undefined ||
+            (canEdit && !set.isWarmup)) && (
+            <div className="set-row__report-value">
+              {canEdit && !set.isWarmup ? (
+                <button
+                  type="button"
+                  onClick={() => onReportPromptChange?.(reportSetKey, true)}
+                  aria-label={`${set.reportedRir ? "Edit" : "Add"} set ${set.set} reported effort`}
+                >
+                  {set.reportedRir === "unsure"
+                    ? "Unsure"
+                    : set.reportedRir
+                      ? `~${set.reportedRir} left`
+                      : focused
+                        ? "Add effort · optional"
+                        : "Add"}
+                </button>
+              ) : (
+                <span>
+                  {set.reportedRir === "unsure"
+                    ? "Unsure"
+                    : set.reportedRir
+                      ? `~${set.reportedRir} left`
+                      : focused
+                        ? null
+                        : "—"}
+                </span>
+              )}
+              {set.rpe !== undefined && <small>RPE {set.rpe} (legacy)</small>}
+            </div>
+          )}
         </>
       ) : (
         <>
