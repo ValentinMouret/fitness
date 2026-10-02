@@ -54,6 +54,18 @@ for (const width of [320, 390]) {
     const box = await warmup.boundingBox();
     expect(box?.height).toBeLessThanOrEqual(64);
     await expect(warmup).not.toContainText("—");
+    const labels = page.locator(".set-table-header__label");
+    for (const [index, column] of ["weight", "reps"].entries()) {
+      const header = await labels.nth(index + 1).boundingBox();
+      const value = await warmup
+        .locator(".set-row__value")
+        .nth(index)
+        .boundingBox();
+      if (!header || !value) throw new Error(`Missing ${column} column`);
+      expect(
+        Math.abs(header.x + header.width / 2 - value.x - value.width / 2),
+      ).toBeLessThan(1);
+    }
     for (const name of ["Edit set 1", "Remove set 1"]) {
       const button = warmup.getByRole("button", { name, exact: true });
       const buttonBox = await button.boundingBox();
@@ -68,6 +80,17 @@ for (const width of [320, 390]) {
     await expect(
       page.getByRole("textbox", { name: "Set 1 weight", exact: true }),
     ).toBeVisible();
+    for (const [index, column] of ["weight", "reps"].entries()) {
+      const header = await labels.nth(index + 1).boundingBox();
+      const input = await warmup
+        .getByRole("textbox", { name: `Set 1 ${column}`, exact: true })
+        .boundingBox();
+      if (!header || !input)
+        throw new Error(`Missing editable ${column} column`);
+      expect(
+        Math.abs(header.x + header.width / 2 - input.x - input.width / 2),
+      ).toBeLessThan(1);
+    }
     await warmup.getByRole("button", { name: "Cancel", exact: true }).tap();
     await rows
       .nth(1)

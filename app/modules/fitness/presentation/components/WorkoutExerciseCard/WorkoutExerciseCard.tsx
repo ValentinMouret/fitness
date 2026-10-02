@@ -194,7 +194,7 @@ export function WorkoutExerciseCard({
           onClick={
             onMMCClick ? () => onMMCClick(viewModel.exerciseId) : undefined
           }
-          className={onMMCClick ? "exercise-card__cue--editable" : undefined}
+          className={`exercise-card__cue${onMMCClick ? " exercise-card__cue--editable" : ""}`}
         >
           <Callout.Icon>
             <Brain size={16} />
@@ -249,6 +249,7 @@ export function WorkoutExerciseCard({
       {viewModel.canAddSets && (
         <Button
           onClick={handleAddSet}
+          className="exercise-card__add-set"
           size="1"
           variant="ghost"
           mt="3"
