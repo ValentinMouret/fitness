@@ -108,6 +108,9 @@ test("explicit assignments filter management and log one composition in the chos
   ).toHaveCount(1);
   await page.getByRole("button", { name: "Lunch", exact: true }).click();
   await expect(page).toHaveURL(/meal=lunch$/);
+  await expect(
+    page.getByRole("link", { name: `Edit ${riceName}`, exact: true }),
+  ).toHaveAttribute("href", `/nutrition/templates?meal=lunch&edit=${rice}`);
   await page
     .getByRole("link", { name: `Edit ${riceName}`, exact: true })
     .click();
@@ -116,6 +119,9 @@ test("explicit assignments filter management and log one composition in the chos
   await expect(page).toHaveURL(/meal=lunch$/);
   await page.getByRole("button", { name: "Dinner", exact: true }).click();
   await expect(page).toHaveURL(/meal=dinner$/);
+  await expect(
+    page.getByRole("link", { name: `Edit ${riceName}`, exact: true }),
+  ).toHaveAttribute("href", `/nutrition/templates?meal=dinner&edit=${rice}`);
   await expect(
     page.getByRole("heading", { name: riceName, exact: true }),
   ).toBeVisible();
@@ -351,4 +357,56 @@ test("a rejected save retains inputs and consecutive saves do not consume stale 
       [names],
     );
   }
+});
+
+test("filter navigation waits for the selected meal before editing and saving", async ({
+  page,
+  fixture,
+}) => {
+  await page.goto("/nutrition/templates?meal=all");
+  await page.waitForLoadState("networkidle");
+  const held = Promise.withResolvers<void>();
+  const release = Promise.withResolvers<void>();
+  const edit = page.getByRole("link", {
+    name: `Edit ${fixture.riceName}`,
+    exact: true,
+  });
+  const lunch = page.getByRole("button", { name: "Lunch", exact: true });
+  await page.route(
+    (url) =>
+      url.pathname === "/nutrition/templates.data" &&
+      url.searchParams.get("meal") === "lunch" &&
+      !url.searchParams.has("edit"),
+    async (route) => {
+      held.resolve();
+      await release.promise;
+      await route.continue();
+    },
+  );
+  try {
+    await lunch.click();
+    await held.promise;
+    await expect(lunch).toHaveAttribute("aria-pressed", "false");
+    await expect(edit).toHaveAttribute(
+      "href",
+      `/nutrition/templates?meal=all&edit=${fixture.rice}`,
+    );
+  } finally {
+    release.resolve();
+  }
+  await expect(page).toHaveURL(/meal=lunch$/);
+  await expect(lunch).toHaveAttribute("aria-pressed", "true");
+  await expect(edit).toHaveAttribute(
+    "href",
+    `/nutrition/templates?meal=lunch&edit=${fixture.rice}`,
+  );
+  await edit.click();
+  await page.getByRole("checkbox", { name: "Dinner", exact: true }).check();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page).toHaveURL(/meal=lunch$/);
+  await expect(lunch).toHaveAttribute("aria-pressed", "true");
+  await expect(edit).toHaveAttribute(
+    "href",
+    `/nutrition/templates?meal=lunch&edit=${fixture.rice}`,
+  );
 });
