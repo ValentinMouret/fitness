@@ -170,11 +170,13 @@ test("final-save readiness spans every exercise and correction retains historica
       [sessionId, firstId],
     );
     await page.goto(`/workouts/${sessionId}?exercise=${lastId}`);
+    await page.waitForLoadState("networkidle");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(
       page.getByText("2 of 2 sets saved", { exact: true }),
     ).toBeVisible();
     await page.getByRole("link", { name: "Previous" }).click();
+    await expect(page).toHaveURL(`/workouts/${sessionId}?exercise=${firstId}`);
     await expect(
       page.getByText("7 of 8 sets saved", { exact: true }),
     ).toBeVisible();
