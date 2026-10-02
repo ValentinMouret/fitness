@@ -289,7 +289,8 @@
   flex: 1;
   min-width: 0;
   margin: 0;
-  font: 500 2rem var(--font-display);
+  font: 500 2.25rem / 1.08 var(--font-display);
+  letter-spacing: -0.02em;
 }
 .exercise-card--focused .exercise-card__name {
   font: inherit;
@@ -300,14 +301,19 @@
 .exercise-card__equipment {
   display: block;
   margin-top: var(--space-2);
-  font: 500 1rem var(--font-body);
+  font: 400 0.875rem var(--font-body);
+  color: var(--brand-text-secondary);
 }
 .exercise-card__progress {
-  margin: var(--space-3) 0;
+  margin: 12px 0 18px;
+  font-size: 0.75rem;
+  color: var(--brand-text-secondary);
 }
 .exercise-card--focused .set-table-header,
 .exercise-card--focused .set-row {
-  grid-template-columns: 28px minmax(0, 1fr) minmax(0, 0.75fr) 92px;
+  grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr) 92px;
+  gap: 5px;
+  padding-right: 6px;
 }
 .exercise-card--focused .set-table-header [hidden] {
   display: none;
@@ -349,4 +355,71 @@
 }
 .exercise-card--focused .set-row__report-prompt {
   grid-column: 1 / -1;
+}
+
+.exercise-card--focused .exercise-card__cue {
+  margin-top: 0;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--gray-4);
+  border-radius: 10px;
+  background: var(--brand-surface);
+  color: var(--brand-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.exercise-card--focused .exercise-card__cue .rt-CalloutIcon {
+  color: var(--brand-coral);
+}
+
+.exercise-card--focused .set-table-header {
+  min-height: 34px;
+  padding-bottom: 0;
+}
+
+.exercise-card--focused .set-table-header__label {
+  font-size: 0.6875rem;
+  color: var(--brand-text-secondary);
+  text-align: center;
+}
+
+.exercise-card--focused .set-row {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--gray-4);
+}
+
+.exercise-card--focused .set-row + .set-row {
+  border-top: 0;
+}
+
+.exercise-card--focused .set-row--completed {
+  background: var(--brand-surface);
+}
+
+.exercise-card--focused .set-row__value,
+.exercise-card--focused .set-row__input input {
+  font: 500 1.1875rem var(--font-body);
+  text-align: center;
+  padding: 0;
+}
+
+.exercise-card--focused .set-row__input {
+  height: 44px;
+}
+
+.exercise-card--focused .set-row__number {
+  font-size: 0.75rem;
+}
+
+.exercise-card--focused .exercise-card__add-set {
+  margin: 18px 0 24px;
+  min-height: 44px;
+}
+
+@media (max-width: 340px) {
+  .exercise-card__heading {
+    font-size: 2rem;
+  }
 }
