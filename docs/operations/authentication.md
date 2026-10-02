@@ -5,7 +5,7 @@ Fitness uses one owner login. Browser sessions use a signed, expiring HttpOnly c
 ## Local magic-link foundation (ENSO-89)
 
 The approved next authentication model is invitation-only email magic links with
-Better Auth 1.7.6 and its native PostgreSQL adapter. Drizzle remains unchanged.
+Better Auth 1.7.7 and its native PostgreSQL adapter. Drizzle remains unchanged.
 This first stage is a local development foundation: the existing owner login,
 private app pages, OAuth and MCP authorization remain on their current boundary.
 Native sessions do not authorize access to those surfaces. Production admission
