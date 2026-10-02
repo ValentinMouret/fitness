@@ -107,6 +107,9 @@ test("manual Start counts down and rest controls remain usable", async ({
   await timer.getByRole("button", { name: "Skip", exact: true }).click();
   await expect(countdown).toHaveText("1:30");
   await countdown.click();
+  await expect(timer.locator('[aria-keyshortcuts="2"]')).toContainText("1.5m");
+  await timer.locator('[aria-keyshortcuts="2"]').click();
+  await expect(countdown).toHaveText("1:30");
   await timer.locator('[aria-keyshortcuts="3"]').click();
   await expect(countdown).toHaveText("2:00");
   await timer.getByRole("button", { name: "Skip", exact: true }).click();
