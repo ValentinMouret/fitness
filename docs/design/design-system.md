@@ -14,7 +14,7 @@ The design prioritizes clarity and simplicity, reducing cognitive load while mai
 All interactive elements follow predictable patterns for expanding content, inline editing, and state feedback.
 
 ### Semantic Color Usage
-Colors convey meaning through consistent application: tomato for primary actions and completion states, green for success feedback/toasts, red for destructive actions, and contextual colors for categorization.
+Colors convey meaning through consistent application: tomato for primary actions and active navigation, green for success feedback/toasts, red for destructive actions, and contextual colors for categorization. Completion treatment follows the feature patterns below. New completion feedback must not rely on color alone.
 
 ### Smooth Transitions
 All animations use consistent timing and easing to create cohesive, polished interactions.
@@ -27,7 +27,7 @@ All animations use consistent timing and easing to create cohesive, polished int
 <Theme accentColor="tomato" grayColor="sand" radius="medium">
 ```
 
-- **Accent Color**: Tomato — primary actions, completion states, active navigation
+- **Accent Color**: Tomato — primary actions, active navigation and feature-specific completion accents
 - **Gray Scale**: Sand — warm, approachable neutral tones
 - **Border Radius**: Medium (12px) — clean, modern feel
 
@@ -75,17 +75,25 @@ slow:   0.35s  /* Complex state changes, page transitions */
 
 **Stagger animations**: For lists of cards/items, use `fadeSlideUp` with 50ms delay increments per child (defined in `app/app.css`).
 
-### Spacing Extensions
-```css
---space-card: var(--space-4);     /* 16px — internal card padding */
---space-section: var(--space-6);  /* 32px — between major sections */
---space-page: var(--space-8);     /* 64px — page-level spacing */
-```
+### Runtime spacing and heading tokens
+
+Values defined in [app/app.css](../../app/app.css), assuming a 16px root font size. These project variables are literal rem values, not aliases for Radix spacing variables. Radix's own scale remains available for component spacing.
+
+| Token | Default | At widths ≤640px |
+| --- | --- | --- |
+| `--space-page` | 2rem (32px) | 1rem (16px) |
+| `--space-section` | 1.5rem (24px) | 1rem (16px) |
+| `--space-card` | 1rem (16px) | 0.75rem (12px) |
+| `--heading-page` | 2rem (32px) | 1.75rem (28px) |
+| `--heading-section` | 1.5rem (24px) | 1.25rem (20px) |
+| `--heading-card` | 1.25rem (20px) | 1.125rem (18px) |
+
+The heading tokens describe available runtime values; existing Radix Heading sizes and approved feature typography are not automatically replaced by them.
 
 ### Semantic Colors
 | Role | Color | Usage |
 |------|-------|-------|
-| Primary | `tomato` | Buttons, active nav, CTAs, completed states |
+| Primary | `tomato` | Buttons, active nav, CTAs; feature-specific completion accents |
 | Success | `green` | Toasts, confirmations |
 | Warning | `amber` | Pending/editable states |
 | In-progress | `orange` | Active workout, warmup |
@@ -95,7 +103,9 @@ slow:   0.35s  /* Complex state changes, page transitions */
 ## Component Patterns
 
 ### Card Containment
-All content blocks (exercise cards, summary cards, etc.) use warm card treatment:
+Choose containment by the interaction. Summary cards can use a warm surface; related data rows can share one container or use dividers. Do not wrap every content block in its own card. Existing WorkoutExerciseCard uses divider rows; approved Workout V3 groups compact set rows and avoids per-set cards.
+
+Example warm surface:
 
 ```css
 .my-card {
@@ -108,7 +118,7 @@ All content blocks (exercise cards, summary cards, etc.) use warm card treatment
 ```
 
 ### Row State Indicators
-Table rows use a **left border accent** to indicate state — no background fills:
+Editable data-table rows use a **left border accent** as the default state indicator. This does not prohibit feature-specific overview surfaces: approved Workout V3 uses a green surface and Completed label for finished exercises, while saved set rows retain one left indicator without a duplicate tick.
 
 | State | CSS |
 |-------|-----|
@@ -178,7 +188,7 @@ Page-level headers use warm surface with shadow:
 ```
 
 ### Status Feedback
-- Color-coded completion (tomato for completed sets/habits)
+- Existing completion follows feature patterns: saved workout sets show persisted values and an Edit action with their left accent; approved V3 overview exercises use green with Completed text. Habits retain their existing per-habit colors and completion labels. New completion feedback needs a readable label or accessible state as well as color.
 - Loading states during async operations
 - Confirmation dialogs for destructive actions
 - Badge system for categorization
@@ -192,7 +202,7 @@ Page-level headers use warm surface with shadow:
 
 ### Shadows
 - Always use `--shadow-warm-*` instead of generic `box-shadow`
-- Cards get `--shadow-warm-sm`, elevated elements get `--shadow-warm`
+- The warm-surface example uses `--shadow-warm-sm`; current global `.rt-Card` uses `--shadow-warm` and hover uses `--shadow-warm-hover`. Preserve those existing treatments until a visual consolidation slice is reviewed.
 
 ### Animations
 - `normal` (0.25s) for most interactions
@@ -204,6 +214,21 @@ Page-level headers use warm surface with shadow:
 - Touch targets: minimum 44px on mobile (`min-height: 44px; min-width: 44px`)
 - Inputs: `font-size: 16px` to prevent iOS auto-zoom
 - Bottom padding: account for tab bar + safe area inset
+
+## Existing component roles
+
+| Foundation | Responsibility |
+| --- | --- |
+| `AppLayout` | Shared navigation, route-header composition and safe-area layout |
+| `PageHeader` | Page identity, optional back link and primary/secondary actions; existing CSS stacks actions on mobile |
+| `SectionHeader` | Section title and optional trailing action |
+| Radix controls | Primary primitives for buttons, dialogs, inputs and tab panels |
+| `NumberInput`, `EmptyState`, `Skeleton`, `Celebration` | Existing reusable controls and feedback; inspect before adding equivalents |
+| Feature presentation components | Domain-specific rendering such as meal cards, workout rows and dashboard stats |
+
+Shared components receive UI-shaped props and do not import feature domain code. Keep completion rules, meal assignments and persistence semantics in their feature layers. See [frontend conventions](../engineering/frontend.md).
+
+Approved active-workout V3 keeps compact session navigation and timer chrome, direct duration tapping, a visible Start action and optional effort outside value entry. These are feature patterns, not a mandate to give every page workout chrome. Dashboard retains direct weight entry and its trend; this alignment introduces no history link.
 
 ## Nutrition view navigation and meal filters
 
