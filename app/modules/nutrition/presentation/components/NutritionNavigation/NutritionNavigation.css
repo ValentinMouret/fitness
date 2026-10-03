@@ -1,26 +1,21 @@
 .nutrition-navigation {
   display: flex;
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
+  gap: 12px;
+  margin-bottom: 26px;
   border-bottom: 1px solid var(--gray-4);
 }
-.nutrition-navigation a,
-.meal-template-filters button {
-  display: inline-flex;
+.nutrition-navigation a {
+  flex: 1;
+  display: flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 var(--space-2);
+  padding: 8px;
   color: var(--brand-text-secondary);
   text-decoration: none;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  font: inherit;
-  cursor: pointer;
+  font-size: 14px;
 }
-.nutrition-navigation [aria-current="page"],
-.meal-template-filters [aria-pressed="true"] {
+.nutrition-navigation [aria-current="page"] {
   color: var(--brand-text);
-  border-bottom-color: var(--brand-coral);
-  font-weight: 600;
+  box-shadow: inset 0 -2px var(--brand-coral);
+  font-weight: 500;
 }

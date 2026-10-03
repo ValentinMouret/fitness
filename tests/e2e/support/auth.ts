@@ -31,6 +31,10 @@ export async function login(page: Page, redirectTo = "/dashboard") {
   await page.getByPlaceholder("Enter your username").fill(credentials.username);
   await page.getByPlaceholder("Enter your password").fill(credentials.password);
   await page.getByRole("button", { name: "Login", exact: true }).click();
+  await expectAppDestination(page, redirectTo);
+}
+
+export async function expectAppDestination(page: Page, redirectTo: string) {
   const destination = new URL(redirectTo, authTestEnv.E2E_BASE_URL);
   if (["/dashboard", "/habits"].includes(destination.pathname)) {
     await expect(page).toHaveURL((url) => {
