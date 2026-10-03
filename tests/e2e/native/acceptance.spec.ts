@@ -219,10 +219,14 @@ test("native A and B retain separate histories and catalogue controls, and logou
     const renamed = `${guard}_definitions`;
     await pool.query(`alter table measurements rename to ${renamed}`);
     try {
-      expect((await b.request.get("/dashboard")).status()).toBe(500);
+      expect((await b.goto("/dashboard"))?.status()).toBe(500);
     } finally {
       await pool.query(`alter table ${renamed} rename to measurements`);
     }
+    await b.goto("/dashboard");
+    await expect(
+      b.getByRole("textbox", { name: "Weight", exact: true }),
+    ).toBeVisible();
     await test.step("Log the second account's weight", async () => {
       await b
         .getByRole("textbox", { name: "Weight", exact: true })
