@@ -3,7 +3,9 @@ import { err, ok, type Result } from "neverthrow";
 import { z } from "zod";
 import { env } from "~/env.server";
 import { logger } from "~/logger.server";
-import { HabitRepository } from "./repository.server";
+import type { UserId } from "~/modules/auth/domain/user";
+import { getAccountToday } from "~/modules/auth/infra/account-settings.server";
+import { createHabitRepositories } from "./repository.server";
 
 interface IdentityHabitReference {
   readonly habitName: string;
@@ -109,10 +111,12 @@ function getToolResponse(message: Anthropic.Messages.Message): unknown {
   return toolUse?.type === "tool_use" ? toolUse.input : null;
 }
 
-async function getIdentityHabitReferences(): Promise<
-  ReadonlyArray<IdentityHabitReference>
-> {
-  const habits = await HabitRepository.fetchActive();
+async function getIdentityHabitReferences(
+  userId: UserId,
+): Promise<ReadonlyArray<IdentityHabitReference>> {
+  const habits = await createHabitRepositories(userId).habits.fetchActive(
+    await getAccountToday(userId),
+  );
 
   if (habits.isErr()) {
     logger.warn(
@@ -200,7 +204,10 @@ async function requestHabitSuggestions(
 }
 
 export const IdentityPlaceholderService = {
-  async generate(habitName: string): Promise<
+  async generate(
+    userId: UserId,
+    habitName: string,
+  ): Promise<
     Result<
       {
         readonly identityPhrases: ReadonlyArray<string>;
@@ -209,7 +216,7 @@ export const IdentityPlaceholderService = {
       Error
     >
   > {
-    const existingHabits = await getIdentityHabitReferences();
+    const existingHabits = await getIdentityHabitReferences(userId);
 
     try {
       const client = getClient();

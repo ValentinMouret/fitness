@@ -3,6 +3,7 @@ import { test as base, expect } from "@playwright/test";
 import pg from "pg";
 import {
   canWriteFixtureDatabase,
+  fixtureOwnerId,
   verifyFixtureServerDatabase,
 } from "./support/fixture-database";
 
@@ -58,12 +59,12 @@ const test = base.extend<{
         [oats, oatsName, "breakfast"],
       ]) {
         await pool.query(
-          "insert into meal_templates (id,name,categories,total_calories,total_protein,total_carbs,total_fat,total_fiber,satiety_score) values ($1,$2,array[$3]::meal_category[],100,20,5,2,1,1)",
-          [id, name, category],
+          "insert into meal_templates (user_id,id,name,categories,total_calories,total_protein,total_carbs,total_fat,total_fiber,satiety_score) values ($4,$1,$2,array[$3]::meal_category[],100,20,5,2,1,1)",
+          [id, name, category, fixtureOwnerId()],
         );
         await pool.query(
-          "insert into meal_template_ingredients (meal_template_id,ingredient_id,quantity_grams) values ($1,$2,100)",
-          [id, ingredient],
+          "insert into meal_template_ingredients (user_id,meal_template_id,ingredient_id,quantity_grams) values ($3,$1,$2,100)",
+          [id, ingredient, fixtureOwnerId()],
         );
       }
       await use({ pool, rice, oats, ingredient, food, riceName, oatsName });

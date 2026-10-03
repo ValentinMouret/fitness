@@ -3,6 +3,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { data, redirect, useFetcher, useNavigate } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { createHabit } from "~/modules/habits/infra/create-habit.service.server";
 import { IdentityPlaceholderService } from "~/modules/habits/infra/identity-placeholder.service.server";
 import { AnimatedSuggestion } from "~/modules/habits/presentation/components/AnimatedSuggestion";
@@ -76,14 +77,17 @@ const fieldInput: React.CSSProperties = {
   boxSizing: "border-box",
 };
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const formData = await request.formData();
 
   if (formData.get("intent") === "generate-identity-placeholder") {
     const parsed = zfd
       .formData({ name: formText(z.string().trim().min(1).max(120)) })
       .parse(formData);
-    const result = await IdentityPlaceholderService.generate(parsed.name);
+    const result = await IdentityPlaceholderService.generate(
+      context.get(authenticatedUserContext).id,
+      parsed.name,
+    );
 
     if (result.isErr()) {
       return data({ error: result.error.message }, { status: 502 });
@@ -122,7 +126,7 @@ export async function action({ request }: Route.ActionArgs) {
           }
         : {};
 
-  const result = await createHabit({
+  const result = await createHabit(context.get(authenticatedUserContext).id, {
     name: parsed.name,
     identityPhrase: parsed.identityPhrase ?? "",
     timeOfDay: parsed.timeOfDay ?? "",

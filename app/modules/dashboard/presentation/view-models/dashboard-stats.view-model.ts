@@ -25,8 +25,9 @@ function intakeStat(
   unit: string,
 ): DashboardStatViewModel {
   const value = Math.round(current).toLocaleString("en-US");
-  const hasGoal = Number.isFinite(goal) && goal > 0;
-  const percent = hasGoal ? Math.round((current / goal) * 100) : null;
+  const hasGoal = Number.isFinite(goal) && goal >= 0;
+  const percent =
+    hasGoal && goal > 0 ? Math.round((current / goal) * 100) : null;
   const target = hasGoal ? Math.round(goal).toLocaleString("en-US") : null;
 
   return {
@@ -34,7 +35,12 @@ function intakeStat(
     value,
     target,
     unit,
-    detail: percent === null ? "No goal set" : `${percent}% of goal`,
+    detail:
+      goal === 0
+        ? "Zero target"
+        : percent === null
+          ? "No goal set"
+          : `${percent}% of goal`,
     progress: percent === null ? null : Math.min(100, Math.max(0, percent)),
     accessibleValue: target
       ? `${value} of ${target} ${unit}`

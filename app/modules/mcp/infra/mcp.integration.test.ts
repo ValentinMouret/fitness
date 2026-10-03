@@ -7,6 +7,8 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Client, Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
+import { env } from "~/env.server";
+import { userIdSchema } from "~/modules/auth/domain/user";
 import { workoutOperations } from "~/modules/fitness/application/workout-operations";
 import {
   createWorkoutSchema,
@@ -48,13 +50,18 @@ const reader = new Pool({
   query_timeout: 4000,
 });
 const database = drizzle(writer);
-const repository = createWorkoutRepository(database);
+const ownerUserId = userIdSchema.parse(env.AUTH_FOUNDATION_OWNER_USER_ID);
+const repository = createWorkoutRepository(ownerUserId, database);
 const operations = workoutOperations(repository);
 const nutrition = nutritionOperations(
-  createIngredientRepository(database),
-  createMealLogRepository(database),
+  createIngredientRepository(ownerUserId, database),
+  createMealLogRepository(ownerUserId, database),
 );
-const query = createQueryRunner(() => reader.connect(), readerRole);
+const query = createQueryRunner(
+  ownerUserId,
+  () => reader.connect(),
+  readerRole,
+);
 let createdDatabase = false;
 let createdRole = false;
 
@@ -63,6 +70,14 @@ beforeAll(async () => {
   await admin.query(`create database ${admin.escapeIdentifier(databaseName)}`);
   createdDatabase = true;
   await migrate(database, { migrationsFolder: "./drizzle" });
+  await writer.query(
+    "insert into auth_users (id, name, email) values ($1, 'MCP test owner', 'owner@example.invalid')",
+    [ownerUserId],
+  );
+  await writer.query(
+    "insert into auth_invitations(user_id,invited_by,expires_at,accepted_at) values ($1,$1,now(),now())",
+    [ownerUserId],
+  );
   await writer.query("revoke create on schema public from public");
   await provisionReader(
     databaseUrl.toString(),
@@ -499,11 +514,17 @@ describe("workout operations and restricted SQL", () => {
     await expect(
       reader.query("delete from fitness_data.workouts"),
     ).rejects.toBeDefined();
-    const disguised = createQueryRunner(async () => {
-      const connection = await writer.connect();
-      await connection.query(`set role ${admin.escapeIdentifier(readerRole)}`);
-      return connection;
-    }, readerRole);
+    const disguised = createQueryRunner(
+      ownerUserId,
+      async () => {
+        const connection = await writer.connect();
+        await connection.query(
+          `set role ${admin.escapeIdentifier(readerRole)}`,
+        );
+        return connection;
+      },
+      readerRole,
+    );
     expect((await disguised({ sql: "select 1" })).isErr()).toBe(true);
     const client = await reader.connect();
     try {
@@ -517,7 +538,9 @@ describe("workout operations and restricted SQL", () => {
     }
     expect(
       (
-        await createQueryRunner(() => writer.connect())({ sql: "select 1" })
+        await createQueryRunner(ownerUserId, () => writer.connect())({
+          sql: "select 1",
+        })
       ).isErr(),
     ).toBe(true);
   });
@@ -564,10 +587,10 @@ describe("habit MCP reads", () => {
     const inactiveId = randomUUID();
     try {
       await writer.query(
-        `insert into habits (id, name, identity_phrase, minimal_version, frequency_type, frequency_config, target_count, start_date, is_active)
-         values ($1, 'Read', 'I keep learning', 'Read one page', 'weekly', '{"days_of_week":[1,3]}', 1, '2025-01-01', true),
-                ($2, 'Archived', '', '', 'daily', '{}', 1, '2025-01-01', false)`,
-        [activeId, inactiveId],
+        `insert into habits (user_id, id, name, identity_phrase, minimal_version, frequency_type, frequency_config, target_count, start_date, is_active)
+         values ($3, $1, 'Read', 'I keep learning', 'Read one page', 'weekly', '{"days_of_week":[1,3]}', 1, '2025-01-01', true),
+                ($3, $2, 'Archived', '', '', 'daily', '{}', 1, '2025-01-01', false)`,
+        [activeId, inactiveId, ownerUserId],
       );
       await writer.query(
         `insert into habit_completions (habit_id, completion_date, completed, notes)
@@ -792,15 +815,15 @@ describe("nutrition MCP", () => {
     )._unsafeUnwrap().ingredient;
     const templateId = randomUUID();
     await writer.query(
-      `insert into meal_templates (id, name, categories, total_calories, total_protein, total_carbs, total_fat, total_fiber, satiety_score) values ($1, 'Template', array['breakfast']::meal_category[], 100, 1, 1, 1, 1, 1)`,
-      [templateId],
+      `insert into meal_templates (user_id, id, name, categories, total_calories, total_protein, total_carbs, total_fat, total_fiber, satiety_score) values ($2, $1, 'Template', array['breakfast']::meal_category[], 100, 1, 1, 1, 1, 1)`,
+      [templateId, ownerUserId],
     );
     await writer.query(
-      `insert into meal_template_ingredients (meal_template_id, ingredient_id, quantity_grams) values ($1, $2, 100)`,
-      [templateId, food.id],
+      `insert into meal_template_ingredients (user_id, meal_template_id, ingredient_id, quantity_grams) values ($3, $1, $2, 100)`,
+      [templateId, food.id, ownerUserId],
     );
     const meal = (
-      await createMealLogRepository(database).save({
+      await createMealLogRepository(ownerUserId, database).save({
         mealCategory: "breakfast",
         loggedDate: new Date("2025-04-01T00:00:00Z"),
         mealTemplateId: templateId,
@@ -890,13 +913,18 @@ describe("nutrition MCP", () => {
     if (!saved) throw new Error("Expected one saved meal");
     const mealId = saved._unsafeUnwrap().meal.id;
     // A real database failure after the metadata update must roll back the transaction.
-    const failed = await createMealLogRepository(database).update(mealId, {
-      notes: "Should roll back",
-      ingredients: [{ ingredient, quantityGrams: -1 }],
-    });
+    const failed = await createMealLogRepository(ownerUserId, database).update(
+      mealId,
+      {
+        notes: "Should roll back",
+        ingredients: [{ ingredient, quantityGrams: -1 }],
+      },
+    );
     expect(failed.isErr()).toBe(true);
     const persisted = (
-      await createMealLogRepository(database).fetchWithIngredients(mealId)
+      await createMealLogRepository(ownerUserId, database).fetchWithIngredients(
+        mealId,
+      )
     )._unsafeUnwrap();
     expect(persisted.notes).toBeNull();
     expect(persisted.ingredients[0].quantityGrams).toBe(100);
@@ -946,10 +974,12 @@ describe("progress reads through MCP", () => {
     };
     try {
       await writer.query(
-        "insert into measurements (name, unit) values ('weight', 'kg'), ('daily_calorie_intake', 'Cal'), ('progress_other', 'cm') on conflict do nothing",
+        "insert into measurements (user_id, name, unit) values ($1, 'weight', 'kg'), ($1, 'daily_calorie_intake', 'Cal'), ($1, 'progress_other', 'cm') on conflict do nothing",
+        [ownerUserId],
       );
       await writer.query(
-        "insert into measures (measurement_name, t, value) values ('weight', '1904-05-06 08:30:00', 81.5), ('weight', '1904-05-06 19:45:00', 82), ('weight', '1904-05-07 08:00:00', 0), ('progress_other', '1904-05-06 08:30:00', 99)",
+        "insert into measures (user_id, measurement_name, t, value) values ($1, 'weight', '1904-05-06 08:30:00', 81.5), ($1, 'weight', '1904-05-06 19:45:00', 82), ($1, 'weight', '1904-05-07 08:00:00', 0), ($1, 'progress_other', '1904-05-06 08:30:00', 99)",
+        [ownerUserId],
       );
       const schema = await client.callTool({
         name: "describe_schema",
@@ -1017,8 +1047,8 @@ describe("progress reads through MCP", () => {
         truncated: false,
       });
       await writer.query(
-        "insert into targets (id, measurement_name, value, deleted_at) values ($1, 'daily_calorie_intake', 2300, null), ($2, 'daily_calorie_intake', 1800, now()), ($3, 'progress_other', 99, null)",
-        [targetId, deletedId, otherId],
+        "insert into targets (user_id, id, measurement_name, value, deleted_at) values ($4, $1, 'daily_calorie_intake', 2300, null), ($4, $2, 'daily_calorie_intake', 1800, now()), ($4, $3, 'progress_other', 99, null)",
+        [targetId, deletedId, otherId, ownerUserId],
       );
       const target = await read("select * from active_calorie_target");
       expect(target).toEqual({
@@ -1062,6 +1092,11 @@ describe("progress reads through MCP", () => {
       const connection = await reader.connect();
       try {
         await connection.query("set timezone = 'Pacific/Auckland'");
+        await connection.query("begin read only");
+        await connection.query(
+          "select set_config('fitness.user_id', $1, true)",
+          [ownerUserId],
+        );
         const alternateZone = await connection.query(
           "select recorded_at from fitness_data.body_weight_history order by recorded_at desc",
         );
@@ -1073,6 +1108,7 @@ describe("progress reads through MCP", () => {
           ),
         );
       } finally {
+        await connection.query("rollback");
         await connection.query("set timezone = 'UTC'");
         connection.release();
       }
@@ -1115,5 +1151,412 @@ describe("progress reads through MCP", () => {
       await client.close();
       await server.close();
     }
+  });
+});
+
+describe("personal habit SQL isolation", () => {
+  it("scopes joins and aggregates to the trusted user and clears pooled transaction identity", async () => {
+    const otherUserId = userIdSchema.parse(randomUUID());
+    const ownerHabitId = randomUUID();
+    const otherHabitId = randomUUID();
+    const otherQuery = createQueryRunner(
+      otherUserId,
+      () => reader.connect(),
+      readerRole,
+    );
+    try {
+      await writer.query(
+        "insert into auth_users (id, name, email) values ($1, 'Other test user', $2)",
+        [otherUserId, `${otherUserId}@example.invalid`],
+      );
+      await writer.query(
+        `insert into habits (user_id, id, name, frequency_type, start_date)
+        values ($1, $2, 'Owner private habit', 'daily', '2020-01-01'),
+               ($3, $4, 'Other private habit', 'daily', '2020-01-01')`,
+        [ownerUserId, ownerHabitId, otherUserId, otherHabitId],
+      );
+      await writer.query(
+        `insert into habit_completions (habit_id, completion_date, completed, notes)
+        values ($1, '2020-01-01', true, 'Owner private note'),
+               ($2, '2020-01-01', true, 'Other private note')`,
+        [ownerHabitId, otherHabitId],
+      );
+      const sql =
+        "select h.id, c.notes from fitness_data.habits h join fitness_data.habit_completions c on c.habit_id=h.id order by h.id";
+      const [owner, other] = await Promise.all([
+        query({ sql }),
+        otherQuery({ sql }),
+      ]);
+      expect(owner._unsafeUnwrap().rows).toEqual([
+        { id: ownerHabitId, notes: "Owner private note" },
+      ]);
+      expect(other._unsafeUnwrap().rows).toEqual([
+        { id: otherHabitId, notes: "Other private note" },
+      ]);
+      expect(
+        (
+          await otherQuery({
+            sql: "select count(*)::integer as n from fitness_data.habits",
+          })
+        )._unsafeUnwrap().rows,
+      ).toEqual([{ n: 1 }]);
+      expect((await query({ sql }))._unsafeUnwrap().rows).toEqual([
+        { id: ownerHabitId, notes: "Owner private note" },
+      ]);
+      expect(
+        (await reader.query("select * from fitness_data.habits")).rows,
+      ).toEqual([]);
+      expect(
+        (await reader.query("select * from fitness_data.habit_completions"))
+          .rows,
+      ).toEqual([]);
+      expect(
+        (
+          await otherQuery({
+            sql: `select set_config('fitness.user_id', '${ownerUserId}', true)`,
+          })
+        ).isErr(),
+      ).toBe(true);
+      expect(
+        (
+          await otherQuery({ sql: "select current_setting('fitness.user_id')" })
+        ).isErr(),
+      ).toBe(true);
+      expect((await otherQuery({ sql }))._unsafeUnwrap().rows).toEqual([
+        { id: otherHabitId, notes: "Other private note" },
+      ]);
+    } finally {
+      await writer.query(
+        "delete from habit_completions where habit_id=any($1::uuid[])",
+        [[ownerHabitId, otherHabitId]],
+      );
+      await writer.query("delete from habits where id=any($1::uuid[])", [
+        [ownerHabitId, otherHabitId],
+      ]);
+      await writer.query("delete from auth_users where id=$1", [otherUserId]);
+    }
+  });
+});
+
+describe("personal progress SQL isolation", () => {
+  it("isolates body weight and calorie targets across parallel accounts and missing identity", async () => {
+    const otherUserId = userIdSchema.parse(randomUUID());
+    const ownerTargetId = randomUUID();
+    const otherTargetId = randomUUID();
+    const otherQuery = createQueryRunner(
+      otherUserId,
+      () => reader.connect(),
+      readerRole,
+    );
+    try {
+      await writer.query(
+        "insert into auth_users (id,name,email) values ($1,'Other progress account',$2)",
+        [otherUserId, `${otherUserId}@example.invalid`],
+      );
+      await writer.query(
+        `insert into measurements (user_id,name,unit)
+        values ($1,'weight','kg'),($1,'daily_calorie_intake','Cal'),
+               ($2,'weight','kg'),($2,'daily_calorie_intake','Cal') on conflict do nothing`,
+        [ownerUserId, otherUserId],
+      );
+      await writer.query(
+        "insert into measures (user_id,measurement_name,t,value) values ($1,'weight','1890-01-01',80),($2,'weight','1890-01-01',50)",
+        [ownerUserId, otherUserId],
+      );
+      await writer.query(
+        "insert into targets (user_id,id,measurement_name,value) values ($1,$2,'daily_calorie_intake',2300),($3,$4,'daily_calorie_intake',1800)",
+        [ownerUserId, ownerTargetId, otherUserId, otherTargetId],
+      );
+      const sql =
+        "select avg(w.weight_kg)::float8 as weight, max(t.calories_kcal_per_day)::float8 as calories from fitness_data.body_weight_history w cross join fitness_data.active_calorie_target t";
+      const [owner, other] = await Promise.all([
+        query({ sql }),
+        otherQuery({ sql }),
+      ]);
+      expect(owner._unsafeUnwrap().rows).toEqual([
+        { weight: 80, calories: 2300 },
+      ]);
+      expect(other._unsafeUnwrap().rows).toEqual([
+        { weight: 50, calories: 1800 },
+      ]);
+      expect(
+        (await reader.query("select * from fitness_data.body_weight_history"))
+          .rows,
+      ).toEqual([]);
+      expect(
+        (await reader.query("select * from fitness_data.active_calorie_target"))
+          .rows,
+      ).toEqual([]);
+      for (const table of ["measurements", "daily_note"])
+        await expect(
+          reader.query(`select * from public.${table}`),
+        ).rejects.toMatchObject({ code: "42501" });
+      expect((await query({ sql }))._unsafeUnwrap().rows).toEqual([
+        { weight: 80, calories: 2300 },
+      ]);
+      expect((await otherQuery({ sql }))._unsafeUnwrap().rows).toEqual([
+        { weight: 50, calories: 1800 },
+      ]);
+    } finally {
+      await writer.query("delete from targets where id=any($1::uuid[])", [
+        [ownerTargetId, otherTargetId],
+      ]);
+      await writer.query(
+        "delete from measures where user_id=any($1::uuid[]) and t='1890-01-01'",
+        [[ownerUserId, otherUserId]],
+      );
+      await writer.query("delete from measurements where user_id=$1", [
+        otherUserId,
+      ]);
+      await writer.query("delete from auth_users where id=$1", [otherUserId]);
+    }
+  });
+});
+
+it("isolates workout sessions, ordered groups, sets and volume for the real A/B SQL reader", async () => {
+  const otherUserId = userIdSchema.parse(randomUUID());
+  const otherOperations = workoutOperations(
+    createWorkoutRepository(otherUserId, database),
+  );
+  const otherQuery = createQueryRunner(
+    otherUserId,
+    () => reader.connect(),
+    readerRole,
+  );
+  await writer.query(
+    "insert into auth_users (id,name,email) values ($1,'Other workout fixture',$2)",
+    [otherUserId, `${otherUserId}@example.invalid`],
+  );
+  const entry = await exercise("Reader isolation neutral exercise");
+  const workoutIds: string[] = [];
+  try {
+    for (const [operation, name, reps, weight] of [
+      [operations, "Account A private workout", 8, 60],
+      [otherOperations, "Account B private workout", 3, 10],
+    ] as const) {
+      const session = (
+        await operation.createWorkout({
+          name,
+          start: "1900-01-01T10:00:00Z",
+          stop: "1900-01-01T11:00:00Z",
+          notes: name,
+          exercises: [
+            {
+              exerciseId: entry.id,
+              notes: name,
+              sets: [
+                {
+                  set: 1,
+                  reps,
+                  weight,
+                  note: name,
+                  isCompleted: true,
+                  isWarmup: false,
+                  isFailure: false,
+                },
+              ],
+            },
+          ],
+        })
+      )._unsafeUnwrap();
+      workoutIds.push(session.workout.id);
+    }
+    const sql =
+      "select w.id,w.notes,we.notes as exercise_notes,s.note,s.volume_kg from fitness_data.workouts w join fitness_data.workout_exercises we on we.workout_id=w.id join fitness_data.sets s on s.workout_id=we.workout_id and s.exercise_id=we.exercise_id where w.id in ('" +
+      workoutIds.join("','") +
+      "') order by w.id";
+    const [a, b] = await Promise.all([query({ sql }), otherQuery({ sql })]);
+    expect(a._unsafeUnwrap().rows).toEqual([
+      {
+        id: workoutIds[0],
+        notes: "Account A private workout",
+        exercise_notes: "Account A private workout",
+        note: "Account A private workout",
+        volume_kg: 480,
+      },
+    ]);
+    expect(b._unsafeUnwrap().rows).toEqual([
+      {
+        id: workoutIds[1],
+        notes: "Account B private workout",
+        exercise_notes: "Account B private workout",
+        note: "Account B private workout",
+        volume_kg: 30,
+      },
+    ]);
+    for (const view of [
+      "workouts",
+      "workout_exercises",
+      "sets",
+      "muscle_volume",
+    ])
+      expect(
+        (await reader.query(`select * from fitness_data.${view}`)).rows,
+      ).toEqual([]);
+    const aggregateSql =
+      "select sum(volume_kg)::float8 as total from fitness_data.sets where workout_id in ('" +
+      workoutIds.join("','") +
+      "')";
+    for (const [run, total] of [
+      [query, 480],
+      [otherQuery, 30],
+      [query, 480],
+    ] as const)
+      expect((await run({ sql: aggregateSql }))._unsafeUnwrap().rows).toEqual([
+        { total },
+      ]);
+    await expect(
+      reader.query("select * from public.workout_templates"),
+    ).rejects.toThrow();
+  } finally {
+    await writer.query(
+      "delete from workout_sets where workout=any($1::uuid[])",
+      [workoutIds],
+    );
+    await writer.query(
+      "delete from workout_exercises where workout_id=any($1::uuid[])",
+      [workoutIds],
+    );
+    await writer.query("delete from workouts where id=any($1::uuid[])", [
+      workoutIds,
+    ]);
+    await writer.query("delete from exercise_muscle_groups where exercise=$1", [
+      entry.id,
+    ]);
+    await writer.query(
+      "delete from exercise_preferences where exercise_id=$1",
+      [entry.id],
+    );
+    await writer.query("delete from exercises where id=$1", [entry.id]);
+    await writer.query("delete from auth_users where id=$1", [otherUserId]);
+  }
+});
+
+describe("personal nutrition through the restricted reader", () => {
+  it("isolates both accounts across roots, compositions, aggregates, missing identity and pooled reuse", async () => {
+    const other = userIdSchema.parse(randomUUID());
+    await writer.query(
+      "insert into auth_users (id,name,email) values ($1,'Nutrition reader fixture',$2)",
+      [other, `${other}@example.invalid`],
+    );
+    const name = `Same private food ${randomUUID()}`;
+    const queryB = createQueryRunner(other, () => reader.connect(), readerRole);
+    const ids: { food: string; template: string; meal: string }[] = [];
+    for (const actor of [ownerUserId, other]) {
+      const food = (
+        await createIngredientRepository(actor, database).save({
+          name,
+          category: "proteins",
+          texture: "firm_solid",
+          calories: 100,
+          protein: 20,
+          carbs: 5,
+          fat: 2,
+          fiber: 1,
+          waterPercentage: 70,
+          energyDensity: 1,
+          sliderMin: 5,
+          sliderMax: 500,
+          isVegetarian: false,
+          isVegan: false,
+          aiGenerated: false,
+          aiGeneratedAt: null,
+        })
+      )._unsafeUnwrap();
+      const template = randomUUID();
+      await writer.query(
+        "insert into meal_templates (user_id,id,name,categories,total_calories,total_protein,total_carbs,total_fat,total_fiber,satiety_score,is_public) values ($1,$2,$3,array['dinner']::meal_category[],100,20,5,2,1,3,true)",
+        [actor, template, name],
+      );
+      await writer.query(
+        "insert into meal_template_ingredients (user_id,meal_template_id,ingredient_id,quantity_grams) values ($1,$2,$3,100)",
+        [actor, template, food.id],
+      );
+      const meal = (
+        await createMealLogRepository(actor, database).save({
+          mealCategory: "dinner",
+          loggedDate: new Date("1903-01-01"),
+          mealTemplateId: template,
+          ingredients: [{ ingredient: food, quantityGrams: 200 }],
+        })
+      )._unsafeUnwrap();
+      ids.push({ food: food.id, template, meal: meal.id });
+    }
+    const [a, b] = ids;
+    const checks = [
+      {
+        sql: `select id from fitness_data.ingredients where name='${name}'`,
+        own: a.food,
+        foreign: b.food,
+        key: "id",
+      },
+      {
+        sql: `select id from fitness_data.meal_templates where name='${name}'`,
+        own: a.template,
+        foreign: b.template,
+        key: "id",
+      },
+      {
+        sql: "select id from fitness_data.meal_logs where logged_date='1903-01-01'",
+        own: a.meal,
+        foreign: b.meal,
+        key: "id",
+      },
+      {
+        sql: `select meal_template_id from fitness_data.meal_template_ingredients where ingredient_id in ('${a.food}','${b.food}')`,
+        own: a.template,
+        foreign: b.template,
+        key: "meal_template_id",
+      },
+      {
+        sql: `select meal_log_id from fitness_data.meal_log_ingredients where ingredient_id in ('${a.food}','${b.food}')`,
+        own: a.meal,
+        foreign: b.meal,
+        key: "meal_log_id",
+      },
+    ];
+    for (const check of checks) {
+      expect((await query({ sql: check.sql }))._unsafeUnwrap().rows).toEqual([
+        { [check.key]: check.own },
+      ]);
+      expect((await queryB({ sql: check.sql }))._unsafeUnwrap().rows).toEqual([
+        { [check.key]: check.foreign },
+      ]);
+      expect((await reader.query(check.sql)).rows).toEqual([]);
+      expect((await query({ sql: check.sql }))._unsafeUnwrap().rows).toEqual([
+        { [check.key]: check.own },
+      ]);
+    }
+    const totals = `select sum(i.calories * mi.quantity_grams / 100) as calories from fitness_data.meal_logs m join fitness_data.meal_log_ingredients mi on mi.meal_log_id=m.id join fitness_data.ingredients i on i.id=mi.ingredient_id where m.logged_date='1903-01-01'`;
+    expect((await query({ sql: totals }))._unsafeUnwrap().rows).toEqual([
+      { calories: 200 },
+    ]);
+    expect((await queryB({ sql: totals }))._unsafeUnwrap().rows).toEqual([
+      { calories: 200 },
+    ]);
+    expect(
+      (
+        await nutrition.updateMealLog({
+          mealId: b.meal,
+          ingredients: [{ id: a.food, quantity: 999 }],
+        })
+      )._unsafeUnwrapErr().code,
+    ).toBe("not_found");
+    expect(
+      (await nutrition.deleteMealLog({ mealId: b.meal }))._unsafeUnwrapErr()
+        .code,
+    ).toBe("not_found");
+    expect(
+      (
+        await nutrition.logMeal({
+          mealCategory: "snack",
+          loggedDate: "1903-01-02",
+          ingredients: [{ id: b.food, quantity: 999 }],
+        })
+      )._unsafeUnwrapErr().code,
+    ).toBe("not_found");
+    expect((await queryB({ sql: totals }))._unsafeUnwrap().rows).toEqual([
+      { calories: 200 },
+    ]);
   });
 });

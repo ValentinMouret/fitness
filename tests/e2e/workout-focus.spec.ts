@@ -3,6 +3,7 @@ import { test as base, expect } from "@playwright/test";
 import pg from "pg";
 import {
   canWriteFixtureDatabase,
+  fixtureOwnerId,
   verifyFixtureServerDatabase,
 } from "./support/fixture-database";
 
@@ -16,8 +17,8 @@ const test = base.extend<{ readonly sessionId: string }>({
     try {
       await verifyFixtureServerDatabase(request, pool);
       await pool.query(
-        "insert into workouts (id, name, start) values ($1, 'Focus acceptance workout', $2)",
-        [id, new Date().toISOString()],
+        "insert into workouts (user_id,id, name, start) values ($3,$1, 'Focus acceptance workout', $2)",
+        [id, new Date().toISOString(), fixtureOwnerId()],
       );
       for (const [index, exerciseId] of exerciseIds.entries()) {
         await pool.query(

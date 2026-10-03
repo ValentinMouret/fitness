@@ -1,17 +1,21 @@
-import { isSameDay, toDateString } from "~/time";
+import type { UserId } from "~/modules/auth/domain/user";
+import {
+  getAccountToday,
+  requireAccountToday,
+} from "~/modules/auth/infra/account-settings.server";
+import { isSameCalendarDay, toDateString } from "~/time";
 import { handleResultError } from "~/utils/errors";
 import { HabitService } from "../application/service";
 import { groupDailyHabits } from "../domain/daily-habit-order";
 import { HabitCompletion } from "../domain/entity";
-import {
-  HabitCompletionRepository,
-  HabitRepository,
-} from "./repository.server";
+import { createHabitRepositories } from "./repository.server";
 
 const STREAK_MILESTONES = [7, 30, 90, 365];
 
-export async function getHabitsPageData(todayDate: Date) {
-  const habitsResult = await HabitRepository.fetchActive(todayDate);
+export async function getHabitsPageData(userId: UserId, date?: Date) {
+  const todayDate = date ?? (await getAccountToday(userId));
+  const repositories = createHabitRepositories(userId);
+  const habitsResult = await repositories.habits.fetchActive(todayDate);
   if (habitsResult.isErr()) {
     handleResultError(habitsResult, "Failed to load habits");
   }
@@ -23,7 +27,7 @@ export async function getHabitsPageData(todayDate: Date) {
     todayDate,
   );
 
-  const completionsResult = await HabitCompletionRepository.fetchByDateRange(
+  const completionsResult = await repositories.completions.fetchByDateRange(
     earliestDate,
     todayDate,
   );
@@ -48,7 +52,7 @@ export async function getHabitsPageData(todayDate: Date) {
     );
 
     const todayCompletion = habitCompletions.find((c) =>
-      isSameDay(c.completionDate, todayDate),
+      isSameCalendarDay(c.completionDate, todayDate),
     );
     if (todayCompletion) {
       completionMap[habit.id] = todayCompletion.completed;
@@ -104,39 +108,52 @@ export type ToggleCompletionResult =
   | { readonly ok: true; readonly hitMilestone: number | null }
   | { readonly ok: false; readonly error: string; readonly status: number };
 
-export async function toggleHabitCompletion(input: {
-  readonly habitId: string;
-  readonly completed: boolean;
-  readonly notes?: string;
-  readonly date: Date;
-}): Promise<ToggleCompletionResult> {
+export async function toggleHabitCompletion(
+  userId: UserId,
+  input: {
+    readonly habitId: string;
+    readonly completed: boolean;
+    readonly notes?: string;
+    readonly date?: Date;
+  },
+): Promise<ToggleCompletionResult> {
+  const accountToday = await requireAccountToday(userId);
+  const todayDate = input.date ?? accountToday;
+  const repositories = createHabitRepositories(userId);
   const completion = HabitCompletion.create(
     input.habitId,
-    input.date,
+    todayDate,
     !input.completed,
     input.notes,
   );
 
-  const result = await HabitCompletionRepository.save(completion);
+  const result = await repositories.completions.save(completion);
 
   if (result.isErr()) {
-    return { ok: false, error: "Failed to save completion", status: 500 };
+    return {
+      ok: false,
+      error:
+        result.error === "not_found"
+          ? "Habit not found"
+          : "Failed to save completion",
+      status: result.error === "not_found" ? 404 : 500,
+    };
   }
 
   let hitMilestone: number | null = null;
   if (!input.completed) {
-    const habit = await HabitRepository.fetchById(input.habitId);
+    const habit = await repositories.habits.fetchById(input.habitId);
     if (habit.isOk() && habit.value) {
-      const completions = await HabitCompletionRepository.fetchByHabitBetween(
+      const completions = await repositories.completions.fetchByHabitBetween(
         input.habitId,
         new Date(habit.value.startDate),
-        input.date,
+        todayDate,
       );
       if (completions.isOk()) {
         const newStreak = HabitService.calculateStreak(
           habit.value,
           completions.value,
-          input.date,
+          todayDate,
         );
         if (STREAK_MILESTONES.includes(newStreak)) {
           hitMilestone = newStreak;

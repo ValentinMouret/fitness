@@ -28,6 +28,7 @@ export default [
   route("share/meal/:id", "routes/share/meal.tsx"),
 
   layout("layouts/ProtectedLayout.tsx", [
+    route("account/timezone", "routes/account/timezone.ts"),
     route("api/exercises/history", "routes/api/exercises/history.ts"),
     route(
       "api/nutrition/estimate-meal",

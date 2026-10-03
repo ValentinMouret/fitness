@@ -1,7 +1,12 @@
 import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
+import { authUsers } from "~/db/schema";
+
 export const oauthConnections = pgTable("oauth_connections", {
   id: uuid().primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => authUsers.id),
   clientId: text("client_id").notNull(),
   resource: text().notNull(),
   scope: text().notNull(),

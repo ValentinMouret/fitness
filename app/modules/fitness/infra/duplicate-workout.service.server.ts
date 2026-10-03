@@ -1,9 +1,10 @@
 import { redirect } from "react-router";
+import type { UserId } from "~/modules/auth/domain/user";
 import type { WorkoutSession } from "~/modules/fitness/domain/workout";
 import { Workout } from "~/modules/fitness/domain/workout";
 import {
-  WorkoutRepository,
-  WorkoutSessionRepository,
+  createWorkoutRepository,
+  createWorkoutSessionRepository,
 } from "~/modules/fitness/infra/workout.repository.server";
 import { getOrdinalSuffix } from "~/time";
 import { createNotFoundError, handleResultError } from "~/utils/errors";
@@ -13,10 +14,11 @@ import { createNotFoundError, handleResultError } from "~/utils/errors";
  * with the same exercises and sets (weights/reps pre-filled, all uncompleted).
  */
 export async function duplicateWorkout(
+  userId: UserId,
   sourceWorkoutId: string,
 ): Promise<Response> {
   const sessionResult =
-    await WorkoutSessionRepository.findById(sourceWorkoutId);
+    await createWorkoutSessionRepository(userId).findById(sourceWorkoutId);
 
   if (sessionResult.isErr()) {
     handleResultError(sessionResult, "Failed to load source workout");
@@ -34,7 +36,7 @@ export async function duplicateWorkout(
   const workoutName = `${weekday}, ${date}${getOrdinalSuffix(date)}`;
 
   const newWorkout = Workout.create({ name: workoutName });
-  const saveResult = await WorkoutRepository.save(newWorkout);
+  const saveResult = await createWorkoutRepository(userId).save(newWorkout);
 
   if (saveResult.isErr()) {
     handleResultError(saveResult, "Failed to create workout");
@@ -63,7 +65,8 @@ export async function duplicateWorkout(
     })),
   };
 
-  const sessionSaveResult = await WorkoutRepository.saveSession(newSession);
+  const sessionSaveResult =
+    await createWorkoutRepository(userId).saveSession(newSession);
 
   if (sessionSaveResult.isErr()) {
     handleResultError(sessionSaveResult, "Failed to duplicate workout session");

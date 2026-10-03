@@ -14,7 +14,10 @@ export default defineConfig({
     ...base.test,
     env: { ...base.test?.env, DATABASE_URL: databaseUrl },
     include: ["app/modules/nutrition/**/*.integration.test.ts"],
-    exclude: ["**/ai-ingredient.service.integration.test.ts"],
+    exclude: [
+      "**/ai-ingredient.service.integration.test.ts",
+      "**/ownership.integration.test.ts",
+    ],
     fileParallelism: false,
   },
 });

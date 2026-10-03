@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { err, ok, type Result } from "neverthrow";
 import { env } from "~/env.server";
 import { logger } from "~/logger.server";
+import type { UserId } from "~/modules/auth/domain/user";
 import type { CreateAIIngredientInput } from "../domain/ingredient";
 import { ingredientCategories, textureCategories } from "../domain/ingredient";
 import {
@@ -11,7 +12,7 @@ import {
   MealEstimationResultSchema,
   type ResolvedIngredient,
 } from "../domain/meal-estimation";
-import { IngredientRepository } from "./ingredient.repository.server";
+import { createIngredientRepository } from "./ingredient.repository.server";
 
 const estimateMealTool: Anthropic.Messages.Tool = {
   name: "estimate_meal",
@@ -169,12 +170,14 @@ function parseEstimationResponse(
 }
 
 export async function processChatTurn(
+  userId: UserId,
   messages: readonly EstimationMessage[],
 ): Promise<Result<ChatTurnResult, Error>> {
   try {
     const client = getClient();
 
-    const ingredientsResult = await IngredientRepository.listAll();
+    const ingredientsResult =
+      await createIngredientRepository(userId).listAll();
     const existingNames = ingredientsResult.isOk()
       ? ingredientsResult.value.map((i) => i.name)
       : [];
@@ -197,10 +200,12 @@ export async function processChatTurn(
 }
 
 export async function resolveEstimatedIngredients(
+  userId: UserId,
   items: readonly EstimatedIngredient[],
 ): Promise<Result<readonly ResolvedIngredient[], Error>> {
   try {
-    const allIngredientsResult = await IngredientRepository.listAll();
+    const allIngredientsResult =
+      await createIngredientRepository(userId).listAll();
     if (allIngredientsResult.isErr()) {
       return err(new Error("Failed to load ingredients"));
     }
@@ -243,7 +248,7 @@ export async function resolveEstimatedIngredients(
         aiGeneratedAt: new Date(),
       };
 
-      const saveResult = await IngredientRepository.save(input);
+      const saveResult = await createIngredientRepository(userId).save(input);
       if (saveResult.isErr()) {
         logger.error(
           { ingredientName: item.name },

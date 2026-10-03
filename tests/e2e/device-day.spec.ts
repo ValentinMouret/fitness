@@ -3,6 +3,7 @@ import { test as base, expect } from "@playwright/test";
 import pg from "pg";
 import {
   canWriteFixtureDatabase,
+  fixtureOwnerId,
   verifyFixtureServerDatabase,
 } from "./support/fixture-database";
 
@@ -26,7 +27,7 @@ const test = base.extend<{
       await verifyFixtureServerDatabase(request, pool);
       for (const [index, id] of ids.entries()) {
         await pool.query(
-          "insert into habits (id, name, frequency_type, frequency_config, start_date, is_active) values ($1, $2, $3, $4, '1900-01-01', true)",
+          "insert into habits (user_id, id, name, frequency_type, frequency_config, start_date, is_active) values ($5, $1, $2, $3, $4, '1900-01-01', true)",
           [
             id,
             names[index],
@@ -36,6 +37,7 @@ const test = base.extend<{
                 ? {}
                 : { days_of_week: [index === 0 ? "Friday" : "Saturday"] },
             ),
+            fixtureOwnerId(),
           ],
         );
       }

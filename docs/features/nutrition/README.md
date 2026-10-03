@@ -15,6 +15,10 @@ This is a personal tracking tool, not a multi-user diet platform.
 - A **meal log** records consumption on a date in a meal category. It is distinct
   from a template or an unlogged composition.
 - A **target** describes intended intake; logged intake is the actual record.
+  Dashboard and nutrition use only the account's saved calorie target. When none
+  is saved, the existing example values remain visibly labeled as defaults with
+  a link to set personal targets. Defaults are display values, never saved goals.
+  A target read failure is an error, not evidence that the account has no target.
 
 The [nutrition domain](../../../app/modules/nutrition/domain/) and
 [database schema](../../../app/db/schema.ts) define the implemented types and

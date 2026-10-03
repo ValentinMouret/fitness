@@ -74,12 +74,28 @@ fi
 
 if [ "${REVIEW_DATABASE_RUN_SEED:-true}" = "true" ]; then
   if [ "${PREVIEW_APP:-}" = "true" ]; then
-    psql "$DATABASE_URL" --set ON_ERROR_STOP=1 <<'SQL'
-INSERT INTO measurements (name, unit, description)
+    require_env AUTH_FOUNDATION_OWNER_USER_ID
+    psql "$DATABASE_URL" --set ON_ERROR_STOP=1 \
+      --set owner="$AUTH_FOUNDATION_OWNER_USER_ID" <<'SQL'
+BEGIN;
+SELECT EXISTS (
+  SELECT 1 FROM auth_users u
+  JOIN auth_invitations i ON i.user_id = u.id
+  WHERE u.id = :'owner'::uuid AND i.invited_by = u.id
+    AND i.accepted_at IS NOT NULL AND i.revoked_at IS NULL
+) AS owner_admitted \gset
+\if :owner_admitted
+INSERT INTO measurements (user_id, name, unit, description)
 VALUES
-  ('weight', 'kg', 'One of the most important measures for overall fitness'),
-  ('daily_calorie_intake', 'Cal', 'Amount of calories to consume')
-ON CONFLICT (name) DO NOTHING;
+  (:'owner'::uuid, 'weight', 'kg', 'One of the most important measures for overall fitness'),
+  (:'owner'::uuid, 'daily_calorie_intake', 'Cal', 'Amount of calories to consume')
+ON CONFLICT (user_id, name) DO NOTHING;
+COMMIT;
+\else
+DO $$ BEGIN
+  RAISE EXCEPTION 'Preview seed requires an accepted original owner';
+END $$;
+\endif
 SQL
   fi
 fi

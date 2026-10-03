@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import pg from "pg";
+import { fixtureOwnerId } from "./support/fixture-database";
 
 const databaseUrl = process.env.E2E_DATABASE_URL;
 const pool = new pg.Pool({ connectionString: databaseUrl });
@@ -46,12 +47,12 @@ test.beforeEach(async ({ request }) => {
   );
   foodId = food.rows[0].id;
   await pool.query(
-    `insert into meal_logs (id, meal_category, logged_date, notes, is_completed) values ($1, 'lunch', $2, 'Preserved notes', true)`,
-    [mealId, date],
+    `insert into meal_logs (user_id, id, meal_category, logged_date, notes, is_completed) values ($3, $1, 'lunch', $2, 'Preserved notes', true)`,
+    [mealId, date, fixtureOwnerId()],
   );
   await pool.query(
-    `insert into meal_log_ingredients (meal_log_id, ingredient_id, quantity_grams) values ($1, $2, 100)`,
-    [mealId, foodId],
+    `insert into meal_log_ingredients (user_id, meal_log_id, ingredient_id, quantity_grams) values ($3, $1, $2, 100)`,
+    [mealId, foodId, fixtureOwnerId()],
   );
 });
 test.afterEach(async () => {

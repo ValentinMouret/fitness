@@ -23,6 +23,7 @@ import HabitCheckbox from "~/components/HabitCheckbox";
 import MeasurementChart from "~/components/MeasurementChart";
 import { NumberInput } from "~/components/NumberInput";
 import { loadDeviceDay, useDeviceDayRollover } from "~/hooks/device-day";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { saveDailyNote } from "~/modules/daily-note/infra/daily-note.service.server";
 import { DailyNoteCard } from "~/modules/daily-note/presentation/components/DailyNoteCard/DailyNoteCard";
 import { DailyNoteModal } from "~/modules/daily-note/presentation/components/DailyNoteModal/DailyNoteModal";
@@ -41,8 +42,11 @@ import { requestDay } from "~/utils/request-day";
 import type { Route } from "./+types/index";
 import "./index.css";
 
-export async function loader({ request }: Route.LoaderArgs) {
-  return getDashboardData(requestDay(request));
+export async function loader({ request, context }: Route.LoaderArgs) {
+  return getDashboardData(
+    context.get(authenticatedUserContext).id,
+    requestDay(request),
+  );
 }
 
 export async function clientLoader(args: Route.ClientLoaderArgs) {
@@ -51,7 +55,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
 clientLoader.hydrate = true as const;
 export const HydrateFallback = DeviceDayFallback;
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const form = await request.formData();
   const intent = form.get("intent");
 
@@ -62,7 +66,7 @@ export async function action({ request }: Route.ActionArgs) {
     });
     const parsed = schema.parse(form);
 
-    await toggleHabitCompletion({
+    await toggleHabitCompletion(context.get(authenticatedUserContext).id, {
       habitId: parsed.habitId,
       completed: parsed.completed,
       date: requestDay(request),
@@ -76,7 +80,10 @@ export async function action({ request }: Route.ActionArgs) {
       content: formText(z.string()),
     });
     const parsed = schema.parse(form);
-    await saveDailyNote(parsed.content);
+    await saveDailyNote(
+      context.get(authenticatedUserContext).id,
+      parsed.content,
+    );
     return { saved: true };
   }
 
@@ -89,7 +96,9 @@ export async function action({ request }: Route.ActionArgs) {
     throw createValidationError("Invalid weight value provided", parsed.error);
   }
 
-  await logWeight({ weight: parsed.data.weight });
+  await logWeight(context.get(authenticatedUserContext).id, {
+    weight: parsed.data.weight,
+  });
 }
 
 export const handle = {
@@ -237,6 +246,12 @@ export default function DashboardPage({
       )}
 
       <DashboardStats stats={stats} />
+      {nutrition.targetSource === "default" && (
+        <Text as="p" size="2" color="gray">
+          Default nutrition targets.{" "}
+          <Link to="/nutrition/calculate-targets">Set your own</Link>.
+        </Text>
+      )}
 
       {/* Daily note */}
       <DailyNoteCard note={dailyNote} />

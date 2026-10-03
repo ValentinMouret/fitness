@@ -43,6 +43,7 @@ import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
 import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
 import { useLiveDuration } from "~/components/workout/useLiveDuration";
 import { logger } from "~/logger.server";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import type { WorkoutExerciseGroup } from "~/modules/fitness/domain/workout";
 import { duplicateWorkout } from "~/modules/fitness/infra/duplicate-workout.service.server";
 import {
@@ -77,18 +78,25 @@ import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types/index";
 import "./active-workout.css";
 
-export async function loader({ params, request }: Route.LoaderArgs) {
+export async function loader({ params, request, context }: Route.LoaderArgs) {
   const id = parseWorkoutId(params.id);
   const focusExerciseId = z
     .uuid()
     .optional()
     .catch(undefined)
     .parse(new URL(request.url).searchParams.get("exercise") ?? undefined);
-  return { ...(await getWorkoutSessionData(id)), focusExerciseId };
+  return {
+    ...(await getWorkoutSessionData(
+      context.get(authenticatedUserContext).id,
+      id,
+    )),
+    focusExerciseId,
+  };
 }
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
   const id = parseWorkoutId(params.id);
+  await getWorkoutSessionData(context.get(authenticatedUserContext).id, id);
   const formData = await request.formData();
   const intentSchema = zfd.formData({
     intent: formText(z.string().min(1)),
@@ -107,7 +115,11 @@ export async function action({ request, params }: Route.ActionArgs) {
           name: formText(z.string().min(1)),
         });
         const parsed = schema.parse(formData);
-        return updateWorkoutName(id, parsed.name);
+        return updateWorkoutName(
+          context.get(authenticatedUserContext).id,
+          id,
+          parsed.name,
+        );
       }
 
       case "add-exercise": {
@@ -116,7 +128,7 @@ export async function action({ request, params }: Route.ActionArgs) {
           notes: formOptionalText(),
         });
         const parsed = schema.parse(formData);
-        return addExerciseToWorkout({
+        return addExerciseToWorkout(context.get(authenticatedUserContext).id, {
           workoutId: id,
           exerciseId: parsed.exerciseId,
           notes: parsed.notes ?? undefined,
@@ -125,7 +137,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 
       case "add-exercises": {
         const exerciseIds = formData.getAll("exerciseIds").map(String);
-        return addExercisesToWorkout({
+        return addExercisesToWorkout(context.get(authenticatedUserContext).id, {
           workoutId: id,
           exerciseIds,
         });
@@ -137,10 +149,14 @@ export async function action({ request, params }: Route.ActionArgs) {
           mmcInstructions: formOptionalText(),
         });
         const parsed = schema.parse(formData);
-        return updateExerciseMmcInstructions({
-          exerciseId: parsed.exerciseId,
-          mmcInstructions: parsed.mmcInstructions,
-        });
+        return updateExerciseMmcInstructions(
+          context.get(authenticatedUserContext).id,
+          {
+            workoutId: id,
+            exerciseId: parsed.exerciseId,
+            mmcInstructions: parsed.mmcInstructions,
+          },
+        );
       }
 
       case "update-exercise-notes": {
@@ -149,7 +165,7 @@ export async function action({ request, params }: Route.ActionArgs) {
           notes: formOptionalText(),
         });
         const parsed = schema.parse(formData);
-        return updateExerciseNotes({
+        return updateExerciseNotes(context.get(authenticatedUserContext).id, {
           workoutId: id,
           exerciseId: parsed.exerciseId,
           notes: parsed.notes ?? null,
@@ -161,10 +177,13 @@ export async function action({ request, params }: Route.ActionArgs) {
           exerciseId: formText(z.string().min(1)),
         });
         const parsed = schema.parse(formData);
-        return removeExerciseFromWorkout({
-          workoutId: id,
-          exerciseId: parsed.exerciseId,
-        });
+        return removeExerciseFromWorkout(
+          context.get(authenticatedUserContext).id,
+          {
+            workoutId: id,
+            exerciseId: parsed.exerciseId,
+          },
+        );
       }
 
       case "replace-exercise": {
@@ -173,11 +192,14 @@ export async function action({ request, params }: Route.ActionArgs) {
           newExerciseId: formText(z.string().min(1)),
         });
         const parsed = schema.parse(formData);
-        return replaceExerciseInWorkout({
-          workoutId: id,
-          oldExerciseId: parsed.oldExerciseId,
-          newExerciseId: parsed.newExerciseId,
-        });
+        return replaceExerciseInWorkout(
+          context.get(authenticatedUserContext).id,
+          {
+            workoutId: id,
+            oldExerciseId: parsed.oldExerciseId,
+            newExerciseId: parsed.newExerciseId,
+          },
+        );
       }
 
       case "reorder-exercises": {
@@ -188,10 +210,13 @@ export async function action({ request, params }: Route.ActionArgs) {
         }
 
         const exerciseIds: string[] = JSON.parse(exerciseIdsJson);
-        return reorderExercisesInWorkout({
-          workoutId: id,
-          exerciseIds,
-        });
+        return reorderExercisesInWorkout(
+          context.get(authenticatedUserContext).id,
+          {
+            workoutId: id,
+            exerciseIds,
+          },
+        );
       }
 
       case "add-set": {
@@ -202,7 +227,7 @@ export async function action({ request, params }: Route.ActionArgs) {
           note: formOptionalText(),
         });
         const parsed = schema.parse(formData);
-        return addSetToWorkout({
+        return addSetToWorkout(context.get(authenticatedUserContext).id, {
           workoutId: id,
           exerciseId: parsed.exerciseId,
           repsStr: parsed.reps ?? undefined,
@@ -224,7 +249,7 @@ export async function action({ request, params }: Route.ActionArgs) {
           isWarmup: formOptionalText(),
         });
         const parsed = schema.parse(formData);
-        return updateSetInWorkout({
+        return updateSetInWorkout(context.get(authenticatedUserContext).id, {
           workoutId: id,
           exerciseId: parsed.exerciseId,
           setNumberStr: parsed.setNumber,
@@ -244,7 +269,7 @@ export async function action({ request, params }: Route.ActionArgs) {
           setNumber: formText(z.string().min(1)),
         });
         const parsed = schema.parse(formData);
-        return removeSetFromWorkout({
+        return removeSetFromWorkout(context.get(authenticatedUserContext).id, {
           workoutId: id,
           exerciseId: parsed.exerciseId,
           setNumberStr: parsed.setNumber,
@@ -252,16 +277,20 @@ export async function action({ request, params }: Route.ActionArgs) {
       }
 
       case "complete-workout": {
-        return completeWorkout({ workoutId: id });
+        return completeWorkout(context.get(authenticatedUserContext).id, {
+          workoutId: id,
+        });
       }
 
       case "cancel-workout":
       case "delete-workout": {
-        return destroyWorkout({ workoutId: id });
+        return destroyWorkout(context.get(authenticatedUserContext).id, {
+          workoutId: id,
+        });
       }
 
       case "duplicate-workout": {
-        return duplicateWorkout(id);
+        return duplicateWorkout(context.get(authenticatedUserContext).id, id);
       }
 
       default:

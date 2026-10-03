@@ -1,3 +1,4 @@
+import { requireLegacyOwnerIdentity } from "~/modules/auth/infra/legacy-owner.server";
 import "dotenv/config";
 import type { InferInsertModel } from "drizzle-orm";
 import { sql } from "drizzle-orm";
@@ -12,7 +13,10 @@ export const db = drizzle({
   },
 });
 
-const ingredientData: Omit<InferInsertModel<typeof ingredients>, "id">[] = [
+const ingredientData: Omit<
+  InferInsertModel<typeof ingredients>,
+  "id" | "userId"
+>[] = [
   // Proteins
   {
     name: "Chicken Breast",
@@ -703,13 +707,19 @@ const ingredientData: Omit<InferInsertModel<typeof ingredients>, "id">[] = [
 async function main() {
   logger.info("Starting nutrition database seeding...");
 
+  const owner = await requireLegacyOwnerIdentity();
   await db.transaction(async (tx) => {
     logger.info("Seeding ingredients...");
     const insertedIngredients = await tx
       .insert(ingredients)
-      .values(ingredientData)
+      .values(
+        ingredientData.map((ingredient) => ({
+          ...ingredient,
+          userId: owner.id,
+        })),
+      )
       .onConflictDoUpdate({
-        target: [ingredients.name],
+        target: [ingredients.userId, ingredients.name],
         where: sql`ingredients.deleted_at IS NULL`,
         set: {
           category: sql`excluded.category`,

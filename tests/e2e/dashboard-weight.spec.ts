@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import pg from "pg";
+import { z } from "zod";
 import {
   canWriteFixtureDatabase,
   verifyFixtureServerDatabase,
@@ -17,6 +18,7 @@ test("weight entry remains available after today's reading and repeated saves", 
   request,
 }) => {
   const pool = new pg.Pool({ connectionString: databaseUrl });
+  const ownerId = z.uuid().parse(process.env.AUTH_FOUNDATION_OWNER_USER_ID);
   const startedAt = new Date().toISOString();
   const seedValue = 70 + Math.floor(Math.random() * 900000) / 100000;
   const values = [seedValue + 0.00001, seedValue + 0.00002];
@@ -24,13 +26,13 @@ test("weight entry remains available after today's reading and repeated saves", 
   try {
     await verifyFixtureServerDatabase(request, pool);
     const existing = await pool.query(
-      "select t from measures where measurement_name = 'weight' and (t = $1 or value = any($2::numeric[]))",
-      [startedAt, [seedValue, ...values]],
+      "select t from measures where user_id = $3 and measurement_name = 'weight' and (t = $1 or value = any($2::numeric[]))",
+      [startedAt, [seedValue, ...values], ownerId],
     );
     expect(existing.rows).toHaveLength(0);
     await pool.query(
-      "insert into measures (measurement_name, t, value) values ('weight', $1, $2)",
-      [startedAt, seedValue],
+      "insert into measures (user_id, measurement_name, t, value) values ($3, 'weight', $1, $2)",
+      [startedAt, seedValue, ownerId],
     );
     timestamps.push(startedAt);
     await page.goto("/dashboard");
@@ -49,8 +51,8 @@ test("weight entry remains available after today's reading and repeated saves", 
       await expect(log).toBeEnabled();
       await expect(input).toBeVisible();
       const persisted = await pool.query(
-        "select t::text as timestamp from measures where measurement_name = 'weight' and t >= $1 and value = $2",
-        [startedAt, value],
+        "select t::text as timestamp from measures where user_id = $3 and measurement_name = 'weight' and t >= $1 and value = $2",
+        [startedAt, value, ownerId],
       );
       expect(persisted.rows).toHaveLength(1);
       timestamps.push(persisted.rows[0].timestamp);
@@ -60,8 +62,8 @@ test("weight entry remains available after today's reading and repeated saves", 
     await expect(log).toBeEnabled();
   } finally {
     await pool.query(
-      "delete from measures where measurement_name = 'weight' and t = any($1::timestamp[])",
-      [timestamps],
+      "delete from measures where user_id = $2 and measurement_name = 'weight' and t = any($1::timestamp[])",
+      [timestamps, ownerId],
     );
     await pool.end();
   }

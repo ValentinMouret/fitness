@@ -1,15 +1,21 @@
+import type { UserId } from "~/modules/auth/domain/user";
 import { handleResultError } from "~/utils/errors";
 import { Measure } from "../domain/measure";
-import { MeasureRepository } from "./measure.repository.server";
-import { MeasurementRepository } from "./measurements.repository.server";
+import { createMeasureRepository } from "./measure.repository.server";
+import { createMeasurementRepository } from "./measurements.repository.server";
 
-export async function getMeasurementDetail(name: string) {
-  const measurement = await MeasurementRepository.fetchByName(name);
+export async function getMeasurementDetail(userId: UserId, name: string) {
+  const measurement =
+    await createMeasurementRepository(userId).fetchByName(name);
   if (measurement.isErr()) {
-    handleResultError(measurement, "Failed to load measurement");
+    handleResultError(
+      measurement,
+      "Measurement not found",
+      measurement.error === "not_found" ? 404 : 500,
+    );
   }
 
-  const measures = await MeasureRepository.fetchAll(name);
+  const measures = await createMeasureRepository(userId).fetchAll(name);
   if (measures.isErr()) {
     handleResultError(measures, "Failed to load measures");
   }
@@ -24,14 +30,26 @@ export type AddMeasureResult =
   | { readonly ok: true }
   | { readonly ok: false; readonly error: string; readonly status: number };
 
-export async function addMeasure(input: {
-  readonly name: string;
-  readonly value: number;
-  readonly date: Date;
-}): Promise<AddMeasureResult> {
+export async function addMeasure(
+  userId: UserId,
+  input: {
+    readonly name: string;
+    readonly value: number;
+    readonly date: Date;
+  },
+): Promise<AddMeasureResult> {
+  const measurement = await createMeasurementRepository(userId).fetchByName(
+    input.name,
+  );
+  if (measurement.isErr())
+    return {
+      ok: false,
+      error: "Measurement not found",
+      status: measurement.error === "not_found" ? 404 : 500,
+    };
   const measure = Measure.create(input.name, input.value, input.date);
 
-  const result = await MeasureRepository.save(measure);
+  const result = await createMeasureRepository(userId).save(measure);
   if (result.isErr()) {
     return { ok: false, error: "Failed to save measure", status: 500 };
   }
@@ -43,13 +61,23 @@ export type DeleteMeasureResult =
   | { readonly ok: true }
   | { readonly ok: false; readonly error: string; readonly status: number };
 
-export async function deleteMeasure(input: {
-  readonly name: string;
-  readonly date: Date;
-}): Promise<DeleteMeasureResult> {
-  const result = await MeasureRepository.delete(input.name, input.date);
+export async function deleteMeasure(
+  userId: UserId,
+  input: {
+    readonly name: string;
+    readonly date: Date;
+  },
+): Promise<DeleteMeasureResult> {
+  const result = await createMeasureRepository(userId).delete(
+    input.name,
+    input.date,
+  );
   if (result.isErr()) {
-    return { ok: false, error: "Failed to delete measure", status: 500 };
+    return {
+      ok: false,
+      error: "Failed to delete measure",
+      status: result.error === "not_found" ? 404 : 500,
+    };
   }
 
   return { ok: true };

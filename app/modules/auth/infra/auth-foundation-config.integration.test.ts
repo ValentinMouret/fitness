@@ -46,12 +46,84 @@ describe("local authentication foundation configuration", () => {
   });
 
   it("rejects nonlocal origins and incomplete owner or inbox configuration", () => {
-    for (const overrides of [
+    const invalid: ReadonlyArray<Readonly<Record<string, string>>> = [
       { AUTH_FOUNDATION_ORIGIN: "https://fitness.example.invalid" },
       { AUTH_FOUNDATION_OWNER_USER_ID: "" },
       { AUTH_LOCAL_INBOX: "" },
-    ]) {
+    ];
+    for (const overrides of invalid) {
       expect(validate({ ...local, ...overrides }).status).not.toBe(0);
     }
+  });
+});
+
+const production = {
+  AUTH_FOUNDATION_ENABLED: "true",
+  NODE_ENV: "production",
+  AUTH_FOUNDATION_ORIGIN: "https://fitness.example.invalid",
+  AUTH_FOUNDATION_OWNER_USER_ID: local.AUTH_FOUNDATION_OWNER_USER_ID,
+  AUTH_SMTP_HOST: "smtp.example.invalid",
+  AUTH_SMTP_PORT: "587",
+  AUTH_SMTP_SECURE: "false",
+  AUTH_SMTP_USER: "fixture-user",
+  AUTH_SMTP_PASSWORD: "fixture-password",
+  AUTH_SMTP_FROM: "fitness@example.invalid",
+};
+
+describe("production authentication configuration", () => {
+  it("accepts complete STARTTLS and implicit TLS settings", () => {
+    expect(validate(production).status).toBe(0);
+    expect(
+      validate({
+        ...production,
+        AUTH_SMTP_PORT: "465",
+        AUTH_SMTP_SECURE: "true",
+      }).status,
+    ).toBe(0);
+  });
+
+  it("rejects incomplete settings without printing secrets", () => {
+    for (const key of [
+      "AUTH_FOUNDATION_ORIGIN",
+      "AUTH_FOUNDATION_OWNER_USER_ID",
+      "AUTH_SMTP_HOST",
+      "AUTH_SMTP_PORT",
+      "AUTH_SMTP_SECURE",
+      "AUTH_SMTP_USER",
+      "AUTH_SMTP_PASSWORD",
+      "AUTH_SMTP_FROM",
+    ]) {
+      const result = validate({ ...production, [key]: "" });
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).not.toContain(production.AUTH_SMTP_PASSWORD);
+    }
+  });
+
+  it("rejects insecure or ambiguous origins, mixed inbox and invalid SMTP settings", () => {
+    const invalid: ReadonlyArray<Readonly<Record<string, string>>> = [
+      { AUTH_FOUNDATION_ORIGIN: "http://fitness.example.invalid" },
+      { AUTH_FOUNDATION_ORIGIN: "https://fitness.example.invalid/" },
+      { AUTH_FOUNDATION_ORIGIN: "https://fitness.example.invalid/path" },
+      {
+        AUTH_FOUNDATION_ORIGIN: "https://fitness.example.invalid?token=fixture",
+      },
+      {
+        AUTH_FOUNDATION_ORIGIN: "https://user:password@fitness.example.invalid",
+      },
+      { AUTH_LOCAL_INBOX: local.AUTH_LOCAL_INBOX },
+      { AUTH_SMTP_PORT: "0" },
+      { AUTH_SMTP_PORT: "65536" },
+      { AUTH_SMTP_SECURE: "yes" },
+      { AUTH_SMTP_HOST: "smtp://example.invalid" },
+      { AUTH_SMTP_FROM: "Fitness <fitness@example.invalid>" },
+      {
+        AUTH_SMTP_FROM: "fitness@example.invalid\r\nBcc: other@example.invalid",
+      },
+    ];
+    for (const overrides of invalid)
+      expect(validate({ ...production, ...overrides }).status).not.toBe(0);
+    expect(
+      validate({ ...local, AUTH_SMTP_HOST: production.AUTH_SMTP_HOST }).status,
+    ).not.toBe(0);
   });
 });
