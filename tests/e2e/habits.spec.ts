@@ -73,7 +73,7 @@ test.describe("Create Habit", () => {
     page,
   }) => {
     await page.getByRole("button", { name: "Back" }).click();
-    await expect(page).toHaveURL(/\/habits$/);
+    await expect(page).toHaveURL(/\/habits\?day=\d{4}-\d{2}-\d{2}$/);
   });
 
   test("back button navigates to previous step", async ({ page }) => {
@@ -119,7 +119,7 @@ test.describe("Create Habit", () => {
     await page.getByRole("button", { name: "Safety →" }).click();
     await page.getByRole("button", { name: "Color →" }).click();
     await page.getByRole("button", { name: "Add habit" }).click();
-    await expect(page).toHaveURL(/\/habits$/);
+    await expect(page).toHaveURL(/\/habits\?day=\d{4}-\d{2}-\d{2}$/);
   });
 
   test("tapping an identity suggestion uses it as the user's phrase", async ({

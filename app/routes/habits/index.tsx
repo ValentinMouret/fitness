@@ -4,14 +4,18 @@ import { data, Link, useFetcher, useFetchers, useNavigate } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { Celebration } from "~/components/Celebration";
+import DeviceDayFallback from "~/components/DeviceDayFallback";
+import { loadDeviceDay, useDeviceDayRollover } from "~/hooks/device-day";
 import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import type { Habit } from "~/modules/habits/domain/entity";
 import {
   getHabitsPageData,
   toggleHabitCompletion,
 } from "~/modules/habits/infra/habits-page.service.server";
+import { fromDateString } from "~/time";
 import { isEditableTarget } from "~/utils/dom";
 import { formOptionalText, formText } from "~/utils/form-data";
+import { requestDay } from "~/utils/request-day";
 import type { Route } from "./+types/index";
 import "./index.css";
 
@@ -48,9 +52,18 @@ const STYLES = `
   .habit-min-btn:focus-visible { outline: 2px solid #e15a46; outline-offset: 2px; }
 `;
 
-export async function loader({ context }: Route.LoaderArgs) {
-  return getHabitsPageData(context.get(authenticatedUserContext).id);
+export async function loader({ request, context }: Route.LoaderArgs) {
+  return getHabitsPageData(
+    context.get(authenticatedUserContext).id,
+    requestDay(request),
+  );
 }
+
+export async function clientLoader(args: Route.ClientLoaderArgs) {
+  return loadDeviceDay(args);
+}
+clientLoader.hydrate = true as const;
+export const HydrateFallback = DeviceDayFallback;
 
 export async function action({ request, context }: Route.ActionArgs) {
   const formData = await request.formData();
@@ -72,6 +85,7 @@ export async function action({ request, context }: Route.ActionArgs) {
         habitId: parsed.habitId,
         completed: parsed.completed === "true",
         notes: parsed.notes,
+        date: requestDay(request),
       },
     );
 
@@ -530,6 +544,7 @@ function TabBar({ active }: { active: "today" | "week" }) {
 }
 
 export default function HabitsPage({ loaderData }: Route.ComponentProps) {
+  useDeviceDayRollover(loaderData.day);
   const navigate = useNavigate();
   const fetchers = useFetchers();
 
@@ -657,7 +672,7 @@ export default function HabitsPage({ loaderData }: Route.ComponentProps) {
                 marginBottom: 8,
               }}
             >
-              {formatDate(new Date(loaderData.todayDate))}
+              {formatDate(fromDateString(loaderData.day))}
             </div>
             <div
               key={allDone ? "ad" : allMorningDone ? "md" : "gr"}

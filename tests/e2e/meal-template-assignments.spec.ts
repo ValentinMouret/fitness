@@ -109,6 +109,9 @@ test("explicit assignments filter management and log one composition in the chos
   ).toHaveCount(1);
   await page.getByRole("button", { name: "Lunch", exact: true }).click();
   await expect(page).toHaveURL(/meal=lunch$/);
+  await expect(
+    page.getByRole("link", { name: `Edit ${riceName}`, exact: true }),
+  ).toHaveAttribute("href", `/nutrition/templates?meal=lunch&edit=${rice}`);
   await page
     .getByRole("link", { name: `Edit ${riceName}`, exact: true })
     .click();
@@ -117,6 +120,9 @@ test("explicit assignments filter management and log one composition in the chos
   await expect(page).toHaveURL(/meal=lunch$/);
   await page.getByRole("button", { name: "Dinner", exact: true }).click();
   await expect(page).toHaveURL(/meal=dinner$/);
+  await expect(
+    page.getByRole("link", { name: `Edit ${riceName}`, exact: true }),
+  ).toHaveAttribute("href", `/nutrition/templates?meal=dinner&edit=${rice}`);
   await expect(
     page.getByRole("heading", { name: riceName, exact: true }),
   ).toBeVisible();
@@ -352,4 +358,154 @@ test("a rejected save retains inputs and consecutive saves do not consume stale 
       [names],
     );
   }
+});
+
+test("filter navigation waits for the selected meal before editing and saving", async ({
+  page,
+  fixture,
+}) => {
+  await page.goto("/nutrition/templates?meal=all");
+  await page.waitForLoadState("networkidle");
+  const held = Promise.withResolvers<void>();
+  const release = Promise.withResolvers<void>();
+  const edit = page.getByRole("link", {
+    name: `Edit ${fixture.riceName}`,
+    exact: true,
+  });
+  const lunch = page.getByRole("button", { name: "Lunch", exact: true });
+  await page.route(
+    (url) =>
+      url.pathname === "/nutrition/templates.data" &&
+      url.searchParams.get("meal") === "lunch" &&
+      !url.searchParams.has("edit"),
+    async (route) => {
+      held.resolve();
+      await release.promise;
+      await route.continue();
+    },
+  );
+  try {
+    await lunch.click();
+    await held.promise;
+    await expect(lunch).toHaveAttribute("aria-pressed", "false");
+    await expect(edit).toHaveAttribute(
+      "href",
+      `/nutrition/templates?meal=all&edit=${fixture.rice}`,
+    );
+  } finally {
+    release.resolve();
+  }
+  await expect(page).toHaveURL(/meal=lunch$/);
+  await expect(lunch).toHaveAttribute("aria-pressed", "true");
+  await expect(edit).toHaveAttribute(
+    "href",
+    `/nutrition/templates?meal=lunch&edit=${fixture.rice}`,
+  );
+  await edit.click();
+  await page.getByRole("checkbox", { name: "Dinner", exact: true }).check();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page).toHaveURL(/meal=lunch$/);
+  await expect(lunch).toHaveAttribute("aria-pressed", "true");
+  await expect(edit).toHaveAttribute(
+    "href",
+    `/nutrition/templates?meal=lunch&edit=${fixture.rice}`,
+  );
+});
+
+test("compact template rows wrap long names and assignments on a phone", async ({
+  page,
+  fixture,
+}) => {
+  const { pool, rice, oats } = fixture;
+  const longName =
+    "A reusable meal with a very long name and all four meal assignments that must remain readable on a small phone";
+  await pool.query("update meal_templates set name=$2 where id=$1", [
+    rice,
+    "Rice bowl",
+  ]);
+  await pool.query(
+    "update meal_templates set name=$2,categories=array['breakfast','lunch','dinner','snack']::meal_category[],total_calories=0 where id=$1",
+    [oats, longName],
+  );
+  await page.goto("/nutrition/templates?meal=all");
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    const shortRow = page.getByRole("article").filter({
+      has: page.getByRole("heading", { name: "Rice bowl", exact: true }),
+    });
+    const longRow = page.getByRole("article").filter({
+      has: page.getByRole("heading", { name: longName, exact: true }),
+    });
+    await expect(shortRow).toBeVisible();
+    await expect(longRow).toContainText(
+      "Breakfast · Lunch · Dinner · Snacks · 0 kcal",
+    );
+    const geometry = await shortRow.evaluate((row) => {
+      const edit = row.querySelector("a");
+      if (!edit) throw new Error("Edit link is missing");
+      return {
+        rowHeight: row.getBoundingClientRect().height,
+        editHeight: edit.getBoundingClientRect().height,
+        editWidth: edit.getBoundingClientRect().width,
+      };
+    });
+    expect(geometry.rowHeight).toBeGreaterThanOrEqual(65);
+    expect(geometry.rowHeight).toBeLessThanOrEqual(85);
+    expect(geometry.editHeight).toBeGreaterThanOrEqual(44);
+    expect(geometry.editWidth).toBeGreaterThanOrEqual(44);
+    const longGeometry = await longRow.evaluate((row) => {
+      const name = row.querySelector("h3");
+      const edit = row.querySelector("a");
+      if (!name || !edit) throw new Error("Template content is missing");
+      return {
+        nameHeight: name.getBoundingClientRect().height,
+        noOverlap:
+          name.getBoundingClientRect().right <=
+          edit.getBoundingClientRect().left,
+        fits: row.scrollWidth <= row.clientWidth,
+      };
+    });
+    expect(longGeometry.nameHeight).toBeGreaterThan(40);
+    expect(longGeometry.noOverlap).toBe(true);
+    expect(longGeometry.fits).toBe(true);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.getByRole("button", { name: "Snacks", exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name: longName, exact: true }),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole("heading", { name: "Rice bowl", exact: true }),
+    ).toHaveCount(0);
+    await page.getByRole("button", { name: "All", exact: true }).click();
+  }
+  await page.goto("/nutrition?date=1905-05-08");
+  await expect(
+    page.getByRole("region", { name: "Daily nutrition summary" }),
+  ).toBeVisible();
+  for (const nutrient of ["Calories", "Protein", "Carbs", "Fat"]) {
+    await expect(
+      page.getByRole("progressbar", {
+        name: `${nutrient} progress`,
+        exact: true,
+      }),
+    ).toBeVisible();
+  }
+  await expect(
+    page.getByRole("link", { name: "Add Breakfast", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", {
+      name: "Use template for Breakfast",
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
 });

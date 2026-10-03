@@ -12,7 +12,7 @@ test.describe("Nutrition Page", () => {
     await page.goto("/nutrition");
   });
 
-  test("should display calorie ring and meals", async ({ page }) => {
+  test("should display daily nutrition summary and meals", async ({ page }) => {
     await expect(page.getByText("kcal target")).toBeVisible();
     await expect(page.getByText("Meals")).toBeVisible();
   });

@@ -160,6 +160,10 @@ export function toDateString(date: Date): string {
   return date.toISOString().split("T")[0];
 }
 
+export function toLocalDateString(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 export function fromDateString(dateString: string): Date {
   return new Date(`${dateString}T00:00:00.000Z`);
 }

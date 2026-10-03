@@ -85,6 +85,50 @@ async function expectUncovered(page: Page, selector: string) {
     .toBe(true);
 }
 
+test("manual Start counts down and rest controls remain usable", async ({
+  page,
+  sessionId,
+}) => {
+  await page.goto(`/workouts/${sessionId}`);
+  await page
+    .getByRole("link", { name: /^Open / })
+    .first()
+    .click();
+  await expect(page.locator(".exercise-card--focused:visible")).toBeVisible();
+  const focusedUrl = page.url();
+  await page.clock.install({ time: new Date("2030-01-01T12:00:00Z") });
+  await page.clock.pauseAt(new Date("2030-01-01T12:01:00Z"));
+  const timer = page.getByRole("region", { name: "Rest timer" });
+  const countdown = timer.getByRole("button", { name: "Choose rest duration" });
+  await expect(countdown).toHaveText("1:30");
+  await timer.getByRole("button", { name: "Start", exact: true }).click();
+  await expect(countdown).toHaveText("1:30");
+  await page.clock.runFor(1100);
+  await expect(countdown).toHaveText("1:29");
+  await timer.getByRole("button", { name: "Skip", exact: true }).click();
+  await expect(countdown).toHaveText("1:30");
+  await countdown.click();
+  await expect(timer.locator('[aria-keyshortcuts="2"]')).toContainText("1.5m");
+  await timer.locator('[aria-keyshortcuts="2"]').click();
+  await expect(countdown).toHaveText("1:30");
+  await timer.locator('[aria-keyshortcuts="3"]').click();
+  await expect(countdown).toHaveText("2:00");
+  await timer.getByRole("button", { name: "Skip", exact: true }).click();
+  await timer.getByRole("button", { name: "Start", exact: true }).click();
+  await expect(countdown).toHaveText("2:00");
+  await expect(
+    timer.getByRole("button", { name: "Skip", exact: true }),
+  ).toBeVisible();
+  await page.clock.fastForward(120_000);
+  await expect(countdown).toHaveText("0:00");
+  await timer.getByRole("button", { name: "OK", exact: true }).click();
+  await expect(
+    timer.getByRole("button", { name: "Start", exact: true }),
+  ).toBeVisible();
+  await expect(countdown).toHaveText("2:00");
+  expect(page.url()).toBe(focusedUrl);
+});
+
 test("rest stays visible and usable while scrolling, resizing and logging", async ({
   page,
   sessionId,
@@ -362,4 +406,77 @@ test("last-set completion and returning to the tab never scroll to another exerc
       .locator(".main-content")
       .evaluate((element) => element.scrollTop),
   ).toBeCloseTo(before, 0);
+});
+
+test("cleared numeric drafts survive autosave and unrelated set updates", async ({
+  page,
+  sessionId,
+}) => {
+  await page.goto(`/workouts/${sessionId}`);
+  await page
+    .getByRole("link", { name: /^Open / })
+    .first()
+    .click();
+  const weight = page.getByRole("textbox", {
+    name: "Set 1 weight",
+    exact: true,
+  });
+  const reps = page.getByRole("textbox", { name: "Set 1 reps", exact: true });
+  const saveField = async (name: string, value: string) => {
+    const saved = page.waitForResponse((response) => {
+      return (
+        response.request().method() === "POST" &&
+        response.url().includes(`/workouts/${sessionId}`)
+      );
+    });
+    await page
+      .getByRole("textbox", { name: `Set 1 ${name}`, exact: true })
+      .fill(value);
+    await saved;
+    await page.waitForLoadState("networkidle");
+  };
+  await saveField("weight", "35");
+  await saveField("reps", "35");
+  await weight.press("ControlOrMeta+ArrowRight");
+  await weight.press("Backspace");
+  await expect(weight).toHaveValue("3");
+  await weight.press("Backspace");
+  await expect(weight).toHaveValue("");
+  await reps.press("ControlOrMeta+ArrowRight");
+  await reps.press("Backspace");
+  await expect(reps).toHaveValue("3");
+  await reps.press("Backspace");
+  await expect(reps).toHaveValue("");
+  const toggled = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      response.url().includes(`/workouts/${sessionId}`),
+  );
+  await page.getByRole("button", { name: "Toggle warmup for set 1" }).click();
+  await toggled;
+  await expect(
+    page.getByRole("button", { name: "Toggle warmup for set 1" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(weight).toHaveValue("");
+  await expect(reps).toHaveValue("");
+  await saveField("weight", "42.5");
+  await saveField("reps", "12");
+  await page
+    .getByRole("button", { name: "Complete set 1", exact: true })
+    .click();
+  const saved = page
+    .locator(".exercise-card--focused .set-row--warmup")
+    .first();
+  await expect(
+    saved.getByRole("button", { name: "Edit set 1", exact: true }),
+  ).toBeVisible();
+  await expect(saved).toContainText("42.5");
+  await expect(saved).toContainText("12");
+  await page.reload();
+  await expect(
+    page.locator(".exercise-card--focused .set-row--warmup").first(),
+  ).toContainText("42.5");
+  await expect(
+    page.locator(".exercise-card--focused .set-row--warmup").first(),
+  ).toContainText("12");
 });

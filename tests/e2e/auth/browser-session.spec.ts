@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import {
   authTestEnv,
   credentials,
+  expectAppDestination,
   expectUnauthenticated,
   login,
   loginWithRequest,
@@ -16,12 +17,12 @@ test("login persists through navigation, reload, a new tab, and a restored brows
 }) => {
   await login(page);
   await page.goto("/habits");
-  await expect(page).toHaveURL(/\/habits$/);
+  await expectAppDestination(page, "/habits");
   await page.reload();
-  await expect(page).toHaveURL(/\/habits$/);
+  await expectAppDestination(page, "/habits");
   const tab = await page.context().newPage();
   await tab.goto("/dashboard");
-  await expect(tab).toHaveURL(/\/dashboard$/);
+  await expectAppDestination(tab, "/dashboard");
 
   const restored = await browser.newContext({
     baseURL: authTestEnv.E2E_BASE_URL,
@@ -30,7 +31,7 @@ test("login persists through navigation, reload, a new tab, and a restored brows
   try {
     const reopened = await restored.newPage();
     await reopened.goto("/dashboard");
-    await expect(reopened).toHaveURL(/\/dashboard$/);
+    await expectAppDestination(reopened, "/dashboard");
   } finally {
     await restored.close();
   }

@@ -6,6 +6,7 @@ import "./EmptyState.css";
 interface EmptyStateProps {
   readonly icon: ReactNode;
   readonly title: string;
+  readonly headingLevel?: "h2" | "h3";
   readonly description: string;
   readonly actionLabel?: string;
   readonly actionTo?: string;
@@ -15,6 +16,7 @@ interface EmptyStateProps {
 export function EmptyState({
   icon,
   title,
+  headingLevel = "h2",
   description,
   actionLabel,
   actionTo,
@@ -40,7 +42,7 @@ export function EmptyState({
       </div>
 
       <Flex direction="column" align="center" gap="2">
-        <Heading size="4" className="empty-state__title">
+        <Heading as={headingLevel} size="4" className="empty-state__title">
           {title}
         </Heading>
         <Text size="2" className="empty-state__description">

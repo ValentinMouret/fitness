@@ -24,15 +24,15 @@ import { type Habit, HabitCompletion } from "~/modules/habits/domain/entity";
 import { createHabitRepositories } from "~/modules/habits/infra/repository.server";
 import { resolveDailyTargets } from "~/modules/nutrition/domain/daily-targets";
 import { createNutritionService } from "~/modules/nutrition/infra/service.server";
-import { dateInTimeZone, isSameDay } from "~/time";
+import { dateInTimeZone, toDateString } from "~/time";
 import { createServerError } from "~/utils/errors";
 
 export type DashboardData = {
+  readonly day: string;
   readonly weight: Measurement;
   readonly lastWeight: MeasureRecord | undefined;
   readonly weightTarget: number | undefined;
   readonly weightData: MeasureRecord[];
-  readonly loggedToday: boolean;
   readonly streak: number;
   readonly todayHabits: Habit[];
   readonly completionMap: Map<string, boolean>;
@@ -49,11 +49,14 @@ export type DashboardData = {
   readonly dailyNote: DailyNote | undefined;
 };
 
-export async function getDashboardData(userId: UserId): Promise<DashboardData> {
+export async function getDashboardData(
+  userId: UserId,
+  date?: Date,
+): Promise<DashboardData> {
   const repositories = createHabitRepositories(userId);
   const now = new Date();
   const timeZone = (await getAccountTimeZone(userId)) ?? "UTC";
-  const todayDate = dateInTimeZone(now, timeZone);
+  const todayDate = date ?? dateInTimeZone(now, timeZone);
 
   const result = await ResultAsync.combine([
     createMeasureRepository(userId).fetchByMeasurementName("weight", 1),
@@ -133,6 +136,7 @@ export async function getDashboardData(userId: UserId): Promise<DashboardData> {
   const dailySummary = dailySummaryResult.dailyTotals;
 
   return {
+    day: toDateString(todayDate),
     weight,
     streak,
     lastWeight: weights?.[0],
@@ -140,7 +144,6 @@ export async function getDashboardData(userId: UserId): Promise<DashboardData> {
       (target) => target.measurement === weight.name,
     )?.value,
     weightData,
-    loggedToday: Boolean(weights?.[0] && isSameDay(weights[0].t, now)),
     todayHabits,
     completionMap,
     habitStreaks,
@@ -162,12 +165,14 @@ export async function toggleHabitCompletion(
   input: {
     readonly habitId: string;
     readonly completed: boolean;
+    readonly date?: Date;
   },
 ): Promise<void> {
   const repositories = createHabitRepositories(userId);
+  const accountToday = await requireAccountToday(userId);
   const completion = HabitCompletion.create(
     input.habitId,
-    await requireAccountToday(userId),
+    input.date ?? accountToday,
     !input.completed,
   );
 

@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { expect, type Page, test } from "@playwright/test";
 import pg from "pg";
 import { z } from "zod";
+import { expectAppDestination } from "../support/auth";
 import {
   canWriteFixtureDatabase,
   fixtureOwnerId,
@@ -50,7 +51,7 @@ async function signIn(page: Page, email: string) {
   if (!message) throw new Error("Native sign-in email missing");
   await page.goto(message.url);
   await page.getByRole("link", { name: "Open Fitness", exact: true }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expectAppDestination(page, "/dashboard");
   await expect(page.getByText("Loading…", { exact: true })).toHaveCount(0);
 }
 

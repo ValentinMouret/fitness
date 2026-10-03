@@ -1,0 +1,62 @@
+.nutrition-summary {
+  padding: 24px 0 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--gray-4);
+  margin-bottom: 24px;
+}
+.nutrition-summary > strong {
+  display: block;
+  font: 500 44px var(--font-display);
+  margin: 12px 0;
+}
+.nutrition-summary small {
+  font: 14px var(--font-body);
+  color: var(--brand-text-secondary);
+}
+.nutrition-summary > p {
+  font-size: 12px;
+  color: var(--brand-text-secondary);
+}
+.nutrition-summary__eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-text-secondary);
+}
+.nutrition-macros {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 22px 0 0;
+}
+.nutrition-macro-card {
+  background: var(--brand-surface);
+  border-radius: 8px;
+  padding: 16px 12px;
+  text-align: center;
+}
+.nutrition-macro-card__value {
+  font: 600 28px / 1 var(--font-display);
+  color: var(--brand-text);
+}
+.nutrition-macro-card__value small {
+  font-size: 12px;
+}
+.nutrition-macro-card__label {
+  font: 12px var(--font-body);
+  color: var(--brand-text-secondary);
+  margin-top: 8px;
+}
+.nutrition-macro-card__target {
+  font-size: 11px;
+  color: var(--brand-text-secondary);
+  margin: 4px 0 8px;
+}
+@media (max-width: 360px) {
+  .nutrition-macro-card {
+    padding: 12px 8px;
+  }
+  .nutrition-macro-card__value {
+    font-size: 24px;
+  }
+}

@@ -171,11 +171,13 @@ test("final-save readiness spans every exercise and correction retains historica
       [sessionId, firstId],
     );
     await page.goto(`/workouts/${sessionId}?exercise=${lastId}`);
+    await page.waitForLoadState("networkidle");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(
       page.getByText("2 of 2 sets saved", { exact: true }),
     ).toBeVisible();
     await page.getByRole("link", { name: "Previous" }).click();
+    await expect(page).toHaveURL(`/workouts/${sessionId}?exercise=${firstId}`);
     await expect(
       page.getByText("7 of 8 sets saved", { exact: true }),
     ).toBeVisible();
@@ -306,8 +308,13 @@ test("completed sessions use read-only overview and focus without changing histo
         .filter({ visible: true }),
     ).toHaveCount(8);
     await page.reload();
+    await page.waitForLoadState("networkidle");
     await expect(page).toHaveURL(firstHref!);
-    await page.getByRole("link", { name: "Next" }).click();
+    const next = page.getByRole("link", { name: "Next" });
+    const nextHref = await next.getAttribute("href");
+    if (!nextHref) throw new Error("Next exercise link requires a destination");
+    await next.click();
+    await expect(page).toHaveURL(nextHref);
     await expect(
       page.getByText("1 of 2 sets saved", { exact: true }),
     ).toBeVisible();

@@ -3,7 +3,7 @@ import {
   getAccountToday,
   requireAccountToday,
 } from "~/modules/auth/infra/account-settings.server";
-import { isSameCalendarDay } from "~/time";
+import { isSameCalendarDay, toDateString } from "~/time";
 import { handleResultError } from "~/utils/errors";
 import { HabitService } from "../application/service";
 import { groupDailyHabits } from "../domain/daily-habit-order";
@@ -12,8 +12,8 @@ import { createHabitRepositories } from "./repository.server";
 
 const STREAK_MILESTONES = [7, 30, 90, 365];
 
-export async function getHabitsPageData(userId: UserId) {
-  const todayDate = await getAccountToday(userId);
+export async function getHabitsPageData(userId: UserId, date?: Date) {
+  const todayDate = date ?? (await getAccountToday(userId));
   const repositories = createHabitRepositories(userId);
   const habitsResult = await repositories.habits.fetchActive(todayDate);
   if (habitsResult.isErr()) {
@@ -90,7 +90,7 @@ export async function getHabitsPageData(userId: UserId) {
   }
 
   return {
-    todayDate,
+    day: toDateString(todayDate),
     habits,
     todayHabits,
     todayHabitGroups: groupDailyHabits(todayHabits),
@@ -114,9 +114,11 @@ export async function toggleHabitCompletion(
     readonly habitId: string;
     readonly completed: boolean;
     readonly notes?: string;
+    readonly date?: Date;
   },
 ): Promise<ToggleCompletionResult> {
-  const todayDate = await requireAccountToday(userId);
+  const accountToday = await requireAccountToday(userId);
+  const todayDate = input.date ?? accountToday;
   const repositories = createHabitRepositories(userId);
   const completion = HabitCompletion.create(
     input.habitId,

@@ -20,6 +20,8 @@ tests
 *.spec.ts
 deploy/*
 !deploy/preview-entrypoint.sh
+!deploy/retained-entrypoint.sh
+!deploy/publish-assets.ts
 docs
 playwright-report
 test-results

@@ -2,8 +2,8 @@ import { Flex, Heading } from "@radix-ui/themes";
 import type React from "react";
 
 export interface SectionHeaderProps {
-  title: React.ReactNode;
-  right?: React.ReactNode;
+  readonly title: React.ReactNode;
+  readonly right?: React.ReactNode;
 }
 
 export const SectionHeader: React.FC<SectionHeaderProps> = ({
@@ -12,7 +12,9 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
 }) => {
   return (
     <Flex justify="between" align="center" mb="4">
-      <Heading size="5">{title}</Heading>
+      <Heading as="h2" size="5">
+        {title}
+      </Heading>
       {right}
     </Flex>
   );

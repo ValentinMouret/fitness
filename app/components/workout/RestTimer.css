@@ -33,7 +33,7 @@
 
 .rest-timer__body {
   position: relative;
-  padding: var(--space-2) var(--space-3);
+  padding: 6px 20px;
   padding-top: calc(var(--space-2) + 3px);
 }
 
@@ -147,4 +147,20 @@ button.rest-timer__countdown {
 }
 .rest-timer__shortcut {
   margin-left: var(--space-1);
+}
+
+.active-workout-chrome .rest-timer__label {
+  font-size: 0.6875rem;
+  color: var(--brand-text-secondary);
+}
+
+@media (max-width: 340px) {
+  .active-workout-chrome .rest-timer__body {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .active-workout-chrome .rest-timer__presets {
+    gap: 4px;
+  }
 }

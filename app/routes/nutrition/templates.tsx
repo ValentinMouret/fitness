@@ -2,7 +2,10 @@ import { Box, Button, Text, TextField } from "@radix-ui/themes";
 import { useId, useState } from "react";
 import { data, Form, Link, redirect, useNavigation } from "react-router";
 import { z } from "zod";
+import { EmptyState } from "~/components/EmptyState";
+import { FilterBar } from "~/components/FilterBar/FilterBar";
 import { PageHeader } from "~/components/PageHeader";
+import { SectionHeader } from "~/components/SectionHeader";
 import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import {
   type MealCategory,
@@ -115,8 +118,18 @@ export default function MealTemplates({
   const { filter, editing, templates } = loaderData;
   const returnTo = filterHref(filter);
   return (
-    <Box>
-      <PageHeader title="Nutrition" />
+    <Box className="nutrition-templates">
+      <PageHeader
+        title="Nutrition"
+        primaryAction={
+          editing
+            ? undefined
+            : {
+                label: "Create template",
+                to: `/nutrition/meal-builder?${new URLSearchParams({ returnTo })}`,
+              }
+        }
+      />
       <NutritionNavigation current="templates" />
       {editing ? (
         <TemplateEditor
@@ -127,52 +140,45 @@ export default function MealTemplates({
         />
       ) : (
         <>
-          <h2>Meal templates</h2>
-          <Text as="p" color="gray">
-            Reusable meals, with the times you use them.
-          </Text>
-          <Form
-            method="get"
-            className="meal-template-filters"
-            aria-label="Filter templates by meal time"
-          >
-            {filters.map((meal) => (
-              <button
-                key={meal}
-                type="submit"
-                name="meal"
-                value={meal}
-                aria-pressed={filter === meal}
-              >
-                {meal === "all" ? "All" : mealLabels[meal]}
-              </button>
-            ))}
+          <SectionHeader title="Meal templates" />
+          <p className="meal-template-intro">
+            Saved meals, ready where you need them.
+          </p>
+          <Form method="get">
+            <FilterBar
+              label="Filter templates by meal time"
+              name="meal"
+              value={filter}
+              choices={filters.map((meal) => ({
+                value: meal,
+                label: meal === "all" ? "All" : mealLabels[meal],
+              }))}
+            />
           </Form>
-          <Button asChild>
-            <Link
-              to={`/nutrition/meal-builder?${new URLSearchParams({ returnTo })}`}
-            >
-              Create template
-            </Link>
-          </Button>
+          <p className="meal-template-help">
+            {filter === "all"
+              ? "All saved templates, shown once."
+              : `Templates assigned to ${mealLabels[filter].toLowerCase()}.`}
+          </p>
           <div className="meal-template-list">
             {templates.length === 0 ? (
-              <Text as="p">
-                No templates assigned to{" "}
-                {filter === "all"
-                  ? "any meal time"
-                  : mealLabels[filter].toLowerCase()}{" "}
-                yet.
-              </Text>
+              <EmptyState
+                icon="🍽️"
+                title="No templates yet"
+                headingLevel="h3"
+                description={`No templates assigned to ${filter === "all" ? "any meal time" : mealLabels[filter].toLowerCase()} yet.`}
+              />
             ) : (
               templates.map((t) => (
-                <article key={t.id} className="meal-template-card">
-                  <h3>{t.name}</h3>
-                  <Text as="p" color="gray">
-                    {t.categories.map((c) => mealLabels[c]).join(" · ")} ·{" "}
-                    {t.calories} kcal
-                  </Text>
-                  <Button variant="soft" asChild>
+                <article key={t.id} className="meal-template-row">
+                  <div>
+                    <h3>{t.name}</h3>
+                    <Text as="p" color="gray">
+                      {t.categories.map((c) => mealLabels[c]).join(" · ")} ·{" "}
+                      {t.calories} kcal
+                    </Text>
+                  </div>
+                  <Button variant="ghost" asChild>
                     <Link
                       to={`${returnTo}&edit=${t.id}`}
                       aria-label={`Edit ${t.name}`}
