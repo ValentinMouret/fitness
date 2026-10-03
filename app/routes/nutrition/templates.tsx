@@ -160,6 +160,7 @@ export default function MealTemplates({
               <EmptyState
                 icon="🍽️"
                 title="No templates yet"
+                headingLevel="h3"
                 description={`No templates assigned to ${filter === "all" ? "any meal time" : mealLabels[filter].toLowerCase()} yet.`}
               />
             ) : (

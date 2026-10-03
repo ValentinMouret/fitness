@@ -47,7 +47,11 @@ test.beforeEach(async ({ page }, testInfo) => {
     console.error(error);
   });
   await page.setContent('<html><body><div id="root"></div></body></html>');
-  if (testInfo.tags.includes("@workout")) {
+  if (testInfo.tags.includes("@empty-state")) {
+    await page.evaluate(() => {
+      window.location.hash = "empty-state";
+    });
+  } else if (testInfo.tags.includes("@workout")) {
     await page.evaluate(() => {
       window.location.hash = "workout";
     });
@@ -58,7 +62,10 @@ test.beforeEach(async ({ page }, testInfo) => {
     pageErrors,
     "Component fixture must render without runtime errors",
   ).toEqual([]);
-  if (!testInfo.tags.includes("@workout")) {
+  if (
+    !testInfo.tags.includes("@workout") &&
+    !testInfo.tags.includes("@empty-state")
+  ) {
     await page.getByRole("button", { name: "Use template for Lunch" }).tap();
     await expect(page.getByRole("dialog")).toBeVisible();
   }
@@ -160,3 +167,29 @@ test(
     ).toBeVisible();
   },
 );
+
+test("empty states preserve default and nested section heading levels @empty-state", async ({
+  page,
+}) => {
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+  await expect(
+    page.getByRole("heading", { name: "Nutrition", level: 1, exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "No meals yet", level: 2, exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Meal templates",
+      level: 2,
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "No templates yet",
+      level: 3,
+      exact: true,
+    }),
+  ).toBeVisible();
+});
