@@ -12,14 +12,11 @@ import {
   AlertDialog,
   Box,
   Button,
-  Card,
   DropdownMenu,
   Flex,
-  Grid,
   Heading,
   IconButton,
   Kbd,
-  Progress,
   Text,
   TextField,
   Tooltip,
@@ -53,8 +50,12 @@ import {
   QuickEstimateModal,
   TemplateSelectionModal,
 } from "~/modules/nutrition/presentation";
-import { MealAssignments } from "~/modules/nutrition/presentation/components/MealAssignments/MealAssignments";
+import {
+  MealAssignments,
+  mealLabels,
+} from "~/modules/nutrition/presentation/components/MealAssignments/MealAssignments";
 import { NutritionNavigation } from "~/modules/nutrition/presentation/components/NutritionNavigation/NutritionNavigation";
+import { NutritionSummary } from "~/modules/nutrition/presentation/components/NutritionSummary/NutritionSummary";
 import { mealAssignmentsField } from "~/modules/nutrition/presentation/meal-builder-form";
 import {
   addOneDay,
@@ -162,60 +163,6 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 const mealTypes = ["breakfast", "lunch", "dinner", "snack"] as const;
-
-const mealConfig: Record<string, { label: string; icon: string }> = {
-  breakfast: { label: "Breakfast", icon: "🌅" },
-  lunch: { label: "Lunch", icon: "☀️" },
-  dinner: { label: "Dinner", icon: "🌙" },
-  snack: { label: "Snacks", icon: "🍎" },
-};
-
-function CalorieRing({ current, target }: { current: number; target: number }) {
-  const progress = Math.min(current / target, 1);
-  const r = 58;
-  const circumference = 2 * Math.PI * r;
-
-  return (
-    <div
-      className="nutrition-hero__ring"
-      role="progressbar"
-      aria-valuenow={Math.round(current)}
-      aria-valuemin={0}
-      aria-valuemax={Math.round(target)}
-      aria-label="Daily calorie progress"
-      aria-valuetext={`${Math.round(current)} of ${Math.round(target)} calories`}
-    >
-      <svg aria-hidden="true" width={140} height={140}>
-        <circle
-          cx={70}
-          cy={70}
-          r={r}
-          fill="none"
-          stroke="var(--gray-4)"
-          strokeWidth={7}
-        />
-        <circle
-          cx={70}
-          cy={70}
-          r={r}
-          fill="none"
-          stroke="var(--tomato-9)"
-          strokeWidth={7}
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference * (1 - progress)}
-          strokeLinecap="round"
-          style={{
-            transition: "stroke-dashoffset 0.55s cubic-bezier(0.4,0,0.2,1)",
-          }}
-        />
-      </svg>
-      <div className="nutrition-hero__ring-label">
-        <span className="nutrition-hero__kcal">{Math.round(current)}</span>
-        <span className="nutrition-hero__kcal-unit">kcal</span>
-      </div>
-    </div>
-  );
-}
 
 function formatDateLabel(date: Date): string {
   const isToday = date.toDateString() === today().toDateString();
@@ -413,10 +360,6 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
     );
   };
 
-  const caloriePercent = Math.round(
-    Math.min((dailyTotals.calories / dailyTargets.calories) * 100, 100),
-  );
-
   return (
     <div className="nutrition-page">
       <PageHeader title="Nutrition" />
@@ -467,91 +410,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
         )}
       </div>
 
-      {/* Hero */}
-      <div className="nutrition-hero">
-        <CalorieRing
-          current={dailyTotals.calories}
-          target={dailyTargets.calories}
-        />
-        <span className="nutrition-hero__target">
-          {caloriePercent}% of {dailyTargets.calories} kcal target
-        </span>
-      </div>
-
-      {/* Macros */}
-      <div className="nutrition-macros">
-        {[
-          { value: dailyTotals.protein, label: "Protein", unit: "g" },
-          { value: dailyTotals.carbs, label: "Carbs", unit: "g" },
-          { value: dailyTotals.fat, label: "Fat", unit: "g" },
-        ].map((macro) => (
-          <div key={macro.label} className="nutrition-macro-card">
-            <div className="nutrition-macro-card__value">
-              {Math.round(macro.value)}
-            </div>
-            <div className="nutrition-macro-card__unit">{macro.unit}</div>
-            <div className="nutrition-macro-card__label">{macro.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Daily Progress Bars */}
-      <Card size="3" mb="4" className="nutrition-progress-card">
-        <Grid columns="2" gap="3">
-          <Box>
-            <Flex justify="between" mb="1">
-              <Text size="1">Calories</Text>
-              <Text size="1" weight="medium">
-                {Math.round(dailyTotals.calories)} / {dailyTargets.calories}
-              </Text>
-            </Flex>
-            <Progress
-              value={(dailyTotals.calories / dailyTargets.calories) * 100}
-              aria-label="Calories progress"
-              aria-valuetext={`${Math.round(dailyTotals.calories)} of ${dailyTargets.calories} kcal`}
-            />
-          </Box>
-          <Box>
-            <Flex justify="between" mb="1">
-              <Text size="1">Protein</Text>
-              <Text size="1" weight="medium">
-                {Math.round(dailyTotals.protein)}g / {dailyTargets.protein}g
-              </Text>
-            </Flex>
-            <Progress
-              value={(dailyTotals.protein / dailyTargets.protein) * 100}
-              aria-label="Protein progress"
-              aria-valuetext={`${Math.round(dailyTotals.protein)}g of ${dailyTargets.protein}g protein`}
-            />
-          </Box>
-          <Box>
-            <Flex justify="between" mb="1">
-              <Text size="1">Carbs</Text>
-              <Text size="1" weight="medium">
-                {Math.round(dailyTotals.carbs)}g / {dailyTargets.carbs}g
-              </Text>
-            </Flex>
-            <Progress
-              value={(dailyTotals.carbs / dailyTargets.carbs) * 100}
-              aria-label="Carbs progress"
-              aria-valuetext={`${Math.round(dailyTotals.carbs)}g of ${dailyTargets.carbs}g carbs`}
-            />
-          </Box>
-          <Box>
-            <Flex justify="between" mb="1">
-              <Text size="1">Fat</Text>
-              <Text size="1" weight="medium">
-                {Math.round(dailyTotals.fat)}g / {dailyTargets.fat}g
-              </Text>
-            </Flex>
-            <Progress
-              value={(dailyTotals.fat / dailyTargets.fat) * 100}
-              aria-label="Fat progress"
-              aria-valuetext={`${Math.round(dailyTotals.fat)}g of ${dailyTargets.fat}g fat`}
-            />
-          </Box>
-        </Grid>
-      </Card>
+      <NutritionSummary totals={dailyTotals} targets={dailyTargets} />
 
       {/* Meals */}
       <div className="nutrition-meals">
@@ -561,9 +420,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
         />
         <div className="nutrition-meals__header">
           <Flex align="center" gap="2">
-            <p className="section-label" style={{ marginBottom: 0 }}>
-              Meals
-            </p>
+            <h2 className="nutrition-meals__title">Meals</h2>
             {completedCount === mealTypes.length && (
               <Text
                 size="1"
@@ -597,7 +454,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
           {mealTypes.map((mealType) => {
             const meal = getMealForType(mealType);
             const hasLogged = meal !== null;
-            const { label, icon } = mealConfig[mealType];
+            const label = mealLabels[mealType];
             const ingredientNames = meal?.ingredients
               ?.map((ing) => ing.ingredient.name)
               .join(" · ");
@@ -624,7 +481,6 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                 <div
                   className={`nutrition-meal ${mealCompletionMap[mealType] ? "nutrition-meal--logged" : ""}`}
                 >
-                  <span className="nutrition-meal__icon">{icon}</span>
                   <div className="nutrition-meal__body">
                     <div className="nutrition-meal__name">{label}</div>
                     {hasLogged && ingredientNames ? (
@@ -633,7 +489,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                       </div>
                     ) : !hasLogged ? (
                       <div className="nutrition-meal__detail nutrition-meal__detail--empty">
-                        Tap to log
+                        Nothing logged yet
                       </div>
                     ) : null}
                   </div>
@@ -726,9 +582,6 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                       </>
                     ) : (
                       <>
-                        <span className="nutrition-meal__kcal nutrition-meal__kcal--empty">
-                          —
-                        </span>
                         <Tooltip content={`Add ${label}`}>
                           <Button
                             size="1"
@@ -753,7 +606,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                             aria-label={`Use template for ${label}`}
                             loading={isApplyingTemplate}
                           >
-                            <DotsHorizontalIcon width="14" height="14" />
+                            Use template
                           </Button>
                         </Tooltip>
                       </>
