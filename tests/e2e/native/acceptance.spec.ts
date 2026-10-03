@@ -178,9 +178,10 @@ test("native A and B retain separate histories and catalogue controls, and logou
     timezoneId: "America/Los_Angeles",
     storageState: { cookies: [], origins: [] },
   });
+  let completed = false;
   try {
     const b = await context.newPage();
-    await signIn(b, otherEmail);
+    await test.step("Sign in the second account", () => signIn(b, otherEmail));
     expect(
       (
         await pool.query("select name from measurements where user_id=$1", [
@@ -222,8 +223,12 @@ test("native A and B retain separate histories and catalogue controls, and logou
     } finally {
       await pool.query(`alter table ${renamed} rename to measurements`);
     }
-    await b.getByRole("textbox", { name: "Weight", exact: true }).fill("77.25");
-    await b.getByRole("button", { name: "Log", exact: true }).click();
+    await test.step("Log the second account's weight", async () => {
+      await b
+        .getByRole("textbox", { name: "Weight", exact: true })
+        .fill("77.25");
+      await b.getByRole("button", { name: "Log", exact: true }).click();
+    });
     await expect
       .poll(
         async () =>
@@ -294,8 +299,11 @@ test("native A and B retain separate histories and catalogue controls, and logou
       expect(denied.status()).toBe(302);
       expect(denied.headers().location).toBe("/sign-in");
     }
+    completed = true;
   } finally {
-    await context.close();
+    await context.close().catch((error: unknown) => {
+      if (completed) throw error;
+    });
   }
 });
 
