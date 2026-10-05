@@ -183,7 +183,11 @@ const AppLayout: React.FC = () => {
           <Flex align="center" justify="between" mb="4">
             <Flex align="center" gap="2">
               <Text size="5">🔥</Text>
-              {!isCollapsed && <Heading size="4">fitness</Heading>}
+              {!isCollapsed && (
+                <Heading size="4" className="app-layout__brand">
+                  fitness
+                </Heading>
+              )}
             </Flex>
 
             <IconButton

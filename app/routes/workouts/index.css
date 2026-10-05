@@ -10,7 +10,9 @@
 
 .workouts-index__title {
   display: block;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
+  font-size: var(--type-body-size);
+  font-weight: var(--type-weight-medium);
 }
 
 .workouts-index__muted {
@@ -22,10 +24,10 @@
   margin-top: 2px;
   padding: 4px 10px;
   border-radius: 100px;
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-weight-medium);
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .workouts-index__status--active {

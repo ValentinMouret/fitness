@@ -33,8 +33,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-family: var(--font-display);
-  font-weight: 700;
+  font-family: var(--font-body);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
+  font-weight: var(--type-weight-medium);
 }
 
 .exercise-card__name--clickable {
@@ -93,7 +95,7 @@
 }
 
 .set-table-header__label {
-  font-size: 12px;
+  font-size: var(--type-caption-size);
   color: var(--gray-9);
 }
 
@@ -134,7 +136,7 @@
 .set-row__number {
   text-align: center;
   color: var(--gray-9);
-  font-size: 12px;
+  font-size: var(--type-caption-size);
 }
 
 .set-row__number--toggle {
@@ -150,7 +152,7 @@
   justify-content: center;
   border-radius: var(--radius-2);
   transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 12px;
+  font-size: var(--type-caption-size);
   color: var(--gray-9);
 }
 
@@ -160,12 +162,14 @@
 
 .set-row__number--warmup {
   color: var(--amber-11);
-  font-weight: 600;
+  font-weight: var(--type-weight-medium);
 }
 
 .set-row__value {
   text-align: center;
-  font: 400 16px var(--font-body);
+  font:
+    var(--type-weight-regular) var(--type-body-size) / var(--type-body-line)
+    var(--font-body);
   font-variant-numeric: tabular-nums;
 }
 
@@ -181,14 +185,17 @@
   box-shadow: none !important;
   border: 1px solid transparent;
   border-radius: var(--radius-2);
-  height: 44px;
+  min-height: 44px;
+  height: auto;
 }
 
 .set-row__input input {
   min-width: 0 !important;
   padding: 0;
   text-align: center;
-  font: 400 16px var(--font-body);
+  font:
+    var(--type-weight-regular) var(--type-body-size) / var(--type-body-line)
+    var(--font-body);
   font-variant-numeric: tabular-nums;
 }
 
@@ -232,10 +239,13 @@
 }
 
 .set-row__reps small {
-  font: 400 12px var(--font-body);
+  font:
+    var(--type-weight-regular) var(--type-caption-size) /
+    var(--type-caption-line) var(--font-body);
 }
 
 .set-row__inline-rir {
+  flex-wrap: wrap;
   width: 100%;
   min-height: 44px;
   min-width: 44px;
@@ -326,8 +336,10 @@
   flex: 1;
   min-width: 0;
   margin: 0;
-  font: 500 2.25rem / 1.08 var(--font-display);
-  letter-spacing: -0.02em;
+  font:
+    var(--type-weight-medium) var(--type-page-size) / var(--type-page-line)
+    var(--font-display);
+  letter-spacing: 0;
 }
 .exercise-card--focused .exercise-card__name {
   font: inherit;
@@ -338,7 +350,9 @@
 .exercise-card__equipment {
   display: block;
   margin-top: var(--space-2);
-  font: 400 0.875rem var(--font-body);
+  font:
+    var(--type-weight-regular) var(--type-support-size) /
+    var(--type-support-line) var(--font-body);
   color: var(--brand-text-secondary);
 }
 .exercise-card__progress {
@@ -388,7 +402,7 @@
   border-radius: 10px;
   background: var(--brand-surface);
   color: var(--brand-text-secondary);
-  font-size: 0.8125rem;
+  font-size: var(--type-support-size);
   line-height: 1.5;
 }
 
@@ -402,7 +416,7 @@
 }
 
 .exercise-card--focused .set-table-header__label {
-  font-size: 12px;
+  font-size: var(--type-caption-size);
   color: var(--brand-text-secondary);
   text-align: center;
 }
@@ -423,13 +437,16 @@
 
 .exercise-card--focused .set-row__value,
 .exercise-card--focused .set-row__input input {
-  font: 400 16px var(--font-body);
+  font:
+    var(--type-weight-regular) var(--type-body-size) / var(--type-body-line)
+    var(--font-body);
   text-align: center;
   padding: 0;
 }
 
 .exercise-card--focused .set-row__input {
-  height: 44px;
+  min-height: 44px;
+  height: auto;
 }
 
 .exercise-card--focused .set-row__number {
@@ -439,10 +456,4 @@
 .exercise-card--focused .exercise-card__add-set {
   margin: 18px 0 24px;
   min-height: 44px;
-}
-
-@media (max-width: 340px) {
-  .exercise-card__heading {
-    font-size: 2rem;
-  }
 }

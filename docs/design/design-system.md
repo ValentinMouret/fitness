@@ -32,14 +32,22 @@ All animations use consistent timing and easing to create cohesive, polished int
 - **Border Radius**: Medium (12px) — clean, modern feel
 
 ### Typography
-- **Display**: `Crimson Pro` (serif) — headings, stat values, display numbers
-- **Body**: `DM Sans` (sans-serif) — all body text, labels, inputs
-- **Scale**: Radix UI type scale (1-9)
 
-```css
---font-display: "Crimson Pro", Georgia, serif;
---font-body: "DM Sans", system-ui, sans-serif;
-```
+Quiet editorial was selected by Valentin on 5 October 2026. Crimson Pro is reserved for the primary page title; DM Sans provides consistent supporting headings, controls, prose and numbers. Apply the same roles across viewport sizes and completion states.
+
+| Role | Size / line height | Weight | Family |
+|---|---|---|---|
+| Page title | 1.75rem / 1.25 (28 / 35px) | 500 | Crimson Pro |
+| Section or dialog title | 1.25rem / 1.4 (20 / 28px) | 500 | DM Sans |
+| Body, item name and numeric value | 1rem / 1.5 (16 / 24px) | 400; item name may use 500 | DM Sans |
+| Supporting copy and action | .875rem / 1.5 (14 / 21px) | 400; action 500 | DM Sans |
+| Caption, unit and column label | .75rem / 1.5 (12 / 18px) | 400; label may use 500 | DM Sans |
+
+Default tracking is zero. Avoid decorative uppercase. Use tabular numerals for comparable data, timers and statistics. A timer/stat normally uses the section role; greater prominence requires a documented reading need.
+
+Map Radix default, heading and strong families to DM Sans. Apply the serif explicitly to the page-title role, independently of HTML heading level. Keep semantic heading levels; a section does not become h1 to obtain its visual size. Inputs and saved numbers use the same 16px role. Dialog portals inherit the same mappings. Reflow rather than shrinking text on mobile.
+
+Implementation is staged: this decision does not approve unrelated layout or interaction changes. Existing approved workout-row surfaces, warmup marker, RIR and touch targets remain in force. Delivery scope and evidence are tracked in ENSO-105 and ENSO-110.
 
 ### Brand Tokens
 Defined in `app/app.css`:
@@ -84,11 +92,8 @@ Values defined in [app/app.css](../../app/app.css), assuming a 16px root font si
 | `--space-page` | 2rem (32px) | 1rem (16px) |
 | `--space-section` | 1.5rem (24px) | 1rem (16px) |
 | `--space-card` | 1rem (16px) | 0.75rem (12px) |
-| `--heading-page` | 2rem (32px) | 1.75rem (28px) |
-| `--heading-section` | 1.5rem (24px) | 1.25rem (20px) |
-| `--heading-card` | 1.25rem (20px) | 1.125rem (18px) |
 
-The heading tokens describe available runtime values; existing Radix Heading sizes and approved feature typography are not automatically replaced by them.
+Typography roles above replace the former unused responsive heading tokens. Existing feature size ladders migrate in reviewed slices.
 
 ### Semantic Colors
 | Role | Color | Usage |

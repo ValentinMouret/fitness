@@ -56,7 +56,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             </Tooltip>
           )}
           {typeof title === "string" ? (
-            <Heading size="7" className="page-header__title">
+            <Heading as="h1" size="7" className="page-header__title">
               {title}
             </Heading>
           ) : (

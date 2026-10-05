@@ -579,3 +579,97 @@ test.describe("completed details", () => {
     await expect(page.getByText("~3 left", { exact: false })).toBeVisible();
   });
 });
+
+for (const width of [320, 390]) {
+  test(`Quiet editorial workout roles and enlarged text reflow at ${width}px`, async ({
+    page,
+    fixture,
+  }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await focus(page, fixture.id);
+    const title = page.locator(
+      ".active-workout-exercise:not([hidden]) .exercise-card__name",
+    );
+    await expect
+      .poll(() =>
+        title.evaluate((element) => {
+          const style = getComputedStyle(element);
+          return {
+            family: style.fontFamily,
+            size: style.fontSize,
+            weight: style.fontWeight,
+            line: style.lineHeight,
+            tracking: style.letterSpacing,
+          };
+        }),
+      )
+      .toEqual({
+        family: '"Crimson Pro", Georgia, serif',
+        size: "28px",
+        weight: "500",
+        line: "35px",
+        tracking: "normal",
+      });
+    await expect
+      .poll(() =>
+        page
+          .locator(".active-workout-header__name")
+          .evaluate((element) => getComputedStyle(element).fontFamily),
+      )
+      .toContain("DM Sans");
+    await noOverflow(page);
+    await title.click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect
+      .poll(() =>
+        dialog
+          .getByRole("heading")
+          .first()
+          .evaluate((element) => {
+            const style = getComputedStyle(element);
+            return {
+              family: style.fontFamily,
+              size: style.fontSize,
+              weight: style.fontWeight,
+              line: style.lineHeight,
+            };
+          }),
+      )
+      .toEqual({
+        family: '"DM Sans", system-ui, sans-serif',
+        size: "20px",
+        weight: "500",
+        line: "28px",
+      });
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await page.addStyleTag({
+      content:
+        ":root { --font-body: system-ui, sans-serif; --font-display: Georgia, serif; }",
+    });
+    await noOverflow(page);
+    await page.addStyleTag({
+      content:
+        "html { font-size: 200%; } * { letter-spacing: .12em !important; word-spacing: .16em !important; } p { margin-bottom: 2em !important; }",
+    });
+    await noOverflow(page);
+    await font(row(page, 1).locator(".set-row__value").first(), "32px");
+    await font(row(page, 1).locator(".set-row__inline-rir small"), "24px");
+    await expect(title).toBeVisible();
+    const timer = await page.locator(".rest-timer").boundingBox();
+    const action = await page.locator(".rest-timer__action").boundingBox();
+    expect(
+      timer && action && action.x + action.width <= timer.x + timer.width,
+    ).toBe(true);
+    await expect(
+      page.getByRole("link", { name: "Back to Workouts" }),
+    ).toBeVisible();
+    await page.locator(".rest-timer__action").click();
+    await expect(page.locator(".rest-timer__action")).toHaveText("Skip");
+    await page.screenshot({
+      path: `/tmp/quiet-editorial-workout-${width}-enlarged.png`,
+      fullPage: true,
+    });
+  });
+}
