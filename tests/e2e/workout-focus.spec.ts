@@ -184,30 +184,34 @@ test("final-save readiness spans every exercise and correction retains historica
       .getByRole("button", { name: "Complete set 8", exact: true })
       .click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog).toContainText("All sets are saved");
-    expect(
-      (await pool.query("select stop from workouts where id = $1", [sessionId]))
-        .rows[0].stop,
-    ).toBeNull();
-    await dialog
-      .getByRole("button", { name: "Keep training", exact: true })
-      .click();
+    await expect(dialog).toHaveCount(0);
+    await expect(
+      page.getByText("How many more good reps could you have done?"),
+    ).toBeVisible();
     await page
       .getByRole("button", {
         name: "Report 2 good reps left for set 8",
         exact: true,
       })
       .click();
+    await expect(dialog).toContainText("All sets are saved");
+    expect(
+      (await pool.query("select stop from workouts where id=$1", [sessionId]))
+        .rows[0].stop,
+    ).toBeNull();
+    await dialog
+      .getByRole("button", { name: "Keep training", exact: true })
+      .click();
     await expect(
       page.getByRole("button", {
-        name: "Edit set 8 reported effort",
+        name: "Edit set 8 reported effort, 8 reps",
         exact: true,
       }),
-    ).toHaveText("~2 left");
+    ).toContainText("~2 left");
     await page.getByRole("button", { name: "Edit set 8", exact: true }).click();
     await expect(
       page.getByRole("combobox", { name: "Set 8 reported effort" }),
-    ).toHaveCount(0);
+    ).toHaveValue("2");
     await page
       .getByRole("textbox", { name: "Set 8 weight", exact: true })
       .fill("62.5");
@@ -247,7 +251,7 @@ test("final-save readiness spans every exercise and correction retains historica
   }
 });
 
-test("completed sessions use read-only overview and focus without changing history", async ({
+test("completed session navigation preserves history and only permits saved-set correction", async ({
   page,
   sessionId,
 }) => {
@@ -295,7 +299,7 @@ test("completed sessions use read-only overview and focus without changing histo
     await expect(page.getByRole("checkbox")).toHaveCount(0);
     await expect(
       page.getByRole("button", {
-        name: /Complete set|Remove set|Add Set|Add Exercise|Finish workout|Reorder|reported effort/,
+        name: /Complete set|Remove set|Add Set|Add Exercise|Finish workout|Reorder|Add set \d+ reported effort/,
       }),
     ).toHaveCount(0);
     await expect(
@@ -328,7 +332,7 @@ test("completed sessions use read-only overview and focus without changing histo
     );
     await expect(
       page.getByRole("button", {
-        name: /Complete set|Remove set|Add Set|Add Exercise|Finish workout|Reorder|reported effort/,
+        name: /Complete set|Remove set|Add Set|Add Exercise|Finish workout|Reorder|Add set \d+ reported effort/,
       }),
     ).toHaveCount(0);
     await page

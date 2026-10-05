@@ -94,7 +94,10 @@ for (const width of [320, 390]) {
     await warmup.getByRole("button", { name: "Cancel", exact: true }).tap();
     await rows
       .nth(1)
-      .getByRole("button", { name: "Add set 2 reported effort", exact: true })
+      .getByRole("button", {
+        name: "Add set 2 reported effort, 7 reps",
+        exact: true,
+      })
       .tap();
     await expect(
       rows.nth(1).getByText("How many more good reps could you have done?", {
@@ -103,10 +106,10 @@ for (const width of [320, 390]) {
     ).toBeVisible();
     await expect(
       rows.nth(2).getByRole("button", {
-        name: "Edit set 3 reported effort",
+        name: "Edit set 3 reported effort, 7 reps",
         exact: true,
       }),
-    ).toHaveText("~2 left");
+    ).toContainText("~2 left");
     await expect(rows.nth(3)).toContainText("RPE 8 (legacy)");
     await expect(rows.nth(3)).not.toContainText("—");
     await page

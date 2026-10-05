@@ -31,6 +31,7 @@ import "./WorkoutExerciseCard.css";
 interface WorkoutExerciseCardProps {
   readonly viewModel: WorkoutExerciseCardViewModel;
   readonly focused?: boolean;
+  readonly canEditCompletedSets?: boolean;
   readonly progressLabel?: string;
   readonly onAddSet?: (
     exerciseId: string,
@@ -38,7 +39,7 @@ interface WorkoutExerciseCardProps {
   ) => void;
   readonly onRemoveExercise?: (exerciseId: string) => void;
   readonly onReplaceExercise?: (exerciseId: string) => void;
-  readonly onCompleteSet?: () => void;
+  readonly onCompleteSet?: (key: string, needsReport: boolean) => void;
   readonly onExerciseNameClick?: (exerciseId: string) => void;
   readonly onMMCClick?: (exerciseId: string) => void;
   readonly openReportSetKey?: string;
@@ -51,6 +52,7 @@ interface WorkoutExerciseCardProps {
 export function WorkoutExerciseCard({
   viewModel,
   focused = false,
+  canEditCompletedSets = false,
   progressLabel,
   onAddSet,
   onRemoveExercise,
@@ -223,12 +225,6 @@ export function WorkoutExerciseCard({
           <span className="set-table-header__label set-table-header__label--right">
             Reps
           </span>
-          <span
-            hidden={focused}
-            className="set-table-header__label set-table-header__label--right"
-          >
-            RIR
-          </span>
           <span className="set-table-header__label set-table-header__label--center" />
         </div>
 
@@ -238,6 +234,7 @@ export function WorkoutExerciseCard({
             set={set}
             exerciseId={viewModel.exerciseId}
             canEdit={viewModel.canAddSets}
+            canEditCompleted={viewModel.canAddSets || canEditCompletedSets}
             focused={focused}
             onCompleteSet={onCompleteSet}
             openReportSetKey={openReportSetKey}
@@ -267,8 +264,9 @@ interface SetRowProps {
   readonly set: WorkoutSetViewModel;
   readonly exerciseId: string;
   readonly canEdit: boolean;
+  readonly canEditCompleted: boolean;
   readonly focused: boolean;
-  readonly onCompleteSet?: () => void;
+  readonly onCompleteSet?: (key: string, needsReport: boolean) => void;
   readonly openReportSetKey?: string;
   readonly onReportPromptChange?: (key: string, open: boolean) => void;
 }
@@ -277,6 +275,7 @@ function SetRow({
   set,
   exerciseId,
   canEdit,
+  canEditCompleted,
   focused,
   onCompleteSet,
   openReportSetKey,
@@ -289,6 +288,7 @@ function SetRow({
   const showReportPrompt = openReportSetKey === reportSetKey;
   const [editingCompleted, setEditingCompleted] = useState(false);
   const [editingSubmitted, setEditingSubmitted] = useState(false);
+  const [reportSubmitted, setReportSubmitted] = useState(false);
   const [completionSubmitted, setCompletionSubmitted] = useState(false);
   const completionNotified = useRef(false);
   const updateFetcher = useFetcher();
@@ -321,7 +321,7 @@ function SetRow({
     } else if (actionFetcher.data?.success && set.isCompleted) {
       if (!completionNotified.current) {
         completionNotified.current = true;
-        onCompleteSet?.();
+        onCompleteSet?.(reportSetKey, !set.isWarmup);
       }
       if (!set.isWarmup) onReportPromptChange?.(reportSetKey, true);
       setCompletionSubmitted(false);
@@ -338,12 +338,17 @@ function SetRow({
   ]);
 
   useEffect(() => {
-    if (reportFetcher.state === "idle" && reportFetcher.data?.success) {
+    if (!reportSubmitted || reportFetcher.state !== "idle") return;
+    if (reportFetcher.data?.success) {
+      setReportSubmitted(false);
       onReportPromptChange?.(reportSetKey, false);
+    } else if (reportFetcher.data?.error) {
+      setReportSubmitted(false);
     }
   }, [
     reportFetcher.state,
     reportFetcher.data,
+    reportSubmitted,
     onReportPromptChange,
     reportSetKey,
   ]);
@@ -357,13 +362,8 @@ function SetRow({
   const rowClassName = [
     "set-row",
     editingCompleted ? "set-row--editing" : "",
-    set.isWarmup
-      ? "set-row--warmup"
-      : set.isCompleted
-        ? "set-row--completed"
-        : canEdit
-          ? "set-row--pending"
-          : "",
+    set.isWarmup ? "set-row--warmup" : "",
+    set.isCompleted ? "set-row--completed" : canEdit ? "set-row--pending" : "",
   ].join(" ");
 
   const handleToggleWarmup = () => {
@@ -419,49 +419,43 @@ function SetRow({
             className="set-row__input"
             aria-label={`Set ${set.set} reps`}
           />
-          <div className="set-row__report-value" />
         </>
       ) : !canEdit || set.isCompleted ? (
         <>
           <Text size="2" className="set-row__value">
             {set.weight ? `${set.weight}` : "—"}
           </Text>
-          <Text size="2" className="set-row__value">
-            {set.reps ?? "—"}
-          </Text>
-          {(!focused ||
-            set.reportedRir !== undefined ||
-            set.rpe !== undefined ||
-            (canEdit && !set.isWarmup)) && (
-            <div className="set-row__report-value">
-              {canEdit && !set.isWarmup ? (
-                <button
-                  type="button"
-                  onClick={() => onReportPromptChange?.(reportSetKey, true)}
-                  aria-label={`${set.reportedRir ? "Edit" : "Add"} set ${set.set} reported effort`}
-                >
+          <div className="set-row__reps">
+            {canEditCompleted && set.isCompleted && !set.isWarmup ? (
+              <button
+                type="button"
+                className="set-row__inline-rir"
+                onClick={() => onReportPromptChange?.(reportSetKey, true)}
+                aria-label={`${set.reportedRir ? "Edit" : "Add"} set ${set.set} reported effort, ${set.reps ?? "unrecorded"} reps`}
+              >
+                <span className="set-row__value">{set.reps ?? "—"}</span>
+                <small>
                   {set.reportedRir === "unsure"
                     ? "Unsure"
                     : set.reportedRir
                       ? `~${set.reportedRir} left`
-                      : focused
-                        ? "Add effort · optional"
-                        : "Add"}
-                </button>
-              ) : (
-                <span>
-                  {set.reportedRir === "unsure"
-                    ? "Unsure"
-                    : set.reportedRir
-                      ? `~${set.reportedRir} left`
-                      : focused
-                        ? null
-                        : "—"}
-                </span>
-              )}
-              {set.rpe !== undefined && <small>RPE {set.rpe} (legacy)</small>}
-            </div>
-          )}
+                      : "Add"}
+                </small>
+              </button>
+            ) : (
+              <>
+                <span className="set-row__value">{set.reps ?? "—"}</span>
+                {set.reportedRir && (
+                  <small>
+                    {set.reportedRir === "unsure"
+                      ? "Unsure"
+                      : `~${set.reportedRir} left`}
+                  </small>
+                )}
+              </>
+            )}
+            {set.rpe !== undefined && <small>RPE {set.rpe} (legacy)</small>}
+          </div>
         </>
       ) : (
         <>
@@ -506,15 +500,11 @@ function SetRow({
               aria-label={`Set ${set.set} reps`}
             />
           </updateFetcher.Form>
-          <div className="set-row__report-value">
-            <span>—</span>
-            {set.rpe !== undefined && <small>RPE {set.rpe} (legacy)</small>}
-          </div>
         </>
       )}
 
       <div className="set-row__actions">
-        {canEdit && set.isCompleted && !editingCompleted && (
+        {canEditCompleted && set.isCompleted && !editingCompleted && (
           <Tooltip content={`Edit set ${set.set}`}>
             <IconButton
               type="button"
@@ -548,7 +538,7 @@ function SetRow({
                 type="submit"
                 size="2"
                 variant="soft"
-                color="green"
+                color="tomato"
                 loading={isCompleting}
                 disabled={isBusy && !isCompleting}
                 aria-label={`Complete set ${set.set}`}
@@ -581,7 +571,7 @@ function SetRow({
         )}
       </div>
 
-      {canEdit && set.isCompleted && editingCompleted && (
+      {canEditCompleted && set.isCompleted && editingCompleted && (
         <editFetcher.Form
           method="post"
           id={editFormId}
@@ -599,7 +589,7 @@ function SetRow({
               aria-label={`Set ${set.set} legacy RPE`}
             />
           )}
-          {!focused && !set.isWarmup && (
+          {!set.isWarmup && (
             <select
               name="reportedRir"
               defaultValue={set.reportedRir ?? "clear"}
@@ -638,7 +628,7 @@ function SetRow({
         </Text>
       )}
 
-      {canEdit &&
+      {canEditCompleted &&
         set.isCompleted &&
         !set.isWarmup &&
         !editingCompleted &&
@@ -652,7 +642,8 @@ function SetRow({
                   type="button"
                   disabled={reportFetcher.state !== "idle"}
                   aria-label={`Report ${value} good reps left for set ${set.set}`}
-                  onClick={() =>
+                  onClick={() => {
+                    setReportSubmitted(true);
                     reportFetcher.submit(
                       {
                         intent: "update-set",
@@ -661,8 +652,8 @@ function SetRow({
                         reportedRir: value,
                       },
                       { method: "post" },
-                    )
-                  }
+                    );
+                  }}
                 >
                   {value === "unsure" ? "Unsure" : value}
                 </button>
@@ -672,7 +663,8 @@ function SetRow({
                   type="button"
                   disabled={reportFetcher.state !== "idle"}
                   aria-label={`Clear set ${set.set} reported effort`}
-                  onClick={() =>
+                  onClick={() => {
+                    setReportSubmitted(true);
                     reportFetcher.submit(
                       {
                         intent: "update-set",
@@ -681,14 +673,15 @@ function SetRow({
                         reportedRir: "clear",
                       },
                       { method: "post" },
-                    )
-                  }
+                    );
+                  }}
                 >
                   Clear
                 </button>
               )}
               <button
                 type="button"
+                disabled={reportFetcher.state !== "idle"}
                 onClick={() => onReportPromptChange?.(reportSetKey, false)}
               >
                 Skip
