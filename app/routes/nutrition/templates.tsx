@@ -114,17 +114,7 @@ export default function MealTemplates({
   const returnTo = filterHref(filter);
   return (
     <Box className="nutrition-templates">
-      <PageHeader
-        title="Nutrition"
-        primaryAction={
-          editing
-            ? undefined
-            : {
-                label: "Create template",
-                to: `/nutrition/meal-builder?${new URLSearchParams({ returnTo })}`,
-              }
-        }
-      />
+      <PageHeader title="Nutrition" />
       <NutritionNavigation current="templates" />
       {editing ? (
         <TemplateEditor
@@ -135,7 +125,18 @@ export default function MealTemplates({
         />
       ) : (
         <>
-          <SectionHeader title="Meal templates" />
+          <SectionHeader
+            title="Meal templates"
+            right={
+              <Button asChild variant="soft" className="meal-template-create">
+                <Link
+                  to={`/nutrition/meal-builder?${new URLSearchParams({ returnTo })}`}
+                >
+                  Create template
+                </Link>
+              </Button>
+            }
+          />
           <p className="meal-template-intro">
             Saved meals, ready where you need them.
           </p>
