@@ -55,6 +55,79 @@ test.skip(
   "Requires a matching dedicated fixture database/server",
 );
 
+for (const viewport of [
+  { width: 320, height: 844 },
+  { width: 390, height: 844 },
+  { width: 740, height: 390 },
+]) {
+  test(`workout chrome spans mobile edges at ${viewport.width}px`, async ({
+    page,
+    sessionId,
+  }) => {
+    await page.setViewportSize(viewport);
+    await page.goto(`/workouts/${sessionId}`);
+    await expect
+      .poll(() =>
+        page
+          .locator(".page-transition")
+          .evaluate((element) => getComputedStyle(element).opacity),
+      )
+      .toBe("1");
+    const checkEdges = async () => {
+      for (const selector of [".active-workout-header", ".rest-timer"]) {
+        const box = await page.locator(selector).boundingBox();
+        if (!box) throw new Error(`Missing ${selector}`);
+        expect(Math.abs(box.x)).toBeLessThan(1);
+        expect(Math.abs(box.x + box.width - viewport.width)).toBeLessThan(1);
+      }
+      const content = await page
+        .locator(".active-workout-content")
+        .boundingBox();
+      if (!content) throw new Error("Missing exercise content");
+      expect(content.x).toBeGreaterThan(0);
+      expect(content.x + content.width).toBeLessThan(viewport.width);
+      expect(
+        await page
+          .locator(".main-content")
+          .evaluate((element) => element.scrollWidth <= element.clientWidth),
+      ).toBe(true);
+      const timerPadding = await page
+        .locator(".rest-timer__body")
+        .evaluate((element) => getComputedStyle(element).paddingLeft);
+      expect(timerPadding).toBe(viewport.width <= 340 ? "16px" : "20px");
+    };
+    await checkEdges();
+    await page
+      .getByRole("link", { name: /^Open Focus fixture exercise/ })
+      .first()
+      .click();
+    await checkEdges();
+    await page
+      .getByRole("region", { name: "Rest timer" })
+      .getByRole("button", { name: "Start", exact: true })
+      .click();
+    await expect(page.locator(".rest-timer__label")).toHaveText("Rest");
+    await checkEdges();
+    const scroller = page.locator(".main-content");
+    await scroller.evaluate((element) => {
+      element.scrollTop = 120;
+    });
+    await expect
+      .poll(() => scroller.evaluate((element) => element.scrollTop))
+      .toBeGreaterThan(30);
+    const chrome = await page.locator(".active-workout-chrome").boundingBox();
+    if (!chrome) throw new Error("Missing workout chrome");
+    expect(Math.abs(chrome.y)).toBeLessThan(1);
+    await checkEdges();
+    await page.screenshot({
+      path: `/tmp/workout-chrome-${viewport.width}.png`,
+    });
+    await page.getByRole("link", { name: "Overview", exact: true }).click();
+    await checkEdges();
+    await expect(page.locator(".rest-timer__label")).toHaveText("Rest");
+  });
+}
+
 test("manual navigation retains drafts, timer and history scroll on a phone", async ({
   page,
   sessionId,
