@@ -1,6 +1,18 @@
 :root {
   --font-display: "Crimson Pro", Georgia, serif;
   --font-body: "DM Sans", system-ui, sans-serif;
+  --type-page-size: 1.75rem;
+  --type-page-line: 1.25;
+  --type-section-size: 1.25rem;
+  --type-section-line: 1.4;
+  --type-body-size: 1rem;
+  --type-body-line: 1.5;
+  --type-support-size: 0.875rem;
+  --type-support-line: 1.5;
+  --type-caption-size: 0.75rem;
+  --type-caption-line: 1.5;
+  --type-weight-regular: 400;
+  --type-weight-medium: 500;
 
   /* Brand colors — Signal C palette */
   --brand-background: #faf9f7;
@@ -17,11 +29,6 @@
   --shadow-warm-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
   --shadow-warm-hover: 0 4px 12px rgba(0, 0, 0, 0.1);
 
-  /* Responsive typography */
-  --heading-page: 2rem;
-  --heading-section: 1.5rem;
-  --heading-card: 1.25rem;
-
   /* Responsive spacing */
   --space-page: 2rem;
   --space-section: 1.5rem;
@@ -30,9 +37,6 @@
 
 @media (max-width: 640px) {
   :root {
-    --heading-page: 1.75rem;
-    --heading-section: 1.25rem;
-    --heading-card: 1.125rem;
     --space-page: 1rem;
     --space-section: 1rem;
     --space-card: 0.75rem;
@@ -50,16 +54,58 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Apply display font to all Radix headings */
+.radix-themes {
+  --default-font-family: var(--font-body);
+  --heading-font-family: var(--font-body);
+  --strong-font-family: var(--font-body);
+  font-weight: var(--type-weight-regular);
+  letter-spacing: 0;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
 h1,
 h2,
 h3,
 h4,
 h5,
-h6,
-[class*="rt-Heading"] {
-  font-family: var(--font-display) !important;
-  font-optical-sizing: auto;
+h6 {
+  font-family: var(--font-body);
+}
+
+.rt-DialogContent > .rt-Heading,
+.rt-AlertDialogContent > .rt-Heading,
+.section-header__title,
+.empty-state__title {
+  font-size: var(--type-section-size);
+  line-height: var(--type-section-line);
+  font-weight: var(--type-weight-medium);
+  letter-spacing: 0;
+}
+
+.rt-DialogContent > p.rt-Text,
+.rt-AlertDialogContent > p.rt-Text {
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
+}
+
+.rt-Button {
+  font-size: var(--type-support-size);
+  line-height: var(--type-support-line);
+  font-weight: var(--type-weight-medium);
+  letter-spacing: 0;
+}
+
+.login-card > .rt-Heading,
+.auth-page-card > .rt-Heading,
+.root-error-boundary > .rt-Heading,
+.app-layout__brand {
+  font-family: var(--font-display);
 }
 
 /* Warm card styling */

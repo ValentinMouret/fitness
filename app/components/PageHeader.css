@@ -9,6 +9,11 @@
 
 .page-header__title {
   overflow-wrap: anywhere;
+  font-family: var(--font-display);
+  font-size: var(--type-page-size);
+  line-height: var(--type-page-line);
+  font-weight: var(--type-weight-medium);
+  letter-spacing: 0;
 }
 
 .page-header__actions {
@@ -23,7 +28,8 @@
 
 .page-header__subtitle {
   color: var(--brand-text-secondary);
-  font-size: 0.95rem;
+  font-size: var(--type-support-size);
+  line-height: var(--type-support-line);
 }
 
 @media (max-width: 767px) {

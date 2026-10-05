@@ -12,7 +12,7 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
 }) => {
   return (
     <Flex justify="between" align="center" mb="4">
-      <Heading as="h2" size="5">
+      <Heading as="h2" size="5" className="section-header__title">
         {title}
       </Heading>
       {right}

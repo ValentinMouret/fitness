@@ -6,7 +6,7 @@
 }
 
 .exercise-history-modal__title {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
 }
 
 .exercise-history-modal__tabs {
@@ -73,7 +73,7 @@
 }
 
 .history-session-card__volume {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-variant-numeric: tabular-nums;
 }
 
@@ -125,7 +125,7 @@
 .progression-chart__label {
   display: block;
   margin-bottom: var(--space-2);
-  font-family: var(--font-display);
+  font-family: var(--font-body);
 }
 
 .progression-chart__container {

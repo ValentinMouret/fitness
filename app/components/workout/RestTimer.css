@@ -54,15 +54,17 @@
 
 .rest-timer__label {
   color: var(--gray-11);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .rest-timer__countdown {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-variant-numeric: tabular-nums;
   color: var(--tomato-11);
-  line-height: 1;
+  font-size: var(--type-section-size);
+  line-height: var(--type-section-line);
+  font-weight: var(--type-weight-medium);
 }
 
 /* --- Preset buttons row --- */
@@ -141,7 +143,9 @@ button.rest-timer__countdown {
   min-width: 64px;
   min-height: 44px;
   padding: 0 var(--space-1);
-  font: 600 1.2rem var(--font-body);
+  font:
+    var(--type-weight-medium) var(--type-section-size) /
+    var(--type-section-line) var(--font-body);
   color: var(--brand-coral);
   cursor: pointer;
 }
@@ -150,7 +154,7 @@ button.rest-timer__countdown {
 }
 
 .active-workout-chrome .rest-timer__label {
-  font-size: 0.6875rem;
+  font-size: var(--type-support-size);
   color: var(--brand-text-secondary);
 }
 
@@ -163,4 +167,28 @@ button.rest-timer__countdown {
   .active-workout-chrome .rest-timer__presets {
     gap: 4px;
   }
+}
+
+.rest-timer__presets {
+  flex-wrap: wrap;
+}
+.rest-timer__preset,
+.rest-timer__action {
+  font-size: var(--type-support-size);
+  line-height: var(--type-support-line);
+}
+
+.rest-timer__main-row,
+.rest-timer__info {
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.rest-timer__info {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+.rest-timer__countdown,
+.rest-timer__action {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
