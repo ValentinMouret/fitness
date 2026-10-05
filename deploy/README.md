@@ -605,3 +605,7 @@ when the server has `PREVIEW_APP=true`, as set by the existing Dokploy review
 configuration. They also remain available during local development. A normal
 production server without that flag returns 404. No alternate Dockerfile or
 build argument is required. Preview database initialization is unchanged.
+
+The standard image includes pinned PostgreSQL 18 dump/restore binaries so
+review database copying can read the host PostgreSQL 18 source. `psql` remains
+the Alpine client for ordinary SQL. Version commands run during image build.
