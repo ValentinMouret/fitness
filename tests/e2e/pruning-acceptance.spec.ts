@@ -269,6 +269,11 @@ test("a current session created by MCP operations remains editable and loggable"
     await page.getByRole("textbox", { name: "Set 1 weight" }).fill("62.5");
     await page.getByRole("textbox", { name: "Set 1 reps" }).fill("9");
     await page.getByRole("button", { name: "Complete set 1" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await page
+      .locator(".set-row__report-prompt")
+      .getByRole("button", { name: "Skip", exact: true })
+      .click();
     await page
       .getByRole("button", { name: "Keep training", exact: true })
       .click();

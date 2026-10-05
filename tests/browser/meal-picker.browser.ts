@@ -156,7 +156,10 @@ test(
       page.locator(".set-row").nth(1).locator(".set-row__report-prompt"),
     ).toBeVisible();
     await page
-      .getByRole("button", { name: "Add set 1 reported effort", exact: true })
+      .getByRole("button", {
+        name: "Add set 1 reported effort, 8 reps",
+        exact: true,
+      })
       .tap();
     await expect(page.locator(".set-row__report-prompt")).toHaveCount(1);
     await expect(

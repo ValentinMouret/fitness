@@ -322,7 +322,7 @@ test.describe("Workout Session - Set Management", () => {
       .click();
     await expect(
       page.getByRole("button", { name: "Edit set 1 reported effort" }),
-    ).toHaveText("~2 left");
+    ).toContainText("~2 left");
     await expect(
       page.getByText("How many more good reps could you have done?"),
     ).toHaveCount(0);
@@ -335,12 +335,12 @@ test.describe("Workout Session - Set Management", () => {
       .click();
     await expect(
       page.getByRole("button", { name: "Edit set 1 reported effort" }),
-    ).toHaveText("Unsure");
+    ).toContainText("Unsure");
 
     await page.getByRole("button", { name: "Edit set 1", exact: true }).click();
     await expect(
       page.getByRole("combobox", { name: "Set 1 reported effort" }),
-    ).toHaveCount(0);
+    ).toHaveValue("unsure");
     await expect(page.getByText("RPE", { exact: true })).toHaveCount(0);
     await page
       .locator(".set-row--completed")
@@ -349,7 +349,7 @@ test.describe("Workout Session - Set Management", () => {
     await page.reload();
     await expect(
       page.getByRole("button", { name: "Edit set 1 reported effort" }),
-    ).toHaveText("Unsure");
+    ).toContainText("Unsure");
     await page
       .getByRole("button", { name: "Edit set 1 reported effort" })
       .click();
@@ -463,13 +463,25 @@ test.describe("Workout Completion Flow", () => {
     await page
       .getByRole("button", { name: "Complete set 1", exact: true })
       .click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(
+      page.getByText("How many more good reps could you have done?"),
+    ).toBeVisible();
+    await page
+      .getByRole("button", {
+        name: "Report 2 good reps left for set 1",
+        exact: true,
+      })
+      .click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await page
       .getByRole("button", { name: "Keep training", exact: true })
       .click();
     await expect(
-      page.getByText("How many more good reps could you have done?"),
-    ).toBeVisible();
+      page.getByRole("button", {
+        name: /^Edit set 1 reported effort, 12 reps$/,
+      }),
+    ).toContainText("~2 left");
     await page.getByRole("link", { name: "Overview", exact: true }).click();
     await page
       .getByRole("button", { name: "Finish workout", exact: true })

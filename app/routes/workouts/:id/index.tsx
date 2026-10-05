@@ -322,8 +322,24 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   }>();
   const openReportSetKey =
     openReport?.workoutId === workoutId ? openReport.key : undefined;
+  const pendingCompletionReport = useRef<
+    | {
+        readonly workoutId: string;
+        readonly key: string;
+      }
+    | undefined
+  >(undefined);
   const onReportPromptChange = useCallback(
     (key: string, open: boolean) => {
+      if (
+        !open &&
+        pendingCompletionReport.current?.workoutId === workoutId &&
+        pendingCompletionReport.current.key === key
+      ) {
+        pendingCompletionReport.current = undefined;
+        if (!workoutSession.workout.stop && progress.allSetsCompleted)
+          setShowCompletionModal(true);
+      }
       setOpenReport((current) =>
         open
           ? { workoutId, key }
@@ -332,7 +348,7 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
             : current,
       );
     },
-    [workoutId],
+    [workoutId, workoutSession.workout.stop, progress.allSetsCompleted],
   );
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
   const [replaceExerciseId, setReplaceExerciseId] = useState<string>();
@@ -413,10 +429,15 @@ export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
   }, []);
 
   const { totalSets, completedSets, percent: progressPercent } = progress;
-  const handleCompletedSet = useCallback(() => {
-    restTimer.start();
-    if (!isComplete && progress.allSetsCompleted) setShowCompletionModal(true);
-  }, [restTimer.start, isComplete, progress.allSetsCompleted]);
+  const handleCompletedSet = useCallback(
+    (key: string, needsReport: boolean) => {
+      restTimer.start();
+      if (isComplete || !progress.allSetsCompleted) return;
+      if (needsReport) pendingCompletionReport.current = { workoutId, key };
+      else setShowCompletionModal(true);
+    },
+    [restTimer.start, isComplete, progress.allSetsCompleted, workoutId],
+  );
 
   const optimisticName =
     fetcher.formData?.get("name")?.toString() || workoutSession.workout.name;
@@ -829,7 +850,7 @@ function SortableExerciseCard({
   readonly focusExerciseId?: string;
   readonly href: string;
   readonly onNavigate: () => void;
-  readonly onCompleteSet?: () => void;
+  readonly onCompleteSet?: (key: string, needsReport: boolean) => void;
   readonly onReplaceExercise?: (exerciseId: string) => void;
   readonly onExerciseNameClick?: (exerciseId: string) => void;
   readonly onMMCClick?: (exerciseId: string) => void;
@@ -906,6 +927,7 @@ function SortableExerciseCard({
       <div hidden={focusExerciseId === undefined}>
         <WorkoutExerciseCard
           focused
+          canEditCompletedSets={isWorkoutComplete}
           progressLabel={`${summary?.completedSets ?? 0} of ${summary?.totalSets ?? 0} sets saved`}
           viewModel={viewModel}
           openReportSetKey={openReportSetKey}
