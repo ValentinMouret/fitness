@@ -7,6 +7,7 @@ const runtimeSchema = z.object({
     .enum(["development", "production", "test"])
     .default("development"),
   GIT_SHA: z.string().optional(),
+  PREVIEW_APP: z.enum(["true", "false"]).default("false"),
 });
 
 const databaseSchema = z.object({

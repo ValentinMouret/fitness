@@ -597,3 +597,11 @@ mounted across replacement/revalidation, including the active rest timer.
 Leaving an idle workout index adopted B. Combined with the container acceptance,
 this verifies the candidate mechanism locally; it does not establish live
 Dokploy settings, production activation or exact-commit deployment control.
+
+### Typography review in regular previews
+
+`/design/type` and `/design/type/:variant` serve the local typography fixtures
+when the server has `PREVIEW_APP=true`, as set by the existing Dokploy review
+configuration. They also remain available during local development. A normal
+production server without that flag returns 404. No alternate Dockerfile or
+build argument is required. Preview database initialization is unchanged.

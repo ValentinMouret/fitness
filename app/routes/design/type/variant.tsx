@@ -17,6 +17,7 @@ import { AuthPage } from "~/modules/auth/presentation/components/AuthPage/AuthPa
 import { EmailField } from "~/modules/auth/presentation/components/EmailField/EmailField";
 import { SharedMealView } from "~/modules/nutrition/presentation/components/SharedMealView/SharedMealView";
 import type { Route } from "./+types/variant";
+import { requireDesignPreview } from "./access.server";
 import { sharedMeal } from "./fixtures";
 import WorkoutFixture from "./WorkoutFixture";
 import "./type.css";
@@ -35,7 +36,7 @@ const schema = z.object({
     .default("workout"),
 });
 export function loader({ params, request }: Route.LoaderArgs) {
-  if (!import.meta.env.DEV) throw new Response("Not found", { status: 404 });
+  requireDesignPreview();
   const result = schema.safeParse({
     variant: params.variant,
     screen: new URL(request.url).searchParams.get("screen") ?? undefined,

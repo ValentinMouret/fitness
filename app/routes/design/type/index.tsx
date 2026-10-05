@@ -1,8 +1,9 @@
 import { Button, Heading, Text } from "@radix-ui/themes";
 import { Link } from "react-router";
+import { requireDesignPreview } from "./access.server";
 import "./type.css";
 export function loader() {
-  if (!import.meta.env.DEV) throw new Response("Not found", { status: 404 });
+  requireDesignPreview();
   return null;
 }
 export default function TypeIndex() {

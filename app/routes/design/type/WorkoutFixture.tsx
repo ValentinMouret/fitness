@@ -47,10 +47,6 @@ const fresh = (): readonly (readonly Row[])[] =>
       effort: i === 1 ? "3" : null,
     })),
   );
-export function loader() {
-  if (!import.meta.env.DEV) throw new Response("Not found", { status: 404 });
-  return null;
-}
 export default function Variant() {
   const { variant } = useParams();
   const [search] = useSearchParams();
