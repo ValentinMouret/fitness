@@ -1,0 +1,2237 @@
+[
+  {
+    "file": "app/app.css",
+    "line": 43,
+    "declaration": "font-family: var(--font-body);"
+  },
+  {
+    "file": "app/app.css",
+    "line": 61,
+    "declaration": "font-family: var(--font-display) !important;"
+  },
+  {
+    "file": "app/app.css",
+    "line": 62,
+    "declaration": "font-optical-sizing: auto;"
+  },
+  {
+    "file": "app/app.css",
+    "line": 212,
+    "declaration": "font-size: 10px;"
+  },
+  {
+    "file": "app/app.css",
+    "line": 213,
+    "declaration": "font-weight: 500;"
+  },
+  {
+    "file": "app/app.css",
+    "line": 408,
+    "declaration": "font-size: 16px !important;"
+  },
+  {
+    "file": "app/app.css",
+    "line": 425,
+    "declaration": "font-size: 0.8rem;"
+  },
+  {
+    "file": "app/app.css",
+    "line": 434,
+    "declaration": "font-family: var(--font-body);"
+  },
+  {
+    "file": "app/app.css",
+    "line": 435,
+    "declaration": "font-size: 0.7rem;"
+  },
+  {
+    "file": "app/app.css",
+    "line": 436,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/app.css",
+    "line": 437,
+    "declaration": "letter-spacing: 0.12em;"
+  },
+  {
+    "file": "app/app.css",
+    "line": 444,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/app.css",
+    "line": 445,
+    "declaration": "font-weight: 400;"
+  },
+  {
+    "file": "app/app.css",
+    "line": 447,
+    "declaration": "line-height: 1;"
+  },
+  {
+    "file": "app/app.css",
+    "line": 450,
+    "declaration": "font-size: 3.5rem;"
+  },
+  {
+    "file": "app/app.css",
+    "line": 453,
+    "declaration": "font-size: 2rem;"
+  },
+  {
+    "file": "app/app.css",
+    "line": 456,
+    "declaration": "font-size: 1.5rem;"
+  },
+  {
+    "file": "app/app.css",
+    "line": 459,
+    "declaration": "font-size: 0.4em;"
+  },
+  {
+    "file": "app/components/PageHeader.css",
+    "line": 26,
+    "declaration": "font-size: 0.95rem;"
+  },
+  {
+    "file": "app/components/EmptyState.css",
+    "line": 9,
+    "declaration": "font-size: 3rem;"
+  },
+  {
+    "file": "app/components/MeasurementChart.tsx",
+    "line": 151,
+    "declaration": "fontSize={12}"
+  },
+  {
+    "file": "app/components/MeasurementChart.tsx",
+    "line": 158,
+    "declaration": "fontSize={12}"
+  },
+  {
+    "file": "app/components/WeightChart.css",
+    "line": 14,
+    "declaration": "font-size: 1.2rem;"
+  },
+  {
+    "file": "app/components/WeightChart.css",
+    "line": 15,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/components/WeightChart.css",
+    "line": 16,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/components/WeightChart.css",
+    "line": 31,
+    "declaration": "font-size: 0.85rem;"
+  },
+  {
+    "file": "app/components/WeightChart.css",
+    "line": 32,
+    "declaration": "font-weight: 500;"
+  },
+  {
+    "file": "app/components/WeightChart.css",
+    "line": 78,
+    "declaration": "font-size: 0.8rem;"
+  },
+  {
+    "file": "app/components/FilterBar/FilterBar.css",
+    "line": 22,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/components/FilterBar/FilterBar.css",
+    "line": 34,
+    "declaration": "font-size: 12px;"
+  },
+  {
+    "file": "app/components/workout/RestTimer.css",
+    "line": 58,
+    "declaration": "letter-spacing: 0.05em;"
+  },
+  {
+    "file": "app/components/workout/RestTimer.css",
+    "line": 62,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/components/workout/RestTimer.css",
+    "line": 63,
+    "declaration": "font-variant-numeric: tabular-nums;"
+  },
+  {
+    "file": "app/components/workout/RestTimer.css",
+    "line": 65,
+    "declaration": "line-height: 1;"
+  },
+  {
+    "file": "app/components/workout/RestTimer.css",
+    "line": 153,
+    "declaration": "font-size: 0.6875rem;"
+  },
+  {
+    "file": "app/components/workout/WorkoutTimerBar.css",
+    "line": 10,
+    "declaration": "font-variant-numeric: tabular-nums;"
+  },
+  {
+    "file": "app/modules/habits/presentation/components/AnimatedSuggestion.css",
+    "line": 11,
+    "declaration": "font-size: 16px;"
+  },
+  {
+    "file": "app/modules/habits/presentation/components/AnimatedSuggestion.css",
+    "line": 12,
+    "declaration": "line-height: 1.7;"
+  },
+  {
+    "file": "app/modules/habits/presentation/components/AnimatedSuggestion.css",
+    "line": 24,
+    "declaration": "font-size: 12px;"
+  },
+  {
+    "file": "app/modules/dashboard/presentation/components/DashboardStats/DashboardStats.css",
+    "line": 14,
+    "declaration": "font-variant-numeric: tabular-nums;"
+  },
+  {
+    "file": "app/modules/dashboard/presentation/components/DashboardStats/DashboardStats.css",
+    "line": 27,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/modules/dashboard/presentation/components/DashboardStats/DashboardStats.css",
+    "line": 28,
+    "declaration": "font-size: 1.75rem;"
+  },
+  {
+    "file": "app/modules/dashboard/presentation/components/DashboardStats/DashboardStats.css",
+    "line": 29,
+    "declaration": "font-weight: 400;"
+  },
+  {
+    "file": "app/modules/dashboard/presentation/components/DashboardStats/DashboardStats.css",
+    "line": 30,
+    "declaration": "line-height: 1;"
+  },
+  {
+    "file": "app/modules/dashboard/presentation/components/DashboardStats/DashboardStats.css",
+    "line": 37,
+    "declaration": "font-size: 0.75rem;"
+  },
+  {
+    "file": "app/modules/dashboard/presentation/components/DashboardStats/DashboardStats.css",
+    "line": 43,
+    "declaration": "font-size: 0.625rem;"
+  },
+  {
+    "file": "app/modules/dashboard/presentation/components/DashboardStats/DashboardStats.css",
+    "line": 44,
+    "declaration": "font-weight: 500;"
+  },
+  {
+    "file": "app/modules/dashboard/presentation/components/DashboardStats/DashboardStats.css",
+    "line": 45,
+    "declaration": "letter-spacing: 0.1em;"
+  },
+  {
+    "file": "app/modules/dashboard/presentation/components/DashboardStats/DashboardStats.css",
+    "line": 71,
+    "declaration": "font-size: 0.6875rem;"
+  },
+  {
+    "file": "app/modules/daily-note/presentation/components/DailyNoteModal/DailyNoteModal.css",
+    "line": 34,
+    "declaration": "font-size: 0.9375rem;"
+  },
+  {
+    "file": "app/modules/daily-note/presentation/components/DailyNoteModal/DailyNoteModal.css",
+    "line": 35,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/modules/daily-note/presentation/components/DailyNoteModal/DailyNoteModal.css",
+    "line": 53,
+    "declaration": "font-size: 0.9375rem;"
+  },
+  {
+    "file": "app/modules/daily-note/presentation/components/DailyNoteModal/DailyNoteModal.css",
+    "line": 54,
+    "declaration": "line-height: 1.6;"
+  },
+  {
+    "file": "app/modules/daily-note/presentation/components/DailyNoteModal/DailyNoteModal.css",
+    "line": 60,
+    "declaration": "font-size: 0.9375rem;"
+  },
+  {
+    "file": "app/modules/daily-note/presentation/components/DailyNoteModal/DailyNoteModal.css",
+    "line": 71,
+    "declaration": "font-family: var(--font-body);"
+  },
+  {
+    "file": "app/modules/daily-note/presentation/components/DailyNoteModal/DailyNoteModal.css",
+    "line": 72,
+    "declaration": "font-size: 0.9375rem;"
+  },
+  {
+    "file": "app/modules/daily-note/presentation/components/DailyNoteModal/DailyNoteModal.css",
+    "line": 73,
+    "declaration": "line-height: 1.6;"
+  },
+  {
+    "file": "app/modules/daily-note/presentation/components/DailyNoteCard/DailyNoteCard.css",
+    "line": 21,
+    "declaration": "font-size: 0.8125rem;"
+  },
+  {
+    "file": "app/modules/daily-note/presentation/components/DailyNoteCard/DailyNoteCard.css",
+    "line": 22,
+    "declaration": "line-height: 1.5;"
+  },
+  {
+    "file": "app/modules/daily-note/presentation/components/DailyNoteCard/DailyNoteCard.css",
+    "line": 28,
+    "declaration": "font-size: 0.8125rem;"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/ExerciseHistoryModal/ExerciseHistoryModal.css",
+    "line": 9,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/ExerciseHistoryModal/ExerciseHistoryModal.css",
+    "line": 76,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/ExerciseHistoryModal/ExerciseHistoryModal.css",
+    "line": 77,
+    "declaration": "font-variant-numeric: tabular-nums;"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/ExerciseHistoryModal/ExerciseHistoryModal.css",
+    "line": 86,
+    "declaration": "font-variant-numeric: tabular-nums;"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/ExerciseHistoryModal/ExerciseHistoryModal.css",
+    "line": 99,
+    "declaration": "font-size: var(--font-size-1);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/ExerciseHistoryModal/ExerciseHistoryModal.css",
+    "line": 107,
+    "declaration": "font-size: var(--font-size-2);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/ExerciseHistoryModal/ExerciseHistoryModal.css",
+    "line": 128,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/ExerciseHistoryModal/ExerciseHistoryModal.tsx",
+    "line": 323,
+    "declaration": "fontSize={10}"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/ExerciseHistoryModal/ExerciseHistoryModal.tsx",
+    "line": 329,
+    "declaration": "fontSize={10}"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/ExerciseHistoryModal/ExerciseHistoryModal.tsx",
+    "line": 340,
+    "declaration": "fontSize: \"12px\","
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 36,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 37,
+    "declaration": "font-weight: 700;"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 74,
+    "declaration": "font-size: var(--font-size-1);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 83,
+    "declaration": "font-variant-numeric: tabular-nums;"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 96,
+    "declaration": "font-size: var(--font-size-1);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 140,
+    "declaration": "font-size: var(--font-size-2);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 156,
+    "declaration": "font-size: var(--font-size-2);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 166,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 171,
+    "declaration": "font-size: var(--font-size-2);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 206,
+    "declaration": "font-size: var(--font-size-2);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 222,
+    "declaration": "font-size: var(--font-size-1);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 233,
+    "declaration": "font-size: var(--font-size-1);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 293,
+    "declaration": "letter-spacing: -0.02em;"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 309,
+    "declaration": "font-size: 0.75rem;"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 344,
+    "declaration": "font-weight: 500;"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 345,
+    "declaration": "font-size: var(--font-size-1);"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 368,
+    "declaration": "font-size: 0.8125rem;"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 369,
+    "declaration": "line-height: 1.5;"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 382,
+    "declaration": "font-size: 0.6875rem;"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 413,
+    "declaration": "font-size: 0.75rem;"
+  },
+  {
+    "file": "app/modules/fitness/presentation/components/WorkoutExerciseCard/WorkoutExerciseCard.css",
+    "line": 423,
+    "declaration": "font-size: 2rem;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 8,
+    "declaration": "font-family: var(--font-body);"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 26,
+    "declaration": "font-size: 13px;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 28,
+    "declaration": "letter-spacing: 0.08em;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 34,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 35,
+    "declaration": "font-size: 30px;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 36,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 37,
+    "declaration": "line-height: 1.1;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 43,
+    "declaration": "font-size: 13px;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 72,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 73,
+    "declaration": "font-size: 28px;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 74,
+    "declaration": "font-weight: 700;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 75,
+    "declaration": "line-height: 1;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 79,
+    "declaration": "font-size: 11px;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 102,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 103,
+    "declaration": "font-size: 1.5rem;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 104,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 106,
+    "declaration": "line-height: 1;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 110,
+    "declaration": "font-size: 0.7rem;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 116,
+    "declaration": "font-size: 0.62rem;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 117,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 118,
+    "declaration": "letter-spacing: 0.08em;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 150,
+    "declaration": "font-size: 12px;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 171,
+    "declaration": "font-size: 0.65rem;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 172,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 173,
+    "declaration": "letter-spacing: 0.08em;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 200,
+    "declaration": "font-size: 1.1rem;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 204,
+    "declaration": "font-size: 0.9375rem;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 205,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 212,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 213,
+    "declaration": "font-size: 1rem;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 214,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 219,
+    "declaration": "font-size: 0.8125rem;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/SharedMealView/SharedMealView.css",
+    "line": 226,
+    "declaration": "font-size: 0.75rem;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/NutritionNavigation/NutritionNavigation.css",
+    "line": 15,
+    "declaration": "font-size: 14px;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/NutritionNavigation/NutritionNavigation.css",
+    "line": 20,
+    "declaration": "font-weight: 500;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/NutritionSummary/NutritionSummary.css",
+    "line": 17,
+    "declaration": "font-size: 12px;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/NutritionSummary/NutritionSummary.css",
+    "line": 21,
+    "declaration": "font-size: 11px;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/NutritionSummary/NutritionSummary.css",
+    "line": 22,
+    "declaration": "letter-spacing: 0.08em;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/NutritionSummary/NutritionSummary.css",
+    "line": 43,
+    "declaration": "font-size: 12px;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/NutritionSummary/NutritionSummary.css",
+    "line": 51,
+    "declaration": "font-size: 11px;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/NutritionSummary/NutritionSummary.css",
+    "line": 60,
+    "declaration": "font-size: 24px;"
+  },
+  {
+    "file": "app/modules/nutrition/presentation/components/MealAssignments/MealAssignments.css",
+    "line": 10,
+    "declaration": "font-weight: 500;"
+  },
+  {
+    "file": "app/routes/workouts/index.css",
+    "line": 13,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/routes/workouts/index.css",
+    "line": 25,
+    "declaration": "font-size: 0.65rem;"
+  },
+  {
+    "file": "app/routes/workouts/index.css",
+    "line": 26,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/routes/workouts/index.css",
+    "line": 27,
+    "declaration": "letter-spacing: 0.08em;"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 37,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 42,
+    "declaration": "line-height: 1.1;"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 58,
+    "declaration": "font-size: 0.6rem;"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 59,
+    "declaration": "font-weight: 700;"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 60,
+    "declaration": "letter-spacing: 0.08em;"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 146,
+    "declaration": "font-size: 2.5rem;"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 165,
+    "declaration": "font-family: var(--font-body);"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 166,
+    "declaration": "font-size: var(--font-size-3);"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 167,
+    "declaration": "line-height: 1.3;"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 215,
+    "declaration": "font-size: var(--font-size-1);"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 258,
+    "declaration": "font-size: 0.8125rem;"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 267,
+    "declaration": "font-size: 0.625rem;"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 271,
+    "declaration": "font-size: 0.5625rem;"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 289,
+    "declaration": "font-size: 0.75rem;"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 313,
+    "declaration": "font-size: 0.6875rem;"
+  },
+  {
+    "file": "app/routes/workouts/:id/active-workout.css",
+    "line": 317,
+    "declaration": "font-size: 0.5625rem;"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 143,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 144,
+    "declaration": "fontSize: 16,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 145,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 147,
+    "declaration": "lineHeight: 1,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 156,
+    "declaration": "<span style={{ fontSize: 10, color: \"#c4bfba\" }}>streak</span>"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 157,
+    "declaration": "<span style={{ fontSize: 10, color: \"#e7e5e4\", margin: \"0 1px\" }}>"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 162,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 163,
+    "declaration": "fontSize: 16,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 164,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 166,
+    "declaration": "lineHeight: 1,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 171,
+    "declaration": "<span style={{ fontSize: 10, color: \"#c4bfba\" }}>ever</span>"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 174,
+    "declaration": "<span style={{ fontSize: 11, color: \"#b5b0a8\" }}>Done \u2713</span>"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 195,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 197,
+    "declaration": "fontWeight: 500,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 199,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 367,
+    "declaration": "style={{ fontSize: 13 }}"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 374,
+    "declaration": "fontSize: 15,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 375,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 386,
+    "declaration": "fontSize: 10,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 391,
+    "declaration": "fontWeight: 500,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 401,
+    "declaration": "fontSize: 12,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 403,
+    "declaration": "lineHeight: 1.4,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 429,
+    "declaration": "fontSize: 12,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 480,
+    "declaration": "fontSize: 12,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 481,
+    "declaration": "fontWeight: 500,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 484,
+    "declaration": "fontFamily: \"DM Sans, system-ui, sans-serif\","
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 502,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 503,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 506,
+    "declaration": "fontFamily: \"DM Sans, system-ui, sans-serif\","
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 525,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 526,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 529,
+    "declaration": "fontFamily: \"DM Sans, system-ui, sans-serif\","
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 633,
+    "declaration": "fontFamily: \"DM Sans, system-ui, sans-serif\","
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 661,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 663,
+    "declaration": "letterSpacing: \"0.08em\","
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 674,
+    "declaration": "fontSize: 28,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 675,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 676,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 688,
+    "declaration": "style={{ fontSize: 13, color: \"#a8a29e\", marginTop: 5 }}"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 711,
+    "declaration": "fontSize: 20,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 712,
+    "declaration": "lineHeight: 1,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 783,
+    "declaration": "fontSize: 28,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 784,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 785,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 786,
+    "declaration": "lineHeight: 1,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 791,
+    "declaration": "<span style={{ fontSize: 11, color: \"#a8a29e\", marginTop: 2 }}>"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 811,
+    "declaration": "<div style={{ fontSize: 32, marginBottom: 12 }}>"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 818,
+    "declaration": "fontSize: 18,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 819,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 820,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/index.tsx",
+    "line": 827,
+    "declaration": "<div style={{ fontSize: 13 }}>No habits scheduled for today.</div>"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 246,
+    "declaration": "fontFamily: \"DM Sans, system-ui, sans-serif\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 257,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 259,
+    "declaration": "letterSpacing: \"0.08em\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 270,
+    "declaration": "fontSize: 28,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 271,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 272,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 280,
+    "declaration": "style={{ fontSize: 13, color: \"#a8a29e\", marginTop: 5 }}"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 358,
+    "declaration": "fontSize: 28,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 359,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 360,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 361,
+    "declaration": "lineHeight: 1,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 366,
+    "declaration": "<span style={{ fontSize: 11, color: \"#a8a29e\", marginTop: 2 }}>"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 385,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 386,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 389,
+    "declaration": "letterSpacing: \"0.1em\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 478,
+    "declaration": "<span style={{ fontSize: 13 }}>\u26a1</span>"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 483,
+    "declaration": "fontSize: 15,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 484,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 494,
+    "declaration": "fontSize: 10,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 499,
+    "declaration": "fontWeight: 500,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 508,
+    "declaration": "fontSize: 12,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 510,
+    "declaration": "lineHeight: 1.4,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 516,
+    "declaration": "<div style={{ fontSize: 11, color: \"#c4bfba\" }}>"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 519,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 520,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 521,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 533,
+    "declaration": "fontSize: 12,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 555,
+    "declaration": "<span style={{ fontSize: 11, color: \"#b5b0a8\" }}>"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 569,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 571,
+    "declaration": "fontWeight: 500,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 573,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 593,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 594,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 597,
+    "declaration": "letterSpacing: \"0.1em\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 669,
+    "declaration": "fontSize: 15,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 670,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 680,
+    "declaration": "fontSize: 12,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 682,
+    "declaration": "lineHeight: 1.4,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 688,
+    "declaration": "<div style={{ fontSize: 11, color: \"#d6d3d1\" }}>"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 691,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 692,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 693,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 704,
+    "declaration": "fontSize: 12,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 734,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 737,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 800,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 803,
+    "declaration": "letterSpacing: \"0.06em\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 811,
+    "declaration": "fontSize: 17,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 812,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 813,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 815,
+    "declaration": "lineHeight: 1.3,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 822,
+    "declaration": "<div style={{ fontSize: 13, color: \"#a8a29e\" }}>"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 825,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 826,
+    "declaration": "fontSize: 15,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 827,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 848,
+    "declaration": "<span style={{ fontSize: 11, color: \"#b5b0a8\" }}>"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 857,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 859,
+    "declaration": "fontWeight: 500,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 878,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 879,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 882,
+    "declaration": "letterSpacing: \"0.1em\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 897,
+    "declaration": "fontFamily: \"DM Sans, system-ui, sans-serif\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 906,
+    "declaration": "fontSize: 12,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 908,
+    "declaration": "letterSpacing: \"0.06em\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 917,
+    "declaration": "fontSize: 26,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 918,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 919,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 975,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 996,
+    "declaration": "<div style={{ fontSize: 14, fontWeight: 600, color: \"#1c1917\" }}>"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 999,
+    "declaration": "<div style={{ fontSize: 11, color: \"#a8a29e\", marginTop: 1 }}>"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1006,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1007,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1013,
+    "declaration": "<div style={{ fontSize: 10, color: \"#b5b0a8\" }}>this week</div>"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1037,
+    "declaration": "<span style={{ fontSize: 10, color: \"#c4bfba\" }}>13 days ago</span>"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1038,
+    "declaration": "<span style={{ fontSize: 10, color: \"#c4bfba\" }}>today</span>"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1059,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1060,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1062,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1075,
+    "declaration": "fontSize: 12,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1077,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1103,
+    "declaration": "fontFamily: \"DM Sans, system-ui, sans-serif\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1112,
+    "declaration": "fontSize: 12,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1114,
+    "declaration": "letterSpacing: \"0.06em\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1123,
+    "declaration": "fontSize: 22,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1124,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1125,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1149,
+    "declaration": "<span style={{ fontSize: 13, color: \"#79756d\" }}>This week</span>"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1152,
+    "declaration": "fontSize: 15,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1153,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1154,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1181,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1182,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1185,
+    "declaration": "letterSpacing: \"0.1em\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1205,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1206,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1209,
+    "declaration": "letterSpacing: \"0.1em\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1248,
+    "declaration": "fontFamily: \"DM Sans, system-ui, sans-serif\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1259,
+    "declaration": "fontSize: 14,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1260,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1263,
+    "declaration": "letterSpacing: \"0.1em\","
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1285,
+    "declaration": "fontSize: 15,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1286,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/preview.tsx",
+    "line": 1293,
+    "declaration": "<div style={{ fontSize: 13, color: \"#a8a29e\" }}>"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 321,
+    "declaration": "fontSize: 12,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 322,
+    "declaration": "fontWeight: 500,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 325,
+    "declaration": "fontFamily: \"DM Sans, system-ui, sans-serif\","
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 343,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 344,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 347,
+    "declaration": "fontFamily: \"DM Sans, system-ui, sans-serif\","
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 366,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 367,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 370,
+    "declaration": "fontFamily: \"DM Sans, system-ui, sans-serif\","
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 425,
+    "declaration": "fontFamily: \"DM Sans, system-ui, sans-serif\","
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 450,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 452,
+    "declaration": "letterSpacing: \"0.08em\","
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 463,
+    "declaration": "fontSize: 24,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 464,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 465,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 487,
+    "declaration": "fontSize: 20,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 488,
+    "declaration": "lineHeight: 1,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 557,
+    "declaration": "fontSize: 20,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 558,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 559,
+    "declaration": "fontWeight: 700,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 560,
+    "declaration": "lineHeight: 1,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 565,
+    "declaration": "<span style={{ fontSize: 10, color: \"#a8a29e\", marginTop: 1 }}>"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 596,
+    "declaration": "fontSize: 10,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 597,
+    "declaration": "fontWeight: i === todayIndex ? 700 : 500,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 631,
+    "declaration": "{habit.isKeystone && <span style={{ fontSize: 10 }}>\u26a1</span>}"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 634,
+    "declaration": "fontSize: 12,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 635,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 645,
+    "declaration": "<div style={{ fontSize: 9, color: \"#b5b0a8\" }}>"
+  },
+  {
+    "file": "app/routes/habits/week.tsx",
+    "line": 787,
+    "declaration": "<span style={{ fontSize: 10, color: \"#b5b0a8\" }}>{label}</span>"
+  },
+  {
+    "file": "app/routes/habits/index.css",
+    "line": 7,
+    "declaration": "font-family: var(--font-body);"
+  },
+  {
+    "file": "app/routes/habits/index.css",
+    "line": 8,
+    "declaration": "font-size: var(--font-size-1);"
+  },
+  {
+    "file": "app/routes/habits/index.css",
+    "line": 9,
+    "declaration": "font-weight: 700;"
+  },
+  {
+    "file": "app/routes/habits/index.css",
+    "line": 12,
+    "declaration": "letter-spacing: 0.1em;"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 58,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 61,
+    "declaration": "letterSpacing: \"0.08em\","
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 63,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 71,
+    "declaration": "fontSize: 16,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 75,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 409,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 410,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 415,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 444,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 445,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 450,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 472,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 473,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 478,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 608,
+    "declaration": "<div style={{ fontSize: 14, fontWeight: 600, color: \"#1c1917\" }}>"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 611,
+    "declaration": "<div style={{ fontSize: 12, color: \"#a8a29e\", marginTop: 2 }}>"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 675,
+    "declaration": "<span style={{ fontSize: 16, fontWeight: 700, color: \"#1c1917\" }}>"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 681,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 684,
+    "declaration": "lineHeight: 1.5,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 701,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 713,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 727,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 739,
+    "declaration": "<span style={{ fontSize: 11, color: \"#a8a29e\", marginLeft: 4 }}>"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 745,
+    "declaration": "<div style={{ fontSize: 12, color: \"#a8a29e\" }}>{location}</div>"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 761,
+    "declaration": "fontFamily: \"DM Sans, system-ui, sans-serif\","
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 775,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 777,
+    "declaration": "letterSpacing: \"0.1em\","
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 786,
+    "declaration": "fontSize: 26,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 787,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 788,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 790,
+    "declaration": "lineHeight: 1.2,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 865,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 866,
+    "declaration": "fontWeight: 500,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 868,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 896,
+    "declaration": "fontSize: 14,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 897,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/new.tsx",
+    "line": 900,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/new.css",
+    "line": 3,
+    "declaration": "line-height: 1.7;"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 58,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 61,
+    "declaration": "letterSpacing: \"0.08em\","
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 63,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 71,
+    "declaration": "fontSize: 16,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 75,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 334,
+    "declaration": "style={{ ...fieldInput, resize: \"none\", lineHeight: 1.7 }}"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 363,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 364,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 369,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 398,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 399,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 404,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 426,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 427,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 432,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 496,
+    "declaration": "lineHeight: 1.7,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 542,
+    "declaration": "<div style={{ fontSize: 14, fontWeight: 600, color: \"#1c1917\" }}>"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 545,
+    "declaration": "<div style={{ fontSize: 12, color: \"#a8a29e\", marginTop: 2 }}>"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 609,
+    "declaration": "<span style={{ fontSize: 16, fontWeight: 700, color: \"#1c1917\" }}>"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 615,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 618,
+    "declaration": "lineHeight: 1.5,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 635,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 647,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 661,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 673,
+    "declaration": "<span style={{ fontSize: 11, color: \"#a8a29e\", marginLeft: 4 }}>"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 679,
+    "declaration": "<div style={{ fontSize: 12, color: \"#a8a29e\" }}>{location}</div>"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 695,
+    "declaration": "fontFamily: \"DM Sans, system-ui, sans-serif\","
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 709,
+    "declaration": "fontSize: 11,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 711,
+    "declaration": "letterSpacing: \"0.1em\","
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 720,
+    "declaration": "fontSize: 26,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 721,
+    "declaration": "fontFamily: \"Crimson Pro, Georgia, serif\","
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 722,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 724,
+    "declaration": "lineHeight: 1.2,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 738,
+    "declaration": "fontSize: 12,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 816,
+    "declaration": "fontSize: 13,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 817,
+    "declaration": "fontWeight: 500,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 819,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 847,
+    "declaration": "fontSize: 14,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 848,
+    "declaration": "fontWeight: 600,"
+  },
+  {
+    "file": "app/routes/habits/:id/edit.tsx",
+    "line": 851,
+    "declaration": "fontFamily: \"inherit\","
+  },
+  {
+    "file": "app/routes/dashboard/index.css",
+    "line": 26,
+    "declaration": "font-size: 0.8125rem;"
+  },
+  {
+    "file": "app/routes/dashboard/index.css",
+    "line": 27,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/routes/dashboard/index.css",
+    "line": 32,
+    "declaration": "font-size: 0.6875rem;"
+  },
+  {
+    "file": "app/routes/dashboard/index.css",
+    "line": 37,
+    "declaration": "font-size: 0.6875rem;"
+  },
+  {
+    "file": "app/routes/dashboard/index.css",
+    "line": 38,
+    "declaration": "font-weight: 700;"
+  },
+  {
+    "file": "app/routes/dashboard/index.css",
+    "line": 39,
+    "declaration": "letter-spacing: 0.04em;"
+  },
+  {
+    "file": "app/routes/dashboard/index.css",
+    "line": 84,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/routes/dashboard/index.css",
+    "line": 85,
+    "declaration": "font-size: 1.375rem;"
+  },
+  {
+    "file": "app/routes/dashboard/index.css",
+    "line": 86,
+    "declaration": "font-weight: 400;"
+  },
+  {
+    "file": "app/routes/dashboard/index.css",
+    "line": 87,
+    "declaration": "line-height: 1;"
+  },
+  {
+    "file": "app/routes/dashboard/index.css",
+    "line": 92,
+    "declaration": "font-size: 0.9375rem;"
+  },
+  {
+    "file": "app/routes/dashboard/index.css",
+    "line": 131,
+    "declaration": "font-size: 0.6875rem;"
+  },
+  {
+    "file": "app/routes/nutrition/index.css",
+    "line": 10,
+    "declaration": "font-weight: 500;"
+  },
+  {
+    "file": "app/routes/nutrition/index.css",
+    "line": 21,
+    "declaration": "font-size: 13px;"
+  },
+  {
+    "file": "app/routes/nutrition/index.css",
+    "line": 64,
+    "declaration": "font-size: 0.9375rem;"
+  },
+  {
+    "file": "app/routes/nutrition/index.css",
+    "line": 65,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/routes/nutrition/index.css",
+    "line": 70,
+    "declaration": "font-size: 0.8125rem;"
+  },
+  {
+    "file": "app/routes/nutrition/index.css",
+    "line": 73,
+    "declaration": "line-height: 1.5;"
+  },
+  {
+    "file": "app/routes/nutrition/index.css",
+    "line": 89,
+    "declaration": "font-family: var(--font-display);"
+  },
+  {
+    "file": "app/routes/nutrition/index.css",
+    "line": 90,
+    "declaration": "font-size: 1rem;"
+  },
+  {
+    "file": "app/routes/nutrition/index.css",
+    "line": 91,
+    "declaration": "font-weight: 600;"
+  },
+  {
+    "file": "app/routes/nutrition/index.css",
+    "line": 117,
+    "declaration": "font-size: 12px;"
+  },
+  {
+    "file": "app/routes/nutrition/index.css",
+    "line": 127,
+    "declaration": "font-size: 11px;"
+  },
+  {
+    "file": "app/routes/nutrition/templates.css",
+    "line": 2,
+    "declaration": "font-weight: 500;"
+  },
+  {
+    "file": "app/routes/nutrition/templates.css",
+    "line": 7,
+    "declaration": "line-height: 1.5;"
+  },
+  {
+    "file": "app/routes/nutrition/templates.css",
+    "line": 10,
+    "declaration": "font-size: 13px;"
+  },
+  {
+    "file": "app/routes/nutrition/templates.css",
+    "line": 13,
+    "declaration": "font-size: 12px;"
+  },
+  {
+    "file": "app/routes/nutrition/templates.css",
+    "line": 39,
+    "declaration": "font-size: 12px;"
+  },
+  {
+    "file": "app/routes/nutrition/templates.css",
+    "line": 40,
+    "declaration": "line-height: 1.45;"
+  }
+]
