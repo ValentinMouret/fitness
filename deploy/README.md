@@ -597,3 +597,29 @@ mounted across replacement/revalidation, including the active rest timer.
 Leaving an idle workout index adopted B. Combined with the container acceptance,
 this verifies the candidate mechanism locally; it does not establish live
 Dokploy settings, production activation or exact-commit deployment control.
+
+## Isolated typography preview
+
+`Dockerfile.design-preview` builds Marco's synthetic typography specimen (source
+`bc15bed50fc27d6ce0012fda24a74090400d2629`) as a separate application. Publish this
+preview branch only; do not merge it into the production release queue.
+
+Build with `docker build -f Dockerfile.design-preview --build-arg GIT_SHA=<checkout-sha> -t fitness-design-preview .`.
+Run the image on container port 5174. No database, authentication, OAuth, email,
+MCP or AI environment variables are required. Do not attach production secrets,
+volumes, databases or data-copy jobs. Use a separate Dokploy application and HTTPS
+origin, then remove that application and its image when the design review ends.
+
+The compiled route graph contains only `/` (redirect), `/healthz`, `/design/type`
+and `/design/type/:variant`. Health returns `mode: synthetic-design-preview` and
+the embedded build revision. All fixture interactions are local browser state.
+The preview does not register a service worker. Ordinary production builds keep
+the design routes unavailable.
+
+For a local proof without `.env` loading, build with
+`FITNESS_DESIGN_PREVIEW=true GIT_SHA=<checkout-sha> bun --no-env-file run build`,
+then use the image's plain Node command from `Dockerfile.design-preview` with
+`NODE_ENV=production PORT=5201`. Verify with
+`DESIGN_PREVIEW_URL=http://127.0.0.1:5201 bunx playwright test --config playwright.design.config.ts`.
+Martin owns DNS, TLS and deployment; verify the returned health revision matches
+the selected checkout before sharing the URL.

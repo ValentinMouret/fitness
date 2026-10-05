@@ -4,8 +4,14 @@ import {
   type RouteConfig,
   route,
 } from "@react-router/dev/routes";
+import { designPreviewBuild } from "../design-preview.config";
 
-export default [
+const designRoutes = [
+  route("design/type", "routes/design/type/index.tsx"),
+  route("design/type/:variant", "routes/design/type/variant.tsx"),
+] satisfies RouteConfig;
+
+const applicationRoutes = [
   route(
     ".well-known/oauth-authorization-server",
     "routes/.well-known/oauth-authorization-server.ts",
@@ -70,3 +76,11 @@ export default [
     route("habits/:id/edit", "routes/habits/:id/edit.tsx"),
   ]),
 ] satisfies RouteConfig;
+
+export default designPreviewBuild
+  ? ([
+      index("routes/design/redirect.ts"),
+      route("healthz", "routes/design/health.ts"),
+      ...designRoutes,
+    ] satisfies RouteConfig)
+  : applicationRoutes;

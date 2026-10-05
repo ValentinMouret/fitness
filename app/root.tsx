@@ -29,7 +29,9 @@ export const links: Route.LinksFunction = () => [
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:wght@400;500;600;700&display=swap",
   },
-  { rel: "manifest", href: "/manifest.json" },
+  ...(!import.meta.env.FITNESS_DESIGN_PREVIEW
+    ? [{ rel: "manifest", href: "/manifest.json" }]
+    : []),
   { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
 ];
 
@@ -67,7 +69,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   useEffect(() => {
-    if ("serviceWorker" in navigator) {
+    if (
+      !import.meta.env.FITNESS_DESIGN_PREVIEW &&
+      "serviceWorker" in navigator
+    ) {
       navigator.serviceWorker.register("/sw.js");
     }
   }, []);
