@@ -100,6 +100,13 @@ async function focus(page: Page, id: string) {
     .first()
     .click();
   await expect(page).toHaveURL(/\?exercise=/);
+  const focusedExercise = page.locator(
+    ".active-workout-exercise:not([hidden])",
+  );
+  await expect(focusedExercise).toHaveCount(1);
+  await expect(
+    focusedExercise.locator(".exercise-card--focused"),
+  ).toBeVisible();
 }
 const row = (page: Page, number: number) =>
   page
