@@ -35,7 +35,8 @@ import { zfd } from "zod-form-data";
 import { Celebration, SuccessPulse } from "~/components/Celebration";
 import { PageHeader } from "~/components/PageHeader";
 import RequiredStar from "~/components/RequiredStar";
-import { defaultDailyTargets } from "~/modules/nutrition/domain/daily-targets";
+import { getAccountToday } from "~/modules/auth/infra/account-settings.server";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import {
@@ -58,25 +59,33 @@ import { NutritionNavigation } from "~/modules/nutrition/presentation/components
 import { NutritionSummary } from "~/modules/nutrition/presentation/components/NutritionSummary/NutritionSummary";
 import { mealAssignmentsField } from "~/modules/nutrition/presentation/meal-builder-form";
 import {
-  addOneDay,
-  isSameDay,
-  removeOneDay,
+  addCalendarDay,
+  isSameCalendarDay,
+  removeCalendarDay,
   toDateString,
-  today,
 } from "~/time";
 import { isEditableTarget } from "~/utils/dom";
 import { formOptionalText, formText } from "~/utils/form-data";
 import type { Route } from "./+types";
 import "./index.css";
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const dateParam = url.searchParams.get("date");
-  const currentDate = dateParam ? new Date(dateParam) : today();
-  return getMealsPageData(currentDate);
+  const todayDate = await getAccountToday(
+    context.get(authenticatedUserContext).id,
+  );
+  const currentDate = dateParam ? new Date(dateParam) : todayDate;
+  return {
+    ...(await getMealsPageData(
+      context.get(authenticatedUserContext).id,
+      currentDate,
+    )),
+    todayDate,
+  };
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   const formData = await request.formData();
   const intentSchema = zfd.formData({
     intent: formOptionalText(),
@@ -93,11 +102,14 @@ export async function action({ request }: ActionFunctionArgs) {
     const parsed = schema.parse(formData);
     const loggedDate = new Date(parsed.loggedDate);
 
-    const result = await applyMealTemplate({
-      templateId: parsed.templateId,
-      mealCategory: parsed.mealCategory,
-      loggedDate,
-    });
+    const result = await applyMealTemplate(
+      context.get(authenticatedUserContext).id,
+      {
+        templateId: parsed.templateId,
+        mealCategory: parsed.mealCategory,
+        loggedDate,
+      },
+    );
 
     if (!result.ok) {
       return { success: false, error: result.error };
@@ -111,7 +123,10 @@ export async function action({ request }: ActionFunctionArgs) {
     });
     const parsed = schema.parse(formData);
 
-    const result = await deleteMealLog({ mealId: parsed.mealId });
+    const result = await deleteMealLog(
+      context.get(authenticatedUserContext).id,
+      { mealId: parsed.mealId },
+    );
 
     if (!result.ok) {
       return { success: false, error: result.error };
@@ -126,10 +141,13 @@ export async function action({ request }: ActionFunctionArgs) {
     });
     const parsed = schema.parse(formData);
 
-    const result = await setMealTemplatePublic({
-      templateId: parsed.templateId,
-      isPublic: parsed.isPublic === "true",
-    });
+    const result = await setMealTemplatePublic(
+      context.get(authenticatedUserContext).id,
+      {
+        templateId: parsed.templateId,
+        isPublic: parsed.isPublic === "true",
+      },
+    );
 
     if (!result.ok) {
       return { success: false, error: result.error };
@@ -146,12 +164,15 @@ export async function action({ request }: ActionFunctionArgs) {
     });
     const parsed = schema.parse(formData);
 
-    const result = await saveMealAsTemplate({
-      mealId: parsed.mealId,
-      name: parsed.name,
-      categories: parsed.categories,
-      notes: parsed.notes ?? undefined,
-    });
+    const result = await saveMealAsTemplate(
+      context.get(authenticatedUserContext).id,
+      {
+        mealId: parsed.mealId,
+        name: parsed.name,
+        categories: parsed.categories,
+        notes: parsed.notes ?? undefined,
+      },
+    );
 
     if (!result.ok) {
       return { success: false, error: result.error };
@@ -164,15 +185,16 @@ export async function action({ request }: ActionFunctionArgs) {
 
 const mealTypes = ["breakfast", "lunch", "dinner", "snack"] as const;
 
-function formatDateLabel(date: Date): string {
-  const isToday = date.toDateString() === today().toDateString();
+function formatDateLabel(date: Date, todayDate: Date): string {
+  const isToday = isSameCalendarDay(date, todayDate);
   if (isToday) return "Today";
 
-  const yesterday = removeOneDay(today());
-  const isYesterday = date.toDateString() === yesterday.toDateString();
+  const yesterday = removeCalendarDay(todayDate);
+  const isYesterday = isSameCalendarDay(date, yesterday);
   if (isYesterday) return "Yesterday";
 
   return date.toLocaleDateString("en-US", {
+    timeZone: "UTC",
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -180,7 +202,8 @@ function formatDateLabel(date: Date): string {
 }
 
 export default function NutritionPage({ loaderData }: Route.ComponentProps) {
-  const { mealTemplates, dailySummary, targets, currentDate } = loaderData;
+  const { mealTemplates, dailySummary, targets, targetSource, currentDate } =
+    loaderData;
   const [searchParams, setSearchParams] = useSearchParams();
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const templateOpenerRef = useRef<HTMLButtonElement>(null);
@@ -238,8 +261,9 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
     : null;
 
   const parsedCurrentDate = new Date(currentDate);
+  const todayDate = new Date(loaderData.todayDate);
   const dailyTotals = dailySummary.dailyTotals;
-  const dailyTargets = targets ?? defaultDailyTargets;
+  const dailyTargets = targets;
 
   const navigateToDate = useCallback(
     (newDate: Date) => {
@@ -251,16 +275,16 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
   );
 
   const previousDay = useCallback(
-    () => navigateToDate(removeOneDay(parsedCurrentDate)),
+    () => navigateToDate(removeCalendarDay(parsedCurrentDate)),
     [navigateToDate, parsedCurrentDate],
   );
   const nextDay = useCallback(
-    () => navigateToDate(addOneDay(parsedCurrentDate)),
+    () => navigateToDate(addCalendarDay(parsedCurrentDate)),
     [navigateToDate, parsedCurrentDate],
   );
   const goToToday = useCallback(
-    () => navigateToDate(today()),
-    [navigateToDate],
+    () => navigateToDate(todayDate),
+    [navigateToDate, todayDate],
   );
 
   useEffect(() => {
@@ -377,7 +401,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
           </IconButton>
         </Tooltip>
         <Heading as="h2" size="5">
-          {formatDateLabel(parsedCurrentDate)}
+          {formatDateLabel(parsedCurrentDate, todayDate)}
         </Heading>
         <Tooltip content="Next day (Right Arrow)">
           <IconButton
@@ -390,7 +414,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
           </IconButton>
         </Tooltip>
 
-        {!isSameDay(parsedCurrentDate, today()) && (
+        {!isSameCalendarDay(parsedCurrentDate, todayDate) && (
           <div className="nutrition-date-nav__today">
             <Tooltip content="Go to Today (T)">
               <Button
@@ -409,6 +433,13 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
           </div>
         )}
       </div>
+
+      {targetSource === "default" && (
+        <Text as="p" size="2" color="gray">
+          Default targets.{" "}
+          <Link to="/nutrition/calculate-targets">Set your own</Link>.
+        </Text>
+      )}
 
       <NutritionSummary totals={dailyTotals} targets={dailyTargets} />
 

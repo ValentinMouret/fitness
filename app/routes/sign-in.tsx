@@ -72,6 +72,9 @@ export default function SignIn({
           <Text as="p" className="auth-invitation-email">
             Signed in as {loaderData.email}
           </Text>
+          <Button asChild>
+            <Link to="/dashboard">Open Fitness</Link>
+          </Button>
           {loaderData.isOwner && (
             <Button asChild>
               <Link to="/account/invitations">Manage invitations</Link>

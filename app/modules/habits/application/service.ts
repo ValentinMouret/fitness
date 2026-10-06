@@ -20,7 +20,7 @@ export const HabitService = {
 
       case "weekly":
       case "custom": {
-        const dayOfWeek = date.getDay();
+        const dayOfWeek = date.getUTCDay();
         if (habit.frequencyConfig.days_of_week) {
           return habit.frequencyConfig.days_of_week.includes(
             Day.fromNumber(dayOfWeek),
@@ -38,10 +38,10 @@ export const HabitService = {
 
       case "monthly": {
         if (habit.frequencyConfig.day_of_month) {
-          return date.getDate() === habit.frequencyConfig.day_of_month;
+          return date.getUTCDate() === habit.frequencyConfig.day_of_month;
         }
         // Default to same day of month as start date
-        return date.getDate() === habit.startDate.getDate();
+        return date.getUTCDate() === habit.startDate.getUTCDate();
       }
 
       default:
@@ -195,9 +195,9 @@ export const HabitService = {
 
     // Check each day in the range
     const currentDate = new Date(from);
-    currentDate.setHours(0, 0, 0, 0);
+    currentDate.setUTCHours(0, 0, 0, 0);
     const endDate = new Date(to);
-    endDate.setHours(23, 59, 59, 999);
+    endDate.setUTCHours(23, 59, 59, 999);
 
     while (currentDate <= endDate) {
       if (this.isDueOn(habit, currentDate)) {
@@ -207,7 +207,7 @@ export const HabitService = {
           totalCompleted++;
         }
       }
-      currentDate.setDate(currentDate.getDate() + 1);
+      currentDate.setUTCDate(currentDate.getUTCDate() + 1);
     }
 
     return {

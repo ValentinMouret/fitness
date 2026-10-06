@@ -3,6 +3,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { data, Link, redirect, useNavigate } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import type { Habit } from "~/modules/habits/domain/entity";
 import {
   getHabitForEdit,
@@ -76,12 +77,15 @@ const fieldInput: React.CSSProperties = {
   boxSizing: "border-box",
 };
 
-export async function loader({ params }: Route.LoaderArgs) {
-  const habit = await getHabitForEdit(params.id);
+export async function loader({ params, context }: Route.LoaderArgs) {
+  const habit = await getHabitForEdit(
+    context.get(authenticatedUserContext).id,
+    params.id,
+  );
   return data({ habit });
 }
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
   const formData = await request.formData();
 
   const schema = zfd.formData({
@@ -110,7 +114,7 @@ export async function action({ request, params }: Route.ActionArgs) {
           }
         : {};
 
-  const result = await updateHabit({
+  const result = await updateHabit(context.get(authenticatedUserContext).id, {
     id: params.id,
     name: parsed.name,
     identityPhrase: parsed.identityPhrase ?? "",

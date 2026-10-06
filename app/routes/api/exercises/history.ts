@@ -1,7 +1,8 @@
-import { WorkoutSessionRepository } from "~/modules/fitness/infra/workout.repository.server";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
+import { createWorkoutSessionRepository } from "~/modules/fitness/infra/workout.repository.server";
 import type { Route } from "./+types/history";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const exerciseId = url.searchParams.get("exerciseId");
   const cursor = url.searchParams.get("cursor") ?? undefined;
@@ -11,11 +12,9 @@ export async function loader({ request }: Route.LoaderArgs) {
     return Response.json({ error: "exerciseId is required" }, { status: 400 });
   }
 
-  const result = await WorkoutSessionRepository.getExerciseHistory(
-    exerciseId,
-    cursor,
-    limit,
-  );
+  const result = await createWorkoutSessionRepository(
+    context.get(authenticatedUserContext).id,
+  ).getExerciseHistory(exerciseId, cursor, limit);
 
   if (result.isErr()) {
     return Response.json(

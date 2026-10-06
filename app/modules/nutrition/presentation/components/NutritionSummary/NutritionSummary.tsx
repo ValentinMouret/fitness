@@ -22,8 +22,9 @@ export function NutritionSummary({ totals, targets }: Props) {
         {Math.round(totals.calories)} <small>kcal</small>
       </strong>
       <p>
-        {Math.round(percentage(totals.calories, targets.calories))}% of{" "}
-        {targets.calories} kcal target
+        {targets.calories > 0
+          ? `${Math.round(percentage(totals.calories, targets.calories))}% of ${targets.calories} kcal target`
+          : `${targets.calories} kcal target`}
       </p>
       <Progress
         value={percentage(totals.calories, targets.calories)}

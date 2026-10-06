@@ -29,7 +29,20 @@ or running write tests; do not use production data.
 The auth integration suite has a separate command, `bun run test:auth:integration`,
 and [configuration](../../vitest.auth.config.ts). See
 [authentication setup](../operations/authentication.md) for its environment and
-cleanup behaviour. Meal update regressions use `bun run test:nutrition:integration` with
+cleanup behaviour. Personal data ownership and owner-history migration regressions use
+`bun run test:tenant:integration`, with `TENANT_TEST_ADMIN_URL` explicitly
+pointing to a loopback disposable PostgreSQL admin connection. The suite creates
+and drops its own scratch database.
+
+`bun run test:mcp:acceptance` builds the full stack and runs a real HTTP SDK
+client against a separate loopback PostgreSQL cluster and app server. It needs
+local `initdb`, `pg_ctl`, `pg_dump` and `pg_restore`. It includes retained OAuth
+credential migration, local rehearsal preflight/apply and backup recovery proof;
+see the [isolated ownership rehearsal](../operations/authentication.md#isolated-restored-history-rehearsal-command).
+This operator acceptance suite is separate from ordinary unit/tenant tests and
+does not change an existing reader login or open native onboarding.
+
+Meal update regressions use `bun run test:nutrition:integration` with
 `NUTRITION_TEST_DATABASE_URL` explicitly pointing to a migrated, dedicated test
 database. The suite creates and cleans up its own fixtures and never calls AI.
 Meal-update browser tests likewise require `E2E_DATABASE_URL` for fixture setup;
@@ -93,3 +106,30 @@ Run focused checks while iterating, then `bun run gate`. For a changed user
 workflow, also run `bun run gate:e2e` when browsers are available and a test
 server is correctly configured. Formatting and lint commands write changes;
 inspect the working tree before and after running them.
+
+### Account timezone acceptance
+
+The `device-timezone` Playwright project runs after both `auth` and `chromium`,
+so its temporary account-wide timezone changes cannot race other workflow tests.
+Its tests run serially and restore prior settings. For a focused rerun against
+an already authenticated dedicated test server, use
+`bun run test:e2e --project=device-timezone --no-deps`; a full run keeps the
+project dependencies enabled.
+
+### Native account browser acceptance
+
+`playwright.native.config.ts` is a separate serial phone browser profile with
+real local magic-link sessions and empty cookie contexts. Start a rebuilt local
+foundation-enabled server against a migrated dedicated test database, configure
+`E2E_BASE_URL`, `E2E_DATABASE_URL`, `AUTH_LOCAL_INBOX` and the test owner identity,
+then run `bunx playwright test --config playwright.native.config.ts`.
+It does not start, migrate or seed a server. Ordinary Chromium tests exclude it.
+Run it separately from other suites on the same database: its database-failure
+checks temporarily install a trigger and rename a table, restoring both in
+`finally`. Fixtures and new sessions are removed after the suite; existing owner
+settings are restored. Traces, video and automatic screenshots are disabled to
+avoid persisting sign-in links and session credentials. CI runs the legacy
+browser suite with the foundation disabled, then starts a native server and
+runs this separate profile against the same isolated job database. The unit and
+integration CI job also runs full HTTP SDK acceptance with its own PostgreSQL
+cluster.

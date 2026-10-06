@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { test as base, expect } from "@playwright/test";
 import pg from "pg";
+import { userIdSchema } from "../../app/modules/auth/domain/user";
 import {
   canWriteFixtureDatabase,
+  fixtureOwnerId,
   verifyFixtureServerDatabase,
 } from "./support/fixture-database";
 
@@ -37,18 +39,19 @@ test("historical template, Strong and Fitbod sessions retain their records", asy
   const exerciseId = exercise.rows[0].id;
   try {
     await pool.query(
-      "insert into workout_templates (id, name) values ($1, 'Retained acceptance template')",
-      [templateId],
+      "insert into workout_templates (user_id,id, name) values ($2,$1, 'Retained acceptance template')",
+      [templateId, fixtureOwnerId()],
     );
     for (const [index, id] of workoutIds.entries()) {
       await pool.query(
-        "insert into workouts (id, name, start, stop, notes, imported_from_strong, imported_from_fitbod, template_id) values ($1, $2, '1902-03-04 10:00:00', '1902-03-04 10:30:00', 'Retained session notes', $3, $4, $5)",
+        "insert into workouts (user_id,id, name, start, stop, notes, imported_from_strong, imported_from_fitbod, template_id) values ($6,$1, $2, '1902-03-04 10:00:00', '1902-03-04 10:30:00', 'Retained session notes', $3, $4, $5)",
         [
           id,
           `Historical acceptance ${id}`,
           index === 1,
           index === 2,
           index === 0 ? templateId : null,
+          fixtureOwnerId(),
         ],
       );
       await pool.query(
@@ -133,12 +136,13 @@ test("unfinished Fitbod history does not replace the current native workout", as
   const importedId = randomUUID();
   try {
     await pool.query(
-      "insert into workouts (id, name, start, imported_from_fitbod) values ($1, $2, '2098-01-01 10:00:00', false), ($3, $4, '2099-01-01 10:00:00', true)",
+      "insert into workouts (user_id,id, name, start, imported_from_fitbod) values ($5,$1, $2, '2098-01-01 10:00:00', false), ($5,$3, $4, '2099-01-01 10:00:00', true)",
       [
         nativeId,
         `Native acceptance ${nativeId}`,
         importedId,
         `Unfinished Fitbod ${importedId}`,
+        fixtureOwnerId(),
       ],
     );
     const before = await pool.query(
@@ -190,7 +194,10 @@ test("a current session created by MCP operations remains editable and loggable"
   expect(exercise.rows).toHaveLength(1);
   const name = `MCP acceptance ${randomUUID()}`;
   const result = await workoutOperations(
-    createWorkoutRepository(drizzle(pool)),
+    createWorkoutRepository(
+      userIdSchema.parse(process.env.AUTH_FOUNDATION_OWNER_USER_ID),
+      drizzle(pool),
+    ),
   ).createWorkout(
     createWorkoutSchema.parse({
       name,

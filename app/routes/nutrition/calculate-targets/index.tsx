@@ -14,6 +14,7 @@ import { Form } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import MacrosChart from "~/components/MacrosChart";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import {
   calculateTargets,
   saveNutritionTarget,
@@ -208,7 +209,7 @@ export default function CalculateTargetsPage({
   );
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const form = await request.formData();
   const schema = zfd.formData({
     age: formNumber(z.number().int().min(1)),
@@ -221,5 +222,5 @@ export async function action({ request }: Route.ActionArgs) {
 
   const parsed = schema.parse(form);
 
-  return saveNutritionTarget(parsed);
+  return saveNutritionTarget(context.get(authenticatedUserContext).id, parsed);
 }

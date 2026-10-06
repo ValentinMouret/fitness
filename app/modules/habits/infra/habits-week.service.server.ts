@@ -1,29 +1,32 @@
-import { today } from "~/time";
+import type { UserId } from "~/modules/auth/domain/user";
+import {
+  getAccountToday,
+  requireAccountToday,
+} from "~/modules/auth/infra/account-settings.server";
+
 import { handleResultError } from "~/utils/errors";
 import { HabitCompletion } from "../domain/entity";
-import {
-  HabitCompletionRepository,
-  HabitRepository,
-} from "./repository.server";
+import { createHabitRepositories } from "./repository.server";
 
-export async function getHabitsWeekData() {
-  const habitsResult = await HabitRepository.fetchActive();
+export async function getHabitsWeekData(userId: UserId) {
+  const todayDate = await getAccountToday(userId);
+  const repositories = createHabitRepositories(userId);
+  const habitsResult = await repositories.habits.fetchActive(todayDate);
   if (habitsResult.isErr()) {
     handleResultError(habitsResult, "Failed to load habits");
   }
 
   const habits = habitsResult.value;
-  const todayDate = today();
 
-  const dayOfWeek = todayDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const dayOfWeek = todayDate.getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
   const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   const weekStart = new Date(todayDate);
-  weekStart.setDate(weekStart.getDate() + mondayOffset);
+  weekStart.setUTCDate(weekStart.getUTCDate() + mondayOffset);
 
   // 0=Mon, 6=Sun
   const todayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
-  const completionsResult = await HabitCompletionRepository.fetchByDateRange(
+  const completionsResult = await repositories.completions.fetchByDateRange(
     weekStart,
     todayDate,
   );
@@ -39,7 +42,7 @@ export async function getHabitsWeekData() {
   for (const completion of completionsResult.value) {
     if (!completionMap[completion.habitId]) continue;
     const d = new Date(completion.completionDate);
-    const dow = d.getDay(); // 0=Sun
+    const dow = d.getUTCDay(); // 0=Sun
     const idx = dow === 0 ? 6 : dow - 1; // 0=Mon
     completionMap[completion.habitId][idx] = completion.completed;
   }
@@ -53,23 +56,35 @@ export async function getHabitsWeekData() {
   return { habits, weekStart, todayIndex, completionMap, todayCompletionMap };
 }
 
-export async function toggleWeekHabitCompletion(input: {
-  readonly habitId: string;
-  readonly completed: boolean;
-  readonly date?: Date;
-  readonly notes?: string;
-}): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
+export async function toggleWeekHabitCompletion(
+  userId: UserId,
+  input: {
+    readonly habitId: string;
+    readonly completed: boolean;
+    readonly date?: Date;
+    readonly notes?: string;
+  },
+): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
+  const targetDate = input.date ?? (await requireAccountToday(userId));
+  const repositories = createHabitRepositories(userId);
   const completion = HabitCompletion.create(
     input.habitId,
-    input.date ?? today(),
+    targetDate,
     !input.completed,
     input.notes,
   );
 
-  const result = await HabitCompletionRepository.save(completion);
+  const result = await repositories.completions.save(completion);
 
   if (result.isErr()) {
-    return { ok: false, error: "Failed to save completion", status: 500 };
+    return {
+      ok: false,
+      error:
+        result.error === "not_found"
+          ? "Habit not found"
+          : "Failed to save completion",
+      status: result.error === "not_found" ? 404 : 500,
+    };
   }
 
   return { ok: true };

@@ -18,14 +18,24 @@ export function createSmtpSignInEmail(input: {
     secure: input.secure,
     requireTLS: input.requireTLS,
     auth: input.credentials,
+    logger: false,
+    debug: false,
+    tls: { minVersion: "TLSv1.2", rejectUnauthorized: true },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
   });
   return async (message: SignInEmail) => {
-    await transport.sendMail({
-      from: input.from,
-      to: message.to,
-      subject: "Sign in to Fitness",
-      text: `Use this link to sign in to Fitness. It expires in five minutes and can only be used once.\n\n${message.url}\n\nIf you did not request this email, ignore it.`,
-    });
+    try {
+      await transport.sendMail({
+        from: input.from,
+        to: message.to,
+        subject: "Sign in to Fitness",
+        text: `Use this link to sign in to Fitness. It expires in five minutes and can only be used once.\n\n${message.url}\n\nIf you did not request this email, ignore it.`,
+      });
+    } catch {
+      throw new Error("Sign-in email delivery failed");
+    }
   };
 }
 

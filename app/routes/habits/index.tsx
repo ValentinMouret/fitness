@@ -6,6 +6,7 @@ import { zfd } from "zod-form-data";
 import { Celebration } from "~/components/Celebration";
 import DeviceDayFallback from "~/components/DeviceDayFallback";
 import { loadDeviceDay, useDeviceDayRollover } from "~/hooks/device-day";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import type { Habit } from "~/modules/habits/domain/entity";
 import {
   getHabitsPageData,
@@ -51,8 +52,11 @@ const STYLES = `
   .habit-min-btn:focus-visible { outline: 2px solid #e15a46; outline-offset: 2px; }
 `;
 
-export async function loader({ request }: Route.LoaderArgs) {
-  return getHabitsPageData(requestDay(request));
+export async function loader({ request, context }: Route.LoaderArgs) {
+  return getHabitsPageData(
+    context.get(authenticatedUserContext).id,
+    requestDay(request),
+  );
 }
 
 export async function clientLoader(args: Route.ClientLoaderArgs) {
@@ -61,7 +65,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
 clientLoader.hydrate = true as const;
 export const HydrateFallback = DeviceDayFallback;
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const formData = await request.formData();
   const intentParsed = zfd
     .formData({ intent: formOptionalText() })
@@ -75,12 +79,15 @@ export async function action({ request }: Route.ActionArgs) {
     });
     const parsed = schema.parse(formData);
 
-    const result = await toggleHabitCompletion({
-      habitId: parsed.habitId,
-      completed: parsed.completed === "true",
-      notes: parsed.notes,
-      date: requestDay(request),
-    });
+    const result = await toggleHabitCompletion(
+      context.get(authenticatedUserContext).id,
+      {
+        habitId: parsed.habitId,
+        completed: parsed.completed === "true",
+        notes: parsed.notes,
+        date: requestDay(request),
+      },
+    );
 
     if (!result.ok) {
       return data({ error: result.error }, { status: result.status });
@@ -100,10 +107,10 @@ function getGreeting(): string {
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-US", {
+    timeZone: "UTC",
     weekday: "long",
     month: "long",
     day: "numeric",
-    timeZone: "UTC",
   });
 }
 

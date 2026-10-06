@@ -1,5 +1,6 @@
 import { ResultAsync } from "neverthrow";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { userIdSchema } from "~/modules/auth/domain/user";
 import type {
   AdaptiveWorkoutRequest,
   EquipmentInstance,
@@ -9,11 +10,10 @@ import type {
 } from "~/modules/fitness/domain/workout";
 import { AdaptiveWorkoutService } from "./adaptive-workout-service.server";
 
-vi.mock("~/modules/fitness/infra/repository.server", () => ({
-  ExerciseMuscleGroupsRepository: {
-    listAll: vi.fn(),
-  },
-}));
+vi.mock("~/modules/fitness/infra/repository.server", () => {
+  const repository = { listAll: vi.fn() };
+  return { createExerciseMuscleGroupsRepository: () => repository };
+});
 
 vi.mock("~/modules/fitness/infra/adaptive-workout-repository.server", () => ({
   AdaptiveWorkoutRepository: {
@@ -22,10 +22,11 @@ vi.mock("~/modules/fitness/infra/adaptive-workout-repository.server", () => ({
 }));
 
 import { AdaptiveWorkoutRepository } from "~/modules/fitness/infra/adaptive-workout-repository.server";
-import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
+import { createExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 
+const actor = userIdSchema.parse("8d1606c7-f8ee-487e-ae60-f326dd91b3bb");
 const mockExerciseMuscleGroupsListAll = vi.mocked(
-  ExerciseMuscleGroupsRepository.listAll,
+  createExerciseMuscleGroupsRepository(actor).listAll,
 );
 const mockAdaptiveWorkoutFindSubstitutes = vi.mocked(
   AdaptiveWorkoutRepository.findSubstitutes,
@@ -106,7 +107,10 @@ describe("AdaptiveWorkoutService", () => {
       );
 
       const request = createAdaptiveWorkoutRequest({ targetDuration: 60 });
-      const result = await AdaptiveWorkoutService.generateWorkout(request);
+      const result = await AdaptiveWorkoutService.generateWorkout(
+        actor,
+        request,
+      );
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
@@ -132,7 +136,10 @@ describe("AdaptiveWorkoutService", () => {
         ],
       });
 
-      const result = await AdaptiveWorkoutService.generateWorkout(request);
+      const result = await AdaptiveWorkoutService.generateWorkout(
+        actor,
+        request,
+      );
 
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
@@ -152,7 +159,10 @@ describe("AdaptiveWorkoutService", () => {
 
       const request = createAdaptiveWorkoutRequest({ targetDuration: 120 }); // Would need more exercises
 
-      const result = await AdaptiveWorkoutService.generateWorkout(request);
+      const result = await AdaptiveWorkoutService.generateWorkout(
+        actor,
+        request,
+      );
 
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
@@ -169,7 +179,10 @@ describe("AdaptiveWorkoutService", () => {
       );
 
       const request = createAdaptiveWorkoutRequest();
-      const result = await AdaptiveWorkoutService.generateWorkout(request);
+      const result = await AdaptiveWorkoutService.generateWorkout(
+        actor,
+        request,
+      );
 
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
@@ -193,6 +206,7 @@ describe("AdaptiveWorkoutService", () => {
         createEquipmentInstance({ exerciseType: "dumbbells" }),
       ];
       const result = await AdaptiveWorkoutService.replaceExercise(
+        actor,
         "workout-1",
         "exercise-1",
         availableEquipment,
@@ -212,6 +226,7 @@ describe("AdaptiveWorkoutService", () => {
 
       const availableEquipment = [createEquipmentInstance()];
       const result = await AdaptiveWorkoutService.replaceExercise(
+        actor,
         "workout-1",
         "exercise-1",
         availableEquipment,
@@ -236,6 +251,7 @@ describe("AdaptiveWorkoutService", () => {
         createEquipmentInstance({ exerciseType: "dumbbells" }),
       ];
       const result = await AdaptiveWorkoutService.replaceExercise(
+        actor,
         "workout-1",
         "exercise-1",
         availableEquipment,
