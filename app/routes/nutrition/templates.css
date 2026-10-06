@@ -1,6 +1,12 @@
 .nutrition-templates .page-header__title {
   font-weight: 500;
 }
+.meal-template-create {
+  min-height: 44px;
+  min-width: 44px;
+  margin: 0;
+  flex-shrink: 0;
+}
 .meal-template-intro,
 .meal-template-help {
   color: var(--brand-text-secondary);
