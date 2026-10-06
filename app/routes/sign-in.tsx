@@ -106,7 +106,7 @@ export default function SignIn({
             </Button>
             {actionData?.sent && (
               <Text as="p" role="status">
-                If this email is invited, you’ll receive a sign-in link.
+                If you have an account, you’ll receive a sign-in link.
               </Text>
             )}
             {actionData?.error && (

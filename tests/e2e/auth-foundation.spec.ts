@@ -328,7 +328,7 @@ test("uninvited sign-in is neutral and creates no account or email", async ({
       .getByRole("button", { name: "Email me a sign-in link", exact: true })
       .click();
     await expect(page.getByRole("status")).toHaveText(
-      "If this email is invited, you’ll receive a sign-in link.",
+      "If you have an account, you’ll receive a sign-in link.",
     );
     expect((await messages()).some((message) => message.to === email)).toBe(
       false,
