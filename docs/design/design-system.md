@@ -241,7 +241,8 @@ Approved active-workout V3 keeps compact session navigation and timer chrome, di
 Today uses date controls, Your day with grouped nutrition totals, meal-level
 Log/Edit and action menus, quiet tools, and a full-width soft Meal templates link
 at the bottom. Do not add a Today/Templates tab strip or a page-level Log meal
-button. Templates has an immediate header Back link, a Meal time select and
+button or a page-level overflow menu. Keep Meal Builder, Calculate targets and
+Estimate meal in the bottom tools area. Templates has an immediate header Back link, a Meal time select and
 Create template toolbar, its template list, and a bottom Back to today link.
 Retain the selected date across those links and template filter, create, edit,
 Save and Cancel operations.

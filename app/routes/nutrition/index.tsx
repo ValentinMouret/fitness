@@ -399,7 +399,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
           type="button"
           variant="ghost"
           onClick={goToToday}
-          aria-label="Go to Today (T)"
+          aria-label={`${formatDateLabel(parsedCurrentDate, todayDate)}. Go to Today (T)`}
           aria-keyshortcuts="t"
         >
           {formatDateLabel(parsedCurrentDate, todayDate)}
@@ -417,33 +417,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
         </Tooltip>
       </div>
 
-      <SectionHeader
-        title="Your day"
-        right={
-          <DropdownMenu.Root modal={false}>
-            <DropdownMenu.Trigger>
-              <IconButton
-                type="button"
-                variant="ghost"
-                aria-label="More Nutrition actions"
-              >
-                <DotsHorizontalIcon />
-              </IconButton>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-              <DropdownMenu.Item onClick={() => setShowQuickEstimate(true)}>
-                Estimate meal
-              </DropdownMenu.Item>
-              <DropdownMenu.Item asChild>
-                <Link to="/nutrition/meal-builder">Meal builder</Link>
-              </DropdownMenu.Item>
-              <DropdownMenu.Item asChild>
-                <Link to="/nutrition/calculate-targets">Calculate targets</Link>
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-        }
-      />
+      <SectionHeader title="Your day" />
       <p className="nutrition-description">
         Meals and progress, one day at a time.
       </p>
