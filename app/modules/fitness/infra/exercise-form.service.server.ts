@@ -1,4 +1,5 @@
 import { redirect } from "react-router";
+import { logger } from "~/logger.server";
 import type { UserId } from "~/modules/auth/domain/user";
 import {
   type Exercise,
@@ -35,11 +36,14 @@ function parseSplits(splits: MuscleGroupSplitInput[]): MuscleGroupSplit[] {
     const split = coerceInt(splitInput.split);
 
     if (muscleGroupName.isErr()) {
-      console.error("Error parsing muscle group", { splitInput });
+      logger.warn(
+        { err: { code: "invalid_input" } },
+        "Error parsing muscle group",
+      );
       throw new Error("Error parsing muscle group");
     }
     if (split.isErr()) {
-      console.error("Error parsing split", { split });
+      logger.warn({ err: { code: "invalid_input" } }, "Error parsing split");
       throw new Error("Error parsing split");
     }
 

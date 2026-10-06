@@ -14,6 +14,7 @@ import {
 import type { OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
+import { diagnosticEventSchema } from "../../app/diagnostics";
 import { hashCredential } from "../../app/modules/auth/infra/crypto.server";
 import { provisionReader } from "../../app/modules/mcp/infra/provision-reader.server";
 import { createDisposablePostgres } from "./support/disposable-postgres";
@@ -49,6 +50,8 @@ let clusterStarted = false;
 let fixture: ReturnType<typeof createDisposablePostgres> | undefined;
 let app: ChildProcess | undefined;
 let origin = "";
+const diagnosticEvents: z.infer<typeof diagnosticEventSchema>[] = [];
+let diagnosticBuffer = "";
 let client: Client | undefined;
 let saved: OAuthTokens = {
   access_token: access,
@@ -469,6 +472,7 @@ beforeAll(async () => {
       env: {
         ...process.env,
         NODE_ENV: "test",
+        GIT_SHA: "a".repeat(40),
         HOST: "127.0.0.1",
         PORT: String(httpPort),
         DATABASE_URL: fixture.databaseUrl.toString(),
@@ -490,9 +494,22 @@ beforeAll(async () => {
           },
         ]),
       },
-      stdio: "ignore",
+      stdio: ["ignore", "pipe", "ignore"],
     },
   );
+  app.stdout?.on("data", (chunk: Buffer) => {
+    diagnosticBuffer = (diagnosticBuffer + chunk.toString()).slice(-256 * 1024);
+    const lines = diagnosticBuffer.split("\n");
+    diagnosticBuffer = lines.pop() ?? "";
+    for (const line of lines) {
+      try {
+        const { time: _time, level: _level, ...fields } = JSON.parse(line);
+        const parsed = diagnosticEventSchema.safeParse(fields);
+        if (parsed.success && diagnosticEvents.length < 1000)
+          diagnosticEvents.push(parsed.data);
+      } catch {}
+    }
+  });
   const deadline = Date.now() + 15000;
   while (Date.now() < deadline) {
     if (app.exitCode !== null)
@@ -524,6 +541,96 @@ afterAll(async () => {
 });
 
 describe.sequential("full-stack external HTTP SDK ownership acceptance", () => {
+  it("correlates resource requests and HTTP200 MCP failures without payload capture", async () => {
+    const untrusted = "private-health-token-email@example.invalid";
+    for (const [path, status, routeId] of [
+      ["/healthz", 200, "/healthz"],
+      ["/mcp", 401, "/mcp"],
+      ["/api/auth/get-session", 200, "/api/auth/*"],
+    ] as const) {
+      const response = await fetch(`${origin}${path}?token=${untrusted}`, {
+        headers: { "X-Request-Id": untrusted },
+      });
+      expect(response.status).toBe(status);
+      const id = z.uuid().parse(response.headers.get("X-Request-Id"));
+      await expect
+        .poll(() =>
+          diagnosticEvents.find(
+            (entry) =>
+              entry.event === "request.complete" && entry.request_id === id,
+          ),
+        )
+        .toMatchObject({ status, route_id: routeId });
+    }
+    const value = new Client({ name: "diagnostic-acceptance", version: "1" });
+    const responseIds: string[] = [];
+    const transport = new StreamableHTTPClientTransport(
+      new URL(`${origin}/mcp`),
+      {
+        requestInit: {
+          headers: {
+            Authorization: `Bearer ${access}`,
+            "X-Request-Id": untrusted,
+          },
+        },
+        fetch: async (url, init) => {
+          const response = await fetch(url, init);
+          const id = response.headers.get("X-Request-Id");
+          if (id) responseIds.push(z.uuid().parse(id));
+          return response;
+        },
+      },
+    );
+    try {
+      await value.connect(transport);
+      const denied = await value.callTool({
+        name: "finish_workout",
+        arguments: { workoutId: randomUUID() },
+      });
+      expect(denied.isError).toBe(true);
+      await expect
+        .poll(() =>
+          diagnosticEvents.find(
+            (entry) =>
+              entry.event === "mcp.complete" && entry.tool === "finish_workout",
+          ),
+        )
+        .toMatchObject({ category: "not_found", outcome: "error" });
+      const failure = diagnosticEvents.find(
+        (entry) =>
+          entry.event === "mcp.complete" && entry.tool === "finish_workout",
+      );
+      expect(responseIds).toContain(failure?.request_id);
+      await expect
+        .poll(() =>
+          diagnosticEvents.find(
+            (entry) =>
+              entry.event === "request.complete" &&
+              entry.request_id === failure?.request_id,
+          ),
+        )
+        .toMatchObject({ status: 200, outcome: "ok", release: "a".repeat(40) });
+      const rejected = await value.callTool({
+        name: "query",
+        arguments: { sql: 42, notes: untrusted },
+      });
+      expect(rejected.isError).toBe(true);
+      await expect
+        .poll(() =>
+          diagnosticEvents.find(
+            (entry) =>
+              entry.event === "mcp.complete" &&
+              entry.tool === "query" &&
+              entry.outcome === "error",
+          ),
+        )
+        .toBeDefined();
+      expect(JSON.stringify(diagnosticEvents)).not.toContain(untrusted);
+    } finally {
+      await value.close();
+    }
+  });
+
   it("admits real native A/B sessions with independent dates and owner-only catalogue permissions", async () => {
     await databaseFixture().pool.query(
       "insert into measurements(user_id,name,unit,description) values($1,'weight','kg','Owner retained weight definition')",

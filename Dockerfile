@@ -36,6 +36,7 @@ COPY --from=build --chown=bun:bun /app/app/db/migrate.ts  ./app/db/migrate.ts
 COPY --from=build --chown=bun:bun /app/app/env.server.ts  ./app/env.server.ts
 COPY --from=build --chown=bun:bun /app/app/modules/auth/domain/oauth.ts ./app/modules/auth/domain/oauth.ts
 COPY --from=build --chown=bun:bun /app/app/logger.server.ts ./app/logger.server.ts
+COPY --from=build --chown=bun:bun /app/app/diagnostics.ts /app/app/diagnostics-context.server.ts /app/app/diagnostics.schema.json ./app/
 COPY --from=build --chown=bun:bun /app/scripts/provision-mcp-reader.ts ./scripts/provision-mcp-reader.ts
 COPY --from=build --chown=bun:bun /app/app/modules/mcp/infra/provision-reader.server.ts ./app/modules/mcp/infra/provision-reader.server.ts
 COPY --from=build --chown=bun:bun /app/app/modules/mcp/domain/query-policy.ts ./app/modules/mcp/domain/query-policy.ts

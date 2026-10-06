@@ -14,6 +14,7 @@ for setup and verification commands, then read the guides relevant to your task.
 | Model or persist data | [Database](engineering/database.md) |
 | Write or run tests | [Testing](engineering/testing.md) |
 | Configure login or external clients | [Authentication](operations/authentication.md) |
+| Investigate server/MCP failures | [Server diagnostics](operations/diagnostics.md) |
 | Deploy the app | [Deployment guide](../deploy/README.md) |
 | Understand authentication boundaries | [ADR 0001](adr/0001-server-auth-middleware.md) |
 | Investigate similar CI failures | [CI incident](incidents/2026-02-10-ci-test-failures.md) |

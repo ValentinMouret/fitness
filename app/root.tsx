@@ -8,11 +8,13 @@ import {
   ScrollRestoration,
   useLocation,
 } from "react-router";
-
 import type { Route } from "./+types/root";
+import { diagnosticMiddleware } from "./diagnostics-middleware.server";
 import "@radix-ui/themes/styles.css";
 import "./app.css";
 import { Code, Container, Heading, Text, Theme } from "@radix-ui/themes";
+
+export const middleware: Route.MiddlewareFunction[] = [diagnosticMiddleware];
 
 export const headers: Route.HeadersFunction = () => ({
   "Cache-Control": "no-store",
