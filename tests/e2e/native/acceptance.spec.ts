@@ -34,7 +34,7 @@ async function signIn(page: Page, email: string) {
     .getByRole("button", { name: "Email me a sign-in link", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText(
-    "If this email is invited",
+    "If you have an account",
   );
   await openLatestEmail(page, email);
 }
