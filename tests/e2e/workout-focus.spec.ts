@@ -12,7 +12,7 @@ const test = base.extend<{ readonly sessionId: string }>({
       connectionString: process.env.E2E_DATABASE_URL,
     });
     const id = randomUUID();
-    const exerciseIds = Array.from({ length: 2 }, () => randomUUID());
+    const exerciseIds = Array.from({ length: 3 }, () => randomUUID());
     try {
       await verifyFixtureServerDatabase(request, pool);
       await pool.query(
@@ -22,8 +22,14 @@ const test = base.extend<{ readonly sessionId: string }>({
       for (const [index, exerciseId] of exerciseIds.entries()) {
         await pool.query(
           "insert into exercises (id, name, type, movement_pattern) values ($1, $2, 'barbell', 'push')",
-          [exerciseId, `Focus fixture exercise ${index + 1} ${exerciseId}`],
+          [
+            exerciseId,
+            index === 2
+              ? `Replacement fixture ${id}`
+              : `Focus fixture exercise ${index + 1} ${exerciseId}`,
+          ],
         );
+        if (index === 2) continue;
         await pool.query(
           "insert into workout_exercises (workout_id, exercise_id, order_index) values ($1, $2, $3)",
           [id, exerciseId, index],
@@ -229,7 +235,7 @@ test("final-save readiness spans every exercise and correction retains historica
   const pool = new pg.Pool({ connectionString: process.env.E2E_DATABASE_URL });
   try {
     const exercises = await pool.query(
-      "select exercise_id from workout_exercises where workout_id = $1 order by order_index",
+      "select exercise_id from workout_exercises where workout_id = $1 and deleted_at is null order by order_index",
       [sessionId],
     );
     const firstId: string = exercises.rows[0].exercise_id;
@@ -422,6 +428,170 @@ test("completed session navigation preserves history and only permits saved-set 
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
+  } finally {
+    await pool.end();
+  }
+});
+
+for (const keepCompleted of [false, true]) {
+  test(`replacement focuses the persisted exercise with completed history ${keepCompleted}`, async ({
+    page,
+    sessionId,
+  }) => {
+    const pool = new pg.Pool({
+      connectionString: process.env.E2E_DATABASE_URL,
+    });
+    try {
+      const before = await pool.query(
+        "select exercise_id from workout_exercises where workout_id = $1 and deleted_at is null order by order_index",
+        [sessionId],
+      );
+      const oldId: string = before.rows[0].exercise_id;
+      const otherId: string = before.rows[1].exercise_id;
+      const replacement = await pool.query(
+        "select id, name from exercises where name = $1",
+        [`Replacement fixture ${sessionId}`],
+      );
+      const replacementId: string = replacement.rows[0].id;
+      const replacementName: string = replacement.rows[0].name;
+      if (keepCompleted) {
+        await pool.query(
+          'update workout_sets set "isCompleted" = true, reported_rir = $3 where workout = $1 and exercise = $2 and set = 1',
+          [sessionId, oldId, "2"],
+        );
+      }
+      const saved = await pool.query(
+        "select start, stop from workouts where id = $1",
+        [sessionId],
+      );
+      const otherSets = await pool.query(
+        "select * from workout_sets where workout = $1 and exercise = $2 order by set",
+        [sessionId, otherId],
+      );
+      await page.goto(`/workouts/${sessionId}?exercise=${oldId}`);
+      await page.getByRole("button", { name: "Start", exact: true }).click();
+      await page.getByRole("button", { name: "Exercise actions" }).click();
+      await page.getByRole("menuitem", { name: "Replace Exercise" }).click();
+      const dialog = page.getByRole("dialog", { name: "Replace Exercise" });
+      await dialog
+        .getByPlaceholder("Search exercises...")
+        .fill(replacementName);
+      await dialog.getByText(replacementName, { exact: true }).click();
+      await dialog
+        .getByRole("button", { name: "Replace", exact: true })
+        .click();
+      await expect(page).toHaveURL(
+        `/workouts/${sessionId}?exercise=${replacementId}`,
+      );
+      const focused = page.locator(
+        ".active-workout-exercise:not([hidden]) .exercise-card--focused",
+      );
+      await expect(focused).toHaveCount(1);
+      await expect(
+        focused.getByRole("button", { name: replacementName, exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Skip", exact: true }),
+      ).toBeVisible();
+      const persisted = await pool.query(
+        "select exercise_id from workout_exercises where workout_id = $1 and deleted_at is null order by order_index",
+        [sessionId],
+      );
+      expect(persisted.rows.map((entry) => entry.exercise_id)).toEqual(
+        keepCompleted
+          ? [oldId, replacementId, otherId]
+          : [replacementId, otherId],
+      );
+      expect(
+        (
+          await pool.query("select start, stop from workouts where id = $1", [
+            sessionId,
+          ])
+        ).rows,
+      ).toEqual(saved.rows);
+      expect(
+        (
+          await pool.query(
+            "select * from workout_sets where workout = $1 and exercise = $2 order by set",
+            [sessionId, otherId],
+          )
+        ).rows,
+      ).toEqual(otherSets.rows);
+      const history = await pool.query(
+        'select reps, weight, "isCompleted", reported_rir from workout_sets where workout = $1 and exercise = $2 and deleted_at is null',
+        [sessionId, oldId],
+      );
+      expect(history.rows).toEqual(
+        keepCompleted
+          ? [{ reps: 8, weight: 60, isCompleted: true, reported_rir: "2" }]
+          : [],
+      );
+      await page.reload();
+      await expect(page).toHaveURL(
+        `/workouts/${sessionId}?exercise=${replacementId}`,
+      );
+      await expect(
+        focused.getByRole("button", { name: replacementName, exact: true }),
+      ).toBeVisible();
+    } finally {
+      await pool.end();
+    }
+  });
+}
+
+test("rejected replacement keeps the focused exercise and session records", async ({
+  page,
+  sessionId,
+}) => {
+  const pool = new pg.Pool({ connectionString: process.env.E2E_DATABASE_URL });
+  try {
+    const groups = await pool.query(
+      "select e.id, e.name from workout_exercises we join exercises e on e.id = we.exercise_id where we.workout_id = $1 order by we.order_index",
+      [sessionId],
+    );
+    const original = groups.rows[0];
+    const existing = groups.rows[1];
+    const before = await pool.query(
+      "select * from workout_sets where workout = $1 order by exercise, set",
+      [sessionId],
+    );
+    await page.goto(`/workouts/${sessionId}?exercise=${original.id}`);
+    await page.getByRole("button", { name: "Exercise actions" }).click();
+    await page.getByRole("menuitem", { name: "Replace Exercise" }).click();
+    const dialog = page.getByRole("dialog", { name: "Replace Exercise" });
+    await dialog.getByPlaceholder("Search exercises...").fill(existing.name);
+    await dialog.getByText(existing.name, { exact: true }).click();
+    const response = page.waitForResponse(
+      (entry) =>
+        entry.request().method() === "POST" &&
+        entry.url().includes(`/workouts/${sessionId}`),
+    );
+    await dialog.getByRole("button", { name: "Replace", exact: true }).click();
+    await response;
+    await expect(page).toHaveURL(
+      `/workouts/${sessionId}?exercise=${original.id}`,
+    );
+    await expect(
+      page
+        .locator(".exercise-card--focused")
+        .getByRole("button", { name: original.name, exact: true }),
+    ).toBeVisible();
+    expect(
+      (
+        await pool.query(
+          "select * from workout_sets where workout = $1 order by exercise, set",
+          [sessionId],
+        )
+      ).rows,
+    ).toEqual(before.rows);
+    expect(
+      (
+        await pool.query(
+          "select exercise_id from workout_exercises where workout_id = $1 and deleted_at is null order by order_index",
+          [sessionId],
+        )
+      ).rows.map((entry) => entry.exercise_id),
+    ).toEqual(groups.rows.map((entry) => entry.id));
   } finally {
     await pool.end();
   }

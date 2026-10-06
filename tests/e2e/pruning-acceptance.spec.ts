@@ -245,9 +245,9 @@ test("a current session created by MCP operations remains editable and loggable"
       )
       .toEqual([{ exercise: replacementId }]);
     await page.reload();
-    await page
-      .getByRole("link", { name: `Open ${replacementName}`, exact: true })
-      .click();
+    await expect(page).toHaveURL(
+      `/workouts/${workoutId}?exercise=${replacementId}`,
+    );
     await expect(
       page.getByRole("button", { name: replacementName, exact: true }),
     ).toBeVisible();

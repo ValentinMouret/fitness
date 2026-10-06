@@ -433,7 +433,9 @@ export async function replaceExerciseInWorkout(input: {
     return { error: result.error.message };
   }
 
-  return { success: true };
+  return redirect(
+    `/workouts/${result.value.workout.id}?exercise=${parsed.data.newExerciseId}`,
+  );
 }
 
 export async function reorderExercisesInWorkout(input: {
