@@ -1,4 +1,4 @@
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 import {
@@ -159,4 +159,52 @@ describe("safe diagnostic boundaries", () => {
       events.length,
     );
   });
+});
+
+it("keeps marked and ordinary Pino output valid under stdout backpressure", async () => {
+  const child = spawn(
+    process.execPath,
+    ["--import", "tsx", "tests/fixtures/diagnostics-output.ts"],
+    {
+      env: { ...process.env, NODE_ENV: "production", GIT_SHA: "a".repeat(40) },
+    },
+  );
+  let stdout = "";
+  let stderr = "";
+  child.stdout.setEncoding("utf8");
+  child.stdout.pause();
+  child.stdout.on("data", (chunk: string) => {
+    stdout += chunk;
+  });
+  child.stderr.setEncoding("utf8");
+  child.stderr.on("data", (chunk: string) => {
+    stderr += chunk;
+  });
+  const closed = new Promise<void>((resolve, reject) => {
+    child.once("error", reject);
+    child.once("close", (code) =>
+      code === 0
+        ? resolve()
+        : reject(new Error(`Output fixture exited ${code}`)),
+    );
+  });
+  const resume = setTimeout(() => child.stdout.resume(), 1000);
+  try {
+    await closed;
+  } finally {
+    clearTimeout(resume);
+    if (child.exitCode === null) child.kill();
+  }
+  expect(stderr).toBe("");
+  expect(stdout).not.toContain("synthetic private canary");
+  const lines = stdout
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line));
+  expect(lines).toHaveLength(10000);
+  const marked = lines.filter((line) => line.diagnostic_version === 1);
+  expect(marked).toHaveLength(5000);
+  for (const { level: _level, time: _time, ...fields } of marked) {
+    expect(diagnosticEventSchema.safeParse(fields).success).toBe(true);
+  }
 });
