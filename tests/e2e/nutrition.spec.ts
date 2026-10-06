@@ -14,7 +14,9 @@ test.describe("Nutrition Page", () => {
 
   test("should display daily nutrition summary and meals", async ({ page }) => {
     await expect(page.getByText("kcal target")).toBeVisible();
-    await expect(page.getByText("Meals")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Your day", exact: true }),
+    ).toBeVisible();
   });
 
   test("should display nutrition action links", async ({ page }) => {
@@ -22,7 +24,7 @@ test.describe("Nutrition Page", () => {
       page.getByRole("link", { name: "Meal Builder" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Calculate Targets" }),
+      page.getByRole("link", { name: "Calculate targets" }),
     ).toBeVisible();
   });
 

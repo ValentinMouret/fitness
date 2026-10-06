@@ -107,7 +107,9 @@ test("explicit assignments filter management and log one composition in the chos
   await expect(
     page.getByRole("heading", { name: riceName, exact: true }),
   ).toHaveCount(1);
-  await page.getByRole("button", { name: "Lunch", exact: true }).click();
+  await page
+    .getByRole("combobox", { name: "Meal time", exact: true })
+    .selectOption("lunch");
   await expect(page).toHaveURL(/meal=lunch$/);
   await expect(
     page.getByRole("link", { name: `Edit ${riceName}`, exact: true }),
@@ -118,7 +120,9 @@ test("explicit assignments filter management and log one composition in the chos
   await page.getByRole("checkbox", { name: "Dinner", exact: true }).check();
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(/meal=lunch$/);
-  await page.getByRole("button", { name: "Dinner", exact: true }).click();
+  await page
+    .getByRole("combobox", { name: "Meal time", exact: true })
+    .selectOption("dinner");
   await expect(page).toHaveURL(/meal=dinner$/);
   await expect(
     page.getByRole("link", { name: `Edit ${riceName}`, exact: true }),
@@ -147,7 +151,10 @@ test("explicit assignments filter management and log one composition in the chos
   ).toHaveLength(0);
   await page.goto(`/nutrition?date=${date}`);
   await page
-    .getByRole("button", { name: "Use template for Breakfast", exact: true })
+    .getByRole("button", { name: "Meal actions for Breakfast", exact: true })
+    .click();
+  await page
+    .getByRole("menuitem", { name: "Use template", exact: true })
     .click();
   let dialog = page.getByRole("dialog");
   await expect(
@@ -161,7 +168,10 @@ test("explicit assignments filter management and log one composition in the chos
     .click();
   for (const meal of ["Lunch", "Dinner"]) {
     await page
-      .getByRole("button", { name: `Use template for ${meal}`, exact: true })
+      .getByRole("button", { name: `Meal actions for ${meal}`, exact: true })
+      .click();
+    await page
+      .getByRole("menuitem", { name: "Use template", exact: true })
       .click();
     dialog = page.getByRole("dialog");
     await dialog
@@ -259,6 +269,9 @@ test("creating from a filter requires explicit assignments and returns to that f
     await page
       .getByRole("link", { name: "Create template", exact: true })
       .click();
+    await expect(
+      page.getByRole("heading", { name: "Meal Builder", exact: true }),
+    ).toBeVisible();
     await page.getByRole("link", { name: "Back", exact: true }).click();
     await expect(page).toHaveURL(/meal=dinner$/);
   } finally {
@@ -372,7 +385,7 @@ test("filter navigation waits for the selected meal before editing and saving", 
     name: `Edit ${fixture.riceName}`,
     exact: true,
   });
-  const lunch = page.getByRole("button", { name: "Lunch", exact: true });
+  const lunch = page.getByRole("combobox", { name: "Meal time", exact: true });
   await page.route(
     (url) =>
       url.pathname === "/nutrition/templates.data" &&
@@ -385,9 +398,9 @@ test("filter navigation waits for the selected meal before editing and saving", 
     },
   );
   try {
-    await lunch.click();
+    await lunch.selectOption("lunch");
     await held.promise;
-    await expect(lunch).toHaveAttribute("aria-pressed", "false");
+    await expect(lunch).toHaveValue("all");
     await expect(edit).toHaveAttribute(
       "href",
       `/nutrition/templates?meal=all&edit=${fixture.rice}`,
@@ -396,7 +409,7 @@ test("filter navigation waits for the selected meal before editing and saving", 
     release.resolve();
   }
   await expect(page).toHaveURL(/meal=lunch$/);
-  await expect(lunch).toHaveAttribute("aria-pressed", "true");
+  await expect(lunch).toHaveValue("lunch");
   await expect(edit).toHaveAttribute(
     "href",
     `/nutrition/templates?meal=lunch&edit=${fixture.rice}`,
@@ -405,7 +418,7 @@ test("filter navigation waits for the selected meal before editing and saving", 
   await page.getByRole("checkbox", { name: "Dinner", exact: true }).check();
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(/meal=lunch$/);
-  await expect(lunch).toHaveAttribute("aria-pressed", "true");
+  await expect(lunch).toHaveValue("lunch");
   await expect(edit).toHaveAttribute(
     "href",
     `/nutrition/templates?meal=lunch&edit=${fixture.rice}`,
@@ -473,14 +486,18 @@ test("compact template rows wrap long names and assignments on a phone", async (
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
-    await page.getByRole("button", { name: "Snacks", exact: true }).click();
+    await page
+      .getByRole("combobox", { name: "Meal time", exact: true })
+      .selectOption("snack");
     await expect(
       page.getByRole("heading", { name: longName, exact: true }),
     ).toHaveCount(1);
     await expect(
       page.getByRole("heading", { name: "Rice bowl", exact: true }),
     ).toHaveCount(0);
-    await page.getByRole("button", { name: "All", exact: true }).click();
+    await page
+      .getByRole("combobox", { name: "Meal time", exact: true })
+      .selectOption("all");
   }
   await page.goto("/nutrition?date=1905-05-08");
   await expect(
@@ -495,11 +512,11 @@ test("compact template rows wrap long names and assignments on a phone", async (
     ).toBeVisible();
   }
   await expect(
-    page.getByRole("link", { name: "Add Breakfast", exact: true }),
+    page.getByRole("link", { name: "Log Breakfast", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", {
-      name: "Use template for Breakfast",
+      name: "Meal actions for Breakfast",
       exact: true,
     }),
   ).toBeVisible();

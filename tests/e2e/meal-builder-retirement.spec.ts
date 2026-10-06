@@ -121,7 +121,10 @@ test("meal composition, templates and logged edits survive retired suggestions",
       [templateId],
     );
     await page.goto(`/nutrition?date=${date}`);
-    await page.getByRole("button", { name: "Use template for Lunch" }).click();
+    await page.getByRole("button", { name: "Meal actions for Lunch" }).click();
+    await page
+      .getByRole("menuitem", { name: "Use template", exact: true })
+      .click();
     await page
       .getByRole("dialog")
       .getByRole("button", { name: new RegExp(`^${templateName}( |$)`) })

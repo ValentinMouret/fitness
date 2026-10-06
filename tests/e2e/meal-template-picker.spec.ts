@@ -60,8 +60,12 @@ test.beforeEach(async ({ page, request }) => {
     [templateId, ingredientId, fixtureOwnerId()],
   );
   await page.goto("/nutrition?date=1901-03-01");
-  await page.getByRole("button", { name: "Use template for Lunch" }).tap();
+  await page.getByRole("button", { name: "Meal actions for Lunch" }).tap();
+  await page
+    .getByRole("menuitem", { name: "Use template", exact: true })
+    .click();
   await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("menu")).toHaveCount(0);
 });
 
 test.afterEach(async () => {
@@ -96,7 +100,10 @@ test("the visible close button dismisses the meal picker on its first touch", as
   await page.getByRole("button", { name: "Close (Esc)", exact: true }).tap();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Use template for Lunch" }),
+    page.getByRole("button", { name: "Meal actions for Lunch", exact: true }),
+  ).toBeFocused();
+  await expect(
+    page.getByRole("button", { name: "Meal actions for Lunch" }),
   ).toBeVisible();
 });
 
@@ -111,25 +118,44 @@ test("close still works after dismissing a template's sharing menu", async ({
   await expect(page.getByRole("menu")).toHaveCount(0);
   await page.getByRole("button", { name: "Close (Esc)", exact: true }).tap();
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Meal actions for Lunch", exact: true }),
+  ).toBeFocused();
 });
 
 test("outside touch and Escape dismiss the picker", async ({ page }) => {
   await page.touchscreen.tap(5, 5);
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.getByRole("button", { name: "Use template for Lunch" }).tap();
+  await expect(
+    page.getByRole("button", { name: "Meal actions for Lunch", exact: true }),
+  ).toBeFocused();
+  await page.getByRole("button", { name: "Meal actions for Lunch" }).tap();
+  await page
+    .getByRole("menuitem", { name: "Use template", exact: true })
+    .click();
   await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("menu")).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Close (Esc)", exact: true }),
   ).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.getByRole("button", { name: "Use template for Lunch" }).tap();
+  await expect(
+    page.getByRole("button", { name: "Meal actions for Lunch", exact: true }),
+  ).toBeFocused();
+  await page.getByRole("button", { name: "Meal actions for Lunch" }).tap();
+  await page
+    .getByRole("menuitem", { name: "Use template", exact: true })
+    .click();
   await page
     .getByRole("dialog")
     .getByRole("button")
     .filter({ hasText: templateName })
     .tap();
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Meal actions for Lunch", exact: true }),
+  ).toBeFocused();
   await expect
     .poll(async () => {
       const result = await pool.query(

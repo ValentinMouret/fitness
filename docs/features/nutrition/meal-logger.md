@@ -10,7 +10,10 @@ model and [draft wireframes](meal-logger-wireframes.md) for interaction proposal
 
 ## Current workflow
 
-- Navigate by date and review daily calorie/macro totals.
+- Navigate by date and review daily calorie/macro totals in the Action workspace.
+- Open Meal templates from the bottom link; header Back and bottom Back to today
+  retain the selected date. Template filters, Save and Cancel also retain it.
+- Use meal-level Log/Edit controls and the meal action menu for template reuse.
 - Apply a saved template to a meal category.
 - Use the [meal builder](meal-builder.md) to compose or edit a dated meal.
 - Delete an incorrect log or save a logged composition as a reusable template.
