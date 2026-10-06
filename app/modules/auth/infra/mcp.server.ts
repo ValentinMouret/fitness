@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { createWorkoutCommands } from "~/modules/fitness/infra/workout.repository.server";
+import { observeMcpTransport } from "~/modules/mcp/infra/diagnostics.server";
 import { createRuntimeQueryRunner } from "~/modules/mcp/infra/query.server";
 import { registerFitnessTools } from "~/modules/mcp/infra/tools.server";
 import { createNutritionCommands } from "~/modules/nutrition/infra/nutrition-commands.server";
@@ -53,6 +54,7 @@ export async function handleMcp(request: Request) {
   );
   try {
     await server.connect(transport);
+    observeMcpTransport(transport);
     const response = await transport.handleRequest(request);
     response.headers.set("Cache-Control", "no-store");
     return response;

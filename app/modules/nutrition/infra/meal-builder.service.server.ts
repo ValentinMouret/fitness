@@ -1,4 +1,5 @@
 import { data, redirect } from "react-router";
+import { logger } from "~/logger.server";
 import type { UserId } from "~/modules/auth/domain/user";
 import type { MealCategory } from "~/modules/nutrition/domain/meal-template";
 import type { CreateIngredientCommand } from "~/modules/nutrition/domain/nutrition-commands";
@@ -187,7 +188,7 @@ export async function searchAiIngredient(
     );
     return { aiIngredient: result };
   } catch (error) {
-    console.error("AI ingredient search error:", error);
+    logger.error({ err: error }, "AI ingredient search error");
     return {
       error: "Failed to search ingredient with AI. Please try again.",
     };
@@ -213,7 +214,7 @@ export async function saveAiIngredient(
 
     return { success: true, ingredient: result.value };
   } catch (error) {
-    console.error("Save AI ingredient error:", error);
+    logger.error({ err: error }, "Save AI ingredient error");
     return { error: "Failed to save ingredient. Please try again." };
   }
 }
