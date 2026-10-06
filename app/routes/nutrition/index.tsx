@@ -3,9 +3,7 @@ import {
   ChevronRightIcon,
   DotsHorizontalIcon,
   Link2Icon,
-  MagicWandIcon,
   Pencil1Icon,
-  PlusIcon,
   Share1Icon,
 } from "@radix-ui/react-icons";
 import {
@@ -14,9 +12,7 @@ import {
   Button,
   DropdownMenu,
   Flex,
-  Heading,
   IconButton,
-  Kbd,
   Text,
   TextField,
   Tooltip,
@@ -35,6 +31,7 @@ import { zfd } from "zod-form-data";
 import { Celebration, SuccessPulse } from "~/components/Celebration";
 import { PageHeader } from "~/components/PageHeader";
 import RequiredStar from "~/components/RequiredStar";
+import { SectionHeader } from "~/components/SectionHeader";
 import { getAccountToday } from "~/modules/auth/infra/account-settings.server";
 import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
@@ -387,8 +384,6 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
   return (
     <div className="nutrition-page">
       <PageHeader title="Nutrition" />
-      <NutritionNavigation current="today" />
-      {/* Date Navigation */}
       <div className="nutrition-date-nav">
         <Tooltip content="Previous day (Left Arrow)">
           <IconButton
@@ -400,11 +395,18 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             <ChevronLeftIcon width="16" height="16" />
           </IconButton>
         </Tooltip>
-        <Heading as="h2" size="5">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={goToToday}
+          aria-label="Go to Today (T)"
+          aria-keyshortcuts="t"
+        >
           {formatDateLabel(parsedCurrentDate, todayDate)}
-        </Heading>
+        </Button>
         <Tooltip content="Next day (Right Arrow)">
           <IconButton
+            type="button"
             variant="ghost"
             onClick={nextDay}
             aria-label="Next day (Right Arrow)"
@@ -413,74 +415,59 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
             <ChevronRightIcon width="16" height="16" />
           </IconButton>
         </Tooltip>
-
-        {!isSameCalendarDay(parsedCurrentDate, todayDate) && (
-          <div className="nutrition-date-nav__today">
-            <Tooltip content="Go to Today (T)">
-              <Button
-                variant="ghost"
-                size="1"
-                onClick={goToToday}
-                aria-label="Go to Today (T)"
-                aria-keyshortcuts="t"
-              >
-                Today
-                <Box ml="2" display={{ initial: "none", md: "inline-block" }}>
-                  <Kbd size="1">T</Kbd>
-                </Box>
-              </Button>
-            </Tooltip>
-          </div>
-        )}
       </div>
 
-      {targetSource === "default" && (
-        <Text as="p" size="2" color="gray">
-          Default targets.{" "}
-          <Link to="/nutrition/calculate-targets">Set your own</Link>.
-        </Text>
-      )}
+      <SectionHeader
+        title="Your day"
+        right={
+          <DropdownMenu.Root modal={false}>
+            <DropdownMenu.Trigger>
+              <IconButton
+                type="button"
+                variant="ghost"
+                aria-label="More Nutrition actions"
+              >
+                <DotsHorizontalIcon />
+              </IconButton>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.Item onClick={() => setShowQuickEstimate(true)}>
+                Estimate meal
+              </DropdownMenu.Item>
+              <DropdownMenu.Item asChild>
+                <Link to="/nutrition/meal-builder">Meal builder</Link>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item asChild>
+                <Link to="/nutrition/calculate-targets">Calculate targets</Link>
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        }
+      />
+      <p className="nutrition-description">
+        Meals and progress, one day at a time.
+      </p>
+      <output className="nutrition-feedback">
+        {completedCount === mealTypes.length && (
+          <Text size="1" color="green">
+            All Done! ✨
+          </Text>
+        )}
+        {targetSource === "default" && (
+          <Text as="span" size="2" color="gray">
+            Default targets.{" "}
+            <Link to="/nutrition/calculate-targets">Set your own</Link>.
+          </Text>
+        )}
+      </output>
 
       <NutritionSummary totals={dailyTotals} targets={dailyTargets} />
 
-      {/* Meals */}
       <div className="nutrition-meals">
         <Celebration
           trigger={celebrate}
           onComplete={() => setCelebrate(false)}
         />
-        <div className="nutrition-meals__header">
-          <Flex align="center" gap="2">
-            <h2 className="nutrition-meals__title">Meals</h2>
-            {completedCount === mealTypes.length && (
-              <Text
-                size="1"
-                color="green"
-                weight="bold"
-                className="animate-fade-in"
-                role="status"
-                aria-live="polite"
-              >
-                All Done! ✨
-              </Text>
-            )}
-          </Flex>
-          <Tooltip content="Estimate (E)">
-            <Button
-              variant="soft"
-              size="1"
-              onClick={() => setShowQuickEstimate(true)}
-              aria-label="Estimate (E)"
-              aria-keyshortcuts="e"
-            >
-              <MagicWandIcon />
-              Estimate
-              <Box ml="1" display={{ initial: "none", md: "inline-block" }}>
-                <Kbd size="1">E</Kbd>
-              </Box>
-            </Button>
-          </Tooltip>
-        </div>
         <div className="nutrition-meals__list">
           {mealTypes.map((mealType) => {
             const meal = getMealForType(mealType);
@@ -513,7 +500,12 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                   className={`nutrition-meal ${mealCompletionMap[mealType] ? "nutrition-meal--logged" : ""}`}
                 >
                   <div className="nutrition-meal__body">
-                    <div className="nutrition-meal__name">{label}</div>
+                    <h3 className="nutrition-meal__name">{label}</h3>
+                    {hasLogged && (
+                      <div className="nutrition-meal__detail">
+                        {Math.round(meal.totals.calories)} kcal
+                      </div>
+                    )}
                     {hasLogged && ingredientNames ? (
                       <div className="nutrition-meal__detail">
                         {ingredientNames}
@@ -527,13 +519,10 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                   <div className="nutrition-meal__actions">
                     {hasLogged ? (
                       <>
-                        <span className="nutrition-meal__kcal">
-                          {Math.round(meal.totals.calories)}
-                        </span>
                         <Tooltip content={`Edit ${label}`}>
                           <Button
                             size="1"
-                            variant="outline"
+                            variant="soft"
                             asChild
                             aria-label={`Edit ${label}`}
                           >
@@ -543,7 +532,7 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                             </Link>
                           </Button>
                         </Tooltip>
-                        <DropdownMenu.Root>
+                        <DropdownMenu.Root modal={false}>
                           <Tooltip content={`Meal actions for ${label}`}>
                             <DropdownMenu.Trigger>
                               <Button
@@ -613,33 +602,45 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
                       </>
                     ) : (
                       <>
-                        <Tooltip content={`Add ${label}`}>
+                        <Tooltip content={`Log ${label}`}>
                           <Button
                             size="1"
-                            variant="outline"
+                            variant="solid"
                             asChild
-                            aria-label={`Add ${label}`}
+                            aria-label={`Log ${label}`}
                           >
-                            <Link to={getMealBuilderUrl(mealType)}>
-                              <PlusIcon width="14" height="14" />
-                              Add
-                            </Link>
+                            <Link to={getMealBuilderUrl(mealType)}>Log</Link>
                           </Button>
                         </Tooltip>
-                        <Tooltip content={`Use template for ${label}`}>
-                          <Button
-                            variant="ghost"
-                            size="1"
-                            onClick={(event) => {
-                              templateOpenerRef.current = event.currentTarget;
-                              handleUseTemplate(mealType);
+                        <DropdownMenu.Root modal={false}>
+                          <DropdownMenu.Trigger>
+                            <IconButton
+                              type="button"
+                              variant="ghost"
+                              aria-label={`Meal actions for ${label}`}
+                              loading={isApplyingTemplate}
+                              onPointerDown={(event) => {
+                                templateOpenerRef.current = event.currentTarget;
+                              }}
+                              onFocus={(event) => {
+                                templateOpenerRef.current = event.currentTarget;
+                              }}
+                            >
+                              <DotsHorizontalIcon />
+                            </IconButton>
+                          </DropdownMenu.Trigger>
+                          <DropdownMenu.Content
+                            onCloseAutoFocus={(event) => {
+                              if (showTemplateModal) event.preventDefault();
                             }}
-                            aria-label={`Use template for ${label}`}
-                            loading={isApplyingTemplate}
                           >
-                            Use template
-                          </Button>
-                        </Tooltip>
+                            <DropdownMenu.Item
+                              onSelect={() => handleUseTemplate(mealType)}
+                            >
+                              Use template
+                            </DropdownMenu.Item>
+                          </DropdownMenu.Content>
+                        </DropdownMenu.Root>
                       </>
                     )}
                   </div>
@@ -650,15 +651,28 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
         </div>
       </div>
 
-      {/* Tools */}
       <div className="nutrition-tools">
-        <Button variant="outline" size="2" asChild>
+        <Button variant="ghost" size="2" asChild>
           <Link to="/nutrition/meal-builder">Meal Builder</Link>
         </Button>
-        <Button variant="outline" size="2" asChild>
-          <Link to="/nutrition/calculate-targets">Calculate Targets</Link>
+        <Button variant="ghost" size="2" asChild>
+          <Link to="/nutrition/calculate-targets">Calculate targets</Link>
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="2"
+          onClick={() => setShowQuickEstimate(true)}
+          aria-label="Estimate meal (E)"
+          aria-keyshortcuts="e"
+        >
+          Estimate meal
         </Button>
       </div>
+      <NutritionNavigation
+        current="today"
+        date={searchParams.get("date") ?? undefined}
+      />
 
       <TemplateSelectionModal
         isOpen={showTemplateModal}

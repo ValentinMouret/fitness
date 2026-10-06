@@ -1,59 +1,87 @@
 import { expect, test } from "@playwright/test";
 
 for (const width of [320, 390]) {
-  test(`Nutrition navigation stays fixed between views at ${width}px`, async ({
+  test(`Nutrition workspace preserves date across template navigation at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 844 });
-    await page.goto("/nutrition");
-    await page.evaluate(() => document.fonts.ready);
-    await expect
-      .poll(() =>
-        page
-          .locator(".page-transition")
-          .evaluate((element) => getComputedStyle(element).opacity),
-      )
-      .toBe("1");
-    const navigation = page.getByRole("navigation", {
-      name: "Nutrition views",
+    await page.goto("/nutrition?date=1905-05-08");
+    await expect(
+      page.getByRole("heading", { name: "Your day", exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole("tab")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Log meal", exact: true }),
+    ).toHaveCount(0);
+    const templates = page.getByRole("link", {
+      name: "Meal templates →",
+      exact: true,
     });
-    const title = page.getByRole("heading", { name: "Nutrition", exact: true });
-    const original = await navigation.boundingBox();
-    const originalTitle = await title.boundingBox();
-    if (!original || !originalTitle)
-      throw new Error("Missing Nutrition header");
-    for (const view of ["Templates", "Today", "Templates"]) {
-      await navigation.getByRole("link", { name: view, exact: true }).click();
-      await expect(
-        navigation.getByRole("link", { name: view, exact: true }),
-      ).toHaveAttribute("aria-current", "page");
-      await expect
-        .poll(async () => (await navigation.boundingBox())?.y)
-        .toBe(original.y);
-      const currentTitle = await title.boundingBox();
-      expect(currentTitle).toEqual(originalTitle);
-      await expect(page.locator(".page-header__actions > *")).toHaveCount(0);
-    }
+    await expect(templates).toHaveAttribute(
+      "href",
+      "/nutrition/templates?date=1905-05-08",
+    );
+    const tools = page.locator(".nutrition-tools");
+    const linkBox = await templates.boundingBox();
+    const toolsBox = await tools.boundingBox();
+    if (!linkBox || !toolsBox) throw new Error("Missing workspace navigation");
+    expect(linkBox.y).toBeGreaterThanOrEqual(toolsBox.y + toolsBox.height);
+    expect(Math.round(linkBox.height)).toBeGreaterThanOrEqual(44);
+    await templates.click();
+    await expect(
+      page.getByRole("heading", { name: "Meal templates", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Back", exact: true }),
+    ).toHaveAttribute("href", "/nutrition?date=1905-05-08");
+    await page
+      .getByRole("combobox", { name: "Meal time", exact: true })
+      .selectOption("lunch");
+    await expect(page).toHaveURL(/meal=lunch/);
+    await expect(page).toHaveURL(/date=1905-05-08/);
     const create = page.getByRole("link", {
       name: "Create template",
       exact: true,
     });
-    const createBox = await create.boundingBox();
-    const headingBox = await page
-      .getByRole("heading", { name: "Meal templates", exact: true })
-      .boundingBox();
-    if (!createBox || !headingBox) throw new Error("Missing template actions");
-    expect(createBox.y).toBeGreaterThan(original.y + original.height);
-    expect(createBox.height).toBeGreaterThanOrEqual(44);
-    expect(createBox.x).toBeGreaterThanOrEqual(headingBox.x + headingBox.width);
-    expect(createBox.x + createBox.width).toBeLessThanOrEqual(width);
+    await create.click();
+    await expect(page).toHaveURL(/\/nutrition\/meal-builder\?returnTo=/);
+    await expect(
+      page.getByRole("heading", { name: "Meal Builder", exact: true }),
+    ).toBeVisible();
+    await page.getByRole("link", { name: "Back", exact: true }).click();
+    await expect(page).toHaveURL(/meal=lunch&date=1905-05-08$/);
+    await page
+      .getByRole("link", { name: "← Back to today", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/nutrition\?date=1905-05-08$/);
+    await expect(
+      page.getByRole("heading", { name: "Your day", exact: true }),
+    ).toBeVisible();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(width);
-    await create.click();
-    await expect(page).toHaveURL(/\/nutrition\/meal-builder\?returnTo=/);
-    await page.getByRole("link", { name: "Back", exact: true }).click();
-    await expect(page).toHaveURL(/\/nutrition\/templates\?meal=all$/);
-    await expect(navigation).toBeVisible();
+    const figures = page.locator(
+      ".nutrition-summary > strong, .nutrition-macro-card__value",
+    );
+    for (const figure of await figures.all()) {
+      await expect(figure).toHaveCSS("font-variant-numeric", "tabular-nums");
+    }
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = "20px";
+    });
+    await expect(page.locator(".nutrition-summary > p")).toHaveCSS(
+      "font-size",
+      "15px",
+    );
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = "";
+    });
+    await page.screenshot({
+      path: `/tmp/fitness-nutrition-workspace-${width}.png`,
+      fullPage: true,
+    });
   });
 }

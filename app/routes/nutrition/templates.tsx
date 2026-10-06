@@ -3,7 +3,6 @@ import { useId, useState } from "react";
 import { data, Form, Link, redirect, useNavigation } from "react-router";
 import { z } from "zod";
 import { EmptyState } from "~/components/EmptyState";
-import { FilterBar } from "~/components/FilterBar/FilterBar";
 import { PageHeader } from "~/components/PageHeader";
 import { SectionHeader } from "~/components/SectionHeader";
 import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
@@ -24,10 +23,14 @@ import "./templates.css";
 const querySchema = z.object({
   meal: z.enum(["all", ...mealCategories]).default("all"),
   edit: z.uuid().optional(),
+  date: z.iso.date().optional(),
 });
 const filters = ["all", ...mealCategories] as const;
-const filterHref = (meal: string) =>
-  `/nutrition/templates?${new URLSearchParams({ meal })}`;
+const filterHref = (meal: string, date?: string) => {
+  const params = new URLSearchParams({ meal });
+  if (date) params.set("date", date);
+  return `/nutrition/templates?${params}`;
+};
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const query = querySchema.safeParse(
@@ -62,6 +65,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
   return {
     filter: query.data.meal,
+    date: query.data.date,
     editing,
     templates: result.value
       .filter((t) => filter === "all" || t.categories.includes(filter))
@@ -83,6 +87,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       categories: mealAssignmentsSchema,
       notes: z.string(),
       meal: z.enum(["all", ...mealCategories]),
+      date: z.iso.date().optional(),
     })
     .safeParse({
       id: form.get("id"),
@@ -90,6 +95,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       categories: form.getAll("mealTimes"),
       notes: form.get("notes"),
       meal: form.get("meal"),
+      date: form.get("date") ?? undefined,
     });
   if (!parsed.success)
     return data(
@@ -108,54 +114,63 @@ export async function action({ request, context }: Route.ActionArgs) {
       { error: "Could not save this template. Try again." },
       { status: result.error === "not_found" ? 404 : 500 },
     );
-  return redirect(filterHref(parsed.data.meal));
+  return redirect(filterHref(parsed.data.meal, parsed.data.date));
 }
 
 export default function MealTemplates({
   loaderData,
   actionData,
 }: Route.ComponentProps) {
-  const { filter, editing, templates } = loaderData;
-  const returnTo = filterHref(filter);
+  const { filter, editing, templates, date } = loaderData;
+  const returnTo = filterHref(filter, date);
+  const todayHref = date
+    ? `/nutrition?${new URLSearchParams({ date })}`
+    : "/nutrition";
   return (
     <Box className="nutrition-templates">
-      <PageHeader title="Nutrition" />
-      <NutritionNavigation current="templates" />
+      <PageHeader title="Nutrition" backTo={todayHref} />
       {editing ? (
         <TemplateEditor
           key={editing.id}
           template={editing}
           filter={filter}
+          date={date}
           error={actionData?.error}
         />
       ) : (
         <>
-          <SectionHeader
-            title="Meal templates"
-            right={
-              <Button asChild variant="soft" className="meal-template-create">
-                <Link
-                  to={`/nutrition/meal-builder?${new URLSearchParams({ returnTo })}`}
+          <div className="meal-template-toolbar">
+            <Form method="get">
+              {date && <input type="hidden" name="date" value={date} />}
+              <label className="meal-template-filter">
+                Meal time
+                <select
+                  name="meal"
+                  value={filter}
+                  onChange={(event) =>
+                    event.currentTarget.form?.requestSubmit()
+                  }
                 >
-                  Create template
-                </Link>
-              </Button>
-            }
-          />
+                  {filters.map((meal) => (
+                    <option key={meal} value={meal}>
+                      {meal === "all" ? "All meals" : mealLabels[meal]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </Form>
+            <Button asChild className="meal-template-create">
+              <Link
+                to={`/nutrition/meal-builder?${new URLSearchParams({ returnTo })}`}
+              >
+                Create template
+              </Link>
+            </Button>
+          </div>
+          <SectionHeader title="Meal templates" />
           <p className="meal-template-intro">
-            Saved meals, ready where you need them.
+            Saved meals, ready when you need them.
           </p>
-          <Form method="get">
-            <FilterBar
-              label="Filter templates by meal time"
-              name="meal"
-              value={filter}
-              choices={filters.map((meal) => ({
-                value: meal,
-                label: meal === "all" ? "All" : mealLabels[meal],
-              }))}
-            />
-          </Form>
           <p className="meal-template-help">
             {filter === "all"
               ? "All saved templates, shown once."
@@ -193,6 +208,7 @@ export default function MealTemplates({
           </div>
         </>
       )}
+      <NutritionNavigation current="templates" date={date} />
     </Box>
   );
 }
@@ -200,10 +216,12 @@ export default function MealTemplates({
 function TemplateEditor({
   template,
   filter,
+  date,
   error,
 }: {
   readonly template: NonNullable<Route.ComponentProps["loaderData"]["editing"]>;
   readonly filter: string;
+  readonly date?: string;
   readonly error?: string;
 }) {
   const nameId = useId();
@@ -219,6 +237,7 @@ function TemplateEditor({
       <Form method="post" className="meal-template-editor">
         <input type="hidden" name="id" value={template.id} />
         <input type="hidden" name="meal" value={filter} />
+        {date && <input type="hidden" name="date" value={date} />}
         <label htmlFor={nameId}>
           Name
           <TextField.Root
@@ -259,7 +278,7 @@ function TemplateEditor({
             Save
           </Button>
           <Button variant="soft" asChild>
-            <Link to={filterHref(filter)}>Cancel</Link>
+            <Link to={filterHref(filter, date)}>Cancel</Link>
           </Button>
         </div>
       </Form>

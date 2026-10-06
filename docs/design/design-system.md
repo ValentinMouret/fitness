@@ -235,17 +235,28 @@ Shared components receive UI-shaped props and do not import feature domain code.
 
 Approved active-workout V3 keeps compact session navigation and timer chrome, direct duration tapping, a visible Start action and optional effort outside value entry. These are feature patterns, not a mandate to give every page workout chrome. Dashboard retains direct weight entry and its trend; this alignment introduces no history link.
 
-## Nutrition view navigation and meal filters
+## Nutrition navigation and meal filters
 
-**Accepted:** keep page-wide Today/Templates links beneath the Nutrition identity,
-aligned with the content margins. Place meal filter buttons directly below the
-management heading and introduction. Use an underline and readable weight for
-the selected item, minimum44px touch targets, and horizontal row scrolling
-when the labels do not fit. Filters are pressed buttons; semantic tabs require
-actual tab panels and their keyboard behavior.
+**Accepted: Action workspace, selected by Valentin on 6 October 2026.** Nutrition
+Today uses date controls, Your day with grouped nutrition totals, meal-level
+Log/Edit and action menus, quiet tools, and a full-width soft Meal templates link
+at the bottom. Do not add a Today/Templates tab strip or a page-level Log meal
+button. Templates has an immediate header Back link, a Meal time select and
+Create template toolbar, its template list, and a bottom Back to today link.
+Retain the selected date across those links and template filter, create, edit,
+Save and Cancel operations.
 
-All shows each template once. Meal filters use explicit assignments without
-changing assignments or log destinations. Save and Cancel retain the filter;
-removing an assignment may remove a template from that filtered list. Show an
-inline empty state. Creating a template does not inherit the active filter.
-Logging pickers use only their chosen meal time and have no All filter.
+Use Quiet editorial typography and 44px touch targets. Template rows wrap long
+names and assignments without truncation. All meals shows every template once;
+other choices show templates explicitly assigned to that meal. Filtering never
+changes assignments or the meal context of a log. Removing an assignment may
+remove that template from the selected results. Create/edit retains explicit
+multi-selection without automatic assignment from the active filter.
+
+The logging picker remains scoped to its chosen meal and has no All option.
+Its eligibility follows the same assignments as management filters. Preserve
+real editor, sharing, estimation, target calculation and persistence behavior.
+
+Native Safari/PWA title blur remains unresolved. This navigation decision is
+not evidence of a physical-device blur fix. Scope and selected-design evidence
+are recorded in [ENSO-107](https://linear.app/valentin-mouret/issue/ENSO-107).

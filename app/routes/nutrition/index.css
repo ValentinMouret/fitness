@@ -1,130 +1,90 @@
-/* ================================
-   Nutrition Page
-   ================================ */
-
 .nutrition-page {
   padding-bottom: var(--space-section);
 }
-
-.nutrition-page .page-header__title {
-  font-weight: 500;
-}
-
-/* --- Date Navigation --- */
 .nutrition-date-nav {
-  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 0 0 8px;
-  font-size: 13px;
-  flex-wrap: wrap;
-}
-
-.nutrition-date-nav__today {
-  flex-basis: 100%;
-  text-align: center;
-}
-
-/* --- Meals --- */
-.nutrition-meals {
-  margin-bottom: var(--space-section);
-}
-
-.nutrition-meals__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-
-.nutrition-meals__list {
-  display: flex;
-  flex-direction: column;
   gap: 0;
-  border-top: 1px solid var(--gray-4);
+  padding: 16px 0;
+  min-height: 76px;
+  box-sizing: border-box;
 }
-
+.nutrition-date-nav .rt-Button {
+  margin: 0;
+  padding: 0 6px;
+}
+.nutrition-description {
+  margin: 0;
+  font-size: var(--type-support-size);
+  color: var(--brand-text-secondary);
+}
+.nutrition-page > .rt-Flex {
+  margin-bottom: 4px;
+}
+.nutrition-feedback {
+  min-height: 32px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: var(--type-support-size);
+  color: var(--brand-text-secondary);
+}
+.nutrition-feedback p {
+  margin: 0;
+}
+.nutrition-meals__list {
+  margin-top: 16px;
+}
 .nutrition-meal {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 12px;
-  padding: 14px 0;
+  padding: 16px 0;
   border-bottom: 1px solid var(--gray-4);
   color: inherit;
 }
-
 .nutrition-meal__body {
   flex: 1;
   min-width: 0;
 }
-
 .nutrition-meal__name {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--brand-text);
-}
-
-.nutrition-meal__detail {
-  font-size: 0.8125rem;
-  color: var(--brand-text-secondary);
-  margin-top: 6px;
-  line-height: 1.5;
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
+  font-weight: 500;
   overflow-wrap: anywhere;
 }
-
-.nutrition-meal__detail--empty {
-  font-style: italic;
+.nutrition-meal__detail {
+  font-size: var(--type-support-size);
+  color: var(--brand-text-secondary);
+  margin-top: 4px;
+  line-height: var(--type-support-line);
+  overflow-wrap: anywhere;
 }
-
 .nutrition-meal__actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 4px;
   flex-shrink: 0;
 }
-
-.nutrition-meal__kcal {
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--brand-text);
-  flex-shrink: 0;
-  min-width: 3ch;
-  text-align: right;
-}
-
-/* --- Tools --- */
 .nutrition-tools {
   display: flex;
-  gap: 0.75rem;
   flex-wrap: wrap;
-}
-
-.nutrition-meals__title {
-  margin: 0;
-  font: 500 24px var(--font-display);
+  gap: 8px;
+  padding-top: 24px;
 }
 .nutrition-page .rt-Button,
 .nutrition-page .rt-IconButton {
   min-height: 44px;
   min-width: 44px;
+  font-size: var(--type-support-size);
+  font-weight: 500;
 }
-.nutrition-meal__actions .rt-Button {
+.nutrition-meal__actions .rt-Button,
+.nutrition-meal__actions .rt-IconButton,
+.nutrition-tools .rt-Button {
   margin: 0;
-  padding: 0 8px;
-  font-size: 12px;
-}
-@media (max-width: 360px) {
-  .nutrition-meal {
-    gap: 4px;
-  }
-  .nutrition-meal__actions {
-    gap: 4px;
-  }
-  .nutrition-meal__actions .rt-Button {
-    font-size: 11px;
-    padding: 0 6px;
-  }
 }

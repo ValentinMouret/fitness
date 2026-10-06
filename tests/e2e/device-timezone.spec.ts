@@ -35,7 +35,7 @@ test("device timezone persists before calendar interaction and rejects forged ac
     );
     await page.goto("/nutrition");
     await expect(
-      page.getByRole("heading", { name: "Today", exact: true }),
+      page.getByRole("button", { name: "Go to Today (T)", exact: true }),
     ).toBeVisible();
     await expect
       .poll(
@@ -52,7 +52,7 @@ test("device timezone persists before calendar interaction and rejects forged ac
       dateInTimeZone(new Date(), "Pacific/Auckland"),
     );
     await expect(
-      page.getByRole("link", { name: "Add Breakfast", exact: true }),
+      page.getByRole("link", { name: "Log Breakfast", exact: true }),
     ).toHaveAttribute("href", new RegExp(`date=${expectedDate}`));
     const invalid = await page.request.post("/account/timezone", {
       form: { timeZone: "not/a-zone" },
@@ -304,7 +304,7 @@ test("direct date-default writes require timezone and repeated weight logs keep 
     ).toEqual(before);
     await page.goto("/nutrition");
     await expect(
-      page.getByRole("heading", { name: "Today", exact: true }),
+      page.getByRole("button", { name: "Go to Today (T)", exact: true }),
     ).toBeVisible();
     if (!definition)
       await pool.query(

@@ -1,26 +1,29 @@
 .nutrition-summary {
-  padding: 24px 0 16px;
+  padding: 16px;
+  background: var(--gray-2);
+  border: 1px solid var(--gray-4);
+  border-radius: var(--radius-3);
+  font-variant-numeric: tabular-nums;
   text-align: center;
-  border-bottom: 1px solid var(--gray-4);
-  margin-bottom: 24px;
+  margin-bottom: 0;
 }
 .nutrition-summary > strong {
   display: block;
-  font: 500 44px var(--font-display);
+  font:
+    500 var(--type-section-size) / var(--type-section-line) var(--font-body);
   margin: 12px 0;
 }
 .nutrition-summary small {
-  font: 14px var(--font-body);
+  font: var(--type-caption-size) / var(--type-caption-line) var(--font-body);
   color: var(--brand-text-secondary);
 }
 .nutrition-summary > p {
-  font-size: 12px;
+  font-size: var(--type-caption-size);
   color: var(--brand-text-secondary);
 }
 .nutrition-summary__eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-line);
   color: var(--brand-text-secondary);
 }
 .nutrition-macros {
@@ -36,19 +39,20 @@
   text-align: center;
 }
 .nutrition-macro-card__value {
-  font: 600 28px / 1 var(--font-display);
+  font:
+    500 var(--type-section-size) / var(--type-section-line) var(--font-body);
   color: var(--brand-text);
 }
 .nutrition-macro-card__value small {
-  font-size: 12px;
+  font-size: var(--type-caption-size);
 }
 .nutrition-macro-card__label {
-  font: 12px var(--font-body);
+  font: var(--type-caption-size) / var(--type-caption-line) var(--font-body);
   color: var(--brand-text-secondary);
   margin-top: 8px;
 }
 .nutrition-macro-card__target {
-  font-size: 11px;
+  font-size: var(--type-caption-size);
   color: var(--brand-text-secondary);
   margin: 4px 0 8px;
 }
@@ -56,7 +60,10 @@
   .nutrition-macro-card {
     padding: 12px 8px;
   }
-  .nutrition-macro-card__value {
-    font-size: 24px;
-  }
+}
+
+.nutrition-summary > strong,
+.nutrition-summary small,
+.nutrition-macro-card__value {
+  font-variant-numeric: tabular-nums;
 }

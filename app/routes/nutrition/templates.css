@@ -13,10 +13,10 @@
   line-height: 1.5;
 }
 .meal-template-intro {
-  font-size: 13px;
+  font-size: var(--type-support-size);
 }
 .meal-template-help {
-  font-size: 12px;
+  font-size: var(--type-support-size);
   margin: 12px 0 20px;
 }
 .meal-template-list {
@@ -37,12 +37,12 @@
   min-width: 0;
 }
 .meal-template-row h3 {
-  font: 500 21px / 1.2 var(--font-display);
+  font: 500 var(--type-body-size) / var(--type-body-line) var(--font-body);
   margin: 0;
   overflow-wrap: anywhere;
 }
 .meal-template-row p {
-  font-size: 12px;
+  font-size: var(--type-support-size);
   line-height: 1.45;
   color: var(--brand-text-secondary);
   margin: 4px 0 0;
@@ -62,4 +62,29 @@
 .meal-template-editor-actions {
   display: flex;
   gap: var(--space-3);
+}
+
+.meal-template-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px 0;
+}
+.meal-template-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--type-support-size);
+  min-height: 44px;
+}
+.meal-template-filter select {
+  font: inherit;
+  min-height: 44px;
+  border: 1px solid var(--gray-5);
+  border-radius: var(--radius-2);
+  padding: 0 8px;
+  background: var(--brand-background);
+  color: inherit;
 }
