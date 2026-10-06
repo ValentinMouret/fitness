@@ -54,9 +54,12 @@ for (const width of [320, 390]) {
     await expect(
       page.getByRole("link", { name: "Back", exact: true }),
     ).toHaveAttribute("href", "/nutrition?date=1905-05-08");
-    await page
-      .getByRole("combobox", { name: "Meal time", exact: true })
-      .selectOption("lunch");
+    const mealTime = page.getByRole("combobox", {
+      name: "Meal time",
+      exact: true,
+    });
+    await expect(mealTime).toHaveCSS("font-size", "16px");
+    await mealTime.selectOption("lunch");
     await expect(page).toHaveURL(/meal=lunch/);
     await expect(page).toHaveURL(/date=1905-05-08/);
     const create = page.getByRole("link", {

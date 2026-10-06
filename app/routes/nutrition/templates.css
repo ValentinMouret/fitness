@@ -81,6 +81,7 @@
 }
 .meal-template-filter select {
   font: inherit;
+  font-size: var(--type-body-size);
   min-height: 44px;
   border: 1px solid var(--gray-5);
   border-radius: var(--radius-2);
