@@ -1,6 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { createWorkoutCommands } from "~/modules/fitness/infra/workout.repository.server";
+import { createRuntimeQueryRunner } from "~/modules/mcp/infra/query.server";
 import { registerFitnessTools } from "~/modules/mcp/infra/tools.server";
+import { createNutritionCommands } from "~/modules/nutrition/infra/nutrition-commands.server";
+import { getAuthFoundation } from "./auth-foundation.server";
+import { requireLegacyOwnerIdentity } from "./legacy-owner.server";
 import { findAccess } from "./oauth.repository.server";
 import { oauthConfig } from "./oauth-config.server";
 import { oauthError, privateHeaders } from "./oauth-http.server";
@@ -29,6 +34,9 @@ export async function handleMcp(request: Request) {
   );
   if (access.isErr()) return oauthError(access.error);
   if (!access.value) return challenge();
+  const owner = await requireLegacyOwnerIdentity();
+  if (!getAuthFoundation() && access.value.user.id !== owner.id)
+    return challenge();
   const server = new McpServer(
     { name: "Fitness", version: "1.0.0" },
     { capabilities: { tools: {} } },
@@ -37,7 +45,12 @@ export async function handleMcp(request: Request) {
     sessionIdGenerator: undefined,
     enableJsonResponse: true,
   });
-  registerFitnessTools(server);
+  registerFitnessTools(
+    server,
+    createWorkoutCommands(access.value.user.id),
+    createRuntimeQueryRunner(access.value.user.id),
+    createNutritionCommands(access.value.user.id),
+  );
   try {
     await server.connect(transport);
     const response = await transport.handleRequest(request);

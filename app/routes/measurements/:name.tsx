@@ -22,19 +22,30 @@ import MeasurementChart from "~/components/MeasurementChart";
 import { NumberInput } from "~/components/NumberInput";
 import { SectionHeader } from "~/components/SectionHeader";
 import {
+  getAccountToday,
+  requireAccountToday,
+} from "~/modules/auth/infra/account-settings.server";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
+import {
   addMeasure,
   deleteMeasure,
   getMeasurementDetail,
 } from "~/modules/core/infra/measurement-detail.service.server";
-import { today } from "~/time";
+
 import { isEditableTarget } from "~/utils/dom";
 import { formNumber, formOptionalText } from "~/utils/form-data";
 import type { Route } from "./+types/:name";
 import "./measurement-detail.css";
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, context }: Route.LoaderArgs) {
   const { name } = params;
-  return getMeasurementDetail(name);
+  return {
+    ...(await getMeasurementDetail(
+      context.get(authenticatedUserContext).id,
+      name,
+    )),
+    todayDate: await getAccountToday(context.get(authenticatedUserContext).id),
+  };
 }
 
 export const handle = {
@@ -49,7 +60,7 @@ export const handle = {
   },
 };
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
   const { name } = params;
   const formData = await request.formData();
   const intentSchema = zfd.formData({
@@ -68,8 +79,10 @@ export async function action({ request, params }: Route.ActionArgs) {
       return data({ error: "Invalid value" }, { status: 400 });
     }
 
-    const measureDate = parsed.data.date ? new Date(parsed.data.date) : today();
-    const result = await addMeasure({
+    const measureDate = parsed.data.date
+      ? new Date(parsed.data.date)
+      : await requireAccountToday(context.get(authenticatedUserContext).id);
+    const result = await addMeasure(context.get(authenticatedUserContext).id, {
       name,
       value: parsed.data.value,
       date: measureDate,
@@ -89,7 +102,10 @@ export async function action({ request, params }: Route.ActionArgs) {
     const parsed = schema.parse(formData);
     const measureDate = parsed.date ? new Date(parsed.date) : new Date();
 
-    const result = await deleteMeasure({ name, date: measureDate });
+    const result = await deleteMeasure(
+      context.get(authenticatedUserContext).id,
+      { name, date: measureDate },
+    );
     if (!result.ok) {
       return data({ error: result.error }, { status: result.status });
     }
@@ -101,7 +117,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 }
 
 export default function MeasurementPage(_: Route.ComponentProps) {
-  const { measurement, measures } = useLoaderData<typeof loader>();
+  const { measurement, measures, todayDate } = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
   const addFetcher = useFetcher();
   const valueInputId = useId();
@@ -127,7 +143,7 @@ export default function MeasurementPage(_: Route.ComponentProps) {
   }, []);
   const actionData = z
     .object({ error: z.string().optional(), success: z.boolean().optional() })
-    .nullable()
+    .nullish()
     .parse(addFetcher.data);
 
   return (
@@ -197,7 +213,7 @@ export default function MeasurementPage(_: Route.ComponentProps) {
                   id={dateInputId}
                   name="date"
                   type="date"
-                  defaultValue={today().toISOString().split("T")[0]}
+                  defaultValue={new Date(todayDate).toISOString().split("T")[0]}
                   disabled={isSubmitting}
                 />
               </Box>

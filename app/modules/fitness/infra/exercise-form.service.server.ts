@@ -1,4 +1,5 @@
 import { redirect } from "react-router";
+import type { UserId } from "~/modules/auth/domain/user";
 import {
   type Exercise,
   ExerciseMuscleGroupsAggregate,
@@ -7,10 +8,10 @@ import {
   parseMovementPattern,
   parseMuscleGroup,
 } from "~/modules/fitness/domain/workout";
-import { ExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
-import { ExerciseService } from "~/modules/fitness/infra/service.server";
+import { createExerciseMuscleGroupsRepository } from "~/modules/fitness/infra/repository.server";
 import { coerceEmpty, humanFormatting } from "~/strings";
 import { coerceInt } from "~/utils";
+import { requireCatalogueOwner } from "./exercise-catalogue-owner.server";
 
 export type MuscleGroupSplitInput = {
   readonly muscleGroup: string;
@@ -82,8 +83,10 @@ function buildExercise(input: BaseExerciseInput, id: string): Exercise {
 }
 
 export async function createExercise(
+  userId: UserId,
   input: BaseExerciseInput,
 ): Promise<Response> {
+  await requireCatalogueOwner(userId);
   const exerciseId = crypto.randomUUID();
   const exercise = buildExercise(input, exerciseId);
   const muscleGroupSplits = parseSplits(input.splits);
@@ -98,7 +101,9 @@ export async function createExercise(
     throw new Error("Invalid muscle group");
   }
 
-  const result = await ExerciseMuscleGroupsRepository.save(muscleGroup.value);
+  const result = await createExerciseMuscleGroupsRepository(userId).save(
+    muscleGroup.value,
+  );
   if (result.isErr()) {
     throw new Error("Error writing to database");
   }
@@ -106,12 +111,13 @@ export async function createExercise(
   return redirect("/workouts/exercises");
 }
 
-export async function getExerciseForEdit(id: string) {
+export async function getExerciseForEdit(userId: UserId, id: string) {
   if (!id) {
     throw new Error("Exercise ID is required");
   }
 
-  const exerciseResult = await ExerciseMuscleGroupsRepository.findById(id);
+  const exerciseResult =
+    await createExerciseMuscleGroupsRepository(userId).findById(id);
 
   if (exerciseResult.isErr()) {
     throw new Error("Error fetching exercise");
@@ -125,17 +131,19 @@ export async function getExerciseForEdit(id: string) {
 }
 
 export async function updateExercise(
+  userId: UserId,
   input: BaseExerciseInput & {
     readonly id: string;
   },
 ): Promise<Response> {
+  await requireCatalogueOwner(userId);
   if (!input.id) {
     throw new Error("Exercise ID is required");
   }
 
-  const oldExerciseResult = await ExerciseMuscleGroupsRepository.findById(
-    input.id,
-  );
+  const oldExerciseResult = await createExerciseMuscleGroupsRepository(
+    userId,
+  ).findById(input.id);
 
   if (oldExerciseResult.isErr()) {
     throw new Error("Error fetching original exercise");
@@ -157,8 +165,7 @@ export async function updateExercise(
     throw new Error("Invalid muscle group");
   }
 
-  const result = await ExerciseService.update(
-    oldExerciseResult.value,
+  const result = await createExerciseMuscleGroupsRepository(userId).save(
     newExerciseMuscleGroup.value,
   );
   if (result.isErr()) {

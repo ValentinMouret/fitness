@@ -33,10 +33,12 @@ interface ExerciseCardData {
 
 interface ExerciseCardProps {
   readonly exerciseMuscleGroup: ExerciseCardData;
+  readonly canManageCatalogue: boolean;
 }
 
 export default function ExerciseCard({
   exerciseMuscleGroup: { exercise, muscleGroupSplits },
+  canManageCatalogue,
 }: ExerciseCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -88,33 +90,37 @@ export default function ExerciseCard({
             <Text weight="bold">{exercise.name}</Text>
           </Flex>
           <Flex gap="1" align="center">
-            <Tooltip content={`Edit ${exercise.name}`}>
-              <IconButton
-                variant="ghost"
-                size="1"
-                asChild
-                onClick={(event) => event.stopPropagation()}
-                aria-label={`Edit ${exercise.name}`}
-              >
-                <Link to={`/workouts/exercises/${exercise.id}/edit`}>
-                  <Pencil1Icon />
-                </Link>
-              </IconButton>
-            </Tooltip>
-            <Tooltip content={`Delete ${exercise.name}`}>
-              <IconButton
-                variant="ghost"
-                size="1"
-                color="red"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setShowDeleteDialog(true);
-                }}
-                aria-label={`Delete ${exercise.name}`}
-              >
-                <TrashIcon />
-              </IconButton>
-            </Tooltip>
+            {canManageCatalogue && (
+              <>
+                <Tooltip content={`Edit ${exercise.name}`}>
+                  <IconButton
+                    variant="ghost"
+                    size="1"
+                    asChild
+                    onClick={(event) => event.stopPropagation()}
+                    aria-label={`Edit ${exercise.name}`}
+                  >
+                    <Link to={`/workouts/exercises/${exercise.id}/edit`}>
+                      <Pencil1Icon />
+                    </Link>
+                  </IconButton>
+                </Tooltip>
+                <Tooltip content={`Delete ${exercise.name}`}>
+                  <IconButton
+                    variant="ghost"
+                    size="1"
+                    color="red"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setShowDeleteDialog(true);
+                    }}
+                    aria-label={`Delete ${exercise.name}`}
+                  >
+                    <TrashIcon />
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
             <Tooltip content={isExpanded ? "Collapse" : "Expand"}>
               <IconButton
                 variant="ghost"
@@ -153,40 +159,42 @@ export default function ExerciseCard({
         )}
       </Flex>
 
-      <AlertDialog.Root
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-      >
-        <AlertDialog.Content maxWidth="450px">
-          <AlertDialog.Title>Delete exercise</AlertDialog.Title>
-          <AlertDialog.Description size="2">
-            Delete {exercise.name}? This action cannot be undone.
-          </AlertDialog.Description>
+      {canManageCatalogue && (
+        <AlertDialog.Root
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+        >
+          <AlertDialog.Content maxWidth="450px">
+            <AlertDialog.Title>Delete exercise</AlertDialog.Title>
+            <AlertDialog.Description size="2">
+              Delete {exercise.name}? This action cannot be undone.
+            </AlertDialog.Description>
 
-          <Flex gap="3" mt="4" justify="end">
-            <AlertDialog.Cancel>
-              <Button variant="soft" color="gray" disabled={isDeleting}>
-                Cancel
-              </Button>
-            </AlertDialog.Cancel>
-            <fetcher.Form ref={formRef} method="post">
-              <input type="hidden" name="exerciseId" value={exercise.id} />
-              <Tooltip content="Delete exercise (Cmd/Ctrl+Enter)">
-                <Box display="inline-block">
-                  <Button
-                    type="submit"
-                    color="red"
-                    loading={isDeleting}
-                    aria-keyshortcuts="Meta+Enter Control+Enter"
-                  >
-                    Delete
-                  </Button>
-                </Box>
-              </Tooltip>
-            </fetcher.Form>
-          </Flex>
-        </AlertDialog.Content>
-      </AlertDialog.Root>
+            <Flex gap="3" mt="4" justify="end">
+              <AlertDialog.Cancel>
+                <Button variant="soft" color="gray" disabled={isDeleting}>
+                  Cancel
+                </Button>
+              </AlertDialog.Cancel>
+              <fetcher.Form ref={formRef} method="post">
+                <input type="hidden" name="exerciseId" value={exercise.id} />
+                <Tooltip content="Delete exercise (Cmd/Ctrl+Enter)">
+                  <Box display="inline-block">
+                    <Button
+                      type="submit"
+                      color="red"
+                      loading={isDeleting}
+                      aria-keyshortcuts="Meta+Enter Control+Enter"
+                    >
+                      Delete
+                    </Button>
+                  </Box>
+                </Tooltip>
+              </fetcher.Form>
+            </Flex>
+          </AlertDialog.Content>
+        </AlertDialog.Root>
+      )}
     </Card>
   );
 }

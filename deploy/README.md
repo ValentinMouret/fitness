@@ -486,7 +486,12 @@ images, uses an isolated disposable PostgreSQL container and volume, verifies
 image/store hashes, missing-mount and flagged-preview failures, PID 1 running as
 UID 1000, protected startup/store paths, and an actual preview database copy and
 server even with an inherited mount. CI runs the same acceptance check. The
-filesystem tests also cover concurrent identical/conflicting publishers.
+preview check seeds measurements against the migrated ownership schema for an
+accepted synthetic owner, verifies that the source stays unchanged, and rejects
+missing or revoked owners. Run this command locally before handing off changes
+to preview startup, seeding, or ownership migrations: the ordinary `bun run gate`
+does not execute container entrypoints or their SQL.
+The filesystem tests also cover concurrent identical/conflicting publishers.
 The same command verifies the production-only Caddy handler using a read-only
 store, including old-only bytes/MIME/immutable headers, proxy misses, preview
 isolation and HTML no-store. It then runs a disposable Docker-in-Docker Swarm;

@@ -1,3 +1,5 @@
+import { db } from "~/db";
+import type { UserId } from "~/modules/auth/domain/user";
 import {
   Age,
   baseMeasurements,
@@ -5,7 +7,8 @@ import {
   Weight,
 } from "~/modules/core/domain/measurements";
 import { Target } from "~/modules/core/domain/target";
-import { TargetService } from "~/modules/core/infra/measurement-service";
+import { createMeasurementRepository } from "~/modules/core/infra/measurements.repository.server";
+import { createTargetRepository } from "~/modules/core/infra/target.repository.server";
 import { Activity } from "~/modules/nutrition/domain/activity";
 import {
   type Gender,
@@ -46,14 +49,17 @@ export function calculateTargets(input: {
   };
 }
 
-export async function saveNutritionTarget(input: {
-  readonly age: number;
-  readonly height: number;
-  readonly weight: number;
-  readonly activity: number;
-  readonly delta: number;
-  readonly gender: Gender;
-}) {
+export async function saveNutritionTarget(
+  userId: UserId,
+  input: {
+    readonly age: number;
+    readonly height: number;
+    readonly weight: number;
+    readonly activity: number;
+    readonly delta: number;
+    readonly gender: Gender;
+  },
+) {
   const maintenance = NutritionCalculationService.mifflinStJeor({
     age: Age.years(input.age),
     height: Height.cm(input.height),
@@ -69,11 +75,17 @@ export async function saveNutritionTarget(input: {
     value: targetIntake,
   });
 
-  const saveResult = await TargetService.setTarget(target);
-
-  if (saveResult.isErr()) {
-    throw new Error(saveResult.error);
-  }
+  await db.transaction(async (transaction) => {
+    const definition = await createMeasurementRepository(userId).ensure(
+      baseMeasurements.dailyCalorieIntake,
+      transaction,
+    );
+    if (definition.isErr()) throw new Error(definition.error);
+    const saveResult = await createTargetRepository(userId, transaction).set(
+      target,
+    );
+    if (saveResult.isErr()) throw new Error(saveResult.error);
+  });
 
   return { success: true };
 }

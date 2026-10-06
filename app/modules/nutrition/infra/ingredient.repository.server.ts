@@ -1,8 +1,9 @@
 import { and, eq, isNull } from "drizzle-orm";
-import { Result, ResultAsync } from "neverthrow";
+import { err, ok, Result, ResultAsync } from "neverthrow";
 import { db } from "~/db/index";
 import { ingredients } from "~/db/schema";
 import { logger } from "~/logger.server";
+import type { UserId } from "~/modules/auth/domain/user";
 import type { ErrRepository } from "~/repository";
 import {
   executeQuery,
@@ -17,7 +18,7 @@ import type {
 import { isUniqueViolation } from "./nutrition-errors.server";
 import { recordToIngredient } from "./record-mappers";
 
-export function createIngredientRepository(database = db) {
+export function createIngredientRepository(userId: UserId, database = db) {
   let ingredientsCache: Ingredient[] | null = null;
   return {
     listAll(): ResultAsync<readonly Ingredient[], ErrRepository> {
@@ -28,7 +29,9 @@ export function createIngredientRepository(database = db) {
       const query = database
         .select()
         .from(ingredients)
-        .where(isNull(ingredients.deleted_at));
+        .where(
+          and(eq(ingredients.userId, userId), isNull(ingredients.deleted_at)),
+        );
 
       return executeQuery(query, "listAll")
         .andThen((records) => {
@@ -86,7 +89,13 @@ export function createIngredientRepository(database = db) {
       const query = database
         .select()
         .from(ingredients)
-        .where(and(eq(ingredients.id, id), isNull(ingredients.deleted_at)))
+        .where(
+          and(
+            eq(ingredients.userId, userId),
+            eq(ingredients.id, id),
+            isNull(ingredients.deleted_at),
+          ),
+        )
         .limit(1);
 
       return executeQuery(query, "fetchById")
@@ -99,6 +108,9 @@ export function createIngredientRepository(database = db) {
       tx?: Transaction,
     ): ResultAsync<Ingredient, ErrRepository | "conflict"> {
       const values = {
+        userId,
+        ai_generated: ingredient.aiGenerated,
+        ai_generated_at: ingredient.aiGeneratedAt,
         name: ingredient.name,
         category: ingredient.category,
         calories: ingredient.calories,
@@ -167,7 +179,13 @@ export function createIngredientRepository(database = db) {
         (tx ?? database)
           .update(ingredients)
           .set(updateValues)
-          .where(and(eq(ingredients.id, id), isNull(ingredients.deleted_at)))
+          .where(
+            and(
+              eq(ingredients.userId, userId),
+              eq(ingredients.id, id),
+              isNull(ingredients.deleted_at),
+            ),
+          )
           .returning(),
         (error) => {
           logger.error({ err: error }, "Failed to update ingredient");
@@ -176,9 +194,7 @@ export function createIngredientRepository(database = db) {
       )
         .andThen((records) => {
           if (records.length === 0) {
-            return ResultAsync.fromSafePromise(
-              Promise.reject("not_found" as const),
-            );
+            return err("not_found" as const);
           }
           return recordToIngredient(records[0]);
         })
@@ -194,15 +210,22 @@ export function createIngredientRepository(database = db) {
         (tx ?? database)
           .update(ingredients)
           .set({ deleted_at: new Date() })
-          .where(and(eq(ingredients.id, id), isNull(ingredients.deleted_at))),
+          .where(
+            and(
+              eq(ingredients.userId, userId),
+              eq(ingredients.id, id),
+              isNull(ingredients.deleted_at),
+            ),
+          )
+          .returning({ id: ingredients.id }),
         (error) => {
           logger.error({ err: error }, "Failed to delete ingredient");
           return "database_error" as const;
         },
-      ).map(() => {
-        // Invalidate cache when ingredient is deleted
+      ).andThen((rows) => {
+        if (!rows.length) return err("not_found" as const);
         ingredientsCache = null;
-        return undefined;
+        return ok(undefined);
       });
     },
 
@@ -211,5 +234,3 @@ export function createIngredientRepository(database = db) {
     },
   };
 }
-
-export const IngredientRepository = createIngredientRepository();

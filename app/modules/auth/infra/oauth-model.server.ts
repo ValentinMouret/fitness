@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { db } from "~/db";
 import { env } from "~/env.server";
 import { connectionIsActive, type OAuthClient } from "../domain/oauth";
+import { userIdSchema } from "../domain/user";
 import { hashCredential, randomCredential } from "./crypto.server";
 import { oauthCodes, oauthConnections, oauthTokens } from "./schema";
 
@@ -38,7 +39,12 @@ export function createOAuthServer(
     saveAuthorizationCode: async (code, libraryClient, owner) => {
       const [approved] = await tx
         .insert(oauthConnections)
-        .values({ clientId: client.id, resource, scope: "fitness" })
+        .values({
+          userId: userIdSchema.parse(owner.userId),
+          clientId: client.id,
+          resource,
+          scope: "fitness",
+        })
         .returning();
       if (!approved || !code.codeChallenge)
         throw new Error("Missing approved connection or PKCE challenge");

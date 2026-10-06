@@ -1,5 +1,6 @@
 import { ResultAsync } from "neverthrow";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { userIdSchema } from "~/modules/auth/domain/user";
 import type {
   Exercise,
   MuscleGroup,
@@ -9,14 +10,15 @@ import type {
   WorkoutSession,
   WorkoutSet,
 } from "~/modules/fitness/domain/workout";
-import { VolumeTrackingService } from "./volume-tracking-service.server";
+import { createVolumeTrackingService } from "./volume-tracking-service.server";
 
-vi.mock("~/modules/fitness/infra/volume-tracking-repository.server", () => ({
-  VolumeTrackingRepository: {
+vi.mock("~/modules/fitness/infra/volume-tracking-repository.server", () => {
+  const repository = {
     getWeeklyVolume: vi.fn(),
     recordWorkoutVolume: vi.fn(),
-  },
-}));
+  };
+  return { createVolumeTrackingRepository: () => repository };
+});
 
 vi.mock("~/modules/fitness/domain/workout", () => ({
   WeeklyVolumeTracker: {
@@ -26,8 +28,11 @@ vi.mock("~/modules/fitness/domain/workout", () => ({
 }));
 
 import { WeeklyVolumeTracker } from "~/modules/fitness/domain/workout";
-import { VolumeTrackingRepository } from "~/modules/fitness/infra/volume-tracking-repository.server";
+import { createVolumeTrackingRepository } from "~/modules/fitness/infra/volume-tracking-repository.server";
 
+const actor = userIdSchema.parse("8d1606c7-f8ee-487e-ae60-f326dd91b3bb");
+const VolumeTrackingRepository = createVolumeTrackingRepository(actor);
+const VolumeTrackingService = createVolumeTrackingService(actor);
 const mockGetWeeklyVolume = vi.mocked(VolumeTrackingRepository.getWeeklyVolume);
 const mockRecordWorkoutVolume = vi.mocked(
   VolumeTrackingRepository.recordWorkoutVolume,

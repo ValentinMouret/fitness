@@ -2,12 +2,13 @@ import { RulerSquareIcon } from "@radix-ui/react-icons";
 import { Badge, Box, Card, Flex, Grid, Heading, Text } from "@radix-ui/themes";
 import { Link } from "react-router";
 import { EmptyState } from "~/components/EmptyState";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { getMeasurementsPageData } from "~/modules/core/infra/measurements-page.service.server";
 import type { Route } from "./+types/index";
 import "./index.css";
 
-export async function loader() {
-  return getMeasurementsPageData();
+export async function loader({ context }: Route.LoaderArgs) {
+  return getMeasurementsPageData(context.get(authenticatedUserContext).id);
 }
 
 export const handle = {

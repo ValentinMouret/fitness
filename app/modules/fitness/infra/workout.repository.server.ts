@@ -19,12 +19,14 @@ import {
 import { db } from "~/db";
 import {
   exerciseMuscleGroups,
+  exercisePreferences,
   exercises,
   workoutExercises,
   workoutSets,
   workouts,
 } from "~/db/schema";
 import { logger } from "~/logger.server";
+import type { UserId } from "~/modules/auth/domain/user";
 import type { ErrRepository } from "~/repository";
 import { executeQuery } from "~/repository.server";
 import type { IWorkoutRepository } from "../application/workout.repository";
@@ -43,6 +45,8 @@ import {
   ExerciseMuscleGroupsAggregate,
 } from "../domain/workout";
 import { failure, type WorkoutError } from "../domain/workout-commands";
+import { requireCatalogueOwner } from "./exercise-catalogue-owner.server";
+import { projectExercisePreferences } from "./exercise-preferences.repository.server";
 
 type ExerciseHistoryRow = {
   readonly workout_id: string;
@@ -82,6 +86,7 @@ function databaseError(error: unknown): WorkoutError {
 
 async function catalogue(
   tx: Transaction,
+  userId: UserId,
   ids: readonly string[],
   includeArchived = false,
 ): Promise<readonly Exercise[]> {
@@ -96,24 +101,35 @@ async function catalogue(
       ),
     )
     .for("share");
-  return rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    type: row.type,
-    movementPattern: row.movement_pattern,
-    description: row.description ?? undefined,
-    mmcInstructions: row.mmc_instructions ?? undefined,
-  }));
+  return projectExercisePreferences(
+    userId,
+    rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      type: row.type,
+      movementPattern: row.movement_pattern,
+      description: undefined,
+      mmcInstructions: undefined,
+    })),
+    tx,
+  );
 }
 
 async function loadSession(
   tx: Transaction,
+  userId: UserId,
   id: string,
 ): Promise<WorkoutSession | null> {
   const [row] = await tx
     .select()
     .from(workouts)
-    .where(and(eq(workouts.id, id), isNull(workouts.deleted_at)))
+    .where(
+      and(
+        eq(workouts.userId, userId),
+        eq(workouts.id, id),
+        isNull(workouts.deleted_at),
+      ),
+    )
     .for("update");
   if (!row) return null;
   const groups = await tx
@@ -128,6 +144,7 @@ async function loadSession(
     .orderBy(workoutExercises.order_index);
   const entries = await catalogue(
     tx,
+    userId,
     groups.map((group) => group.exercise_id),
     true,
   );
@@ -180,6 +197,7 @@ async function loadSession(
 
 async function persist(
   tx: Transaction,
+  userId: UserId,
   session: WorkoutSession,
   previous?: WorkoutSession,
 ) {
@@ -187,6 +205,7 @@ async function persist(
   const changedAt = new Date();
   if (!previous) {
     await tx.insert(workouts).values({
+      userId,
       id: workout.id,
       name: workout.name,
       start: workout.start,
@@ -197,7 +216,7 @@ async function persist(
     await tx
       .update(workouts)
       .set({ stop: workout.stop ?? null, updated_at: changedAt })
-      .where(eq(workouts.id, workout.id));
+      .where(and(eq(workouts.userId, userId), eq(workouts.id, workout.id)));
   }
   const oldGroups = new Map(
     previous?.exerciseGroups.map((group) => [group.exercise.id, group]) ?? [],
@@ -315,6 +334,7 @@ async function persist(
 }
 
 export function createWorkoutRepository(
+  userId: UserId,
   database: Database = db,
 ): IWorkoutRepository {
   function transaction<T>(
@@ -328,31 +348,31 @@ export function createWorkoutRepository(
   const repository: IWorkoutRepository = {
     createSession: (build, ids) =>
       transaction(async (tx) => {
-        const result = build(await catalogue(tx, ids));
+        const result = build(await catalogue(tx, userId, ids));
         if (result.isErr()) return result;
-        await persist(tx, result.value);
+        await persist(tx, userId, result.value);
         return result;
       }),
     changeSession: (id, change, ids = []) =>
       transaction(async (tx) => {
-        const session = await loadSession(tx, id);
+        const session = await loadSession(tx, userId, id);
         if (!session)
           return err(failure("not_found", "Workout does not exist"));
-        const result = change(session, await catalogue(tx, ids));
+        const result = change(session, await catalogue(tx, userId, ids));
         if (result.isErr()) return result;
-        await persist(tx, result.value, session);
+        await persist(tx, userId, result.value, session);
         return result;
       }),
     deleteSession: (id) =>
       transaction(async (tx) => {
-        const session = await loadSession(tx, id);
+        const session = await loadSession(tx, userId, id);
         if (!session)
           return err(failure("not_found", "Workout does not exist"));
         const deleted_at = new Date();
         await tx
           .update(workouts)
           .set({ deleted_at })
-          .where(eq(workouts.id, id));
+          .where(and(eq(workouts.userId, userId), eq(workouts.id, id)));
         await tx
           .update(workoutExercises)
           .set({ deleted_at })
@@ -365,6 +385,7 @@ export function createWorkoutRepository(
       }),
     createExercise: (input) =>
       transaction(async (tx) => {
+        await requireCatalogueOwner(userId, tx);
         const exercise = {
           id: crypto.randomUUID(),
           name: input.name,
@@ -384,8 +405,14 @@ export function createWorkoutRepository(
           name: exercise.name,
           type: exercise.type,
           movement_pattern: exercise.movementPattern,
-          description: exercise.description,
-          mmc_instructions: exercise.mmcInstructions,
+          description: null,
+          mmc_instructions: null,
+        });
+        await tx.insert(exercisePreferences).values({
+          userId,
+          exerciseId: exercise.id,
+          description: exercise.description ?? null,
+          mmcInstructions: exercise.mmcInstructions ?? null,
         });
         await tx.insert(exerciseMuscleGroups).values(
           input.muscleGroupSplits.map((group) => ({
@@ -415,7 +442,9 @@ export function createWorkoutRepository(
           database
             .update(workouts)
             .set({ ...values, updated_at: new Date() })
-            .where(eq(workouts.id, workout.id))
+            .where(
+              and(eq(workouts.userId, userId), eq(workouts.id, workout.id)),
+            )
             .returning(),
           (error) => {
             logger.error({ err: error }, "Error updating workout");
@@ -434,7 +463,10 @@ export function createWorkoutRepository(
       }
 
       return ResultAsync.fromPromise(
-        database.insert(workouts).values(values).returning(),
+        database
+          .insert(workouts)
+          .values({ userId, ...values })
+          .returning(),
         (error) => {
           logger.error({ err: error }, "Error creating workout");
           return "database_error" as const;
@@ -455,7 +487,13 @@ export function createWorkoutRepository(
       const query = database
         .select()
         .from(workouts)
-        .where(and(eq(workouts.id, id), isNull(workouts.deleted_at)));
+        .where(
+          and(
+            eq(workouts.userId, userId),
+            eq(workouts.id, id),
+            isNull(workouts.deleted_at),
+          ),
+        );
 
       return executeQuery(query, "findWorkoutById").map((records) => {
         if (records.length === 0) {
@@ -470,7 +508,7 @@ export function createWorkoutRepository(
       const query = database
         .select()
         .from(workouts)
-        .where(isNull(workouts.deleted_at))
+        .where(and(eq(workouts.userId, userId), isNull(workouts.deleted_at)))
         .orderBy(desc(workouts.start));
 
       return executeQuery(query, "findAllWorkouts").map((records) =>
@@ -484,6 +522,7 @@ export function createWorkoutRepository(
         .from(workouts)
         .where(
           and(
+            eq(workouts.userId, userId),
             isNull(workouts.deleted_at),
             isNull(workouts.stop),
             eq(workouts.imported_from_fitbod, false),
@@ -510,7 +549,7 @@ export function createWorkoutRepository(
       const workoutsQuery = database
         .select()
         .from(workouts)
-        .where(isNull(workouts.deleted_at))
+        .where(and(eq(workouts.userId, userId), isNull(workouts.deleted_at)))
         .orderBy(desc(workouts.start))
         .limit(limit)
         .offset(offset);
@@ -518,7 +557,7 @@ export function createWorkoutRepository(
       const countQuery = database
         .select({ count: sql<number>`count(*)` })
         .from(workouts)
-        .where(isNull(workouts.deleted_at));
+        .where(and(eq(workouts.userId, userId), isNull(workouts.deleted_at)));
 
       return ResultAsync.combine([
         executeQuery(workoutsQuery, "findWorkoutsWithPagination"),
@@ -557,7 +596,7 @@ export function createWorkoutRepository(
               "set_count",
             ),
           totalVolume:
-            sql<number>`coalesce((select sum(s.volume_kg) from fitness_data.sets s where s.workout_id = ${workouts.id}), 0)`.as(
+            sql<number>`coalesce((select sum(case when ws."isCompleted" and not ws."isWarmup" then coalesce(ws.weight,0) * coalesce(ws.reps,0) else 0 end) from workout_sets ws join workout_exercises we on we.workout_id=ws.workout and we.exercise_id=ws.exercise and we.deleted_at is null join exercises e on e.id=ws.exercise and e.deleted_at is null where ws.workout = ${workouts.id} and ws.deleted_at is null), 0)`.as(
               "total_volume",
             ),
         })
@@ -577,7 +616,7 @@ export function createWorkoutRepository(
             isNull(workoutSets.deleted_at),
           ),
         )
-        .where(isNull(workouts.deleted_at))
+        .where(and(eq(workouts.userId, userId), isNull(workouts.deleted_at)))
         .groupBy(workouts.id)
         .orderBy(desc(workouts.start))
         .limit(limit)
@@ -586,7 +625,7 @@ export function createWorkoutRepository(
       const countQuery = database
         .select({ count: sql<number>`count(*)` })
         .from(workouts)
-        .where(isNull(workouts.deleted_at));
+        .where(and(eq(workouts.userId, userId), isNull(workouts.deleted_at)));
 
       return ResultAsync.combine([
         executeQuery(summaryQuery, "findWorkoutsWithSummary"),
@@ -634,6 +673,22 @@ export function createWorkoutRepository(
     ): ResultAsync<void, ErrRepository> {
       return ResultAsync.fromPromise(
         database.transaction(async (tx) => {
+          const session = await loadSession(
+            tx,
+            userId,
+            workoutSession.workout.id,
+          );
+          if (!session) return err("not_found" as const);
+          if (
+            workoutSession.exerciseGroups.some((group) =>
+              group.sets.some(
+                (set) =>
+                  set.workoutId !== workoutSession.workout.id ||
+                  set.exerciseId !== group.exercise.id,
+              ),
+            )
+          )
+            return err("validation_error" as const);
           for (const group of workoutSession.exerciseGroups) {
             await tx
               .insert(workoutExercises)
@@ -695,311 +750,384 @@ export function createWorkoutRepository(
                 });
             }
           }
+          return ok(undefined);
         }),
         (error) => {
           logger.error({ err: error }, "Error saving workout session");
           return "database_error" as const;
         },
-      ).map(() => undefined);
+      ).andThen((result) => result);
     },
   };
   return repository;
 }
 
-export const WorkoutRepository = createWorkoutRepository();
-export const workoutCommands = workoutOperations(WorkoutRepository);
+export const createWorkoutCommands = (
+  userId: UserId,
+  database: Database = db,
+) => workoutOperations(createWorkoutRepository(userId, database));
 
-export const WorkoutSessionRepository = {
-  findById(
-    workoutId: string,
-  ): ResultAsync<WorkoutSession | null, ErrRepository> {
-    const query = db
-      .select()
-      .from(workouts)
-      .leftJoin(
-        workoutExercises,
-        and(
-          eq(workouts.id, workoutExercises.workout_id),
-          isNull(workoutExercises.deleted_at),
-        ),
-      )
-      .leftJoin(exercises, eq(workoutExercises.exercise_id, exercises.id))
-      .leftJoin(
-        workoutSets,
-        and(
-          eq(workouts.id, workoutSets.workout),
-          eq(workoutExercises.exercise_id, workoutSets.exercise),
-          isNull(workoutSets.deleted_at),
-        ),
-      )
-      .where(and(eq(workouts.id, workoutId), isNull(workouts.deleted_at)))
-      .orderBy(workoutExercises.order_index, workoutSets.set);
+export function createWorkoutSessionRepository(
+  userId: UserId,
+  database: Database = db,
+) {
+  const workoutCommands = createWorkoutCommands(userId, database);
+  return {
+    findById(
+      workoutId: string,
+    ): ResultAsync<WorkoutSession | null, ErrRepository> {
+      const query = database
+        .select()
+        .from(workouts)
+        .leftJoin(
+          workoutExercises,
+          and(
+            eq(workouts.id, workoutExercises.workout_id),
+            isNull(workoutExercises.deleted_at),
+          ),
+        )
+        .leftJoin(exercises, eq(workoutExercises.exercise_id, exercises.id))
+        .leftJoin(
+          workoutSets,
+          and(
+            eq(workouts.id, workoutSets.workout),
+            eq(workoutExercises.exercise_id, workoutSets.exercise),
+            isNull(workoutSets.deleted_at),
+          ),
+        )
+        .where(
+          and(
+            eq(workouts.userId, userId),
+            eq(workouts.id, workoutId),
+            isNull(workouts.deleted_at),
+          ),
+        )
+        .orderBy(workoutExercises.order_index, workoutSets.set);
 
-    return executeQuery(query, "findWorkoutSessionById").map((records) => {
-      if (records.length === 0) {
-        return null;
-      }
+      return executeQuery(query, "findWorkoutSessionById")
+        .map((records) => {
+          if (records.length === 0) {
+            return null;
+          }
 
-      const workout = workoutRecordToDomain(records[0].workouts);
+          const workout = workoutRecordToDomain(records[0].workouts);
 
-      // Group by exercise
-      const exerciseMap = new Map<
-        string,
-        {
-          exercise: Exercise;
-          orderIndex: number;
-          notes?: string;
-          sets: WorkoutSet[];
+          // Group by exercise
+          const exerciseMap = new Map<
+            string,
+            {
+              exercise: Exercise;
+              orderIndex: number;
+              notes?: string;
+              sets: WorkoutSet[];
+            }
+          >();
+
+          for (const record of records) {
+            if (!record.workout_exercises || !record.exercises) {
+              continue;
+            }
+
+            const exerciseId = record.exercises.id;
+
+            if (!exerciseMap.has(exerciseId)) {
+              exerciseMap.set(exerciseId, {
+                exercise: exerciseRecordToDomain(record.exercises),
+                orderIndex: record.workout_exercises.order_index,
+                notes: record.workout_exercises.notes ?? undefined,
+                sets: [],
+              });
+            }
+
+            const exerciseData = exerciseMap.get(exerciseId);
+            if (!exerciseData) continue;
+
+            if (record.workout_sets) {
+              const existingSet = exerciseData.sets.find(
+                (s) => s.set === record.workout_sets?.set,
+              );
+
+              if (!existingSet) {
+                const workoutSet = workoutSetRecordToDomain(
+                  record.workout_sets,
+                );
+                // console.log(`[Workout Repository] Retrieved set from database...`);
+                exerciseData.sets.push(workoutSet);
+              }
+            }
+          }
+
+          // Convert to exercise groups
+          const exerciseGroups: WorkoutExerciseGroup[] = Array.from(
+            exerciseMap.values(),
+          )
+            .sort((a, b) => a.orderIndex - b.orderIndex)
+            .map(({ exercise, orderIndex, notes, sets }) => ({
+              exercise,
+              orderIndex,
+              notes,
+              sets: sets.sort((a, b) => a.set - b.set),
+            }));
+
+          return {
+            workout,
+            exerciseGroups,
+          };
+        })
+        .andThen((session) =>
+          ResultAsync.fromPromise(
+            session
+              ? projectExercisePreferences(
+                  userId,
+                  session.exerciseGroups.map((group) => group.exercise),
+                  database,
+                ).then((projected) => ({
+                  ...session,
+                  exerciseGroups: session.exerciseGroups.map(
+                    (group, index) => ({
+                      ...group,
+                      exercise: projected[index],
+                    }),
+                  ),
+                }))
+              : Promise.resolve(null),
+            () => "database_error" as const,
+          ),
+        );
+    },
+
+    addExercise(
+      workoutId: string,
+      exerciseId: string,
+      notes?: string,
+      defaultSetValues?: { reps?: number; weight?: number },
+    ): ResultAsync<void, ErrRepository> {
+      return workoutCommands
+        .addExercise({
+          workoutId,
+          exerciseId,
+          notes,
+          sets: [
+            {
+              set: 1,
+              isCompleted: false,
+              isWarmup: false,
+              isFailure: false,
+              reps: defaultSetValues?.reps,
+              weight: defaultSetValues?.weight,
+            },
+          ],
+        })
+        .map(() => undefined)
+        .mapErr(() => "database_error" as const);
+    },
+
+    removeExercise(
+      workoutId: string,
+      exerciseId: string,
+    ): ResultAsync<void, ErrRepository> {
+      return workoutCommands
+        .removeExercise({ workoutId, exerciseId })
+        .map(() => undefined)
+        .mapErr(() => "database_error" as const);
+    },
+
+    addSet(workoutSet: WorkoutSet): ResultAsync<void, ErrRepository> {
+      return workoutCommands
+        .saveSets({
+          workoutId: workoutSet.workoutId,
+          exerciseId: workoutSet.exerciseId,
+          sets: [
+            {
+              set: workoutSet.set,
+              targetReps: workoutSet.targetReps,
+              reps: workoutSet.reps,
+              weight: workoutSet.weight,
+              note: workoutSet.note,
+              rpe: workoutSet.rpe,
+              reportedRir: workoutSet.reportedRir,
+              isCompleted: workoutSet.isCompleted,
+              isWarmup: workoutSet.isWarmup,
+              isFailure: workoutSet.isFailure,
+            },
+          ],
+        })
+        .map(() => undefined)
+        .mapErr(() => "database_error" as const);
+    },
+
+    getNextAvailableSetNumber(
+      workoutId: string,
+      exerciseId: string,
+    ): ResultAsync<number, ErrRepository> {
+      const query = database
+        .select({ set: workoutSets.set })
+        .from(workoutSets)
+        .innerJoin(workouts, eq(workouts.id, workoutSets.workout))
+        .where(
+          and(
+            eq(workouts.userId, userId),
+            eq(workoutSets.workout, workoutId),
+            eq(workoutSets.exercise, exerciseId),
+            isNull(workoutSets.deleted_at),
+          ),
+        )
+        .orderBy(workoutSets.set);
+
+      return executeQuery(query, "getNextAvailableSetNumber").map((records) => {
+        if (records.length === 0) {
+          return 1;
         }
-      >();
 
-      for (const record of records) {
-        if (!record.workout_exercises || !record.exercises) {
-          continue;
-        }
-
-        const exerciseId = record.exercises.id;
-
-        if (!exerciseMap.has(exerciseId)) {
-          exerciseMap.set(exerciseId, {
-            exercise: exerciseRecordToDomain(record.exercises),
-            orderIndex: record.workout_exercises.order_index,
-            notes: record.workout_exercises.notes ?? undefined,
-            sets: [],
-          });
-        }
-
-        const exerciseData = exerciseMap.get(exerciseId);
-        if (!exerciseData) continue;
-
-        if (record.workout_sets) {
-          const existingSet = exerciseData.sets.find(
-            (s) => s.set === record.workout_sets?.set,
-          );
-
-          if (!existingSet) {
-            const workoutSet = workoutSetRecordToDomain(record.workout_sets);
-            // console.log(`[Workout Repository] Retrieved set from database...`);
-            exerciseData.sets.push(workoutSet);
+        // Find the first gap in the sequence or return the next number after the highest
+        const usedSetNumbers = records.map((r) => r.set);
+        for (let i = 1; i <= usedSetNumbers.length + 1; i++) {
+          if (!usedSetNumbers.includes(i)) {
+            return i;
           }
         }
-      }
 
-      // Convert to exercise groups
-      const exerciseGroups: WorkoutExerciseGroup[] = Array.from(
-        exerciseMap.values(),
-      )
-        .sort((a, b) => a.orderIndex - b.orderIndex)
-        .map(({ exercise, orderIndex, notes, sets }) => ({
-          exercise,
-          orderIndex,
-          notes,
-          sets: sets.sort((a, b) => a.set - b.set),
-        }));
+        // This shouldn't happen, but fallback to max + 1
+        return Math.max(...usedSetNumbers) + 1;
+      });
+    },
 
-      return {
-        workout,
-        exerciseGroups,
-      };
-    });
-  },
+    updateSet(
+      workoutId: string,
+      exerciseId: string,
+      setNumber: number,
+      updates: Partial<
+        Pick<
+          WorkoutSet,
+          | "targetReps"
+          | "reps"
+          | "weight"
+          | "note"
+          | "isCompleted"
+          | "isFailure"
+          | "isWarmup"
+          | "rpe"
+        >
+      >,
+    ): ResultAsync<void, ErrRepository> {
+      return workoutCommands
+        .updateSet({ workoutId, exerciseId, set: setNumber, updates })
+        .map(() => undefined)
+        .mapErr(() => "database_error" as const);
+    },
 
-  addExercise(
-    workoutId: string,
-    exerciseId: string,
-    notes?: string,
-    defaultSetValues?: { reps?: number; weight?: number },
-  ): ResultAsync<void, ErrRepository> {
-    return workoutCommands
-      .addExercise({
-        workoutId,
-        exerciseId,
-        notes,
-        sets: [
-          {
-            set: 1,
-            isCompleted: false,
-            isWarmup: false,
-            isFailure: false,
-            reps: defaultSetValues?.reps,
-            weight: defaultSetValues?.weight,
-          },
-        ],
-      })
-      .map(() => undefined)
-      .mapErr(() => "database_error" as const);
-  },
+    removeSet(
+      workoutId: string,
+      exerciseId: string,
+      setNumber: number,
+    ): ResultAsync<void, ErrRepository> {
+      return workoutCommands
+        .deleteSets({ workoutId, exerciseId, sets: [setNumber] })
+        .map(() => undefined)
+        .mapErr(() => "database_error" as const);
+    },
 
-  removeExercise(
-    workoutId: string,
-    exerciseId: string,
-  ): ResultAsync<void, ErrRepository> {
-    return workoutCommands
-      .removeExercise({ workoutId, exerciseId })
-      .map(() => undefined)
-      .mapErr(() => "database_error" as const);
-  },
+    replaceExercise(
+      workoutId: string,
+      oldExerciseId: string,
+      newExerciseId: string,
+    ): ResultAsync<void, ErrRepository> {
+      return workoutCommands
+        .replaceExercise({ workoutId, oldExerciseId, newExerciseId })
+        .map(() => undefined)
+        .mapErr(() => "database_error" as const);
+    },
 
-  addSet(workoutSet: WorkoutSet): ResultAsync<void, ErrRepository> {
-    return workoutCommands
-      .saveSets({
-        workoutId: workoutSet.workoutId,
-        exerciseId: workoutSet.exerciseId,
-        sets: [
-          {
-            set: workoutSet.set,
-            targetReps: workoutSet.targetReps,
-            reps: workoutSet.reps,
-            weight: workoutSet.weight,
-            note: workoutSet.note,
-            rpe: workoutSet.rpe,
-            reportedRir: workoutSet.reportedRir,
-            isCompleted: workoutSet.isCompleted,
-            isWarmup: workoutSet.isWarmup,
-            isFailure: workoutSet.isFailure,
-          },
-        ],
-      })
-      .map(() => undefined)
-      .mapErr(() => "database_error" as const);
-  },
-
-  getNextAvailableSetNumber(
-    workoutId: string,
-    exerciseId: string,
-  ): ResultAsync<number, ErrRepository> {
-    const query = db
-      .select({ set: workoutSets.set })
-      .from(workoutSets)
-      .where(
-        and(
-          eq(workoutSets.workout, workoutId),
-          eq(workoutSets.exercise, exerciseId),
-          isNull(workoutSets.deleted_at),
-        ),
-      )
-      .orderBy(workoutSets.set);
-
-    return executeQuery(query, "getNextAvailableSetNumber").map((records) => {
-      if (records.length === 0) {
-        return 1;
-      }
-
-      // Find the first gap in the sequence or return the next number after the highest
-      const usedSetNumbers = records.map((r) => r.set);
-      for (let i = 1; i <= usedSetNumbers.length + 1; i++) {
-        if (!usedSetNumbers.includes(i)) {
-          return i;
-        }
-      }
-
-      // This shouldn't happen, but fallback to max + 1
-      return Math.max(...usedSetNumbers) + 1;
-    });
-  },
-
-  updateSet(
-    workoutId: string,
-    exerciseId: string,
-    setNumber: number,
-    updates: Partial<
-      Pick<
-        WorkoutSet,
-        | "targetReps"
-        | "reps"
-        | "weight"
-        | "note"
-        | "isCompleted"
-        | "isFailure"
-        | "isWarmup"
-        | "rpe"
-      >
-    >,
-  ): ResultAsync<void, ErrRepository> {
-    return workoutCommands
-      .updateSet({ workoutId, exerciseId, set: setNumber, updates })
-      .map(() => undefined)
-      .mapErr(() => "database_error" as const);
-  },
-
-  removeSet(
-    workoutId: string,
-    exerciseId: string,
-    setNumber: number,
-  ): ResultAsync<void, ErrRepository> {
-    return workoutCommands
-      .deleteSets({ workoutId, exerciseId, sets: [setNumber] })
-      .map(() => undefined)
-      .mapErr(() => "database_error" as const);
-  },
-
-  replaceExercise(
-    workoutId: string,
-    oldExerciseId: string,
-    newExerciseId: string,
-  ): ResultAsync<void, ErrRepository> {
-    return workoutCommands
-      .replaceExercise({ workoutId, oldExerciseId, newExerciseId })
-      .map(() => undefined)
-      .mapErr(() => "database_error" as const);
-  },
-
-  reorderExercises(
-    workoutId: string,
-    exerciseIds: ReadonlyArray<string>,
-  ): ResultAsync<void, ErrRepository> {
-    return ResultAsync.fromPromise(
-      db.transaction(async (tx) => {
-        for (let i = 0; i < exerciseIds.length; i++) {
+    reorderExercises(
+      workoutId: string,
+      exerciseIds: ReadonlyArray<string>,
+    ): ResultAsync<void, ErrRepository> {
+      return ResultAsync.fromPromise(
+        database.transaction(async (tx) => {
+          const session = await loadSession(tx, userId, workoutId);
+          if (!session) return err("not_found" as const);
+          if (
+            exerciseIds.length !== session.exerciseGroups.length ||
+            new Set(exerciseIds).size !== exerciseIds.length ||
+            exerciseIds.some(
+              (id) =>
+                !session.exerciseGroups.some(
+                  (group) => group.exercise.id === id,
+                ),
+            )
+          )
+            return err("validation_error" as const);
           await tx
             .update(workoutExercises)
-            .set({ order_index: i, updated_at: new Date() })
+            .set({ deleted_at: new Date() })
             .where(
               and(
                 eq(workoutExercises.workout_id, workoutId),
-                eq(workoutExercises.exercise_id, exerciseIds[i]),
                 isNull(workoutExercises.deleted_at),
               ),
             );
-        }
-      }),
-      (error) => {
-        logger.error({ err: error }, "Error reordering exercises");
-        return "database_error" as const;
-      },
-    ).map(() => undefined);
-  },
+          for (let i = 0; i < exerciseIds.length; i++) {
+            await tx
+              .update(workoutExercises)
+              .set({ order_index: i, updated_at: new Date(), deleted_at: null })
+              .where(
+                and(
+                  eq(workoutExercises.workout_id, workoutId),
+                  eq(workoutExercises.exercise_id, exerciseIds[i]),
+                ),
+              );
+          }
+          return ok(undefined);
+        }),
+        (error) => {
+          logger.error({ err: error }, "Error reordering exercises");
+          return "database_error" as const;
+        },
+      ).andThen((result) => result);
+    },
 
-  updateExerciseNotes(
-    workoutId: string,
-    exerciseId: string,
-    notes: string | null,
-  ): ResultAsync<void, ErrRepository> {
-    const query = db
-      .update(workoutExercises)
-      .set({ notes, updated_at: new Date() })
-      .where(
-        and(
-          eq(workoutExercises.workout_id, workoutId),
-          eq(workoutExercises.exercise_id, exerciseId),
-          isNull(workoutExercises.deleted_at),
-        ),
-      );
+    updateExerciseNotes(
+      workoutId: string,
+      exerciseId: string,
+      notes: string | null,
+    ): ResultAsync<void, ErrRepository> {
+      return ResultAsync.fromPromise(
+        database.transaction(async (tx) => {
+          const session = await loadSession(tx, userId, workoutId);
+          if (
+            !session ||
+            !session.exerciseGroups.some(
+              (group) => group.exercise.id === exerciseId,
+            )
+          )
+            return err("not_found" as const);
+          await tx
+            .update(workoutExercises)
+            .set({ notes, updated_at: new Date() })
+            .where(
+              and(
+                eq(workoutExercises.workout_id, workoutId),
+                eq(workoutExercises.exercise_id, exerciseId),
+                isNull(workoutExercises.deleted_at),
+              ),
+            );
+          return ok(undefined);
+        }),
+        () => "database_error" as const,
+      ).andThen((result) => result);
+    },
 
-    return executeQuery(query, "updateExerciseNotes").map(() => undefined);
-  },
+    getExerciseHistory(
+      exerciseId: string,
+      cursor?: string,
+      limit = 10,
+    ): ResultAsync<ExerciseHistoryPage, ErrRepository> {
+      const cursorDate = cursor ? new Date(cursor) : null;
+      const cursorCondition = cursorDate
+        ? sql`AND w.start < ${cursorDate}`
+        : sql``;
 
-  getExerciseHistory(
-    exerciseId: string,
-    cursor?: string,
-    limit = 10,
-  ): ResultAsync<ExerciseHistoryPage, ErrRepository> {
-    const cursorDate = cursor ? new Date(cursor) : null;
-    const cursorCondition = cursorDate
-      ? sql`AND w.start < ${cursorDate}`
-      : sql``;
-
-    const query = sql`
+      const query = sql`
       SELECT
         w.id      AS workout_id,
         w.name    AS workout_name,
@@ -1011,7 +1139,8 @@ export const WorkoutSessionRepository = {
         ws.rpe
       FROM workout_sets ws
       INNER JOIN workouts w ON ws.workout = w.id
-      WHERE ws.exercise = ${exerciseId}
+      WHERE w.user_id = ${userId}
+        AND ws.exercise = ${exerciseId}
         AND w.stop IS NOT NULL
         AND ws."isCompleted" = true
         AND ws.deleted_at IS NULL
@@ -1020,87 +1149,88 @@ export const WorkoutSessionRepository = {
       ORDER BY w.start DESC, ws.set ASC
     `;
 
-    return ResultAsync.fromPromise(
-      db.execute<ExerciseHistoryRow>(query),
-      (error) => {
-        logger.error({ err: error }, "Error fetching exercise history");
-        return "database_error" as const;
-      },
-    ).map((result) => {
-      const rows = result.rows;
+      return ResultAsync.fromPromise(
+        database.execute<ExerciseHistoryRow>(query),
+        (error) => {
+          logger.error({ err: error }, "Error fetching exercise history");
+          return "database_error" as const;
+        },
+      ).map((result) => {
+        const rows = result.rows;
 
-      // Group rows by workout
-      const workoutMap = new Map<
-        string,
-        {
-          workoutId: string;
-          workoutName: string;
-          date: Date;
-          sets: Array<{
-            set: number;
-            reps?: number;
-            weight?: number;
-            isWarmup: boolean;
-            rpe?: number;
-          }>;
+        // Group rows by workout
+        const workoutMap = new Map<
+          string,
+          {
+            workoutId: string;
+            workoutName: string;
+            date: Date;
+            sets: Array<{
+              set: number;
+              reps?: number;
+              weight?: number;
+              isWarmup: boolean;
+              rpe?: number;
+            }>;
+          }
+        >();
+
+        for (const row of rows) {
+          let entry = workoutMap.get(row.workout_id);
+          if (!entry) {
+            entry = {
+              workoutId: row.workout_id,
+              workoutName: row.workout_name,
+              date:
+                row.workout_date instanceof Date
+                  ? row.workout_date
+                  : new Date(row.workout_date),
+              sets: [],
+            };
+            workoutMap.set(row.workout_id, entry);
+          }
+          entry.sets.push({
+            set: row.set,
+            reps: row.reps ?? undefined,
+            weight: row.weight ? Number.parseFloat(row.weight) : undefined,
+            isWarmup: row.is_warmup,
+            rpe: row.rpe ?? undefined,
+          });
         }
-      >();
 
-      for (const row of rows) {
-        let entry = workoutMap.get(row.workout_id);
-        if (!entry) {
-          entry = {
-            workoutId: row.workout_id,
-            workoutName: row.workout_name,
-            date:
-              row.workout_date instanceof Date
-                ? row.workout_date
-                : new Date(row.workout_date),
-            sets: [],
-          };
-          workoutMap.set(row.workout_id, entry);
-        }
-        entry.sets.push({
-          set: row.set,
-          reps: row.reps ?? undefined,
-          weight: row.weight ? Number.parseFloat(row.weight) : undefined,
-          isWarmup: row.is_warmup,
-          rpe: row.rpe ?? undefined,
-        });
-      }
+        const allSessions = Array.from(workoutMap.values()).map((entry) =>
+          ExerciseHistorySession.fromSets(
+            entry.workoutId,
+            entry.workoutName,
+            entry.date,
+            entry.sets,
+          ),
+        );
 
-      const allSessions = Array.from(workoutMap.values()).map((entry) =>
-        ExerciseHistorySession.fromSets(
-          entry.workoutId,
-          entry.workoutName,
-          entry.date,
-          entry.sets,
-        ),
-      );
+        // Take limit + 1 to determine if there are more
+        const sessions = allSessions.slice(0, limit);
+        const hasMore = allSessions.length > limit;
+        const nextCursor =
+          hasMore && sessions.length > 0
+            ? sessions[sessions.length - 1].date.toISOString()
+            : undefined;
 
-      // Take limit + 1 to determine if there are more
-      const sessions = allSessions.slice(0, limit);
-      const hasMore = allSessions.length > limit;
-      const nextCursor =
-        hasMore && sessions.length > 0
-          ? sessions[sessions.length - 1].date.toISOString()
-          : undefined;
+        return { sessions, nextCursor, hasMore };
+      });
+    },
 
-      return { sessions, nextCursor, hasMore };
-    });
-  },
-
-  getLastCompletedSetsForExercise(
-    exerciseId: string,
-  ): ResultAsync<
-    ReadonlyArray<{ set: number; reps?: number; weight?: number }>,
-    ErrRepository
-  > {
-    const query = sql`
+    getLastCompletedSetsForExercise(
+      exerciseId: string,
+    ): ResultAsync<
+      ReadonlyArray<{ set: number; reps?: number; weight?: number }>,
+      ErrRepository
+    > {
+      const query = sql`
       SELECT ws.set, ws.reps, ws.weight
       FROM workout_sets ws
       INNER JOIN workouts w ON ws.workout = w.id
-      WHERE ws.exercise = ${exerciseId}
+      WHERE w.user_id = ${userId}
+        AND ws.exercise = ${exerciseId}
         AND w.stop IS NOT NULL
         AND ws."isCompleted" = true
         AND ws."isWarmup" = false
@@ -1109,7 +1239,8 @@ export const WorkoutSessionRepository = {
         AND w.id = (
           SELECT w2.id FROM workouts w2
           INNER JOIN workout_sets ws2 ON ws2.workout = w2.id
-          WHERE ws2.exercise = ${exerciseId}
+          WHERE w2.user_id = ${userId}
+            AND ws2.exercise = ${exerciseId}
             AND w2.stop IS NOT NULL
             AND ws2.deleted_at IS NULL
             AND w2.deleted_at IS NULL
@@ -1118,24 +1249,25 @@ export const WorkoutSessionRepository = {
       ORDER BY ws.set ASC
     `;
 
-    return ResultAsync.fromPromise(
-      db.execute<LastCompletedSetRow>(query),
-      (error) => {
-        logger.error(
-          { err: error },
-          "Error fetching last completed sets for exercise",
-        );
-        return "database_error" as const;
-      },
-    ).map((result) =>
-      result.rows.map((row) => ({
-        set: row.set,
-        reps: row.reps ?? undefined,
-        weight: row.weight ? Number.parseFloat(row.weight) : undefined,
-      })),
-    );
-  },
-};
+      return ResultAsync.fromPromise(
+        database.execute<LastCompletedSetRow>(query),
+        (error) => {
+          logger.error(
+            { err: error },
+            "Error fetching last completed sets for exercise",
+          );
+          return "database_error" as const;
+        },
+      ).map((result) =>
+        result.rows.map((row) => ({
+          set: row.set,
+          reps: row.reps ?? undefined,
+          weight: row.weight ? Number.parseFloat(row.weight) : undefined,
+        })),
+      );
+    },
+  };
+}
 
 function workoutRecordToDomain(
   record: InferSelectModel<typeof workouts>,
@@ -1160,8 +1292,8 @@ function exerciseRecordToDomain(
     name: record.name,
     type: record.type,
     movementPattern: record.movement_pattern,
-    description: record.description ?? undefined,
-    mmcInstructions: record.mmc_instructions ?? undefined,
+    description: undefined,
+    mmcInstructions: undefined,
   };
 }
 

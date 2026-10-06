@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { APIRequestContext } from "@playwright/test";
 import type pg from "pg";
+import { userIdSchema } from "../../../app/modules/auth/domain/user";
 
 const loopbackHosts = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
@@ -22,6 +23,9 @@ export function canWriteFixtureDatabase(
   );
 }
 
+export const fixtureOwnerId = () =>
+  userIdSchema.parse(process.env.AUTH_FOUNDATION_OWNER_USER_ID);
+
 export async function verifyFixtureServerDatabase(
   request: APIRequestContext,
   pool: pg.Pool,
@@ -30,9 +34,9 @@ export async function verifyFixtureServerDatabase(
   const name = `fixture-database-${id}`;
   try {
     await pool.query(
-      `insert into workouts (id, name, start, stop)
-       values ($1, $2, '1900-01-01 10:00:00', '1900-01-01 10:30:00')`,
-      [id, name],
+      `insert into workouts (user_id,id, name, start, stop)
+       values ($3,$1, $2, '1900-01-01 10:00:00', '1900-01-01 10:30:00')`,
+      [id, name, fixtureOwnerId()],
     );
     const response = await request.get(`/workouts/${id}`);
     if (!response.ok() || !(await response.text()).includes(name)) {

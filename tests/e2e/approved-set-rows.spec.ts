@@ -8,6 +8,7 @@ import {
 import pg from "pg";
 import {
   canWriteFixtureDatabase,
+  fixtureOwnerId,
   verifyFixtureServerDatabase,
 } from "./support/fixture-database";
 
@@ -33,11 +34,12 @@ const test = base.extend<{
     try {
       await verifyFixtureServerDatabase(request, pool);
       await pool.query(
-        "insert into workouts (id,name,start,stop) values ($1,'Approved row acceptance',$2,$3)",
+        "insert into workouts (id,name,start,stop,user_id) values ($1,'Approved row acceptance',$2,$3,$4)",
         [
           id,
           new Date().toISOString(),
           scenario === "finished" ? new Date().toISOString() : null,
+          fixtureOwnerId(),
         ],
       );
       for (const [index, exerciseId] of exerciseIds.entries()) {

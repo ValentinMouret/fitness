@@ -34,6 +34,18 @@ const authFoundationSchema = z.object({
   AUTH_FOUNDATION_ORIGIN: z.url().optional(),
   AUTH_FOUNDATION_OWNER_USER_ID: z.uuid().optional(),
   AUTH_LOCAL_INBOX: z.string().min(1).optional(),
+  AUTH_SMTP_HOST: z
+    .string()
+    .regex(/^[a-zA-Z0-9.-]+$/)
+    .optional(),
+  AUTH_SMTP_PORT: z.coerce.number().int().min(1).max(65535).optional(),
+  AUTH_SMTP_SECURE: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((value) => (value === undefined ? undefined : value === "true")),
+  AUTH_SMTP_USER: z.string().min(1).optional(),
+  AUTH_SMTP_PASSWORD: z.string().min(1).optional(),
+  AUTH_SMTP_FROM: z.email().optional(),
   AUTH_INVITATION_TTL_SECONDS: z.coerce
     .number()
     .int()
@@ -87,20 +99,33 @@ const schema = z
   .superRefine((value, ctx) => {
     if (value.AUTH_FOUNDATION_ENABLED) {
       const origin = value.AUTH_FOUNDATION_ORIGIN;
-      const local = origin && new URL(origin);
-      if (
-        value.NODE_ENV === "production" ||
-        !local ||
-        local.protocol !== "http:" ||
-        !["localhost", "127.0.0.1", "[::1]"].includes(local.hostname) ||
-        local.origin !== origin ||
-        !value.AUTH_FOUNDATION_OWNER_USER_ID ||
-        !value.AUTH_LOCAL_INBOX
-      ) {
+      const url = origin && new URL(origin);
+      const validOrigin = url && url.origin === origin;
+      const smtpValues = [
+        value.AUTH_SMTP_HOST,
+        value.AUTH_SMTP_PORT,
+        value.AUTH_SMTP_SECURE,
+        value.AUTH_SMTP_USER,
+        value.AUTH_SMTP_PASSWORD,
+        value.AUTH_SMTP_FROM,
+      ];
+      const production = value.NODE_ENV === "production";
+      const validDelivery = production
+        ? validOrigin &&
+          url.protocol === "https:" &&
+          !value.AUTH_LOCAL_INBOX &&
+          smtpValues.every((setting) => setting !== undefined)
+        : validOrigin &&
+          url.protocol === "http:" &&
+          ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) &&
+          !!value.AUTH_LOCAL_INBOX &&
+          smtpValues.every((setting) => setting === undefined);
+      if (!value.AUTH_FOUNDATION_OWNER_USER_ID || !validDelivery) {
         ctx.addIssue({
           code: "custom",
-          message:
-            "Auth foundation requires a non-production loopback origin, owner ID and private local inbox. Production admission remains closed until tenant isolation is verified.",
+          message: production
+            ? "Production auth requires an HTTPS origin, owner ID and complete SMTP settings; local inbox is forbidden."
+            : "Local auth requires a loopback HTTP origin, owner ID and private inbox; SMTP settings are forbidden.",
         });
       }
     }

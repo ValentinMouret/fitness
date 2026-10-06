@@ -92,6 +92,62 @@
       "when": 1790785712254,
       "tag": "0012_magic-link-foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790792007920,
+      "tag": "0013_habit_ownership",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790794050565,
+      "tag": "0014_measurement_ownership",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1790796452042,
+      "tag": "0015_oauth_connection_ownership",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790799007475,
+      "tag": "0016_workout_ownership",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790802206104,
+      "tag": "0017_nutrition_ownership",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790803636247,
+      "tag": "0018_equipment_ownership",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790813060804,
+      "tag": "0019_exercise_preferences",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790880479364,
+      "tag": "0020_happy_scarecrow",
+      "breakpoints": true
     }
   ]
 }

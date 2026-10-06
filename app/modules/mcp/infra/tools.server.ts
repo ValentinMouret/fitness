@@ -15,15 +15,18 @@ import {
   workoutExerciseSchema,
   workoutIdSchema,
 } from "~/modules/fitness/domain/workout-commands";
-import { workoutCommands } from "~/modules/fitness/infra/workout.repository.server";
+import type { createWorkoutCommands } from "~/modules/fitness/infra/workout.repository.server";
 import {
   createIngredientSchema,
   logMealSchema,
   mealLogIdSchema,
   updateMealLogSchema,
 } from "~/modules/nutrition/domain/nutrition-commands";
-import { nutritionCommands } from "~/modules/nutrition/infra/nutrition-commands.server";
-import { queryInputSchema, runQuery } from "./query.server";
+import type { createNutritionCommands } from "~/modules/nutrition/infra/nutrition-commands.server";
+import {
+  type createRuntimeQueryRunner,
+  queryInputSchema,
+} from "./query.server";
 import { schemaDescription } from "./schema-description";
 
 function result(value: unknown, isError = false): CallToolResult {
@@ -36,9 +39,9 @@ function result(value: unknown, isError = false): CallToolResult {
 
 export function registerFitnessTools(
   server: McpServer,
-  commands = workoutCommands,
-  query = runQuery,
-  nutrition = nutritionCommands,
+  commands: ReturnType<typeof createWorkoutCommands>,
+  query: ReturnType<typeof createRuntimeQueryRunner>,
+  nutrition: ReturnType<typeof createNutritionCommands>,
 ) {
   server.registerTool(
     "describe_schema",

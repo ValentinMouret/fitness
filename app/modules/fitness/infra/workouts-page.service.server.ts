@@ -1,14 +1,18 @@
-import { WorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
+import type { UserId } from "~/modules/auth/domain/user";
+import { createWorkoutRepository } from "~/modules/fitness/infra/workout.repository.server";
 import { handleResultError } from "~/utils/errors";
 
-export async function getWorkoutsPageData(input: {
-  readonly page: number;
-  readonly limit: number;
-}) {
+export async function getWorkoutsPageData(
+  userId: UserId,
+  input: {
+    readonly page: number;
+    readonly limit: number;
+  },
+) {
   const validPage = Math.max(1, input.page);
   const validLimit = Math.min(Math.max(1, input.limit), 10);
 
-  const result = await WorkoutRepository.findAllWithSummary(
+  const result = await createWorkoutRepository(userId).findAllWithSummary(
     validPage,
     validLimit,
   );

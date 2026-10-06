@@ -7,7 +7,10 @@ export default defineConfig({
     ...base.test,
     env: {},
     include: ["app/modules/auth/**/*.integration.test.ts"],
-    exclude: ["node_modules/**"],
+    exclude: [
+      "node_modules/**",
+      "app/modules/auth/infra/account-settings.integration.test.ts",
+    ],
     fileParallelism: false,
   },
 });

@@ -1,4 +1,5 @@
-import { MeasurementRepository } from "./measurements.repository.server";
+import type { UserId } from "~/modules/auth/domain/user";
+import { createMeasurementRepository } from "./measurements.repository.server";
 
 function toSnakeCase(str: string): string {
   return str
@@ -19,11 +20,14 @@ export type CreateMeasurementResult =
       readonly status: number;
     };
 
-export async function createMeasurement(input: {
-  readonly rawName?: string;
-  readonly unit?: string;
-  readonly description?: string;
-}): Promise<CreateMeasurementResult> {
+export async function createMeasurement(
+  userId: UserId,
+  input: {
+    readonly rawName?: string;
+    readonly unit?: string;
+    readonly description?: string;
+  },
+): Promise<CreateMeasurementResult> {
   const { rawName, unit, description } = input;
 
   if (!rawName || !unit) {
@@ -40,7 +44,7 @@ export async function createMeasurement(input: {
     };
   }
 
-  const result = await MeasurementRepository.save({
+  const result = await createMeasurementRepository(userId).save({
     name,
     unit: unit.trim(),
     description: description?.trim() || undefined,

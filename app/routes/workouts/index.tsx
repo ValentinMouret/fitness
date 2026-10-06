@@ -10,17 +10,21 @@ import {
 } from "react-router";
 import { EmptyState } from "~/components/EmptyState";
 import { Pagination } from "~/components/Pagination";
+import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import { getWorkoutsPageData } from "~/modules/fitness/infra/workouts-page.service.server";
 import { isEditableTarget } from "~/utils/dom";
 import type { Route } from "./+types/index";
 import "./index.css";
 
-export const loader = async ({ request }: Route.LoaderArgs) => {
+export const loader = async ({ request, context }: Route.LoaderArgs) => {
   const url = new URL(request.url);
   const page = Number.parseInt(url.searchParams.get("page") ?? "1", 10);
   const limit = Number.parseInt(url.searchParams.get("limit") ?? "20", 10);
 
-  const data = await getWorkoutsPageData({ page, limit });
+  const data = await getWorkoutsPageData(
+    context.get(authenticatedUserContext).id,
+    { page, limit },
+  );
   return {
     ...data,
     workoutDateLabels: Object.fromEntries(

@@ -41,6 +41,7 @@ test_environment=(
   -e "DATABASE_URL=postgresql://postgres:retention-test@$test_prefix-db:5432/fitness_retention_acceptance"
   -e ANTHROPIC_API_KEY=dummy -e AUTH_USERNAME=fixture -e AUTH_PASSWORD=fixture
   -e AUTH_SESSION_SECRET=retention-fixture-secret-at-least-32-characters
+  -e AUTH_FOUNDATION_OWNER_USER_ID=720cbf7c-67b5-4d6b-b026-c8e1099ff435
   -e PORT=3000
 )
 start_app() {
@@ -86,6 +87,14 @@ docker exec --user root "$test_prefix-app" bun -e '
 # A root image with publication disabled must still run the app as bun.
 start_app "$test_prefix-default" -e RETAIN_PRODUCTION_ASSETS=false "$test_prefix:publisher"
 
+# The isolated source needs its synthetic owner before scoped preview seeding.
+docker exec -i "$test_prefix-db" psql -U postgres -d fitness_retention_acceptance -v ON_ERROR_STOP=1 <<'SQL'
+INSERT INTO auth_users (id, email, name)
+VALUES ('720cbf7c-67b5-4d6b-b026-c8e1099ff435', 'retention-owner@example.invalid', 'Retention owner');
+INSERT INTO auth_invitations (user_id, invited_by, expires_at, accepted_at)
+VALUES ('720cbf7c-67b5-4d6b-b026-c8e1099ff435', '720cbf7c-67b5-4d6b-b026-c8e1099ff435', now(), now());
+SQL
+
 # Exercise the actual preview database copy/startup even if the shared mount is inherited.
 start_app "$test_prefix-preview" \
   -e PREVIEW_APP=true -e DOKPLOY_DEPLOY_URL=http://retention-preview.example.invalid \
@@ -93,6 +102,29 @@ start_app "$test_prefix-preview" \
   -e "REVIEW_DATABASE_SOURCE_URL=postgresql://postgres:retention-test@$test_prefix-db:5432/fitness_retention_acceptance" \
   -e "REVIEW_DATABASE_URL_PREFIX=postgresql://postgres:retention-test@$test_prefix-db:5432/" \
   "$test_prefix:default"
+preview_database="fitness_review_retention_preview_example_invalid_$(printf %s http://retention-preview.example.invalid | sha256sum | cut -c1-12)"
+docker exec -i "$test_prefix-db" psql -U postgres -d "$preview_database" -At -v ON_ERROR_STOP=1 <<'SQL' | grep -x t
+SELECT count(*) = 2 AND bool_and(user_id = '720cbf7c-67b5-4d6b-b026-c8e1099ff435'::uuid) FROM measurements;
+SQL
+docker exec "$test_prefix-db" psql -U postgres -d fitness_retention_acceptance -At -c 'SELECT count(*) FROM measurements' | grep -x 0
+for owner_case in missing revoked; do
+  preview_owner=00000000-0000-4000-8000-000000000001
+  if [ "$owner_case" = revoked ]; then
+    preview_owner=720cbf7c-67b5-4d6b-b026-c8e1099ff435
+    docker exec "$test_prefix-db" psql -U postgres -d fitness_retention_acceptance -v ON_ERROR_STOP=1 -c 'UPDATE auth_invitations SET revoked_at = now()' >/dev/null
+  fi
+  if docker run --rm --network "$test_prefix" "${test_environment[@]}" \
+    -e PREVIEW_APP=true -e "AUTH_FOUNDATION_OWNER_USER_ID=$preview_owner" \
+    -e "DOKPLOY_DEPLOY_URL=http://$owner_case-retention-preview.example.invalid" \
+    -e "REVIEW_DATABASE_ADMIN_URL=postgresql://postgres:retention-test@$test_prefix-db:5432/postgres" \
+    -e "REVIEW_DATABASE_SOURCE_URL=postgresql://postgres:retention-test@$test_prefix-db:5432/fitness_retention_acceptance" \
+    -e "REVIEW_DATABASE_URL_PREFIX=postgresql://postgres:retention-test@$test_prefix-db:5432/" \
+    "$test_prefix:default" >"$test_directory/preview-owner-$owner_case.log" 2>&1; then
+    echo "Preview started with a $owner_case owner" >&2; exit 1
+  fi
+  grep -F 'Preview seed requires an accepted original owner' "$test_directory/preview-owner-$owner_case.log"
+done
+docker exec "$test_prefix-db" psql -U postgres -d fitness_retention_acceptance -v ON_ERROR_STOP=1 -c 'UPDATE auth_invitations SET revoked_at = NULL' >/dev/null
 docker exec --user root "$test_prefix-app" sh -c 'test "$(find /retained-production/manifests -type f | wc -l)" -eq 1'
 
 # Seed an old image's module, then verify the checked-in handler and proxy fallback.
