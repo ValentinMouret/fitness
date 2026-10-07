@@ -41,7 +41,7 @@ export default defineConfig({
       testIgnore: [
         /auth\.setup\.ts/,
         /auth\/.*\.spec\.ts/,
-        /device-timezone\.spec\.ts/,
+        /(?:device-timezone|device-day|workout-date-hydration)\.spec\.ts/,
         /native\/.*\.spec\.ts/,
       ],
       use: {
@@ -52,8 +52,10 @@ export default defineConfig({
     {
       name: "device-timezone",
       dependencies: ["auth", "chromium"],
-      testMatch: /device-timezone\.spec\.ts/,
+      testMatch:
+        /(?:device-timezone|device-day|workout-date-hydration)\.spec\.ts/,
       fullyParallel: false,
+      workers: 1,
       use: {
         ...devices["Desktop Chrome"],
         storageState: authFile,
