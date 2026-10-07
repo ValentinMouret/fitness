@@ -9,7 +9,11 @@ import {
   invitationAllowsSignIn,
 } from "../domain/invitation";
 
-export function createInvitationRepository(pool: Pool, ownerUserId: string) {
+export function createInvitationRepository(
+  pool: Pool,
+  ownerUserId: string,
+  readDatabase?: () => Pick<ReturnType<typeof drizzle>, "select"> | undefined,
+) {
   const database = drizzle(pool);
   const selection = {
     id: authInvitations.id,
@@ -19,7 +23,7 @@ export function createInvitationRepository(pool: Pool, ownerUserId: string) {
     revokedAt: authInvitations.revokedAt,
   };
   async function findByEmail(email: string): Promise<Invitation | null> {
-    const [invitation] = await database
+    const [invitation] = await (readDatabase?.() ?? database)
       .select(selection)
       .from(authInvitations)
       .innerJoin(authUsers, eq(authUsers.id, authInvitations.userId))
@@ -27,7 +31,7 @@ export function createInvitationRepository(pool: Pool, ownerUserId: string) {
     return invitation ?? null;
   }
   async function findByUserId(userId: string): Promise<Invitation | null> {
-    const [invitation] = await database
+    const [invitation] = await (readDatabase?.() ?? database)
       .select(selection)
       .from(authInvitations)
       .innerJoin(authUsers, eq(authUsers.id, authInvitations.userId))

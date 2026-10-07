@@ -1,13 +1,25 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { createHmac, randomUUID } from "node:crypto";
+import { runWithTransaction } from "@better-auth/core/context";
 import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import {
   APIError,
+  createAuthEndpoint,
   createAuthMiddleware,
   formCsrfMiddleware,
 } from "better-auth/api";
 import { emailOTP, magicLink } from "better-auth/plugins";
+import { sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/node-postgres";
 import type { Pool } from "pg";
 import { z } from "zod";
+import {
+  authAccounts,
+  authSessions,
+  authUsers,
+  authVerifications,
+} from "~/db/schema";
 import { logger } from "~/logger.server";
 import {
   invitationAllowsSignIn,
@@ -23,8 +35,25 @@ export function createMagicLinkAuth(input: {
   readonly ownerUserId: string;
   readonly sendEmail: (message: SignInEmail) => Promise<void>;
 }) {
-  const invitations = createInvitationRepository(input.pool, input.ownerUserId);
-  const fields = { createdAt: "created_at", updatedAt: "updated_at" };
+  const database = drizzle(input.pool);
+  const transactionDatabase = new AsyncLocalStorage<
+    Pick<typeof database, "select">
+  >();
+  const invitations = createInvitationRepository(
+    input.pool,
+    input.ownerUserId,
+    () => transactionDatabase.getStore(),
+  );
+  const adapterConfig = {
+    provider: "pg",
+    schema: {
+      auth_users: authUsers,
+      auth_sessions: authSessions,
+      auth_accounts: authAccounts,
+      auth_verifications: authVerifications,
+    },
+    transaction: true,
+  } as const;
   const signInCodePlugin = emailOTP({
     disableSignUp: true,
     otpLength: 6,
@@ -51,7 +80,7 @@ export function createMagicLinkAuth(input: {
     },
   });
   const auth = betterAuth({
-    database: input.pool,
+    database: drizzleAdapter(database, adapterConfig),
     baseURL: input.origin,
     secret: input.secret,
     logger: { disabled: true },
@@ -72,8 +101,9 @@ export function createMagicLinkAuth(input: {
         if (
           context.path === "/email-otp/send-verification-otp" ||
           context.path === "/sign-in/email-otp"
-        )
+        ) {
           await formCsrfMiddleware(context);
+        }
         if (context.path === "/email-otp/send-verification-otp") {
           const parsed = z
             .object({ email: invitedEmailSchema, type: z.literal("sign-in") })
@@ -124,36 +154,16 @@ export function createMagicLinkAuth(input: {
     },
     user: {
       modelName: "auth_users",
-      fields: { ...fields, emailVerified: "email_verified" },
     },
     session: {
       modelName: "auth_sessions",
       cookieCache: { enabled: false },
-      fields: {
-        ...fields,
-        userId: "user_id",
-        expiresAt: "expires_at",
-        ipAddress: "ip_address",
-        userAgent: "user_agent",
-      },
     },
     account: {
       modelName: "auth_accounts",
-      fields: {
-        ...fields,
-        userId: "user_id",
-        accountId: "account_id",
-        providerId: "provider_id",
-        accessToken: "access_token",
-        refreshToken: "refresh_token",
-        idToken: "id_token",
-        accessTokenExpiresAt: "access_token_expires_at",
-        refreshTokenExpiresAt: "refresh_token_expires_at",
-      },
     },
     verification: {
       modelName: "auth_verifications",
-      fields: { ...fields, expiresAt: "expires_at" },
     },
     emailAndPassword: { enabled: false },
     databaseHooks: {
@@ -177,7 +187,34 @@ export function createMagicLinkAuth(input: {
       },
     },
     plugins: [
-      signInCodePlugin,
+      {
+        ...signInCodePlugin,
+        endpoints: {
+          ...signInCodePlugin.endpoints,
+          sendVerificationOTP: createAuthEndpoint(
+            signInCodePlugin.endpoints.sendVerificationOTP.path,
+            signInCodePlugin.endpoints.sendVerificationOTP.options,
+            (context) =>
+              serializeCodeRequest(context.body.email, () =>
+                signInCodePlugin.endpoints.sendVerificationOTP({
+                  ...context,
+                  asResponse: true,
+                }),
+              ),
+          ),
+          signInEmailOTP: createAuthEndpoint(
+            signInCodePlugin.endpoints.signInEmailOTP.path,
+            signInCodePlugin.endpoints.signInEmailOTP.options,
+            (context) =>
+              serializeCodeRequest(context.body.email, () =>
+                signInCodePlugin.endpoints.signInEmailOTP({
+                  ...context,
+                  asResponse: true,
+                }),
+              ),
+          ),
+        },
+      },
       magicLink({
         disableSignUp: true,
         storeToken: "hashed",
@@ -191,6 +228,34 @@ export function createMagicLinkAuth(input: {
       }),
     ],
   });
+
+  async function serializeCodeRequest(
+    email: string,
+    operation: () => Promise<Response>,
+  ): Promise<Response> {
+    const normalized = invitedEmailSchema.parse(email);
+    const context = await auth.$context;
+    // Lock and OTP writes share a transaction; a wrong-code response commits attempts.
+    return runWithTransaction(
+      {
+        ...context.adapter,
+        transaction: (callback) =>
+          database.transaction(async (tx) => {
+            await tx.execute(
+              sql`select pg_advisory_xact_lock(hashtextextended(${`fitness:sign-in-code:${normalized}`}, 0))`,
+            );
+            return transactionDatabase.run(tx, () =>
+              callback(
+                drizzleAdapter(tx, { ...adapterConfig, transaction: false })(
+                  context.options,
+                ),
+              ),
+            );
+          }),
+      },
+      operation,
+    );
+  }
 
   async function getAdmittedSession(headers: Headers) {
     const session = await auth.api.getSession({ headers });
