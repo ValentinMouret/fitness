@@ -202,6 +202,8 @@ jobs:
       - name: Native account browser acceptance
         env:
           AUTH_FOUNDATION_ENABLED: "true"
+          E2E_SERVER_LOG: /tmp/fitness-native-server.log
+          GIT_SHA: ${{ github.sha }}
           E2E_BASE_URL: http://127.0.0.1:5175
           HOST: 127.0.0.1
           PORT: "5175"

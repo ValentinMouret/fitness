@@ -94,17 +94,9 @@ export async function action({ request, context }: Route.ActionArgs) {
       );
     }
     try {
-      const response = await runtime.requestSignInLink({
-        headers: request.headers,
+      await runtime.sendInvitationEmail({
         email: invitation.email,
       });
-      if (!response.ok)
-        return data({
-          error:
-            response.status === 429
-              ? "Too many requests. Try again later."
-              : "Could not send the email. Use Resend email to try again.",
-        });
     } catch {
       return data({
         error: "Could not send the email. Use Resend email to try again.",
@@ -128,17 +120,9 @@ export async function action({ request, context }: Route.ActionArgs) {
         { status: 400 },
       );
     try {
-      const response = await runtime.requestSignInLink({
-        headers: request.headers,
+      await runtime.sendInvitationEmail({
         email: parsed.data.email,
       });
-      if (!response.ok)
-        return data({
-          error:
-            response.status === 429
-              ? "Invitation created. Too many email requests; try Resend email later."
-              : "Invitation created, but the email could not be sent. Use Resend email to try again.",
-        });
     } catch {
       return data({
         error:

@@ -28,36 +28,62 @@ let ownerSessionIds: readonly string[] = [];
 let previous: { time_zone: string; updated_at: Date } | undefined;
 
 async function signIn(page: Page, email: string) {
+  const before = (await codeMessages(email)).length;
   await page.goto("/sign-in");
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page
-    .getByRole("button", { name: "Email me a sign-in link", exact: true })
+    .getByRole("button", { name: "Email me a sign-in code", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText(
     "If you have an account",
   );
-  await openLatestEmail(page, email);
+  await openLatestEmail(page, email, before);
 }
 
-async function openLatestEmail(page: Page, email: string) {
-  const messages = (
-    await readFile(
-      z.string().min(1).parse(process.env.AUTH_LOCAL_INBOX),
-      "utf8",
+async function codeMessages(email: string) {
+  const schema = z.object({
+    to: z.email(),
+    code: z.string().regex(/^[0-9]{6}$/),
+  });
+  try {
+    return (
+      await readFile(
+        z.string().min(1).parse(process.env.AUTH_LOCAL_INBOX),
+        "utf8",
+      )
     )
-  )
-    .trim()
-    .split("\n")
-    .map((line) =>
-      z.object({ to: z.string(), url: z.url() }).parse(JSON.parse(line)),
-    );
-  const message = messages.findLast((entry) => entry.to === email);
-  if (!message) throw new Error("Native sign-in email missing");
-  await page.goto(message.url);
-  await page.getByRole("link", { name: "Open Fitness", exact: true }).click();
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .flatMap((line) => {
+        const result = schema.safeParse(JSON.parse(line));
+        return result.success && result.data.to === email ? [result.data] : [];
+      });
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT")
+      return [];
+    throw error;
+  }
+}
+async function openLatestEmail(page: Page, email: string, before: number) {
+  await expect
+    .poll(async () => (await codeMessages(email)).length)
+    .toBeGreaterThan(before);
+  const message = (await codeMessages(email)).at(-1);
+  if (!message) throw new Error("Missing sign-in code");
+  await page.getByLabel("Six-digit code").fill(message.code);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expectAppDestination(page, "/dashboard");
   await expect(page.getByText("Loading…", { exact: true })).toHaveCount(0);
 }
+
+let fixtureIp = 10;
+const nextFixtureHeaders = () => ({
+  "X-Real-IP": `192.0.2.${++fixtureIp}`,
+});
+test.beforeEach(async ({ context }) => {
+  await context.setExtraHTTPHeaders(nextFixtureHeaders());
+});
 
 test.beforeAll(async ({ browser }) => {
   const owner = fixtureOwnerId();
@@ -76,6 +102,7 @@ test.beforeAll(async ({ browser }) => {
     await pool.query("select id from auth_sessions where user_id=$1", [owner])
   ).rows.map((row) => row.id);
   const preflight = await browser.newContext({
+    extraHTTPHeaders: nextFixtureHeaders(),
     baseURL: process.env.E2E_BASE_URL,
     storageState: { cookies: [], origins: [] },
   });
@@ -177,6 +204,7 @@ test("native A and B retain separate histories and catalogue controls, and logou
     page.getByRole("link", { name: "Add Exercise", exact: true }).first(),
   ).toBeVisible();
   const context = await browser.newContext({
+    extraHTTPHeaders: nextFixtureHeaders(),
     baseURL: process.env.E2E_BASE_URL,
     viewport: { width: 390, height: 844 },
     timezoneId: "America/Los_Angeles",
@@ -321,6 +349,7 @@ test("native B saves and reloads private habits, measurements, notes, meals, tar
 }) => {
   await signIn(page, otherEmail);
   const aContext = await browser.newContext({
+    extraHTTPHeaders: nextFixtureHeaders(),
     baseURL: process.env.E2E_BASE_URL,
     storageState: { cookies: [], origins: [] },
   });
@@ -526,6 +555,7 @@ test("native B saves and reloads private habits, measurements, notes, meals, tar
     };
     expect((await post("/nutrition", shareTemplate)).ok()).toBe(true);
     const anonymous = await browser.newContext({
+      extraHTTPHeaders: nextFixtureHeaders(),
       baseURL: process.env.E2E_BASE_URL,
       storageState: { cookies: [], origins: [] },
     });
@@ -718,6 +748,7 @@ test("owner manages invitations from Dashboard while invited accounts cannot", a
   const email = `app-invite-${randomUUID()}@example.invalid`;
   const forbiddenEmail = `forbidden-invite-${randomUUID()}@example.invalid`;
   const recipientContext = await browser.newContext({
+    extraHTTPHeaders: nextFixtureHeaders(),
     baseURL: process.env.E2E_BASE_URL,
     viewport: { width: 390, height: 844 },
     storageState: { cookies: [], origins: [] },
@@ -774,7 +805,7 @@ test("owner manages invitations from Dashboard while invited accounts cannot", a
       .getByRole("link", { name: "Manage invitations", exact: true })
       .click();
     const recipient = await recipientContext.newPage();
-    await openLatestEmail(recipient, email);
+    await signIn(recipient, email);
     await expect(
       recipient.getByRole("link", { name: "Manage invitations", exact: true }),
     ).toHaveCount(0);
@@ -832,7 +863,7 @@ test("owner manages invitations from Dashboard while invited accounts cannot", a
     await recipient.reload();
     await expect(
       recipient.getByRole("button", {
-        name: "Email me a sign-in link",
+        name: "Email me a sign-in code",
         exact: true,
       }),
     ).toBeVisible();
@@ -846,4 +877,99 @@ test("owner manages invitations from Dashboard while invited accounts cannot", a
       [email, forbiddenEmail],
     ]);
   }
+});
+
+test("email code stays in the requesting app context through retry and resend", async ({
+  page,
+  browser,
+}) => {
+  const independent = await browser.newContext({
+    baseURL: process.env.E2E_BASE_URL,
+    extraHTTPHeaders: nextFixtureHeaders(),
+    storageState: { cookies: [], origins: [] },
+  });
+  try {
+    const before = (await codeMessages(ownerEmail)).length;
+    await page.goto("/sign-in");
+    await page.getByLabel("Email", { exact: true }).fill(ownerEmail);
+    await page
+      .getByRole("button", { name: "Email me a sign-in code", exact: true })
+      .click();
+    const field = page.getByLabel("Six-digit code");
+    await expect(field).toHaveAttribute("type", "text");
+    await expect(field).toHaveAttribute("inputmode", "numeric");
+    await expect(field).toHaveAttribute("autocomplete", "one-time-code");
+    await expect
+      .poll(async () => (await codeMessages(ownerEmail)).length)
+      .toBeGreaterThan(before);
+    const oldCode = (await codeMessages(ownerEmail)).at(-1)?.code;
+    if (!oldCode) throw new Error("Missing initial code");
+    const wrong = oldCode === "000000" ? "000001" : "000000";
+    await field.fill(wrong);
+    await expect(field).toHaveValue(wrong);
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page.getByRole("alert")).toContainText("invalid or expired");
+    await expect(field).toBeVisible();
+    await field.fill("");
+    const beforeResend = (await codeMessages(ownerEmail)).length;
+    await page
+      .getByRole("button", { name: "Resend code", exact: true })
+      .click();
+    await expect
+      .poll(async () => (await codeMessages(ownerEmail)).length)
+      .toBeGreaterThan(beforeResend);
+    await field.fill(oldCode);
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page.getByRole("alert")).toContainText("invalid or expired");
+    await page.evaluate(() =>
+      document.dispatchEvent(new Event("visibilitychange")),
+    );
+    await expect(field).toBeVisible();
+    await openLatestEmail(page, ownerEmail, beforeResend);
+    expect([...new URL(page.url()).searchParams.keys()]).toEqual(["day"]);
+    const otherApp = await independent.newPage();
+    await otherApp.goto("/dashboard");
+    await expect(otherApp).toHaveURL("/sign-in");
+    await expect(
+      otherApp.getByRole("button", {
+        name: "Email me a sign-in code",
+        exact: true,
+      }),
+    ).toBeVisible();
+    const session = await page.context().request.get("/api/auth/get-session");
+    expect(session.status()).toBe(200);
+    expect(
+      z
+        .object({ user: z.object({ email: z.email() }) })
+        .parse(await session.json()).user.email,
+    ).toBe(ownerEmail);
+  } finally {
+    await independent.close();
+  }
+});
+
+test("code entry can change email and unknown requests remain neutral at phone width", async ({
+  page,
+}) => {
+  const email = `unknown-code-${randomUUID()}@example.invalid`;
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.goto("/sign-in");
+  await page.getByLabel("Email", { exact: true }).fill(email);
+  await page
+    .getByRole("button", { name: "Email me a sign-in code", exact: true })
+    .click();
+  await expect(page.getByRole("status")).toHaveText(
+    "If you have an account, you’ll receive a sign-in code.",
+  );
+  await expect(page.getByLabel("Six-digit code")).toBeVisible();
+  expect(await codeMessages(email)).toEqual([]);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.getByRole("button", { name: "Change email", exact: true }).click();
+  await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Six-digit code")).toHaveCount(0);
+  await signIn(page, ownerEmail);
 });

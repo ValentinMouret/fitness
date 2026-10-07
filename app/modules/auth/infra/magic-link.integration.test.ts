@@ -45,7 +45,7 @@ const request = (
   new Request(`${origin}/api/auth${path}`, {
     method: body ? "POST" : "GET",
     headers: {
-      "X-Forwarded-For": fixtureIp(body),
+      "X-Real-IP": fixtureIp(body),
       ...(body
         ? { "Content-Type": "application/json", Origin: requestOrigin }
         : {}),
@@ -83,9 +83,11 @@ async function sentMessages(): Promise<
 }
 
 async function signIn(email: string) {
-  const response = await runtime.auth.handler(
-    request("/sign-in/magic-link", { email, callbackURL: "/dashboard" }),
-  );
+  const response = await runtime.auth.api.signInMagicLink({
+    headers: new Headers({ Origin: origin }),
+    body: { email, callbackURL: "/dashboard" },
+    asResponse: true,
+  });
   expect(response.status).toBe(200);
   const message = (await sentMessages()).at(-1);
   if (!message) throw new Error("Missing fixture email");
@@ -149,10 +151,13 @@ describe.skipIf(!adminUrl)(
     it("returns the same request response but sends no email to an uninvited address", async () => {
       const before = await sentMessages();
       const response = await runtime.auth.handler(
-        request("/sign-in/magic-link", { email: "unknown@example.invalid" }),
+        request("/email-otp/send-verification-otp", {
+          email: "unknown@example.invalid",
+          type: "sign-in",
+        }),
       );
       expect(response.status).toBe(200);
-      expect(await response.json()).toEqual({ status: true });
+      expect(await response.json()).toEqual({ success: true });
       expect(await sentMessages()).toEqual(before);
       expect(
         (
@@ -167,19 +172,19 @@ describe.skipIf(!adminUrl)(
       const before = await sentMessages();
       const headers = new Headers({
         Origin: origin,
-        "X-Forwarded-For": "192.0.2.200",
+        "X-Real-IP": "192.0.2.200",
       });
-      for (let attempt = 0; attempt < 10; attempt++) {
+      for (let attempt = 0; attempt < 3; attempt++) {
         expect(
           (
-            await runtime.requestSignInLink({
+            await runtime.requestSignInCode({
               headers,
               email: "throttled-unknown@example.invalid",
             })
           ).status,
         ).toBe(200);
       }
-      const response = await runtime.requestSignInLink({
+      const response = await runtime.requestSignInCode({
         headers,
         email: "throttled-unknown@example.invalid",
       });
@@ -267,7 +272,7 @@ describe.skipIf(!adminUrl)(
       const token = new URL(message.url).searchParams.get("token");
       const verification = (
         await pool.query(
-          "select identifier from auth_verifications where value::jsonb->>'email'=$1",
+          "select identifier from auth_verifications where case when value like '{%' then value::jsonb->>'email' end=$1",
           [email],
         )
       ).rows[0];
@@ -300,8 +305,15 @@ describe.skipIf(!adminUrl)(
       );
       const before = await sentMessages();
       expect(
-        (await runtime.auth.handler(request("/sign-in/magic-link", { email })))
-          .status,
+        (
+          await runtime.requestSignInCode({
+            headers: new Headers({
+              Origin: origin,
+              "X-Real-IP": fixtureIp({ email }),
+            }),
+            email,
+          })
+        ).status,
       ).toBe(200);
       expect(await sentMessages()).toEqual(before);
       const rejected = await redeem(message.url);
@@ -323,7 +335,7 @@ describe.skipIf(!adminUrl)(
       await invite(email);
       const message = await signIn(email);
       await pool.query(
-        "update auth_verifications set expires_at=now()-interval '1 second' where value::jsonb->>'email'=$1",
+        "update auth_verifications set expires_at=now()-interval '1 second' where case when value like '{%' then value::jsonb->>'email' end=$1",
         [email],
       );
       const result = await redeem(message.url);
@@ -451,8 +463,8 @@ describe.skipIf(!adminUrl)(
         (
           await runtime.auth.handler(
             request(
-              "/sign-in/magic-link",
-              { email: "owner@example.invalid" },
+              "/email-otp/send-verification-otp",
+              { email: "owner@example.invalid", type: "sign-in" },
               undefined,
               "https://other.example.invalid",
             ),

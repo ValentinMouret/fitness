@@ -2,7 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 import { z } from "zod";
 
 export default defineConfig({
-  testDir: "./tests/e2e/native",
+  testDir: "./tests/e2e",
+  testMatch: [/native\/.*\.spec\.ts$/, /auth-foundation\.spec\.ts$/],
   fullyParallel: false,
   workers: 1,
   timeout: 30_000,

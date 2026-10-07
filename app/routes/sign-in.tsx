@@ -1,5 +1,7 @@
-import { Button, Flex, Text } from "@radix-ui/themes";
+import { Button, Flex, Text, TextField } from "@radix-ui/themes";
+import { useId } from "react";
 import { data, Form, Link, redirect, useNavigation } from "react-router";
+import { z } from "zod";
 import { env } from "~/env.server";
 import { invitedEmailSchema } from "~/modules/auth/domain/invitation";
 import { getAuthFoundation } from "~/modules/auth/infra/auth-foundation.server";
@@ -30,31 +32,65 @@ export async function action({ request }: Route.ActionArgs) {
     });
     return redirect("/sign-in", { headers: response.headers });
   }
-  const email = invitedEmailSchema.safeParse(form.get("email"));
-  if (form.get("intent") !== "request-link" || !email.success)
+  const intent = z
+    .enum(["request-code", "verify-code", "change-email"])
+    .safeParse(form.get("intent"));
+  if (!intent.success)
     return data(
-      { sent: false, error: "Enter a valid email address." },
+      { email: null, error: "Invalid sign-in request." },
+      { status: 400 },
+    );
+  if (intent.data === "change-email") return { email: null, error: null };
+  const email = invitedEmailSchema.safeParse(form.get("email"));
+  if (!email.success)
+    return data(
+      { email: null, error: "Enter a valid email address." },
+      { status: 400 },
+    );
+  const code = z
+    .string()
+    .trim()
+    .regex(/^[0-9]{6}$/)
+    .safeParse(form.get("code"));
+  if (intent.data === "verify-code" && !code.success)
+    return data(
+      { email: email.data, error: "Enter the six-digit code." },
       { status: 400 },
     );
   try {
-    const response = await runtime.requestSignInLink({
-      headers: request.headers,
-      email: email.data,
-    });
+    const response =
+      intent.data === "request-code"
+        ? await runtime.requestSignInCode({
+            headers: request.headers,
+            email: email.data,
+          })
+        : await runtime.verifySignInCode({
+            headers: request.headers,
+            email: email.data,
+            code: code.success ? code.data : "",
+          });
     if (response.status === 429)
       return data(
-        { sent: false, error: "Too many requests. Try again later." },
+        { email: email.data, error: "Too many attempts. Try again later." },
         { status: 429 },
       );
     if (!response.ok)
       return data(
-        { sent: false, error: "Could not send a sign-in email. Try again." },
-        { status: 500 },
+        {
+          email: email.data,
+          error:
+            intent.data === "verify-code"
+              ? "That code is invalid or expired. Try again or request a new code."
+              : "Could not request a code. Try again.",
+        },
+        { status: 400 },
       );
-    return { sent: true, error: null };
+    if (intent.data === "verify-code")
+      return redirect("/dashboard", { headers: response.headers });
+    return { email: email.data, error: null };
   } catch {
     return data(
-      { sent: false, error: "Could not send a sign-in email. Try again." },
+      { email: email.data, error: "Could not sign in. Try again." },
       { status: 500 },
     );
   }
@@ -65,6 +101,8 @@ export default function SignIn({
   actionData,
 }: Route.ComponentProps) {
   const pending = useNavigation().state !== "idle";
+  const codeId = useId();
+  const codeEmail = actionData?.email;
   return (
     <AuthPage title="Sign in">
       {loaderData.email ? (
@@ -91,24 +129,82 @@ export default function SignIn({
             </Button>
           </Form>
         </Flex>
+      ) : codeEmail ? (
+        <Form method="post">
+          <Flex direction="column" gap="3" mt="3">
+            <Text as="p" role="status">
+              If you have an account, you’ll receive a sign-in code.
+            </Text>
+            <Text as="p" className="auth-invitation-email">
+              Enter the code sent to {codeEmail} in this app. It expires in five
+              minutes.
+            </Text>
+            <input type="hidden" name="email" value={codeEmail} />
+            <label htmlFor={codeId}>
+              Six-digit code
+              <TextField.Root
+                id={codeId}
+                name="code"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                required
+                className="auth-email-field"
+              />
+            </label>
+            <Button
+              name="intent"
+              value="verify-code"
+              type="submit"
+              disabled={pending}
+              loading={pending}
+            >
+              Sign in
+            </Button>
+            <Flex gap="3" wrap="wrap">
+              <Button
+                name="intent"
+                value="request-code"
+                type="submit"
+                formNoValidate
+                variant="soft"
+                disabled={pending}
+              >
+                Resend code
+              </Button>
+              <Button
+                name="intent"
+                value="change-email"
+                type="submit"
+                formNoValidate
+                variant="ghost"
+                disabled={pending}
+              >
+                Change email
+              </Button>
+            </Flex>
+            {actionData?.error && (
+              <Text as="p" role="alert" color="red">
+                {actionData.error}
+              </Text>
+            )}
+          </Flex>
+        </Form>
       ) : (
         <Form method="post">
           <Flex direction="column" gap="3" mt="3">
             <EmailField />
             <Button
               name="intent"
-              value="request-link"
+              value="request-code"
               type="submit"
               disabled={pending}
               loading={pending}
             >
-              Email me a sign-in link
+              Email me a sign-in code
             </Button>
-            {actionData?.sent && (
-              <Text as="p" role="status">
-                If you have an account, you’ll receive a sign-in link.
-              </Text>
-            )}
             {actionData?.error && (
               <Text as="p" role="alert" color="red">
                 {actionData.error}
