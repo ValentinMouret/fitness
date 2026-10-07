@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { createHash, createHmac, randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -91,6 +92,65 @@ function direct(path: string, body: object, requestOrigin = origin) {
   );
 }
 
+function independentRequest(
+  email: string,
+  code?: string,
+  pauseAfterConsume = false,
+) {
+  const script = `
+    import { Pool } from "pg";
+    import { createMagicLinkAuth } from "./app/modules/auth/infra/magic-link.server.ts";
+    import { createLocalSignInInbox } from "./app/modules/auth/infra/sign-in-email.server.ts";
+    const pool = new Pool({ connectionString: process.env.CODE_TEST_DATABASE_URL });
+    const runtime = createMagicLinkAuth({ pool, origin: ${JSON.stringify(origin)},
+      ownerUserId: ${JSON.stringify(ownerId)}, secret: "fixture-only-code-secret-32-characters",
+      sendEmail: createLocalSignInInbox({ path: process.env.CODE_TEST_INBOX, environment: "test" }) });
+    const headers = new Headers({ Origin: ${JSON.stringify(origin)}, "X-Real-IP": "198.51.100.240" });
+    if (${pauseAfterConsume}) {
+      const context = await runtime.auth.$context;
+      const consume = context.internalAdapter.consumeVerificationValue;
+      context.internalAdapter.consumeVerificationValue = async (identifier) => {
+        const result = await consume(identifier);
+        if (result) await pool.query("select pg_advisory_xact_lock(115, 2)");
+        return result;
+      };
+    }
+    const response = ${code === undefined ? `await runtime.requestSignInCode({ headers, email: ${JSON.stringify(email)} })` : `await runtime.verifySignInCode({ headers, email: ${JSON.stringify(email)}, code: ${JSON.stringify(code)} })`};
+    console.log(JSON.stringify({ status: response.status }));
+    await pool.end();
+  `;
+  const child = spawn("bun", ["--eval", script], {
+    env: {
+      ...process.env,
+      CODE_TEST_DATABASE_URL: scratchUrl.toString(),
+      CODE_TEST_INBOX: inbox,
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let output = "";
+  let completed = false;
+  const result = new Promise<number>((resolve, reject) => {
+    child.stdout.on("data", (chunk) => {
+      output += chunk.toString();
+    });
+    child.on("error", reject);
+    child.on("close", (exitCode) => {
+      completed = true;
+      if (exitCode !== 0)
+        return reject(new Error("Independent code request failed"));
+      try {
+        resolve(
+          z.object({ status: z.number() }).parse(JSON.parse(output.trim()))
+            .status,
+        );
+      } catch {
+        reject(new Error("Invalid independent request result"));
+      }
+    });
+  });
+  return { child, result, completed: () => completed };
+}
+
 describe.skipIf(!adminUrl)(
   "invitation-only email codes with pinned Better Auth and PostgreSQL",
   () => {
@@ -130,6 +190,198 @@ describe.skipIf(!adminUrl)(
         );
       await admin.end();
       if (folder) await rm(folder, { recursive: true, force: true });
+    });
+
+    it("resend in another process cannot recreate a stale code after a blocked wrong attempt", async () => {
+      const email = "blocked-resend@example.invalid";
+      await invite(email);
+      const oldCode = await issue(email);
+      const wrongCode = oldCode === "000000" ? "000001" : "000000";
+      const blocker = await pool.connect();
+      const context = await runtime.auth.$context;
+      const consume = context.internalAdapter.consumeVerificationValue;
+      let wrong: Promise<Response> | undefined;
+      let resend: ReturnType<typeof independentRequest> | undefined;
+      try {
+        // Pause after real consumption, before the plugin timestamps recreation.
+        context.internalAdapter.consumeVerificationValue = async (
+          identifier,
+        ) => {
+          const result = await consume(identifier);
+          if (identifier === `sign-in-otp-${email}` && result)
+            await pool.query("select pg_advisory_xact_lock(115, 1)");
+          return result;
+        };
+        await blocker.query("begin");
+        await blocker.query("select pg_advisory_xact_lock(115, 1)");
+        wrong = verify(email, wrongCode);
+        await expect
+          .poll(async () => {
+            const result = await pool.query(
+              "select count(*)::int as count from pg_stat_activity where datname=$1 and wait_event='advisory' and query = 'select pg_advisory_xact_lock(115, 1)'",
+              [databaseName],
+            );
+            return result.rows[0].count;
+          })
+          .toBe(1);
+        const visible = await pool.query(
+          "select count(*)::int as count from auth_verifications where identifier=$1",
+          [`sign-in-otp-${email}`],
+        );
+        // Consumption must still be uncommitted on the connection holding the lock.
+        expect(visible.rows[0].count).toBe(1);
+        const before = (await messages()).length;
+        resend = independentRequest(email.toUpperCase());
+        await expect
+          .poll(async () => {
+            const result = await pool.query(
+              "select count(*)::int as count from pg_stat_activity where datname=$1 and wait_event='advisory'",
+              [databaseName],
+            );
+            return resend?.completed() || result.rows[0].count >= 2;
+          })
+          .toBe(true);
+        await blocker.query("rollback");
+        expect((await wrong).status).toBe(400);
+        expect(await resend.result).toBe(200);
+        await expect
+          .poll(async () => (await messages()).length)
+          .toBe(before + 1);
+        const newCode = (await messages()).at(-1)?.code;
+        if (!newCode) throw new Error("Missing resend fixture");
+        expect((await verify(email, oldCode)).status).toBe(400);
+        expect((await verify(email, newCode)).status).toBe(200);
+      } finally {
+        await blocker.query("rollback");
+        blocker.release();
+        if (resend && !resend.completed()) resend.child.kill("SIGKILL");
+        await Promise.allSettled([wrong, resend?.result]);
+        context.internalAdapter.consumeVerificationValue = consume;
+      }
+    }, 30_000);
+
+    it("a stopped verification process releases its transaction before a fresh process resends", async () => {
+      const email = "restart-resend@example.invalid";
+      await invite(email);
+      const oldCode = await issue(email);
+      const blocker = await pool.connect();
+      let wrong: ReturnType<typeof independentRequest> | undefined;
+      let resend: ReturnType<typeof independentRequest> | undefined;
+      try {
+        await blocker.query("begin");
+        await blocker.query("select pg_advisory_xact_lock(115, 2)");
+        wrong = independentRequest(
+          email,
+          oldCode === "000000" ? "000001" : "000000",
+          true,
+        );
+        void wrong.result.catch(() => undefined);
+        await expect
+          .poll(async () => {
+            const result = await pool.query(
+              "select count(*)::int as count from pg_stat_activity where datname=$1 and wait_event='advisory' and query='select pg_advisory_xact_lock(115, 2)'",
+              [databaseName],
+            );
+            return result.rows[0].count;
+          })
+          .toBe(1);
+        const visible = await pool.query(
+          "select count(*)::int as count from auth_verifications where identifier=$1",
+          [`sign-in-otp-${email}`],
+        );
+        expect(visible.rows[0].count).toBe(1);
+        const before = (await messages()).length;
+        resend = independentRequest(email);
+        await expect
+          .poll(async () => {
+            const result = await pool.query(
+              "select count(*)::int as count from pg_stat_activity where datname=$1 and wait_event='advisory'",
+              [databaseName],
+            );
+            return result.rows[0].count;
+          })
+          .toBe(2);
+        wrong.child.kill("SIGKILL");
+        await expect(wrong.result).rejects.toThrow(
+          "Independent code request failed",
+        );
+        // Resend must finish while the old process's gate is still held.
+        expect(await resend.result).toBe(200);
+        await blocker.query("rollback");
+        await expect
+          .poll(async () => (await messages()).length)
+          .toBe(before + 1);
+        const newCode = (await messages()).at(-1)?.code;
+        if (!newCode) throw new Error("Missing restart fixture");
+        expect((await verify(email, oldCode)).status).toBe(400);
+        expect((await verify(email, newCode)).status).toBe(200);
+      } finally {
+        await blocker.query("rollback");
+        blocker.release();
+        for (const request of [wrong, resend])
+          if (request && !request.completed()) request.child.kill("SIGKILL");
+        await Promise.allSettled([wrong?.result, resend?.result]);
+        await expect
+          .poll(async () => {
+            const result = await pool.query(
+              "select count(*)::int as count from pg_stat_activity where datname=$1 and wait_event='advisory'",
+              [databaseName],
+            );
+            return result.rows[0].count;
+          })
+          .toBe(0);
+      }
+    }, 30_000);
+
+    it("concurrent code requests do not exhaust a two-connection pool", async () => {
+      const emails = [
+        "small-pool-a@example.invalid",
+        "small-pool-b@example.invalid",
+      ];
+      for (const email of emails) await invite(email);
+      const smallPool = new Pool({
+        connectionString: scratchUrl.toString(),
+        max: 2,
+      });
+      const limited = createMagicLinkAuth({
+        pool: smallPool,
+        origin,
+        ownerUserId: ownerId,
+        secret: "fixture-only-code-secret-32-characters",
+        sendEmail: createLocalSignInInbox({ path: inbox, environment: "test" }),
+      });
+      try {
+        const responses = await Promise.all(
+          emails.flatMap((email) => [
+            limited.requestSignInCode({ headers: headers(), email }),
+            limited.verifySignInCode({
+              headers: headers(),
+              email,
+              code: "000000",
+            }),
+            limited.requestSignInCode({ headers: headers(), email }),
+          ]),
+        );
+        expect(responses.map((response) => response.status)).toEqual([
+          200, 400, 200, 200, 400, 200,
+        ]);
+      } finally {
+        await smallPool.end();
+      }
+    }, 10_000);
+
+    it("concurrent wrong codes preserve the three-attempt budget", async () => {
+      const email = "concurrent-wrong@example.invalid";
+      await invite(email);
+      const code = await issue(email);
+      const wrongCode = code === "000000" ? "000001" : "000000";
+      const responses = await Promise.all(
+        Array.from({ length: 3 }, () => verify(email, wrongCode)),
+      );
+      expect(responses.map((response) => response.status)).toEqual([
+        400, 400, 400,
+      ]);
+      expect((await verify(email, code)).status).toBe(403);
     });
 
     it("keeps request and wrong-code responses neutral for admitted, missing, uninvited, expired and revoked accounts", async () => {

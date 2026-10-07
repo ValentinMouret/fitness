@@ -16,6 +16,15 @@ Codes use a domain-separated HMAC-SHA-256 hash with the existing server session
 secret, so the stored value cannot be brute-forced from a database-only leak.
 They expire after five minutes, allow three incorrect attempts,
 and are single-use. Resend rotates the code and invalidates the previous one.
+Request and verification endpoints serialize by normalized email using a
+PostgreSQL advisory transaction lock. The lock, code consumption and incorrect
+attempt updates share one connection through Better Auth's Drizzle adapter.
+This prevents the pinned plugin from recreating an old code after a concurrent
+resend, including across processes. Process termination rolls back the attempt
+and releases the lock. Invitation reads use that transaction connection;
+session finalization runs after commit. Keep the pinned core transaction API
+and blocked-interleaving, process-stop and small-pool regressions together when
+updating Better Auth.
 Both public request and verification HTTP endpoints are limited to three requests
 per minute per IP. The library reads only `X-Real-IP`: production Caddy
 explicitly overwrites it with the client IP, while Traefik appends another address
