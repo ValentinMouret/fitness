@@ -2,7 +2,11 @@ import { mkdir, open } from "node:fs/promises";
 import { dirname } from "node:path";
 import nodemailer from "nodemailer";
 
-export type SignInEmail = { readonly to: string; readonly url: string };
+export type SignInEmail = { readonly to: string } & (
+  | { readonly url: string }
+  | { readonly code: string }
+  | { readonly invitationUrl: string }
+);
 
 export function createSmtpSignInEmail(input: {
   readonly host: string;
@@ -31,7 +35,12 @@ export function createSmtpSignInEmail(input: {
         from: input.from,
         to: message.to,
         subject: "Sign in to Fitness",
-        text: `Use this link to sign in to Fitness. It expires in five minutes and can only be used once.\n\n${message.url}\n\nIf you did not request this email, ignore it.`,
+        text:
+          "code" in message
+            ? `Enter this code in Fitness: ${message.code}\n\nIt expires in five minutes and can only be used once. Return to the Fitness app where you requested it.\n\nIf you did not request this email, ignore it.`
+            : "invitationUrl" in message
+              ? `You have been invited to Fitness. Open Fitness and request a sign-in code with this email address.\n\n${message.invitationUrl}`
+              : `Use this link to sign in to Fitness. It expires in five minutes and can only be used once.\n\n${message.url}\n\nIf you did not request this email, ignore it.`,
       });
     } catch {
       throw new Error("Sign-in email delivery failed");

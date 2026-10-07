@@ -2,7 +2,50 @@
 
 Fitness uses one owner login. Browser sessions use a signed, expiring HttpOnly cookie. Remote Model Context Protocol (MCP) clients use OAuth authorization code exchange with PKCE and one `fitness` scope for reads and writes. The MCP endpoint exposes workout tools and generic SQL reads over documented views. See [MCP tools and reader setup](mcp.md).
 
-## Local magic-link foundation (ENSO-89)
+## Email-code sign-in (ENSO-115)
+
+Valentin approved replacing new email sign-in links with six-digit codes on
+7 October 2026. The existing Better Auth 1.7.7 PostgreSQL adapter and invitation
+admission rules stay in place. Request a code at `/sign-in`, then enter it in
+the original Fitness app or browser. Code entry uses text with numeric input
+mode and one-time-code autocomplete so leading zeroes remain intact. Verification
+sets an HttpOnly session cookie in that same context and redirects to Dashboard.
+No session credentials are copied between browser/PWA contexts.
+
+Codes use a domain-separated HMAC-SHA-256 hash with the existing server session
+secret, so the stored value cannot be brute-forced from a database-only leak.
+They expire after five minutes, allow three incorrect attempts,
+and are single-use. Resend rotates the code and invalidates the previous one.
+Both public request and verification HTTP endpoints are limited to three requests
+per minute per IP. The library reads only `X-Real-IP`: production Caddy
+explicitly overwrites it with the client IP, while Traefik appends another address
+to `X-Forwarded-For`. The app port is private to that proxy chain. Operator
+acceptance must retain this trusted-header boundary; local HTTP fixtures supply
+synthetic `X-Real-IP` values and check the real production forwarded-chain shape.
+Unknown, expired, revoked and uninvited accounts receive the
+same request response without email or account creation. Delivery failures do
+not change that response. A wrong code has the same response for an admitted or
+unavailable account. Origin and CSRF protection apply before admission checks.
+Other OTP flows (signup, email changes, password recovery and verification
+inspection) are unavailable.
+
+Owner invitations send a notice directing the recipient to request their own
+code. New magic-link requests are disabled; verification of already-issued links
+is retained temporarily so an email sent just before the release still works.
+Local test/dev delivery writes code messages to the existing private inbox.
+Request a fresh code and enter its newest matching six digits; never use a real
+production inbox or account for automated fixtures. No additional SMTP settings,
+provider, database migration or infrastructure is required.
+
+`bun run test:auth:integration` exercises the pinned library against scratch
+PostgreSQL databases, including expiry, resend, attempt limits, concurrent replay,
+admission revocation and insertion races, origin checks and direct HTTP limits.
+The native phone browser profile exercises the code form in independent cookie
+contexts, invalid-code retry, resend, change-email and account ownership. Physical
+installed iPhone PWA acceptance remains a release acceptance step; desktop phone
+emulation does not prove email/app switching on an actual phone.
+
+## Historical local magic-link foundation (ENSO-89)
 
 The approved next authentication model is invitation-only email magic links with
 Better Auth 1.7.7 and its native PostgreSQL adapter. Drizzle remains unchanged.
@@ -625,7 +668,7 @@ release prerequisites; local inbox capture is not production delivery proof.
   for an admitted session. Device timezone synchronization and draft-preserving
   revalidation continue unchanged; the narrower measurement policy above stands.
 
-The separate native phone browser profile redeems real local magic links in
+The separate native phone browser profile verifies real local email codes in
 independent contexts. It checks private habits/completions, measurement dates,
 notes, ingredients/meals/templates, explicit targets, workout sets/RIR and
 private cues through saves/reloads and known foreign IDs. Template create/edit,

@@ -1,10 +1,28 @@
 import { createServer } from "node:net";
 import { expect, it } from "vitest";
-import { createSmtpSignInEmail } from "./sign-in-email.server";
+import {
+  createSmtpSignInEmail,
+  type SignInEmail,
+} from "./sign-in-email.server";
 
-it.each([false, true])(
-  "loopback SMTP with requireTLS=%s refuses cleartext delivery when required",
-  async (requireTLS) => {
+const emails: readonly SignInEmail[] = [
+  {
+    to: "invited@example.invalid",
+    url: "http://localhost:5196/api/auth/magic-link/verify?token=fixture-token",
+  },
+  { to: "invited@example.invalid", code: "012345" },
+  {
+    to: "invited@example.invalid",
+    invitationUrl: "http://localhost:5196/sign-in",
+  },
+];
+it.each(
+  emails.flatMap((message) =>
+    [false, true].map((requireTLS) => ({ message, requireTLS })),
+  ),
+)(
+  "loopback SMTP requireTLS=$requireTLS protects sign-in delivery",
+  async ({ message, requireTLS }) => {
     let delivered = "";
     let recipient = "";
     const server = createServer((socket) => {
@@ -49,10 +67,7 @@ it.each([false, true])(
         secure: false,
         requireTLS,
         from: "Fitness <fitness@example.invalid>",
-      })({
-        to: "invited@example.invalid",
-        url: "http://localhost:5196/api/auth/magic-link/verify?token=fixture-token",
-      });
+      })(message);
       if (requireTLS) {
         await expect(delivery).rejects.toThrow("Sign-in email delivery failed");
         expect(recipient).toBe("");
@@ -62,8 +77,18 @@ it.each([false, true])(
       await delivery;
       expect(recipient).toContain("invited@example.invalid");
       expect(delivered).toContain("Subject: Sign in to Fitness");
-      expect(delivered).toContain("fixture-token");
-      expect(delivered).toContain("five minutes");
+      if ("code" in message) {
+        expect(delivered).toContain("012345");
+        expect(delivered).toContain("five minutes");
+        expect(delivered).not.toContain("http://");
+      } else if ("invitationUrl" in message) {
+        expect(delivered).toContain(message.invitationUrl);
+        expect(delivered).toContain("request a sign-in code");
+        expect(delivered).not.toContain("five minutes");
+      } else {
+        expect(delivered).toContain("fixture-token");
+        expect(delivered).toContain("five minutes");
+      }
     } finally {
       await new Promise<void>((resolve, reject) =>
         server.close((error) => (error ? reject(error) : resolve())),

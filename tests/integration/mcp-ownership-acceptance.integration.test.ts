@@ -91,31 +91,59 @@ const tokenPost = (path: string, params: Readonly<Record<string, string>>) =>
     body: new URLSearchParams(params),
   });
 
+async function nativeMessages(email: string) {
+  try {
+    return (await readFile(join(folder, "inbox.jsonl"), "utf8"))
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .flatMap((line) => {
+        const message = z
+          .object({ to: z.email(), code: z.string().regex(/^[0-9]{6}$/) })
+          .safeParse(JSON.parse(line));
+        return message.success && message.data.to === email
+          ? [message.data]
+          : [];
+      });
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT")
+      return [];
+    throw error;
+  }
+}
 async function nativeCookie(email: string): Promise<string> {
+  const before = (await nativeMessages(email)).length;
+  const headers = {
+    Origin: origin,
+    "Content-Type": "application/x-www-form-urlencoded",
+    "X-Real-IP": `192.0.2.${++nativeRequestNumber}`,
+  };
   const requested = await fetch(`${origin}/sign-in`, {
     method: "POST",
-    headers: {
-      Origin: origin,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ intent: "request-link", email }),
+    headers,
+    body: new URLSearchParams({ intent: "request-code", email }),
   });
   expect(requested.status).toBe(200);
-  const messages = (await readFile(join(folder, "inbox.jsonl"), "utf8"))
-    .trim()
-    .split("\n")
-    .map((line) =>
-      z.object({ to: z.string(), url: z.url() }).parse(JSON.parse(line)),
-    );
-  const message = messages.findLast((entry) => entry.to === email);
-  if (!message) throw new Error("Native link missing");
-  const verified = await fetch(message.url, { redirect: "manual" });
+  await expect
+    .poll(async () => (await nativeMessages(email)).length)
+    .toBeGreaterThan(before);
+  const message = (await nativeMessages(email)).at(-1);
+  if (!message) throw new Error("Missing native code");
+  const code = message.code;
+  const verified = await fetch(`${origin}/sign-in`, {
+    method: "POST",
+    headers,
+    redirect: "manual",
+    body: new URLSearchParams({ intent: "verify-code", email, code }),
+  });
   expect(verified.status).toBe(302);
+  expect(verified.headers.get("location")).toBe("/dashboard");
   return verified.headers
     .getSetCookie()
     .map((value) => value.split(";")[0])
     .join("; ");
 }
+let nativeRequestNumber = 10;
 
 beforeAll(async () => {
   folder = await mkdtemp(join(tmpdir(), "fitness-sdk-acceptance-"));
