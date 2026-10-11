@@ -257,16 +257,8 @@ export function workoutOperations(
         const supplied = Object.fromEntries(
           Object.entries(updates).filter(([, value]) => value !== undefined),
         );
-        // Effort belongs to completed working sets; reopening a set or marking
-        // it as a warm-up discards the report unless one is supplied.
-        const discarded =
-          (updates.isCompleted === false || updates.isWarmup === true) &&
-          updates.reportedRir === undefined
-            ? { reportedRir: undefined }
-            : {};
         const saved = makeSet(workoutId, exerciseId, {
           ...existing,
-          ...discarded,
           ...supplied,
         });
         if (saved.isErr()) return err(saved.error);

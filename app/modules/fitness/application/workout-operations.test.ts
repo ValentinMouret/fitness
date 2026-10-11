@@ -47,39 +47,35 @@ const operationsOn = (current: WorkoutSession) =>
   });
 
 describe("updateSet", () => {
-  it("discards effort when a set becomes a warm-up", async () => {
+  // Effort belongs to completed working sets and is never dropped implicitly.
+  it.each([
+    { isWarmup: true },
+    { isCompleted: false },
+    { isWarmup: true, reportedRir: "1" as const },
+  ])("rejects %j while the set keeps its effort", async (updates) => {
     const result = await operationsOn(session).updateSet({
       workoutId,
       exerciseId,
       set: 1,
-      updates: { isWarmup: true },
+      updates,
+    });
+    expect(result._unsafeUnwrapErr().code).toBe("invalid_input");
+  });
+
+  it.each([
+    { isWarmup: true, reportedRir: null },
+    { isCompleted: false, reportedRir: null },
+  ])("accepts %j when the effort is cleared", async (updates) => {
+    const result = await operationsOn(session).updateSet({
+      workoutId,
+      exerciseId,
+      set: 1,
+      updates,
     });
     expect(result._unsafeUnwrap().exerciseGroups[0].sets[0]).toMatchObject({
-      isWarmup: true,
+      ...updates,
       reportedRir: undefined,
     });
-  });
-
-  it("rejects effort supplied for a warm-up", async () => {
-    const result = await operationsOn(session).updateSet({
-      workoutId,
-      exerciseId,
-      set: 1,
-      updates: { isWarmup: true, reportedRir: "1" },
-    });
-    expect(result.isErr()).toBe(true);
-  });
-
-  it("discards effort when a set is reopened", async () => {
-    const result = await operationsOn(session).updateSet({
-      workoutId,
-      exerciseId,
-      set: 1,
-      updates: { isCompleted: false },
-    });
-    expect(
-      result._unsafeUnwrap().exerciseGroups[0].sets[0].reportedRir,
-    ).toBeUndefined();
   });
 });
 

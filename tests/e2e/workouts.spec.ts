@@ -371,12 +371,20 @@ test.describe("Reordering exercises", () => {
     await startWorkout(page);
     const first = await addFirstExercise(page);
     await backToWorkout(page);
+    // A fresh catalogue may hold a single exercise, so create the second one.
+    const second = `E2E Reorder Row ${Date.now()}`;
+    const created = await page.request.post("/workouts/exercises/create", {
+      form: { name: second, type: "cable", movementPattern: "pull" },
+    });
+    expect(created.ok()).toBeTruthy();
+    await page.reload();
     await page.getByRole("button", { name: "Add exercise" }).click();
-    await page
-      .getByRole("dialog", { name: "Add exercise" })
-      .locator(".exercise-picker__option")
-      .first()
-      .click();
+    const picker = page.getByRole("dialog", { name: "Add exercise" });
+    await picker
+      .getByRole("searchbox", { name: "Search exercises" })
+      .fill(second);
+    await picker.getByRole("button", { name: new RegExp(second) }).click();
+    await expect(page).toHaveURL(/\/exercises\/[a-z0-9-]+$/);
     await backToWorkout(page);
 
     const grip = page.getByRole("button", { name: `Reorder ${first}` });
