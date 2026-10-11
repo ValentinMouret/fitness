@@ -18,6 +18,7 @@ import { diagnosticEventSchema } from "../../app/diagnostics";
 import { hashCredential } from "../../app/modules/auth/infra/crypto.server";
 import { provisionReader } from "../../app/modules/mcp/infra/provision-reader.server";
 import { createDisposablePostgres } from "./support/disposable-postgres";
+import { exerciseWorkoutWidget } from "./support/mcp-workout-acceptance";
 
 const run = promisify(execFile);
 const freePort = async () => {
@@ -1159,6 +1160,20 @@ describe.sequential("full-stack external HTTP SDK ownership acceptance", () => {
     }
   });
 
+  it("persists widget logging through the actual HTTP SDK and renders its official AppBridge resource at phone widths", async () => {
+    const connected = sdk(access);
+    try {
+      await connected.value.connect(connected.transport);
+      await exerciseWorkoutWidget(
+        connected.value,
+        databaseFixture().pool,
+        owner,
+        foreignWorkout,
+      );
+    } finally {
+      await connected.value.close();
+    }
+  }, 60000);
   it("denies missing bearer and revoked owner identity before private tools", async () => {
     for (const token of ["", randomBytes(32).toString("base64url")]) {
       const attempt = sdk(token);

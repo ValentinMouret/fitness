@@ -1,9 +1,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { createWorkoutCommands } from "~/modules/fitness/infra/workout.repository.server";
+import {
+  createActiveWorkoutCommands,
+  createWorkoutCommands,
+} from "~/modules/fitness/infra/workout.repository.server";
 import { observeMcpTransport } from "~/modules/mcp/infra/diagnostics.server";
 import { createRuntimeQueryRunner } from "~/modules/mcp/infra/query.server";
 import { registerFitnessTools } from "~/modules/mcp/infra/tools.server";
+import { registerFitnessWorkoutApp } from "~/modules/mcp/infra/workout-app.server";
 import { createNutritionCommands } from "~/modules/nutrition/infra/nutrition-commands.server";
 import { getAuthFoundation } from "./auth-foundation.server";
 import { requireLegacyOwnerIdentity } from "./legacy-owner.server";
@@ -51,6 +55,11 @@ export async function handleMcp(request: Request) {
     createWorkoutCommands(access.value.user.id),
     createRuntimeQueryRunner(access.value.user.id),
     createNutritionCommands(access.value.user.id),
+  );
+  registerFitnessWorkoutApp(
+    server,
+    createActiveWorkoutCommands(access.value.user.id),
+    config.issuer,
   );
   try {
     await server.connect(transport);

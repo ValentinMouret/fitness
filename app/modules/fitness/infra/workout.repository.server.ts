@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import {
   and,
@@ -32,6 +33,11 @@ import type { ErrRepository } from "~/repository";
 import { executeQuery } from "~/repository.server";
 import type { IWorkoutRepository } from "../application/workout.repository";
 import { workoutOperations } from "../application/workout-operations";
+import type {
+  ActiveWorkoutFinish,
+  ActiveWorkoutPatch,
+  ActiveWorkoutSnapshot,
+} from "../domain/active-workout";
 import type {
   Exercise,
   ExerciseHistoryPage,
@@ -1321,5 +1327,113 @@ function workoutSetRecordToDomain(
     isWarmup: record.isWarmup,
     rpe: record.rpe ?? undefined,
     reportedRir: record.reportedRir ?? undefined,
+  };
+}
+
+async function activeSnapshot(
+  tx: Transaction,
+  userId: UserId,
+  session: WorkoutSession,
+): Promise<ActiveWorkoutSnapshot> {
+  const workoutId = session.workout.id;
+  // MVCC versions also distinguish recreation when values and timestamps match.
+  const rows = await tx.execute<{ fingerprint: string }>(sql`
+    select json_build_array(
+      (select json_build_array(row_to_json(w), w.xmin::text) from workouts w where w.id = ${workoutId} and w.user_id = ${userId}),
+      (select json_agg(json_build_array(row_to_json(g), g.xmin::text) order by g.exercise_id) from workout_exercises g where g.workout_id = ${workoutId}),
+      (select json_agg(json_build_array(row_to_json(s), s.xmin::text) order by s.exercise,s.set) from workout_sets s where s.workout = ${workoutId})
+    )::text as fingerprint
+  `);
+  const revision = createHash("sha256")
+    .update(JSON.stringify([rows.rows[0].fingerprint, session]))
+    .digest("hex");
+  return {
+    revision,
+    workout: {
+      id: workoutId,
+      name: session.workout.name,
+      start: session.workout.start.toISOString(),
+      stop: session.workout.stop?.toISOString() ?? null,
+      notes: session.workout.notes ?? null,
+    },
+    exerciseGroups: session.exerciseGroups.map((group) => ({
+      exercise: {
+        id: group.exercise.id,
+        name: group.exercise.name,
+        type: group.exercise.type,
+        description: group.exercise.description ?? null,
+        mmcInstructions: group.exercise.mmcInstructions ?? null,
+      },
+      orderIndex: group.orderIndex,
+      notes: group.notes ?? null,
+      sets: group.sets.map((set) => ({
+        set: set.set,
+        targetReps: set.targetReps ?? null,
+        reps: set.reps ?? null,
+        weight: set.weight ?? null,
+        reportedRir: set.reportedRir ?? null,
+        isCompleted: set.isCompleted,
+        isWarmup: set.isWarmup,
+        isFailure: set.isFailure,
+        note: set.note ?? null,
+        rpe: set.rpe ?? null,
+      })),
+    })),
+  };
+}
+
+export function createActiveWorkoutCommands(
+  userId: UserId,
+  database: Database = db,
+) {
+  const run = (
+    workoutId: string,
+    expectedRevision?: string,
+    command?: ActiveWorkoutPatch | ActiveWorkoutFinish,
+  ): ResultAsync<ActiveWorkoutSnapshot, WorkoutError> =>
+    ResultAsync.fromPromise(
+      database.transaction(async (tx) => {
+        const session = await loadSession(tx, userId, workoutId);
+        if (!session)
+          return err(failure("not_found", "Workout does not exist"));
+        const snapshot = await activeSnapshot(tx, userId, session);
+        if (
+          expectedRevision !== undefined &&
+          expectedRevision !== snapshot.revision
+        )
+          return err(
+            failure("conflict", "Workout changed. Refresh before saving."),
+          );
+        if (!command) return ok(snapshot);
+        if (session.workout.stop)
+          return err(failure("conflict", "Workout is already complete."));
+        const operations = workoutOperations({
+          ...createWorkoutRepository(userId, database),
+          changeSession: (_id, change) => {
+            const result = change(session, []);
+            return result.isErr()
+              ? errAsync(result.error)
+              : okAsync(result.value);
+          },
+        });
+        const changed =
+          "updates" in command
+            ? await operations.updateSet(command)
+            : await operations.finishWorkout(command);
+        if (changed.isErr()) return err(changed.error);
+        await persist(tx, userId, changed.value, session);
+        const persisted = await loadSession(tx, userId, workoutId);
+        if (!persisted)
+          return err(failure("not_found", "Workout does not exist"));
+        return ok(await activeSnapshot(tx, userId, persisted));
+      }),
+      databaseError,
+    ).andThen((result) => result);
+  return {
+    read: ({ workoutId }: { readonly workoutId: string }) => run(workoutId),
+    updateSet: (input: ActiveWorkoutPatch) =>
+      run(input.workoutId, input.expectedRevision, input),
+    finishWorkout: (input: ActiveWorkoutFinish) =>
+      run(input.workoutId, input.expectedRevision, input),
   };
 }

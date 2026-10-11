@@ -141,3 +141,31 @@ Meal template `categories` lists all assigned meal times. The legacy `category`
 read field projects the first assignment for compatibility; use `categories`
 for availability. Templates retain one ID and composition, and meal logs keep
 their independently chosen meal category.
+
+## Interactive active workout
+
+`show_workout({ workoutId })` displays an existing session in MCP Apps clients.
+Discover or create the session with the existing tools first; showing it does not
+start a new session. Unsupported clients receive a text status and an ordinary
+Open in Fitness link. The versioned resource is static bundled HTML with its own
+fonts; all private data and writes pass through the authenticated MCP connection.
+
+The card uses `get_workout_widget`, `update_workout_widget_set` and
+`finish_workout_widget` (app visibility). These are account-scoped. Writes include
+an opaque expected revision checked under the existing workout transaction lock.
+An old card refreshes before editing; stale changes are rejected. Drafts survive
+failed saves and refresh, with a saved-value comparison before reapplying edits.
+An uncertain response requires refresh and inspection before another write;
+there is no offline queue or automatic replay.
+
+Actual reps are explicitly entered. Exact optional target reps remain separate;
+weight and reported RIR are optional, and prescriptions are never copied to actual
+performance. Finishing can leave pending sets unrecorded after confirmation. Rest
+is an adjustable local 90-second timer started after an acknowledged set save; it
+is not a persisted coach prescription. Exercise navigation and compact mode are
+user-controlled. Host pinning and real ChatGPT/Claude compatibility require
+separate client acceptance; local browser emulation does not establish either.
+
+Run `bun run build:mcp-ui` before testing resources with the development server.
+The production `build` command generates the self-contained widget after the
+React Router build, and the runtime Docker image includes it in `build/`.

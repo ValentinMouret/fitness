@@ -1,0 +1,82 @@
+@import "./workout-fonts.css";
+:root {
+  font-family: "DM Sans", system-ui, sans-serif;
+  color-scheme: light;
+  --font-body: "DM Sans", system-ui, sans-serif;
+  --font-display: "Crimson Pro", Georgia, serif;
+  --brand-background: #faf9f7;
+  --brand-surface: #f3f1ed;
+  --brand-text: #1c1917;
+  --brand-text-secondary: #79756d;
+  --tomato-3: #feebe7;
+  --tomato-6: #fdbdaf;
+  --tomato-7: #f5a898;
+  --tomato-9: #e54d2e;
+  --tomato-11: #d13415;
+  --green-3: #eef8f1;
+  --green-9: #30a46c;
+  --green-11: #218358;
+  --gray-4: #e9e8e6;
+  --gray-5: #e2e1de;
+  --gray-7: #cfceca;
+  --gray-8: #b9b8b5;
+  --gray-11: #63635e;
+  --red-11: #ce2c31;
+  --tomato-8: #ec8e7b;
+  --amber-3: #fff1cc;
+  --amber-7: #e9c162;
+  --amber-8: #e2a336;
+  --amber-11: #865900;
+  --green-4: #d3eedc;
+  --green-7: #9ed2b0;
+  --green-8: #5bb98b;
+  --shadow-warm: 0 2px 8px rgb(0 0 0 / 6%);
+  --gray-6: #dad9d6;
+  --gray-9: #868682;
+  --gray-12: #21201c;
+  --shadow-warm-sm: 0 1px 2px rgb(0 0 0 / 4%);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --brand-background: #1c1917;
+  --brand-surface: #292524;
+  --brand-text: #faf9f7;
+  --brand-text-secondary: #b9b8b5;
+  --gray-4: #44403c;
+  --gray-6: #57534e;
+  --gray-9: #b9b8b5;
+  --gray-12: #faf9f7;
+  --green-3: #163529;
+  --green-4: #1e4532;
+  --gray-5: #4c4743;
+  --gray-7: #79756d;
+  --gray-11: #b9b8b5;
+  --red-11: #ff9592;
+  --amber-3: #382d17;
+  --amber-11: #f7cc67;
+  --green-11: #71d5a0;
+  --tomato-3: #41221b;
+  --tomato-6: #853a2d;
+  --tomato-11: #ff977d;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: transparent;
+  color: var(--brand-text);
+}
+button,
+input,
+select {
+  font-family: inherit;
+}
+.workout-app-status {
+  padding: 20px;
+  font-size: 16px;
+}
+.workout-app-status h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+}
