@@ -29,8 +29,19 @@ import { useWorkoutContext } from "../workout-context";
 /** The exercise screen has its own navigation, so the tab bar is hidden. */
 export const handle = { hidesTabBar: () => true };
 
-/** Set changes that supersede earlier submissions of the same kind. */
-const SET_FIELDS = ["reportedRir", "isCompleted", "isWarmup", "reps", "weight"];
+/**
+ * Submissions in the same group for the same set supersede each other; other
+ * groups run independently so unrelated edits never cancel one another.
+ */
+type SubmissionGroup =
+  | "completion"
+  | "effort"
+  | "warmup"
+  | "reps"
+  | "weight"
+  | "add-set"
+  | "remove-set"
+  | "exercise";
 
 type Sheet =
   | { readonly kind: "history" | "remove" | "replace" | "cue" }
@@ -75,37 +86,44 @@ export default function ExerciseScreen() {
       : undefined;
   const logged = exercise.sets.filter((set) => set.isCompleted).length;
 
-  // Each set field gets its own fetcher so unrelated edits never cancel each other.
-  const submit = (fields: Record<string, string>) =>
+  const submit = (group: SubmissionGroup, fields: Record<string, string>) =>
     submitForm(
       { exerciseId: exercise.id, ...fields },
       {
         method: "post",
         action: actionPath,
         navigate: false,
-        fetcherKey: [
-          exercise.id,
-          fields.setNumber ?? "",
-          SET_FIELDS.find((field) => field in fields) ?? fields.intent,
-        ].join(":"),
+        fetcherKey: [exercise.id, fields.setNumber ?? "", group].join(":"),
       },
     );
-  const updateSet = (setNumber: number, fields: Record<string, string>) =>
-    submit({ intent: "update-set", setNumber: String(setNumber), ...fields });
+  const updateSet = (
+    group: SubmissionGroup,
+    setNumber: number,
+    fields: Record<string, string>,
+  ) =>
+    submit(group, {
+      intent: "update-set",
+      setNumber: String(setNumber),
+      ...fields,
+    });
   const restSource = (set: ActiveSetViewModel) =>
     `${exercise.id}:${set.setNumber}`;
 
   const toggleComplete = (set: ActiveSetViewModel) => {
     if (set.isCompleted) {
       // Effort belongs to completed working sets, so clear it explicitly.
-      updateSet(set.setNumber, { isCompleted: "false", reportedRir: "" });
+      updateSet("completion", set.setNumber, {
+        isCompleted: "false",
+        reportedRir: "",
+      });
       rest.cancel(restSource(set));
       return;
     }
-    const reps = set.reps.value ?? set.reps.target;
-    updateSet(set.setNumber, {
-      isCompleted: "true",
-      ...(reps === undefined ? {} : { reps: String(reps) }),
+    // The server logs the plan if no reps were saved, so a stale client
+    // value can never overwrite reps that were just entered.
+    submit("completion", {
+      intent: "complete-set",
+      setNumber: String(set.setNumber),
     });
     const setsLeft = workout.totalSets - workout.completedSets - 1;
     if (setsLeft > 0)
@@ -126,12 +144,17 @@ export default function ExerciseScreen() {
     if (sheet?.kind !== "rir") return;
     // Sent with the completion so it cannot reach the server before the tick.
     if (rir !== undefined)
-      updateSet(sheet.setNumber, { reportedRir: rir, isCompleted: "true" });
+      updateSet("effort", sheet.setNumber, {
+        reportedRir: rir,
+        isCompleted: "true",
+      });
     setSheet(undefined);
     if (sheet.finishAfter) requestFinish();
   };
 
-  const addSetKey = [exercise.id, "", "add-set"].join(":");
+  const addSetKey = [exercise.id, "", "add-set" satisfies SubmissionGroup].join(
+    ":",
+  );
   const isAddingSet = fetchers.some(
     (fetcher) => fetcher.key === addSetKey && fetcher.state !== "idle",
   );
@@ -140,7 +163,7 @@ export default function ExerciseScreen() {
     const last = exercise.sets.at(-1);
     const targetReps = last?.reps.value ?? last?.reps.target;
     const weight = last?.weight.value;
-    submit({
+    submit("add-set", {
       intent: "add-set",
       ...(targetReps === undefined ? {} : { targetReps: String(targetReps) }),
       ...(weight === undefined ? {} : { weight: String(weight) }),
@@ -243,11 +266,11 @@ export default function ExerciseScreen() {
               isBodyweight={exercise.isBodyweight}
               mode={isComplete ? "correct" : "log"}
               onChange={(field, value) =>
-                updateSet(set.setNumber, { [field]: value })
+                updateSet(field, set.setNumber, { [field]: value })
               }
               onToggleComplete={() => toggleComplete(set)}
               onToggleWarmup={() =>
-                updateSet(set.setNumber, {
+                updateSet("warmup", set.setNumber, {
                   isWarmup: String(!set.isWarmup),
                   ...(set.isWarmup || !set.isCompleted
                     ? {}
@@ -255,7 +278,7 @@ export default function ExerciseScreen() {
                 })
               }
               onRemove={() =>
-                submit({
+                submit("remove-set", {
                   intent: "remove-set",
                   setNumber: String(set.setNumber),
                 })
@@ -367,7 +390,7 @@ export default function ExerciseScreen() {
         onConfirm={() => {
           setSheet(undefined);
           rest.dismiss();
-          submit({ intent: "remove-exercise" });
+          submit("exercise", { intent: "remove-exercise" });
         }}
         onCancel={() => setSheet(undefined)}
       />

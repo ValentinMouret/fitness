@@ -107,6 +107,20 @@ describe("parseWorkoutSessionForm", () => {
     });
   });
 
+  it("parses a completed set without client-supplied values", () => {
+    expect(
+      parse({
+        intent: "complete-set",
+        exerciseId,
+        setNumber: "2",
+        reps: "99",
+      })._unsafeUnwrap(),
+    ).toEqual({
+      intent: "complete-set",
+      input: { workoutId, exerciseId, set: 2 },
+    });
+  });
+
   it("parses a removed set into a delete command", () => {
     expect(
       parse({

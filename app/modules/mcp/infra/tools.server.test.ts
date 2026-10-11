@@ -54,6 +54,7 @@ describe("MCP tool registration", () => {
         replaceExercise: success,
         saveSets: success,
         appendSet: success,
+        completeSet: success,
         renameWorkout: success,
         deleteSets: success,
         updateSet: success,

@@ -142,6 +142,8 @@ export async function runWorkoutSessionCommand(
       );
     case "add-set":
       return outcome(await commands.appendSet(command.input));
+    case "complete-set":
+      return outcome(await commands.completeSet(command.input));
     case "update-set":
       return outcome(await commands.updateSet(command.input));
     case "remove-set":
