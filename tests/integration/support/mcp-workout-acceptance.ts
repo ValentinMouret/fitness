@@ -257,10 +257,24 @@ async function exerciseBrowser(
       let corruptNextWriteAck = false;
       let corruptNextFinishAck = false;
       const browserErrors: string[] = [];
-      page.on("pageerror", (error) => browserErrors.push(error.message));
-      page.on("console", (message) => {
-        if (message.type() === "error")
-          console.error("Widget host error:", message.text());
+      page.on("pageerror", (error) => {
+        const name = [
+          "Error",
+          "ReferenceError",
+          "SyntaxError",
+          "TypeError",
+          "RangeError",
+        ].includes(error.name)
+          ? error.name
+          : "unknown-error";
+        const category =
+          [
+            "process is not defined",
+            "React is not defined",
+            "Cannot read properties of undefined",
+            "Cannot read properties of null",
+          ].find((known) => error.message.includes(known)) ?? "unclassified";
+        browserErrors.push(`${name}:${category}`);
       });
       await page.exposeFunction("workoutTool", async (params: unknown) => {
         const parsed = z
@@ -335,19 +349,50 @@ async function exerciseBrowser(
         { html, shown, workoutId },
       );
       const app = page.frameLocator('iframe[title="Fitness workout app"]');
+      const readyBy = Date.now() + 5000;
       try {
+        await page.waitForFunction(
+          () => window.workoutHostMilestones.includes("tool-result-sent"),
+          undefined,
+          { timeout: 5000 },
+        );
         await browserExpect(
           app.getByText("Acceptance press", { exact: true }),
-        ).toBeVisible();
+        ).toBeVisible({ timeout: Math.max(1, readyBy - Date.now()) });
       } catch (error) {
+        const milestones = await page.evaluate(
+          () => window.workoutHostMilestones,
+        );
+        const text = await app
+          .locator(".workout-app-status output")
+          .textContent({ timeout: 1000 })
+          .catch(() => null);
+        const knownStatuses = [
+          "Connecting to Fitness…",
+          "Ask the coach to show your workout.",
+          "Could not load this workout. Ask the coach to show it again.",
+          "Could not refresh the workout. Ask the coach to show it again; editing is unavailable.",
+          "This client could not connect the interactive card. Open the workout in Fitness using the tool's link.",
+        ];
+        const status =
+          text === null
+            ? "no-status"
+            : knownStatuses.includes(text)
+              ? text
+              : "unrecognized-status";
+        const safeDiagnostic = JSON.stringify({
+          errors: browserErrors,
+          milestones,
+          status,
+        });
         await writeFile(
           "/tmp/fitness-mcp-workout-browser-failure.json",
-          JSON.stringify({
-            errors: browserErrors,
-            body: await app.locator("body").innerText(),
-          }),
+          safeDiagnostic,
         );
-        throw error;
+        throw new Error(
+          `MCP workout initial render failed: ${safeDiagnostic}`,
+          { cause: error },
+        );
       }
       await browserExpect(
         app.getByText("Target 8", { exact: true }),
