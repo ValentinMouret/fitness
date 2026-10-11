@@ -97,7 +97,8 @@ export default function ExerciseScreen() {
 
   const toggleComplete = (set: ActiveSetViewModel) => {
     if (set.isCompleted) {
-      updateSet(set.setNumber, { isCompleted: "false" });
+      // Effort belongs to completed working sets, so clear it explicitly.
+      updateSet(set.setNumber, { isCompleted: "false", reportedRir: "" });
       rest.cancel(restSource(set));
       return;
     }
@@ -246,7 +247,12 @@ export default function ExerciseScreen() {
               }
               onToggleComplete={() => toggleComplete(set)}
               onToggleWarmup={() =>
-                updateSet(set.setNumber, { isWarmup: String(!set.isWarmup) })
+                updateSet(set.setNumber, {
+                  isWarmup: String(!set.isWarmup),
+                  ...(set.isWarmup || !set.isCompleted
+                    ? {}
+                    : { reportedRir: "" }),
+                })
               }
               onRemove={() =>
                 submit({
