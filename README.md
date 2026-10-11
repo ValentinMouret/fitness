@@ -49,10 +49,14 @@ bun run build    # production build
 bun run test:e2e # Playwright end-to-end tests
 ```
 
-Before hand-off, run `bun run gate` (typecheck, lint, unit tests, build, and
-component browser tests).
-Run `bun run gate:e2e` when the change affects a user workflow, Playwright
-browsers are available, and a test server is correctly configured.
+Before hand-off, run `bun run gate`. It is the same check CI runs: static
+checks, unit and integration suites, component and end-to-end browser tests
+against the production build, and the production image. It creates and drops
+its own databases, so it needs a local PostgreSQL superuser connection
+(`GATE_POSTGRES_URL`, default `postgresql://localhost/postgres`), Playwright's
+Chromium, PostgreSQL server binaries and Docker, with the Node and Bun versions
+in `.node-version` and `.bun-version` (the flake provides them). Logs land in
+`.gate/`.
 `bun run fmt` and `bun run lint` write changes, so
 review their output before running them in a dirty worktree.
 

@@ -1,11 +1,12 @@
 name: CI
 
+# CI runs the same gate as developers: `bun run gate`. Keep logic in
+# scripts/gate.ts, not here; this file only provides the toolchain.
 on:
   push:
     branches: [main]
+  # Every pull request, including stacked ones based on another branch.
   pull_request:
-    branches: [main]
-    types: [opened, reopened, synchronize, ready_for_review]
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -14,35 +15,9 @@ concurrency:
 permissions:
   contents: read
 
-env:
-  DATABASE_URL: postgresql://postgres:password@localhost:5432/fitness
-  ANTHROPIC_API_KEY: dummy_key
-  AUTH_FOUNDATION_OWNER_USER_ID: 720cbf7c-67b5-4d6b-b026-c8e1099ff435
-  AUTH_USERNAME: admin
-  AUTH_PASSWORD: password
-  AUTH_SESSION_SECRET: ci-only-session-secret-not-for-production-32-bytes
-  NODE_ENV: test
-
 jobs:
-  quality:
-    name: Lint, Typecheck & Schema Checks
-    if: github.event_name == 'push' || !github.event.pull_request.draft
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-
-      - run: bun install --frozen-lockfile
-      - run: bun x biome ci .
-      - run: bun run typecheck
-      - run: bun x drizzle-kit check
-      - name: Check schema/migration drift
-        run: bash scripts/check-migrations.sh
-
-  build:
-    name: Build
-    if: github.event_name == 'push' || !github.event.pull_request.draft
+  gate:
+    name: Gate
     runs-on: ubuntu-latest
 
     services:
@@ -50,7 +25,6 @@ jobs:
         image: postgres:17
         env:
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: fitness
         ports:
           - 5432:5432
         options: >-
@@ -62,162 +36,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-
-      - run: bun install --frozen-lockfile
-      - run: bun run build
-
-      - name: Build production image
-        run: docker build --tag fitness-ci .
-
-      - name: Smoke test runtime migrations
-        run: |
-          docker run --rm --network host \
-            -e DATABASE_URL -e ANTHROPIC_API_KEY \
-            -e AUTH_USERNAME -e AUTH_PASSWORD -e AUTH_SESSION_SECRET \
-            -e NODE_ENV=production \
-            fitness-ci bun -e 'console.log("Runtime migration smoke check passed")'
-
-      - name: Verify retained asset startup and preview isolation
-        run: bash deploy/test-retention.sh
-
-      - uses: actions/upload-artifact@v4
         with:
-          name: build-output
-          path: build/
-          retention-days: 1
-
-  test:
-    name: Unit & Integration Tests
-    if: github.event_name == 'push' || !github.event.pull_request.draft
-    runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: fitness
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+          bun-version-file: .bun-version
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
 
       - run: bun install --frozen-lockfile
-      - run: bun run db:migrate
-      - run: bun run auth:seed-local
-        env:
-          AUTH_LOCAL_DATABASE_URL: postgresql://postgres:password@localhost:5432/fitness
-      - run: bun run db:seed
-      - run: bun run test
-      - run: bun run test:nutrition:integration
-        env:
-          NUTRITION_TEST_DATABASE_URL: postgresql://postgres:password@localhost:5432/fitness
-      - run: bun run test:auth:integration
-        env:
-          AUTH_TEST_ADMIN_URL: postgresql://postgres:password@localhost:5432/postgres
-      - run: bun run test:tenant:integration
-        env:
-          TENANT_TEST_ADMIN_URL: postgresql://postgres:password@localhost:5432/postgres
-      - run: bun run test:mcp:integration
-        env:
-          MCP_TEST_ADMIN_URL: postgresql://postgres:password@localhost:5432/postgres
-      - name: Install isolated SDK acceptance PostgreSQL tools
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bunx playwright install --with-deps chromium
+
+      - name: Install PostgreSQL server tools for the MCP acceptance cluster
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-16
           echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
-      - run: bunx playwright install --with-deps chromium
-      - run: bun run test:mcp:acceptance
 
-  e2e:
-    name: E2E Tests
-    if: github.event_name == 'push' || !github.event.pull_request.draft
-    runs-on: ubuntu-latest
-    needs: build
-
-    container:
-      image: mcr.microsoft.com/playwright:v1.58.2-noble
-      options: --user 0
-
-    services:
-      postgres:
-        image: postgres:17
+      - run: bun run gate
         env:
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: fitness
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/fitness
-      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
-      OAUTH_ISSUER_URL: http://127.0.0.1:5175
-      OAUTH_CLIENTS: '[{"name":"ChatGPT","id":"fitness-e2e-chatgpt","secret":"fitness-e2e-chatgpt-secret","redirectUri":"https://chatgpt.example.invalid/callback"},{"name":"Claude","id":"fitness-e2e-claude","secret":"fitness-e2e-claude-secret","redirectUri":"https://claude.example.invalid/callback"}]'
-      E2E_DATABASE_URL: postgresql://postgres:password@postgres:5432/fitness
-      E2E_CONNECTIONS_TABLE: public.oauth_connections
-      E2E_AUTHORIZATION_CODES_TABLE: public.oauth_authorization_codes
-      E2E_TOKENS_TABLE: public.oauth_tokens
-      AUTH_FOUNDATION_ENABLED: "false"
-      AUTH_FOUNDATION_ORIGIN: http://127.0.0.1:5175
-      AUTH_FOUNDATION_OWNER_USER_ID: 720cbf7c-67b5-4d6b-b026-c8e1099ff435
-      AUTH_LOCAL_INBOX: /tmp/fitness-auth-foundation/inbox.jsonl
-      E2E_SERVER_LOG: /tmp/fitness-test-server.log
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Bun prerequisites
-        run: apt-get update && apt-get install -y unzip
-
-      - uses: oven-sh/setup-bun@v2
-
-      - run: bun install --frozen-lockfile
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: build-output
-          path: build
-
-      - run: bun run db:migrate
-      - run: bun run auth:seed-local
-        env:
-          AUTH_LOCAL_DATABASE_URL: postgresql://postgres:password@postgres:5432/fitness
-      - run: bun run db:seed
-
-      - run: bun run test:browser
-      - run: bun run test:e2e
-        env:
-          AUTH_USERNAME: testuser
-          AUTH_PASSWORD: testpassword
-
-      - name: Native account browser acceptance
-        env:
-          AUTH_FOUNDATION_ENABLED: "true"
-          E2E_SERVER_LOG: /tmp/fitness-native-server.log
-          GIT_SHA: ${{ github.sha }}
-          E2E_BASE_URL: http://127.0.0.1:5175
-          HOST: 127.0.0.1
-          PORT: "5175"
-        run: |
-          bun run start > /tmp/fitness-native-server.log 2>&1 &
-          native_server_pid=$!
-          trap 'kill "$native_server_pid" 2>/dev/null || true' EXIT
-          bun -e 'for (let attempt = 0; attempt < 50; attempt++) { try { const response = await fetch("http://127.0.0.1:5175/sign-in"); if (response.ok) process.exit(0); } catch {} await Bun.sleep(200); } process.exit(1);'
-          bunx playwright test --config playwright.native.config.ts
+          GATE_POSTGRES_URL: postgresql://postgres:password@localhost:5432/postgres
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report
-          path: playwright-report/
+          name: gate-logs-${{ github.run_attempt }}
+          path: .gate/
+          include-hidden-files: true
           retention-days: 14

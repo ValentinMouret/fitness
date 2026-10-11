@@ -14,6 +14,9 @@ test.use({
 let templateId: string;
 let templateName: string;
 let ingredientId: string;
+// The last test logs Lunch, so each worker owns a day no other test reads.
+const workerDate = () =>
+  `1902-01-${String(test.info().parallelIndex + 1).padStart(2, "0")}`;
 
 test.beforeEach(async ({ page, request }) => {
   pool = new pg.Pool({ connectionString: databaseUrl });
@@ -59,7 +62,7 @@ test.beforeEach(async ({ page, request }) => {
       values ($3, $1, $2, 100)`,
     [templateId, ingredientId, fixtureOwnerId()],
   );
-  await page.goto("/nutrition?date=1901-03-01");
+  await page.goto(`/nutrition?date=${workerDate()}`);
   await page.getByRole("button", { name: "Meal actions for Lunch" }).tap();
   await page
     .getByRole("menuitem", { name: "Use template", exact: true })

@@ -1,20 +1,29 @@
 import { defineConfig, devices } from "@playwright/test";
-import { authTestEnv, credentials } from "./tests/e2e/support/auth";
+import { authTestEnv } from "./tests/e2e/support/auth";
+import { hermeticLaunchOptions } from "./tests/hermetic-browser";
 
 const authFile = "playwright/.auth/user.json";
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  globalSetup: process.env.CI ? undefined : "./tests/e2e/auth/global-setup.ts",
+  // The same settings apply everywhere; `bun run gate` starts the server.
+  globalSetup: "./tests/e2e/auth/global-setup.ts",
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
+  forbidOnly: process.env.GATE === "1",
   timeout: 15_000,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : undefined,
-  reporter: process.env.CI ? [["list"], ["html"]] : "html",
+  retries: 1,
+  // A test that passes only on retry is flaky, and flaky fails the gate.
+  failOnFlakyTests: true,
+  workers: 4,
+  reporter: [["list"], ["html", { open: "never" }]],
   use: {
+    launchOptions: hermeticLaunchOptions,
     baseURL: authTestEnv.E2E_BASE_URL,
-    trace: "on-first-retry",
+    // Exit animations keep closing menus and dialogs mounted and listening,
+    // so timing under load decides whether the next tap lands.
+    contextOptions: { reducedMotion: "reduce" },
+    // Keep the first failure's evidence; a retry may not reproduce it.
+    trace: "retain-on-failure",
   },
   projects: [
     {
@@ -29,7 +38,8 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         storageState: { cookies: [], origins: [] },
-        trace: "off",
+        // Gate credentials and OAuth clients are fixtures, so failure traces are safe.
+        trace: "retain-on-failure",
         screenshot: "off",
         video: "off",
       },
@@ -62,22 +72,4 @@ export default defineConfig({
       },
     },
   ],
-  webServer: process.env.CI
-    ? {
-        command: process.env.E2E_SERVER_LOG
-          ? 'bun run start > "$E2E_SERVER_LOG" 2>&1'
-          : "bun run start",
-        url: authTestEnv.E2E_BASE_URL,
-        reuseExistingServer: false,
-        env: {
-          AUTH_USERNAME: credentials.username,
-          AUTH_PASSWORD: credentials.password,
-          HOST: "127.0.0.1",
-          PORT: String(authTestEnv.TEST_PORT),
-          DATABASE_URL:
-            process.env.DATABASE_URL || "postgresql://localhost/fitness",
-          ANTHROPIC_API_KEY: "test-key",
-        },
-      }
-    : undefined,
 });

@@ -71,29 +71,30 @@ needed, and stop servers you started when finished. Set `TEST_PORT` or
 server and test fixtures use the same dedicated test database; do not use
 production or personal data.
 
-For a local production-build server, stop the server you own before rebuilding
-changed source, then restart it from the completed build before running E2E tests. A running server retains the previous asset manifest;
-the new build can remove those assets and cause navigation failures. Run
-`bun run gate`, restart the server from that build, then `bun run test:e2e`.
-If using `bun run gate:e2e` with a separately running server, its build step still
-replaces the served assets. Use the separated gate/build → server start → E2E
-sequence locally; do not rebuild underneath a running server. Match the OAuth
-issuer and test base URL to that server's port.
+When iterating against a production-build server, do not rebuild underneath it:
+a running server keeps the previous asset manifest. Match the OAuth issuer and
+test base URL to that server's port.
 
 [playwright.config.ts](../../playwright.config.ts) requires a reachable existing
-test server locally and fails before browser tests when `/login` is unavailable.
-It never builds, migrates, seeds, or starts a local server. CI retains its isolated
-server startup. Auth-only browser tests use a separate configuration and also
-require an existing server. Their fixtures and lifetime profiles are described in the
+test server and fails before browser tests when `/login` is unavailable. It never
+builds, migrates, seeds, or starts a server, and has no CI-specific settings;
+`bun run gate` starts the servers it tests. Auth-only browser tests use a separate
+configuration and also require an existing server. Their fixtures and lifetime profiles are described in the
 [auth acceptance guide](../../tests/e2e/auth/README.md).
 
-## Understand CI setup
+## Run the gate
 
-The [CI workflow](../../.github/workflows/ci.yml) defines isolated PostgreSQL
-services. Its unit/integration and E2E jobs currently push the schema and seed
-their databases before testing. The E2E job downloads a build artifact and lets
-Playwright start the production server; it does not reuse the local setup path.
-The build job separately smoke-tests runtime migrations in the production image.
+[`bun run gate`](../../scripts/gate.ts) is the single check that guards main, and
+the [CI workflow](../../.github/workflows/ci.yml) only runs that command. Keep
+checks in the script, not in the workflow, so local and CI results cannot
+diverge. The gate builds its own environment (`NODE_ENV=test`, UTC, test
+credentials) instead of reading your shell or `.env`, creates throwaway
+databases named `fitness_gate_<run>_<role>_test`, and runs independent stages
+in parallel: static checks; build and database preparation; then unit,
+integration, browser, end-to-end (regular and native account servers) and
+production-image checks. Each step logs to `.gate/<step>.log`, and failures
+print the end of their log. Set `GATE_KEEP_DATABASES=1` to inspect databases
+after a run.
 
 Keep required test environment values aligned with server validation. When a
 failure occurs before tests start, inspect transitive imports and setup first;
@@ -102,10 +103,8 @@ from selector failures.
 
 ## Before hand-off
 
-Run focused checks while iterating, then `bun run gate`. For a changed user
-workflow, also run `bun run gate:e2e` when browsers are available and a test
-server is correctly configured. Formatting and lint commands write changes;
-inspect the working tree before and after running them.
+Run focused checks while iterating, then `bun run gate`. Formatting and lint
+commands write changes; inspect the working tree before and after running them.
 
 ### Account timezone acceptance
 

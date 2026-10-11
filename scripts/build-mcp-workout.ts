@@ -30,7 +30,7 @@ for (const bundle of outputs) {
 if (!script || !css) throw new Error("Incomplete MCP workout bundle");
 const fontLicenses = await Promise.all(
   ["crimsonpro-OFL.txt", "dmsans-OFL.txt"].map((name) =>
-    readFile(`app/modules/mcp/presentation/fonts/${name}`, "utf8"),
+    readFile(`app/fonts/${name}`, "utf8"),
   ),
 );
 await mkdir("build", { recursive: true });

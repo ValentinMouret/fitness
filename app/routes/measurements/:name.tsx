@@ -291,21 +291,23 @@ export default function MeasurementPage(_: Route.ComponentProps) {
                             </Button>
                           </AlertDialog.Cancel>
                           <AlertDialog.Action>
-                            <fetcher.Form method="post">
-                              <input
-                                type="hidden"
-                                name="intent"
-                                value="delete-measure"
-                              />
-                              <input
-                                type="hidden"
-                                name="date"
-                                value={measure.t.toISOString()}
-                              />
-                              <Button variant="solid" color="red" type="submit">
-                                Delete
-                              </Button>
-                            </fetcher.Form>
+                            {/* Closing unmounts the dialog, so a form inside it
+                                would be disconnected before it submits. */}
+                            <Button
+                              variant="solid"
+                              color="red"
+                              onClick={() =>
+                                fetcher.submit(
+                                  {
+                                    intent: "delete-measure",
+                                    date: measure.t.toISOString(),
+                                  },
+                                  { method: "post" },
+                                )
+                              }
+                            >
+                              Delete
+                            </Button>
                           </AlertDialog.Action>
                         </Flex>
                       </AlertDialog.Content>

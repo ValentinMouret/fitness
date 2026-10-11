@@ -17,7 +17,7 @@ import {
   tokens,
 } from "../support/oauth";
 
-test.use({ storageState: { cookies: [], origins: [] }, trace: "off" });
+test.use({ storageState: { cookies: [], origins: [] } });
 
 test("MCP discovery advertises the Fitness resource and supported OAuth flow", async ({
   request,

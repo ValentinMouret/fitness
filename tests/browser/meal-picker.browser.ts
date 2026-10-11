@@ -7,6 +7,8 @@ let script = "";
 let styles = "";
 
 test.beforeAll(async () => {
+  // Bundling the fixture is a build, not a test step; it is slower under load.
+  test.setTimeout(60_000);
   const bundle = await build({
     configFile: false,
     root: fileURLToPath(new URL("../..", import.meta.url)),

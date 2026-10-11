@@ -1,9 +1,8 @@
-import { requireLegacyOwnerIdentity } from "~/modules/auth/infra/legacy-owner.server";
-import "dotenv/config";
 import type { InferInsertModel } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { env } from "~/env.server";
 import { logger } from "~/logger.server";
+import { requireLegacyOwnerIdentity } from "~/modules/auth/infra/legacy-owner.server";
 import { equipmentInstances, gymFloors } from "./schema";
 
 export const db = drizzle({

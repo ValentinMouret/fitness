@@ -10,7 +10,7 @@ import {
   tokens,
 } from "../support/oauth";
 
-test.use({ storageState: { cookies: [], origins: [] }, trace: "off" });
+test.use({ storageState: { cookies: [], origins: [] } });
 
 test("consent and tokens persist in PostgreSQL without plaintext bearer tokens @storage", async ({
   page,

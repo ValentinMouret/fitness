@@ -1,4 +1,4 @@
-@import "./workout-fonts.css";
+@import "../../../fonts/fonts.css";
 :root {
   font-family: "DM Sans", system-ui, sans-serif;
   color-scheme: light;

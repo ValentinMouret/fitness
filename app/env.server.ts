@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { z } from "zod";
 import { oauthClientSchema } from "./modules/auth/domain/oauth";
 

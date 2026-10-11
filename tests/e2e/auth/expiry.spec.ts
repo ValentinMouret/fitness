@@ -18,7 +18,7 @@ import {
   tokens,
 } from "../support/oauth";
 
-test.use({ storageState: { cookies: [], origins: [] }, trace: "off" });
+test.use({ storageState: { cookies: [], origins: [] } });
 
 test.describe("short server lifetimes @expiry", () => {
   test("server rejects an expired, unmodified cookie even when sent manually @session-expiry", async ({

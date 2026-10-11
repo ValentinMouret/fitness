@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { and, eq, type InferInsertModel, isNotNull, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { env } from "~/env.server";
