@@ -26,6 +26,89 @@ if (process.argv[2] === "unknown-release") {
   logger.error({ err: new Error(secret) }, secret);
   process.exit(0);
 }
+if (process.argv[2] === "discovery") {
+  const cases = [
+    {
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-11-25",
+        capabilities: {},
+        clientInfo: { name: secret, version: secret },
+      },
+    },
+    { method: "tools/list" },
+    { method: "resources/list" },
+    { method: "resources/read", params: { uri: `ui://${secret}` } },
+    { method: "tools/call", params: { name: secret, arguments: { secret } } },
+  ];
+  for (const message of cases) {
+    await request("/mcp", () =>
+      discoveryRequest(
+        JSON.stringify({ jsonrpc: "2.0", id: 1, ...message }),
+        "2025-11-25",
+      ),
+    );
+  }
+  await request("/mcp", () => discoveryRequest(secret, "2025-11-25"));
+  await request("/mcp", () =>
+    discoveryRequest(
+      JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+      secret,
+    ),
+  );
+  await request("/mcp", () =>
+    discoveryRequest(
+      JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+      secret.repeat(200),
+    ),
+  );
+  process.exit(0);
+}
+
+async function discoveryRequest(body: string, protocol: string) {
+  const server = new McpServer({ name: secret, version: secret });
+  server.registerTool("query", { inputSchema: z.object({}) }, async () => ({
+    content: [],
+  }));
+  server.registerResource("test", "ui://test", {}, async () => ({
+    contents: [{ uri: "ui://test", text: secret }],
+  }));
+  const transport = new WebStandardStreamableHTTPServerTransport({
+    sessionIdGenerator: undefined,
+    enableJsonResponse: true,
+  });
+  try {
+    await server.connect(transport);
+    const handleRequest = observeMcpTransport(transport);
+    const reply = await handleRequest(
+      new Request("http://localhost/mcp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json, text/event-stream",
+          "MCP-Protocol-Version": protocol,
+          Authorization: `Bearer ${secret}`,
+        },
+        body,
+      }),
+    );
+    const payload = await reply.clone().json();
+    if (
+      body === secret &&
+      (reply.status !== 400 || payload.error.code !== -32700)
+    )
+      throw new Error("Parse rejection response changed");
+    if (
+      protocol.startsWith(secret) &&
+      (reply.status !== 400 || !payload.error.message.includes(secret))
+    )
+      throw new Error("Protocol rejection response changed");
+    return reply;
+  } finally {
+    await server.close();
+  }
+}
+
 const ids = await Promise.all([
   request(`/workouts/${secret}?token=${secret}`, async () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -99,8 +182,8 @@ async function toolRequest(name: string, args: unknown, count = 1) {
   });
   try {
     await server.connect(transport);
-    observeMcpTransport(transport);
-    return await transport.handleRequest(
+    const handleRequest = observeMcpTransport(transport);
+    return await handleRequest(
       new Request("http://localhost/mcp", {
         method: "POST",
         headers: {

@@ -16,6 +16,9 @@ export const diagnosticEventSchema = z
     status: z.number().int().min(100).max(599).optional(),
     route_id: z.enum(contract.routes).optional(),
     tool: z.enum(contract.tools).optional(),
+    rpc_method: z.enum(contract.rpc_methods).optional(),
+    mcp_protocol: z.enum(contract.mcp_protocols).optional(),
+    rpc_error: z.enum(contract.rpc_errors).optional(),
   })
   .strict();
 export type DiagnosticEvent = Readonly<z.infer<typeof diagnosticEventSchema>>;
