@@ -12,7 +12,6 @@ export function canWriteFixtureDatabase(
   if (!databaseUrl || databaseUrl !== env.DATABASE_URL) return false;
   const database = new URL(databaseUrl);
   const databaseHost = database.hostname;
-  if (env.CI === "true") return databaseHost === "postgres";
   return (
     env.E2E_ALLOW_FIXTURE_WRITES === "true" &&
     loopbackHosts.has(databaseHost) &&

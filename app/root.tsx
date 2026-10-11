@@ -11,6 +11,7 @@ import {
 import type { Route } from "./+types/root";
 import { diagnosticMiddleware } from "./diagnostics-middleware.server";
 import "@radix-ui/themes/styles.css";
+import "./fonts/fonts.css";
 import "./app.css";
 import { Code, Container, Heading, Text, Theme } from "@radix-ui/themes";
 
@@ -21,16 +22,6 @@ export const headers: Route.HeadersFunction = () => ({
 });
 
 export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:wght@400;500;600;700&display=swap",
-  },
   { rel: "manifest", href: "/manifest.json" },
   { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
 ];

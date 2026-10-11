@@ -1,4 +1,5 @@
 import { defineConfig } from "@playwright/test";
+import { hermeticLaunchOptions } from "./tests/hermetic-browser";
 
 export default defineConfig({
   testDir: "./tests/browser",
@@ -7,6 +8,7 @@ export default defineConfig({
   retries: 0,
   reporter: "list",
   use: {
+    launchOptions: hermeticLaunchOptions,
     browserName: "chromium",
     viewport: { width: 390, height: 844 },
     hasTouch: true,

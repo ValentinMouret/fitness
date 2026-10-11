@@ -1,9 +1,8 @@
-import { requireLegacyOwnerIdentity } from "~/modules/auth/infra/legacy-owner.server";
-import "dotenv/config";
 import { type InferInsertModel, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { env } from "~/env.server";
 import { logger } from "~/logger.server";
+import { requireLegacyOwnerIdentity } from "~/modules/auth/infra/legacy-owner.server";
 import type { MuscleGroup } from "~/modules/fitness/domain/workout";
 import {
   equipmentPreferences,

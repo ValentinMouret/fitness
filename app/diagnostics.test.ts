@@ -1,12 +1,15 @@
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   diagnosticCategory,
   diagnosticEventSchema,
   diagnosticRoute,
   statusCategory,
 } from "./diagnostics";
+
+// Several tests start Node with tsx; startup time depends on machine load.
+vi.setConfig({ testTimeout: 30_000 });
 
 const execute = promisify(execFile);
 const event = {
@@ -20,8 +23,7 @@ const event = {
   duration_ms: 1,
   category: "none",
 };
-// Several tests start Node with tsx; startup time depends on machine load.
-describe("safe diagnostic boundaries", { timeout: 30_000 }, () => {
+describe("safe diagnostic boundaries", () => {
   it("does not label events with an unverified release", async () => {
     const { stdout, stderr } = await execute(
       process.execPath,

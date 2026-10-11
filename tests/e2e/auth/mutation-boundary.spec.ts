@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import { expectUnauthenticated, login } from "../support/auth";
 
-test.use({ storageState: { cookies: [], origins: [] }, trace: "off" });
+test.use({ storageState: { cookies: [], origins: [] } });
 
 for (const attack of ["unauthenticated", "cross-site"] as const) {
   test(`${attack} exercise creation cannot write before returning an error`, async ({

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { canWriteFixtureDatabase } from "./e2e/support/fixture-database";
 
 const local = "postgresql://localhost/fitness_test";
-const ci = "postgresql://postgres/fitness";
+const remote = "postgresql://postgres/fitness";
 
 describe("browser fixture write permission", () => {
   it.each([
@@ -10,19 +10,13 @@ describe("browser fixture write permission", () => {
     {
       name: "mismatched database",
       url: local,
-      env: { DATABASE_URL: ci, E2E_ALLOW_FIXTURE_WRITES: "true" },
+      env: { DATABASE_URL: remote, E2E_ALLOW_FIXTURE_WRITES: "true" },
       allowed: false,
     },
     {
-      name: "CI isolated service",
-      url: ci,
-      env: { DATABASE_URL: ci, CI: "true" },
-      allowed: true,
-    },
-    {
-      name: "CI remote database",
-      url: local,
-      env: { DATABASE_URL: local, CI: "true" },
+      name: "a non-loopback database",
+      url: remote,
+      env: { DATABASE_URL: remote, E2E_ALLOW_FIXTURE_WRITES: "true" },
       allowed: false,
     },
     {
@@ -76,9 +70,9 @@ describe("browser fixture write permission", () => {
       allowed: false,
     },
     {
-      name: "postgres host without CI",
-      url: ci,
-      env: { DATABASE_URL: ci, E2E_ALLOW_FIXTURE_WRITES: "true" },
+      name: "postgres host",
+      url: remote,
+      env: { DATABASE_URL: remote, E2E_ALLOW_FIXTURE_WRITES: "true" },
       allowed: false,
     },
   ])("$name", ({ url, env, allowed }) => {

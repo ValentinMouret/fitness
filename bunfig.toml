@@ -1,0 +1,3 @@
+# Bun never loads .env implicitly, so `bun run gate` sees the same environment
+# locally and in CI. Developer shells load .env through direnv (.envrc).
+env = false

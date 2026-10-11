@@ -400,7 +400,7 @@ native admission or removal of the legacy-owner MCP gate.
 ### Gate 2: prove compatibility before merging the held stack
 
 - Use the full stacked head, not individual draft CI skips, for required CI and
-  local `gate:e2e`, auth, ownership, nutrition and restricted-reader suites.
+  `bun run gate`, auth, ownership, nutrition and restricted-reader suites.
 - Prove legacy owner browser reads/writes and existing OAuth connection/token
   refresh/revocation against the rehearsed dataset with native admission closed.
   Exercise a real external owner MCP client; SDK/HTTP fixtures alone do not prove

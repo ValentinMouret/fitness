@@ -12,5 +12,7 @@ export default defineConfig({
       "app/modules/auth/infra/account-settings.integration.test.ts",
     ],
     fileParallelism: false,
+    // Polls wait on spawned auth processes, whose startup depends on load.
+    expect: { poll: { timeout: 20_000 } },
   },
 });

@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import { z } from "zod";
+import { hermeticLaunchOptions } from "./tests/hermetic-browser";
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -11,6 +12,7 @@ export default defineConfig({
   retries: 0,
   reporter: [["list"]],
   use: {
+    launchOptions: hermeticLaunchOptions,
     ...devices["Desktop Chrome"],
     viewport: { width: 390, height: 844 },
     baseURL: z.url().parse(process.env.E2E_BASE_URL),

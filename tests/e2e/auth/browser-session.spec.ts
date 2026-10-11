@@ -9,7 +9,7 @@ import {
   sessionCookieName,
 } from "../support/auth";
 
-test.use({ storageState: { cookies: [], origins: [] }, trace: "off" });
+test.use({ storageState: { cookies: [], origins: [] } });
 
 test("login persists through navigation, reload, a new tab, and a restored browser session", async ({
   page,

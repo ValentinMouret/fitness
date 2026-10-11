@@ -62,7 +62,7 @@ function collectRoutes(
   });
 }
 
-test.use({ storageState: { cookies: [], origins: [] }, trace: "off" });
+test.use({ storageState: { cookies: [], origins: [] } });
 
 for (const authentication of ["missing", "forged"] as const) {
   test.describe(`${authentication} authentication`, () => {

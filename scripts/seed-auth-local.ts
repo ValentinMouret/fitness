@@ -11,12 +11,8 @@ const config = z
     AUTH_LOCAL_DATABASE_URL: z.url().refine((value) => {
       const url = new URL(value);
       return (
-        (["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) &&
-          /^\/[a-z0-9_]+_(test|dev)$/.test(url.pathname)) ||
-        (process.env.CI === "true" &&
-          process.env.NODE_ENV === "test" &&
-          ["postgres", "localhost", "127.0.0.1"].includes(url.hostname) &&
-          url.pathname === "/fitness")
+        ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) &&
+        /^\/[a-z0-9_]+_(test|dev)$/.test(url.pathname)
       );
     }, "Use an explicitly named loopback test/dev database"),
     AUTH_FOUNDATION_OWNER_USER_ID: z.uuid(),
