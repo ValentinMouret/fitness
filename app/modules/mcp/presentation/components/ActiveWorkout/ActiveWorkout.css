@@ -1,0 +1,584 @@
+.mcp-workout {
+  background: var(--brand-background);
+  color: var(--brand-text);
+  font-family: var(--font-body, "DM Sans", sans-serif);
+  font-size: 16px;
+  line-height: 1.5;
+  border: 1px solid var(--gray-4);
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 600px;
+  margin-inline: auto;
+}
+.mcp-workout * {
+  box-sizing: border-box;
+}
+.mcp-workout h1 {
+  font-family: var(--font-display, "Crimson Pro", serif);
+  font-size: 28px;
+  line-height: 1.25;
+  font-weight: 500;
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.mcp-workout h2 {
+  font-size: 20px;
+  line-height: 1.4;
+  font-weight: 500;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.mcp-workout p {
+  margin: 0;
+}
+.mcp-workout button,
+.mcp-workout select {
+  font: inherit;
+  min-height: 44px;
+  min-width: 44px;
+  border: 1px solid var(--gray-5);
+  border-radius: 8px;
+  background: var(--brand-surface);
+  color: var(--brand-text);
+  cursor: pointer;
+  padding: 8px;
+}
+.mcp-workout button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.mcp-workout :focus-visible {
+  outline: 2px solid var(--tomato-9);
+  outline-offset: 2px;
+}
+.mcp-header {
+  padding: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mcp-header > div:first-child {
+  flex: 1 1 190px;
+}
+.mcp-caption {
+  display: block;
+  font-size: 12px;
+  color: var(--brand-text-secondary);
+}
+.mcp-header-stats {
+  display: flex;
+  gap: 20px;
+  text-align: right;
+}
+.mcp-header-stats strong {
+  display: block;
+  font-size: 20px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.mcp-header-stats strong span {
+  color: var(--brand-text-secondary);
+}
+.mcp-workout progress {
+  display: block;
+  appearance: none;
+  border: 0;
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--gray-4);
+}
+.mcp-workout progress::-webkit-progress-bar {
+  background: var(--gray-4);
+}
+.mcp-workout progress::-webkit-progress-value {
+  background: var(--tomato-9);
+}
+.mcp-workout progress::-moz-progress-bar {
+  background: var(--tomato-9);
+}
+.mcp-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+.mcp-tools button {
+  font-size: 14px;
+}
+.mcp-exercise {
+  border-block: 1px solid var(--gray-4);
+  padding: 16px;
+}
+.mcp-exercise-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+.mcp-exercise-title > span {
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--brand-text-secondary);
+}
+.mcp-coaching {
+  padding-block: 16px;
+}
+.mcp-coaching .mcp-caption {
+  color: var(--tomato-11);
+}
+.mcp-coaching p,
+.mcp-notes {
+  font-size: 14px;
+  color: var(--brand-text-secondary);
+}
+.mcp-notes {
+  padding-block: 12px;
+}
+.mcp-set-grid {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr) 48px;
+  gap: 8px;
+  align-items: start;
+}
+.mcp-columns {
+  color: var(--brand-text-secondary);
+  font-size: 12px;
+  padding-block: 12px 8px;
+}
+.mcp-sets {
+  display: grid;
+  gap: 8px;
+}
+.mcp-set {
+  background: var(--brand-surface);
+  border: 1px solid var(--gray-4);
+  border-left: 3px solid var(--amber-8);
+  border-radius: 8px;
+  padding: 8px;
+}
+.mcp-set--done {
+  border-left-color: var(--tomato-8);
+}
+.mcp-set-number {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  font-variant-numeric: tabular-nums;
+}
+.mcp-set-number--warm {
+  color: var(--amber-11);
+}
+.mcp-value {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.mcp-value input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--gray-7);
+  font: inherit;
+  color: var(--brand-text);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  border-radius: 0;
+}
+.mcp-target,
+.mcp-unit {
+  text-align: center;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--brand-text-secondary);
+}
+.mcp-target {
+  color: var(--tomato-11);
+}
+.mcp-workout .mcp-log {
+  background: var(--tomato-9);
+  color: white;
+  border-color: var(--tomato-9);
+  font-size: 14px;
+  padding-inline: 4px;
+}
+.mcp-workout .mcp-log--done {
+  background: var(--brand-background);
+  color: var(--tomato-11);
+  border-color: var(--tomato-7);
+}
+.mcp-set-extra {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--brand-text-secondary);
+  padding-top: 4px;
+}
+.mcp-set-extra button {
+  font-size: 12px;
+}
+.mcp-rir {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--brand-text-secondary);
+  padding-top: 8px;
+}
+.mcp-rir > span {
+  flex: 1 1 160px;
+}
+.mcp-rir select {
+  font-size: 14px;
+  max-width: 100%;
+}
+.mcp-set-note {
+  font-size: 12px;
+  color: var(--brand-text-secondary);
+  padding-top: 8px;
+}
+.mcp-rest {
+  background: var(--brand-text);
+  color: var(--brand-background);
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+.mcp-rest-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.mcp-rest strong {
+  display: block;
+  font-size: 20px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.mcp-rest .mcp-caption {
+  color: var(--gray-8);
+}
+.mcp-rest-actions {
+  display: flex;
+  gap: 4px;
+}
+.mcp-rest progress {
+  margin-top: 12px;
+}
+.mcp-navigation {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px;
+}
+.mcp-navigation button {
+  text-align: left;
+  font-size: 14px;
+}
+.mcp-navigation button:last-child {
+  text-align: right;
+}
+.mcp-navigation button span {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  color: var(--brand-text-secondary);
+}
+.mcp-workout .mcp-finish {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 0 16px 16px;
+  color: white;
+  background: var(--tomato-9);
+  border-color: var(--tomato-9);
+}
+.mcp-finish-confirm,
+.mcp-completion,
+.mcp-compact-content {
+  padding: 16px;
+  border-top: 1px solid var(--gray-4);
+}
+.mcp-finish-confirm p,
+.mcp-completion p,
+.mcp-compact-content p {
+  margin-block: 8px;
+  font-size: 14px;
+}
+.mcp-finish-confirm > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mcp-error {
+  padding: 12px 16px;
+  color: var(--red-11);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.mcp-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+/* The approved MCP widget has its own local source treatment. */
+.mcp-workout {
+  box-shadow: var(--shadow-warm);
+}
+.mcp-workout h2,
+.mcp-coaching p {
+  font-family: var(--font-display, "Crimson Pro", serif);
+}
+.mcp-coaching p {
+  font-size: 19px;
+}
+.mcp-value input {
+  font-size: 19px;
+}
+.mcp-target {
+  border: 1px dashed var(--gray-8);
+  border-radius: 4px;
+  margin-top: 4px;
+  padding: 2px;
+  color: var(--brand-text-secondary);
+}
+.mcp-set--done {
+  background: var(--green-3);
+  border-color: var(--green-7);
+  border-left-color: var(--green-8);
+}
+.mcp-workout .mcp-log--done {
+  color: var(--green-11);
+  background: var(--green-4);
+  border-color: var(--green-7);
+}
+.mcp-set-number--warm {
+  border: 1px solid var(--amber-7);
+  border-radius: 4px;
+  background: var(--amber-3);
+}
+.mcp-target-explanation {
+  font-size: 12px;
+  color: var(--brand-text-secondary);
+  margin-bottom: 8px !important;
+}
+.mcp-rest {
+  background: var(--brand-surface);
+  color: var(--brand-text);
+  border: 1px solid var(--gray-4);
+}
+.mcp-rest strong {
+  color: var(--tomato-11);
+}
+.mcp-rest .mcp-caption {
+  color: var(--brand-text-secondary);
+}
+.mcp-workout--compact {
+  background: #21201c;
+  color: #faf9f7;
+}
+.mcp-workout--compact h1,
+.mcp-workout--compact h2 {
+  color: #faf9f7;
+}
+.mcp-workout--compact .mcp-caption,
+.mcp-workout--compact .mcp-header-stats strong span {
+  color: var(--gray-8);
+}
+.mcp-set-grid {
+  grid-template-columns: 22px minmax(0, 1fr) minmax(0, 1fr) 44px 44px;
+  gap: 4px;
+}
+.mcp-workout .mcp-effort {
+  font-size: 16px;
+  padding-inline: 0;
+  background: transparent;
+  border-color: transparent;
+}
+.mcp-columns {
+  padding-inline: 11px 9px;
+}
+.mcp-next-set .mcp-set {
+  border-color: var(--tomato-8);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mcp-workout *,
+  .mcp-workout *::before,
+  .mcp-workout *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+.mcp-draft-conflict {
+  padding: 12px;
+  border: 1px solid var(--amber-8);
+  border-radius: 8px;
+  margin-top: 8px;
+  font-size: 14px;
+}
+.mcp-draft-conflict p {
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+.mcp-workout {
+  border-radius: 20px;
+}
+.mcp-set {
+  border-radius: 14px;
+}
+.mcp-coaching p {
+  font-style: italic;
+}
+.mcp-rest {
+  background: var(--tomato-3);
+  border-color: var(--tomato-6);
+}
+.mcp-rest--over {
+  background: var(--green-3);
+  border-color: var(--green-7);
+}
+.mcp-rest--over strong {
+  color: var(--green-11);
+}
+.mcp-rest-next {
+  font-size: 12px;
+  color: var(--brand-text-secondary);
+  padding-top: 8px;
+}
+.mcp-workout--compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  color: var(--brand-background);
+}
+.mcp-capsule-ring {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  position: relative;
+}
+.mcp-capsule-ring svg {
+  width: 44px;
+  height: 44px;
+  transform: rotate(-90deg);
+}
+.mcp-capsule-ring > span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+}
+.mcp-capsule-text {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.mcp-capsule-text strong {
+  font-size: 16px;
+  font-weight: 500;
+  display: block;
+  overflow-wrap: anywhere;
+}
+.mcp-capsule-text p {
+  font-size: 12px;
+  color: var(--gray-8);
+  overflow-wrap: anywhere;
+}
+.mcp-capsule-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.mcp-completion {
+  text-align: center;
+  padding: 28px 16px;
+}
+.mcp-completion-badge {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--green-9);
+  color: white;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 16px;
+  font-size: 30px;
+}
+.mcp-completion > p {
+  margin-top: 8px;
+  color: var(--brand-text-secondary);
+}
+.mcp-done-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-block: 24px;
+}
+.mcp-done-stats strong {
+  display: block;
+  font-size: 20px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.mcp-done-stats small {
+  font-size: 14px;
+  color: var(--brand-text-secondary);
+}
+.mcp-done-stats span {
+  display: block;
+  font-size: 12px;
+  color: var(--brand-text-secondary);
+}
+.mcp-completion .mcp-tools {
+  justify-content: center;
+  padding: 0;
+}
+.mcp-finish-confirm {
+  width: calc(100% - 32px);
+  max-width: 400px;
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  border: 1px solid var(--gray-5);
+  border-radius: 16px;
+  background: var(--brand-background);
+  color: var(--brand-text);
+  font-family: var(--font-body);
+  padding: 20px;
+}
+.mcp-finish-confirm::backdrop {
+  background: rgb(0 0 0 / 0.4);
+}
+.mcp-workout {
+  --brand-text-secondary: var(--gray-11, #63635e);
+}
+.mcp-workout .mcp-log {
+  background: var(--tomato-11);
+  border-color: var(--tomato-11);
+}
+.mcp-workout .mcp-log--done {
+  background: var(--green-4);
+  color: var(--green-11);
+  border-color: var(--green-7);
+}
+.mcp-workout .mcp-finish {
+  background: var(--tomato-11);
+  border-color: var(--tomato-11);
+}

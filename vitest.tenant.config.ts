@@ -12,6 +12,7 @@ export default defineConfig({
       "app/modules/habits/**/*.integration.test.ts",
       "app/modules/core/**/*.integration.test.ts",
       "app/modules/fitness/infra/ownership.integration.test.ts",
+      "app/modules/fitness/infra/active-workout.integration.test.ts",
       "app/modules/fitness/infra/workout-migration-compatibility.integration.test.ts",
       "app/modules/fitness/infra/equipment-ownership.integration.test.ts",
       "app/modules/fitness/infra/exercise-preferences.integration.test.ts",
