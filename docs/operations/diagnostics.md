@@ -15,10 +15,17 @@ that ID into server errors and MCP outcomes. `request.complete` reports HTTP
 status and elapsed time until the response is created; it does not measure the
 full streamed body delivery. Static assets do not pass through root middleware.
 
-`mcp.complete` observes the SDK transport's reply after sending it, including
-SDK input rejection and HTTP 200 replies containing `isError`. A batch shares
+`mcp.complete` observes allowlisted SDK discovery and tool replies after sending
+them, including SDK input rejection and HTTP 200 replies containing `isError`.
+Optional `rpc_method`, `mcp_protocol` and `rpc_error` contain only values from
+the pinned contract. The protocol field describes the HTTP protocol header;
+unknown values become `unsupported`, and missing values become `absent`.
+Transport HTTP rejections are also recorded, without a method when the SDK has
+not accepted a request. At most 4 KiB of the SDK rejection response is examined
+in memory to project its numeric JSON-RPC error code into a fixed category;
+error text and data are never logged, and the original response is preserved. A batch shares
 one HTTP request ID; each tool outcome has a distinct event ID. The observer
-keeps at most 100 pending tool calls per request. Excess concurrent calls emit
+keeps at most 100 pending RPC requests per request. Excess concurrent calls emit
 one `server.error` with `rate_limited` category to flag incomplete diagnostics;
 they are still handled normally by the SDK. Durations are capped at one hour.
 

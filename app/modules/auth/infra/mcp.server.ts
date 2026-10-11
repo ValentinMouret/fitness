@@ -63,8 +63,8 @@ export async function handleMcp(request: Request) {
   );
   try {
     await server.connect(transport);
-    observeMcpTransport(transport);
-    const response = await transport.handleRequest(request);
+    const handleRequest = observeMcpTransport(transport);
+    const response = await handleRequest(request);
     response.headers.set("Cache-Control", "no-store");
     return response;
   } finally {

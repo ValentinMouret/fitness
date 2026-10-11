@@ -70,6 +70,37 @@
     "create_ingredient",
     "log_meal",
     "update_meal_log",
-    "delete_meal_log"
+    "delete_meal_log",
+    "show_workout",
+    "get_workout_widget",
+    "update_workout_widget_set",
+    "finish_workout_widget"
+  ],
+  "rpc_methods": [
+    "initialize",
+    "tools/list",
+    "tools/call",
+    "resources/list",
+    "resources/read",
+    "resources/templates/list",
+    "ping"
+  ],
+  "mcp_protocols": [
+    "absent",
+    "unsupported",
+    "2025-11-25",
+    "2025-06-18",
+    "2025-03-26",
+    "2024-11-05",
+    "2024-10-07"
+  ],
+  "rpc_errors": [
+    "parse_error",
+    "invalid_request",
+    "method_not_found",
+    "invalid_params",
+    "internal_error",
+    "server_error",
+    "other"
   ]
 }

@@ -46,6 +46,9 @@ describe("safe diagnostic boundaries", () => {
       { duration_ms: 3_600_001 },
       { release: "unknown" },
       { tool: "private" },
+      { rpc_method: "private" },
+      { mcp_protocol: "private" },
+      { rpc_error: "private" },
       { route_id: "/workouts/private" },
       { request_id: "caller-id" },
     ]) {
@@ -85,6 +88,68 @@ describe("safe diagnostic boundaries", () => {
     expect(statusCategory(401)).toBe("unauthenticated");
     expect(statusCategory(403)).toBe("forbidden");
     expect(statusCategory(409)).toBe("conflict");
+  });
+  it("records SDK discovery and transport rejections without client, header or error text", async () => {
+    const { stdout, stderr } = await execute(
+      process.execPath,
+      ["--import", "tsx", "tests/fixtures/diagnostics.ts", "discovery"],
+      {
+        env: {
+          ...process.env,
+          NODE_ENV: "production",
+          GIT_SHA: "a".repeat(40),
+        },
+        maxBuffer: 256 * 1024,
+      },
+    );
+    expect(stdout + stderr).not.toContain(
+      "private-health-token-email@example.invalid",
+    );
+    const events = stdout
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line))
+      .filter((line) => line.diagnostic_version === 1)
+      .map(({ level: _level, time: _time, ...fields }) =>
+        diagnosticEventSchema.parse(fields),
+      );
+    const mcp = events.filter((entry) => entry.event === "mcp.complete");
+    expect(mcp).toHaveLength(8);
+    for (const rpc_method of ["initialize", "tools/list", "resources/list"]) {
+      expect(
+        mcp.find((entry) => entry.rpc_method === rpc_method),
+      ).toMatchObject({ outcome: "ok", mcp_protocol: "2025-11-25" });
+    }
+    expect(
+      mcp.find((entry) => entry.rpc_method === "resources/read"),
+    ).toMatchObject({ outcome: "error", rpc_error: "invalid_params" });
+    expect(
+      mcp.find((entry) => entry.rpc_method === "tools/call"),
+    ).toMatchObject({ outcome: "error", category: "unexpected" });
+    expect(
+      mcp.find((entry) => entry.rpc_error === "parse_error"),
+    ).toMatchObject({
+      status: 400,
+      category: "validation",
+      mcp_protocol: "2025-11-25",
+    });
+    expect(
+      mcp.find((entry) => entry.mcp_protocol === "unsupported"),
+    ).toMatchObject({ status: 400, rpc_error: "server_error" });
+    const oversized = mcp.filter(
+      (entry) => entry.mcp_protocol === "unsupported",
+    )[1];
+    expect(oversized).toMatchObject({ status: 400, category: "validation" });
+    expect(oversized.rpc_error).toBeUndefined();
+    for (const entry of mcp) {
+      expect(
+        events.find(
+          (candidate) =>
+            candidate.event === "request.complete" &&
+            candidate.request_id === entry.request_id,
+        ),
+      ).toBeDefined();
+    }
   });
   it("emits correlated safe Pino JSON, including HTTP200 tool errors across releases", async () => {
     const { stdout, stderr } = await execute(
