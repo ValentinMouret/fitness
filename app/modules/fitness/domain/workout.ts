@@ -433,6 +433,7 @@ export interface ExerciseHistorySet {
   readonly weight?: number;
   readonly isWarmup: boolean;
   readonly rpe?: number;
+  readonly reportedRir?: ReportedRir;
 }
 
 export interface ExerciseHistorySession {

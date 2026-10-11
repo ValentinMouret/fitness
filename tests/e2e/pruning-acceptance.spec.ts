@@ -224,20 +224,13 @@ test("a current session created by MCP operations remains editable and loggable"
       page.getByRole("heading", { name, exact: true }),
     ).toBeVisible();
     await page.getByRole("link", { name: /^Open / }).click();
-    await page
-      .getByRole("button", { name: "Exercise actions", exact: true })
-      .click();
-    await page.getByRole("menuitem", { name: "Replace Exercise" }).click();
+    await page.getByRole("button", { name: "Replace exercise" }).click();
     const selector = page.getByRole("dialog");
-    await expect(
-      selector.getByRole("heading", { name: "Replace Exercise", exact: true }),
-    ).toBeVisible();
     await selector
-      .getByPlaceholder("Search exercises...")
+      .getByRole("searchbox", { name: "Search exercises" })
       .fill(replacementName);
-    await selector.getByText(replacementName, { exact: true }).click();
     await selector
-      .getByRole("button", { name: "Replace", exact: true })
+      .getByRole("button", { name: new RegExp(replacementName) })
       .click();
     await expect(selector).toHaveCount(0);
     await expect
@@ -251,12 +244,12 @@ test("a current session created by MCP operations remains editable and loggable"
           ).rows,
       )
       .toEqual([{ exercise: replacementId }]);
-    await page.reload();
     await expect(page).toHaveURL(
-      `/workouts/${workoutId}?exercise=${replacementId}`,
+      `/workouts/${workoutId}/exercises/${replacementId}`,
     );
+    await page.reload();
     await expect(
-      page.getByRole("button", { name: replacementName, exact: true }),
+      page.getByRole("heading", { name: replacementName, level: 1 }),
     ).toBeVisible();
     await page.goto(`/workouts/${workoutId}/substitute/${replacementId}`);
     await expect(
@@ -271,20 +264,26 @@ test("a current session created by MCP operations remains editable and loggable"
     await page.getByRole("link", { name: "Cancel", exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/workouts/${workoutId}$`));
     await page
-      .getByRole("link", { name: `Open ${replacementName}`, exact: true })
+      .getByRole("link", { name: new RegExp(`^Open ${replacementName}`) })
       .click();
-    await page.getByRole("textbox", { name: "Set 1 weight" }).fill("62.5");
-    await page.getByRole("textbox", { name: "Set 1 reps" }).fill("9");
+    const enter = async (label: string, value: string) => {
+      await page
+        .getByRole("button", { name: new RegExp(`^${label}:`) })
+        .click();
+      await page.getByRole("textbox", { name: label }).fill(value);
+      await page.getByRole("textbox", { name: label }).press("Enter");
+    };
+    await enter("Set 1 weight", "62.5");
+    await enter("Set 1 reps", "9");
     await page.getByRole("button", { name: "Complete set 1" }).click();
-    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await page.getByRole("dialog", { name: "Reps in reserve" }).press("Escape");
     await page
-      .locator(".set-row__report-prompt")
-      .getByRole("button", { name: "Skip", exact: true })
-      .click();
-    await page
+      .getByRole("dialog", { name: "Finish workout?" })
       .getByRole("button", { name: "Keep training", exact: true })
       .click();
-    await expect(page.locator(".set-row--completed")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Set 1 reps in reserve: –" }),
+    ).toBeVisible();
     await expect
       .poll(
         async () =>
@@ -298,14 +297,9 @@ test("a current session created by MCP operations remains editable and loggable"
       .toEqual([{ reps: 9, weight: 62.5, isCompleted: true }]);
     await page.reload();
     await expect(
-      page.locator(".set-row--completed").getByText("62.5", { exact: true }),
+      page.getByRole("button", { name: "Set 1 weight: 62.5" }),
     ).toBeVisible();
-    await page.getByRole("button", { name: "Edit set 1", exact: true }).click();
-    await page.getByRole("textbox", { name: "Set 1 reps" }).fill("10");
-    await page
-      .locator(".set-row--completed")
-      .getByRole("button", { name: "Save", exact: true })
-      .click();
+    await enter("Set 1 reps", "10");
     await expect
       .poll(
         async () =>
@@ -319,7 +313,7 @@ test("a current session created by MCP operations remains editable and loggable"
       .toEqual([{ reps: 10, weight: 62.5, isCompleted: true }]);
     await page.reload();
     await expect(
-      page.locator(".set-row--completed").getByText("10", { exact: true }),
+      page.getByRole("button", { name: "Set 1 reps: 10" }),
     ).toBeVisible();
     const stored = await pool.query(
       'select reps, weight, "isCompleted" from workout_sets where workout = $1 and deleted_at is null',

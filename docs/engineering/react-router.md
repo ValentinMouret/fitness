@@ -19,10 +19,12 @@ Route file names do not define URLs; the route configuration does.
 Keep files aligned with URL segments as a project convention. For example:
 
 ```ts
-route("workouts/:id", "routes/workouts/:id/index.tsx")
+route("workouts/:id", "routes/workouts/:id/layout.tsx", [
+  index("routes/workouts/:id/index.tsx"),
+])
 ```
 
-In that module, import `Route` from `"./+types/index"`. The generated type
+In that module, import `Route` from `"./+types/layout"`. The generated type
 module follows the route file's basename, not its URL parameter name.
 
 - Type loaders with `Route.LoaderArgs`.
@@ -33,6 +35,13 @@ module follows the route file's basename, not its URL parameter name.
 Run `bun run tc` after adding, moving, or renaming routes. This runs React
 Router type generation and TypeScript. Never edit generated route types.
 Nested route components render their child route through `<Outlet />`.
+
+## Configure app chrome with route handles
+
+`AppLayout` reads route `handle` exports. `header(loaderData)` supplies the page
+header; `hidesTabBar(loaderData)` returning `true` hides the mobile tab bar for a
+focused screen that provides its own navigation, such as a workout's exercise
+screen. Both are parsed with Zod before use.
 
 ## Load data at the route boundary
 

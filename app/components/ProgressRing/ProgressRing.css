@@ -1,0 +1,19 @@
+.progress-ring {
+  display: block;
+  transform: rotate(-90deg);
+}
+
+.progress-ring__track,
+.progress-ring__value {
+  fill: none;
+}
+
+.progress-ring__track {
+  stroke: var(--ring-track, var(--gray-4));
+}
+
+.progress-ring__value {
+  stroke: var(--ring-color, var(--tomato-9));
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.25s linear;
+}

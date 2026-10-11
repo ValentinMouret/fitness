@@ -19,7 +19,16 @@ export function PageTransition({
   }, []);
 
   return (
-    <div ref={ref} className={`page-transition ${className}`}>
+    <div
+      ref={ref}
+      className={`page-transition ${className}`}
+      // A finished animation still holds a transform, which would anchor
+      // position: fixed descendants to this element instead of the viewport.
+      onAnimationEnd={(event) => {
+        if (event.target === event.currentTarget)
+          event.currentTarget.classList.add("page-transition--settled");
+      }}
+    >
       {children}
     </div>
   );

@@ -1,0 +1,76 @@
+.exercise-picker__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  margin: 14px 0 8px;
+  padding: 0 12px;
+  border: 1px solid var(--gray-4);
+  border-radius: 12px;
+  background: var(--gray-3);
+  color: var(--gray-9);
+}
+
+.exercise-picker__search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--brand-text);
+  font: 400 16px var(--font-body);
+}
+
+.exercise-picker__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.exercise-picker__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid var(--gray-4);
+  background: none;
+  color: inherit;
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.exercise-picker__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.exercise-picker__name {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--brand-text);
+}
+
+.exercise-picker__last,
+.exercise-picker__empty {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--brand-text-secondary);
+}
+
+.exercise-picker__empty {
+  margin-top: 16px;
+}
+
+.exercise-picker__plus {
+  flex-shrink: 0;
+  color: var(--tomato-11);
+}

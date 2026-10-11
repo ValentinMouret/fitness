@@ -6,7 +6,6 @@ import { createRoot } from "react-dom/client";
 import { TemplateSelectionModal } from "~/modules/nutrition/presentation/components/TemplateSelectionModal/TemplateSelectionModal";
 import type { TemplateSelectionViewModel } from "~/modules/nutrition/presentation/view-models/template-selection.view-model";
 import { mountEmptyStateFixture } from "./empty-state.fixture";
-import { mountWorkoutCompletionFixture } from "./workout-completion.fixture";
 
 function MealPickerFixture() {
   const [open, setOpen] = useState(false);
@@ -61,6 +60,5 @@ function MealPickerFixture() {
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing picker fixture root");
-if (window.location.hash === "#workout") mountWorkoutCompletionFixture(root);
-else if (window.location.hash === "#empty-state") mountEmptyStateFixture(root);
+if (window.location.hash === "#empty-state") mountEmptyStateFixture(root);
 else createRoot(root).render(<MealPickerFixture />);

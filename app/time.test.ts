@@ -3,6 +3,7 @@ import {
   addOneDay,
   allDays,
   Day,
+  formatClock,
   formatStartedAgo,
   getOrdinalSuffix,
   isSameDay,
@@ -305,5 +306,19 @@ describe("time module", () => {
       expect(formatStartedAgo(150)).toBe("Started 2 hours 30 min ago");
       expect(formatStartedAgo(195)).toBe("Started 3 hours 15 min ago");
     });
+  });
+});
+
+describe("formatClock", () => {
+  it.each([
+    [0, "0:00"],
+    [9.9, "0:09"],
+    [75, "1:15"],
+    [3599, "59:59"],
+    [3600, "1:00:00"],
+    [3725, "1:02:05"],
+    [-5, "0:00"],
+  ])("formats %s seconds as %s", (seconds, expected) => {
+    expect(formatClock(seconds)).toBe(expected);
   });
 });

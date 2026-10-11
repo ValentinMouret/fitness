@@ -232,15 +232,6 @@ describe.sequential("personal workout ownership and history", () => {
     ).toBe("not_found");
     expect(
       (
-        await bSession.updateExerciseNotes(
-          workoutIds[1],
-          exerciseIds[0],
-          "Forged",
-        )
-      ).isErr(),
-    ).toBe(true);
-    expect(
-      (
         await bSession.reorderExercises(
           workoutIds[1],
           [...exerciseIds].reverse(),

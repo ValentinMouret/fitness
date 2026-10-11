@@ -19,20 +19,35 @@ muscle-group volume.
   active workout flow does not ask for a new RPE.
 - Historical templates and import provenance remain stored for older sessions.
   New sessions start directly without a template picker.
-- The active rest timer remains with the sticky session header while scrolling.
-  Completing a set or returning to the tab never advances the viewport to another
-  exercise. Scrolling and exercise navigation stay under the lifter's control.
-- Active and completed sessions share an overview of ordered exercises. Selecting an exercise
-  focuses its sets; Previous, Next, and Overview preserve drafts, effort reports,
-  the rest timer, and each view's scroll position. The `exercise` query parameter
-  identifies the focused exercise. Completed sessions use read-only sets and
-  show Completed with their recorded duration; Repeat and Delete remain available.
-  Rest, logging, adding, sorting, and finishing controls belong to active sessions.
-- Finish workout is available in the overview when the session has sets and no
-  save is pending. Unfinished sets require confirmation and remain uncompleted
-  after finishing; saved sets are retained. Saving the final remaining set opens
-  confirmation automatically. Only explicit confirmation stops the workout;
-  Keep training returns to logging and optional effort reporting.
+- Active and completed sessions share an overview of ordered exercises at
+  `/workouts/:id`. Each exercise has its own screen at
+  `/workouts/:id/exercises/:exerciseId` with Previous and Next; links that
+  still use the older `?exercise=` parameter redirect there. Completing a set
+  never moves to another exercise.
+- On an exercise screen, a planned value (`targetReps`) is shown dashed until
+  reps are entered; ticking a set without reps logs the plan. Tapping a set
+  number toggles warm-up; warm-ups show "W" and working sets are numbered from
+  one. Unticking a set or marking it as a warm-up discards its effort report.
+  Added sets are appended after the last set.
+- Completing a working set asks for the effort report in a sheet; dismissing it
+  leaves the report empty. Completing a set starts a client-side rest timer that
+  survives moving between screens; its length is a device preference chosen
+  from presets, and warm-ups rest at most a minute.
+- An exercise added mid-workout starts with one set planned from its last
+  finished session. The picker shows when each exercise was last done.
+- Finish workout is available in the overview when the session has sets.
+  Unfinished sets require confirmation and remain uncompleted after finishing;
+  saved sets are retained. Saving the final remaining set opens confirmation
+  automatically. Only explicit confirmation stops the workout; Keep training
+  returns to logging. Finishing shows a summary of duration, sets and exercises.
+- Completed sessions show Completed with their recorded duration; Repeat and
+  Delete remain available. Their saved sets can still be corrected, including
+  the effort report; rest, adding, removing, sorting and finishing belong to
+  active sessions.
+
+The active workout design also uses plan data the model does not store yet:
+rep-range targets (for example 6–8), a rest length per exercise, a target
+effort per exercise, and a planned weight distinct from the logged weight.
 
 ## Implemented entry points
 
@@ -42,7 +57,8 @@ The [route configuration](../../../app/routes.ts) includes:
 | --- | --- |
 | `/workouts` | Browse workouts |
 | `/workouts/create` | Start an empty workout with one action |
-| `/workouts/:id` | View a session and log exercises and sets |
+| `/workouts/:id` | View a session's exercises, finish it, or reorder them |
+| `/workouts/:id/exercises/:exerciseId` | Log or correct one exercise's sets |
 | `/workouts/exercises` | Manage the exercise catalogue |
 | `/workouts/:id/substitute/:exercise-id` | Substitute an exercise |
 

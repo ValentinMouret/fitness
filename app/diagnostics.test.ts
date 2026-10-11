@@ -63,6 +63,11 @@ describe("safe diagnostic boundaries", () => {
     ).toBe("/workouts/exercises/:exercise-id/edit");
     expect(
       diagnosticRoute(
+        "http://localhost/workouts/private/exercises/secret.data",
+      ),
+    ).toBe("/workouts/:id/exercises/:exercise-id");
+    expect(
+      diagnosticRoute(
         "http://localhost/api/auth/magic-link/verify?token=secret",
       ),
     ).toBe("/api/auth/*");

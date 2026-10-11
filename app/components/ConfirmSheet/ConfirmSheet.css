@@ -1,0 +1,32 @@
+.confirm-sheet__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.confirm-sheet__confirm,
+.confirm-sheet__cancel {
+  min-height: 48px;
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.confirm-sheet__confirm {
+  border: 0;
+  background: var(--tomato-9);
+  color: white;
+}
+
+.confirm-sheet__confirm--destructive {
+  background: var(--red-9);
+}
+
+.confirm-sheet__cancel {
+  border: 1px solid var(--gray-6);
+  background: var(--brand-surface);
+  color: var(--brand-text);
+}

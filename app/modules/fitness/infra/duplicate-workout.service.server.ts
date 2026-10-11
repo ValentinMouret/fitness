@@ -1,6 +1,6 @@
 import { redirect } from "react-router";
 import type { UserId } from "~/modules/auth/domain/user";
-import type { WorkoutSession } from "~/modules/fitness/domain/workout";
+import { planRepeatedSession } from "~/modules/fitness/domain/repeat-workout";
 import { Workout } from "~/modules/fitness/domain/workout";
 import {
   createWorkoutRepository,
@@ -10,8 +10,7 @@ import { getOrdinalSuffix } from "~/time";
 import { createNotFoundError, handleResultError } from "~/utils/errors";
 
 /**
- * Duplicates a completed workout: creates a new in-progress workout
- * with the same exercises and sets (weights/reps pre-filled, all uncompleted).
+ * Repeats a workout: starts a new session planned from the source's sets.
  */
 export async function duplicateWorkout(
   userId: UserId,
@@ -44,26 +43,7 @@ export async function duplicateWorkout(
 
   const savedWorkout = saveResult.value;
 
-  const newSession: WorkoutSession = {
-    workout: savedWorkout,
-    exerciseGroups: source.exerciseGroups.map((group) => ({
-      exercise: group.exercise,
-      orderIndex: group.orderIndex,
-      notes: group.notes,
-      sets: group.sets.map((set) => ({
-        workoutId: savedWorkout.id,
-        exerciseId: group.exercise.id,
-        set: set.set,
-        targetReps: set.reps ?? set.targetReps,
-        reps: set.reps ?? set.targetReps,
-        weight: set.weight,
-        note: undefined,
-        isCompleted: false,
-        isFailure: false,
-        isWarmup: set.isWarmup,
-      })),
-    })),
-  };
+  const newSession = planRepeatedSession(source, savedWorkout);
 
   const sessionSaveResult =
     await createWorkoutRepository(userId).saveSession(newSession);

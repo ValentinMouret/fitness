@@ -186,7 +186,7 @@ test("workout cue editing requires exercise membership and keeps saved content p
       ).rows,
     ).toEqual([]);
     await page.goto(`/workouts/${workoutId}?exercise=${exerciseId}`);
-    await page.getByRole("button", { name: "+ Add mind-muscle cue" }).click();
+    await page.getByRole("button", { name: "Add mind-muscle cue" }).click();
     await page.getByLabel("Focus Cues & Instructions").fill(cue);
     await page.getByRole("button", { name: "Save", exact: true }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);

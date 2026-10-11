@@ -14,6 +14,8 @@ interface EditMMCModalProps {
   readonly exerciseId: string;
   readonly exerciseName: string;
   readonly mmcInstructions?: string;
+  /** The route whose action saves the cue. */
+  readonly actionPath: string;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
 }
@@ -22,6 +24,7 @@ export function EditMMCModal({
   exerciseId,
   exerciseName,
   mmcInstructions,
+  actionPath,
   open,
   onOpenChange,
 }: EditMMCModalProps) {
@@ -50,9 +53,9 @@ export function EditMMCModal({
         exerciseId,
         mmcInstructions: value,
       },
-      { method: "post" },
+      { method: "post", action: actionPath },
     );
-  }, [fetcher, exerciseId, value]);
+  }, [fetcher, exerciseId, value, actionPath]);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {

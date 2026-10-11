@@ -86,7 +86,7 @@ test("device timezone persists before calendar interaction and rejects forged ac
   }
 });
 
-test("revalidation keeps unsaved completed-set and measurement edits mounted", async ({
+test("a time-zone change keeps workout edits and unsaved measurement edits", async ({
   page,
 }) => {
   const pool = new pg.Pool({ connectionString: databaseUrl });
@@ -124,39 +124,36 @@ test("revalidation keeps unsaved completed-set and measurement edits mounted", a
       [owner, measurement],
     );
     await page.goto(`/workouts/${workout}?exercise=${exercise}`);
-    await page.getByRole("button", { name: "Edit set 1", exact: true }).click();
-    await page
-      .getByRole("textbox", { name: "Set 1 weight", exact: true })
-      .fill("81.75");
+    const enterWeight = async (label: string, value: string) => {
+      await page
+        .getByRole("button", { name: new RegExp(`^${label}:`) })
+        .click();
+      await page.getByRole("textbox", { name: label, exact: true }).fill(value);
+      await page
+        .getByRole("textbox", { name: label, exact: true })
+        .press("Enter");
+    };
+    const weight = async (set: number) =>
+      (
+        await pool.query(
+          "select weight from workout_sets where workout=$1 and set=$2",
+          [workout, set],
+        )
+      ).rows[0]?.weight;
+    await enterWeight("Set 1 weight", "81.75");
+    await expect.poll(() => weight(1)).toBe(81.75);
     await pool.query(
       "update account_settings set time_zone='America/Los_Angeles' where user_id=$1",
       [owner],
     );
-    await page
-      .getByRole("textbox", { name: "Set 2 weight", exact: true })
-      .fill("44");
-    await expect
-      .poll(
-        async () =>
-          (
-            await pool.query(
-              "select weight from workout_sets where workout=$1 and set=2",
-              [workout],
-            )
-          ).rows[0]?.weight,
-      )
-      .toBe(44);
+    await enterWeight("Set 2 weight", "44");
+    await expect.poll(() => weight(2)).toBe(44);
     await expect(
-      page.getByRole("textbox", { name: "Set 1 weight", exact: true }),
-    ).toHaveValue("81.75");
-    expect(
-      (
-        await pool.query(
-          "select weight from workout_sets where workout=$1 and set=1",
-          [workout],
-        )
-      ).rows[0].weight,
-    ).toBe(60);
+      page.getByRole("button", { name: "Set 1 weight: 81.75", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Set 2 weight: 44", exact: true }),
+    ).toBeVisible();
     await page.goto(`/measurements/${measurement}`);
     await page.getByLabel("Value (kg)", { exact: true }).fill("88.5");
     await page.getByLabel("Date", { exact: true }).fill("2020-05-06");

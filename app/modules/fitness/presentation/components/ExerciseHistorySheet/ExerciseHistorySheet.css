@@ -1,0 +1,70 @@
+.history-sheet__note {
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--brand-text-secondary);
+}
+
+.history-sheet__session {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--gray-4);
+}
+
+.history-sheet__session:last-child {
+  border-bottom: 0;
+}
+
+.history-sheet__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.history-sheet__date {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.history-sheet__workout,
+.history-sheet__muted {
+  font-size: 14px;
+  color: var(--brand-text-secondary);
+}
+
+.history-sheet__sets {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-sheet__set {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-sheet__set b {
+  font-weight: 600;
+}
+
+.history-sheet__no {
+  font-family: var(--font-display);
+  font-size: 18px;
+  text-align: center;
+  color: var(--brand-text-secondary);
+}
+
+.history-sheet__set--warm {
+  color: var(--brand-text-secondary);
+}
+
+.history-sheet__set--warm .history-sheet__no {
+  border-radius: 6px;
+  background: var(--amber-3);
+  color: var(--amber-11);
+  font: 700 12px / 22px var(--font-body);
+}

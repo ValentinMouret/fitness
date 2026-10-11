@@ -1,0 +1,103 @@
+.exercise-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.exercise-row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  height: 64px;
+  border: 1px solid var(--gray-4);
+  border-radius: 14px;
+  background: var(--brand-surface);
+  --ring-color: var(--tomato-9);
+}
+
+.exercise-row--active {
+  border-color: var(--tomato-6);
+  background: var(--tomato-2);
+}
+
+.exercise-row--done {
+  background: var(--brand-background);
+}
+
+.exercise-row--dragging {
+  z-index: 5;
+  box-shadow: var(--shadow-warm-lg);
+}
+
+.exercise-row__grip {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gray-8);
+  cursor: grab;
+  touch-action: none;
+}
+
+.exercise-row__grip:active {
+  cursor: grabbing;
+  color: var(--gray-11);
+}
+
+.exercise-row__main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding-right: 14px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.exercise-row__main:first-child {
+  padding-left: 14px;
+}
+
+.exercise-row__status {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+}
+
+.exercise-row__check {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--green-9);
+  color: white;
+}
+
+.exercise-row__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--brand-text);
+}
+
+.exercise-row--done .exercise-row__name {
+  color: var(--brand-text-secondary);
+}
+
+.exercise-row__chevron {
+  flex-shrink: 0;
+  color: var(--gray-8);
+}

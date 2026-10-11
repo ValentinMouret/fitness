@@ -167,3 +167,14 @@ export function toLocalDateString(date: Date): string {
 export function fromDateString(dateString: string): Date {
   return new Date(`${dateString}T00:00:00.000Z`);
 }
+
+/** Formats a duration as a clock: `m:ss`, or `h:mm:ss` from one hour. */
+export function formatClock(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor(seconds / 60) % 60;
+  const rest = String(seconds % 60).padStart(2, "0");
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${rest}`
+    : `${minutes}:${rest}`;
+}
