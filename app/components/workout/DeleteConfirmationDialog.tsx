@@ -11,29 +11,23 @@ import { useEffect, useRef } from "react";
 import { Form, useNavigation } from "react-router";
 import "./DeleteConfirmationDialog.css";
 
-interface WorkoutSummarySet {
-  readonly isCompleted: boolean;
-}
-
-interface WorkoutSummaryGroup {
-  readonly sets: ReadonlyArray<WorkoutSummarySet>;
-}
-
-interface DeleteWorkoutSession {
-  readonly workout: {
-    readonly stop?: Date;
-  };
-  readonly exerciseGroups: ReadonlyArray<WorkoutSummaryGroup>;
-}
-
 interface DeleteConfirmationDialogProps {
-  readonly workoutSession: DeleteWorkoutSession;
+  readonly stop: Date;
+  readonly exerciseCount: number;
+  readonly completedSets: number;
+  readonly totalSets: number;
+  /** The route whose action deletes the workout. */
+  readonly actionPath: string;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
 }
 
 export function DeleteConfirmationDialog({
-  workoutSession,
+  stop,
+  exerciseCount,
+  completedSets,
+  totalSets,
+  actionPath,
   open,
   onOpenChange,
 }: DeleteConfirmationDialogProps) {
@@ -61,19 +55,7 @@ export function DeleteConfirmationDialog({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open, isBusy]);
 
-  const totalSets = workoutSession.exerciseGroups.reduce(
-    (sum, group) => sum + group.sets.length,
-    0,
-  );
-
-  const completedSets = workoutSession.exerciseGroups.reduce(
-    (sum, group) => sum + group.sets.filter((set) => set.isCompleted).length,
-    0,
-  );
-
-  const completionDate = workoutSession.workout.stop
-    ?.toISOString()
-    .split("T")[0];
+  const completionDate = stop.toISOString().split("T")[0];
 
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
@@ -102,7 +84,7 @@ export function DeleteConfirmationDialog({
               <Flex justify="between">
                 <Text size="2">Exercises completed:</Text>
                 <Text size="2" weight="bold">
-                  {workoutSession.exerciseGroups.length}
+                  {exerciseCount}
                 </Text>
               </Flex>
               <Flex justify="between">
@@ -127,7 +109,7 @@ export function DeleteConfirmationDialog({
               </Button>
             </AlertDialog.Cancel>
 
-            <Form ref={formRef} method="post">
+            <Form ref={formRef} method="post" action={actionPath}>
               <input type="hidden" name="intent" value="delete-workout" />
               <Tooltip content="Delete workout (Cmd/Ctrl+Enter)">
                 <Box display="inline-block">

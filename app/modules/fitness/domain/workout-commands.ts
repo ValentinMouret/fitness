@@ -127,6 +127,13 @@ export const saveSetsSchema = workoutExerciseSchema.extend({
     "Provide at least one set",
   ),
 });
+export const renameWorkoutSchema = workoutIdSchema.extend({
+  name: z.string().trim().min(1).max(200),
+});
+export const appendSetSchema = workoutExerciseSchema.extend({
+  targetReps: positiveInteger.optional(),
+  weight: z.number().positive().optional(),
+});
 export const patchSetSchema = workoutExerciseSchema.extend({
   set: positiveInteger,
   updates: setSchema
@@ -159,6 +166,8 @@ export type ReplaceExercise = Readonly<z.infer<typeof replaceExerciseSchema>>;
 export type SaveSets = Readonly<z.infer<typeof saveSetsSchema>>;
 export type DeleteSets = Readonly<z.infer<typeof deleteSetsSchema>>;
 export type PatchSet = Readonly<z.infer<typeof patchSetSchema>>;
+export type AppendSet = Readonly<z.infer<typeof appendSetSchema>>;
+export type RenameWorkout = Readonly<z.infer<typeof renameWorkoutSchema>>;
 
 export function makeSet(
   workoutId: string,

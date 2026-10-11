@@ -47,7 +47,7 @@ Default tracking is zero. Avoid decorative uppercase. Use tabular numerals for c
 
 Map Radix default, heading and strong families to DM Sans. Apply the serif explicitly to the page-title role, independently of HTML heading level. Keep semantic heading levels; a section does not become h1 to obtain its visual size. Inputs and saved numbers use the same 16px role. Dialog portals inherit the same mappings. Reflow rather than shrinking text on mobile.
 
-Implementation is staged: this decision does not approve unrelated layout or interaction changes. Existing approved workout-row surfaces, warmup marker, RIR and touch targets remain in force. Delivery scope and evidence are tracked in ENSO-105 and ENSO-110.
+Implementation is staged: this decision does not approve unrelated layout or interaction changes. The active workout screens follow their own [live workout rules](#live-workout); everywhere else these roles apply. Delivery scope and evidence for the original rollout are tracked in ENSO-105 and ENSO-110.
 
 ### Brand Tokens
 Defined in `app/app.css`:
@@ -99,8 +99,8 @@ Typography roles above replace the former unused responsive heading tokens. Exis
 | Role | Color | Usage |
 |------|-------|-------|
 | Primary | `tomato` | Buttons, active nav, CTAs; feature-specific completion accents |
-| Success | `green` | Toasts, confirmations |
-| Warning | `amber` | Pending/editable states |
+| Success | `green` | Toasts, confirmations; completed sets and exercises in a live workout |
+| Warning | `amber` | Pending/editable states; warm-up sets |
 | In-progress | `orange` | Active workout, warmup |
 | Error | `red` | Destructive actions |
 | Info | `blue` | Informational content |
@@ -108,7 +108,7 @@ Typography roles above replace the former unused responsive heading tokens. Exis
 ## Component Patterns
 
 ### Card Containment
-Choose containment by the interaction. Summary cards can use a warm surface; related data rows can share one container or use dividers. Do not wrap every content block in its own card. Existing WorkoutExerciseCard uses divider rows; approved Workout V3 groups compact set rows and avoids per-set cards.
+Choose containment by the interaction. Summary cards can use a warm surface; related data rows can share one container or use dividers. Do not wrap every content block in its own card. The live workout is the exception: each set is a card so one-handed logging has large, separate targets.
 
 Example warm surface:
 
@@ -123,7 +123,7 @@ Example warm surface:
 ```
 
 ### Row State Indicators
-Editable data-table rows use a **left border accent** as the default state indicator. This does not prohibit feature-specific overview surfaces: approved Workout V3 uses a green surface and Completed label for finished exercises, while saved set rows retain one left indicator without a duplicate tick.
+Editable data-table rows use a **left border accent** as the default state indicator. The live workout's set cards use the fills described under [live workout](#live-workout) instead.
 
 | State | CSS |
 |-------|-----|
@@ -193,7 +193,7 @@ Page-level headers use warm surface with shadow:
 ```
 
 ### Status Feedback
-- Existing completion follows feature patterns: saved workout sets show persisted values and an Edit action with their left accent; approved V3 overview exercises use green with Completed text. Habits retain their existing per-habit colors and completion labels. New completion feedback needs a readable label or accessible state as well as color.
+- Existing completion follows feature patterns: live workout sets turn green with a filled tick, and finished exercises show a green check. Habits retain their existing per-habit colors and completion labels. New completion feedback needs a readable label or accessible state as well as color.
 - Loading states during async operations
 - Confirmation dialogs for destructive actions
 - Badge system for categorization
@@ -233,7 +233,29 @@ Page-level headers use warm surface with shadow:
 
 Shared components receive UI-shaped props and do not import feature domain code. Keep completion rules, meal assignments and persistence semantics in their feature layers. See [frontend conventions](../engineering/frontend.md).
 
-Approved active-workout V3 keeps compact session navigation and timer chrome, direct duration tapping, a visible Start action and optional effort outside value entry. These are feature patterns, not a mandate to give every page workout chrome. Dashboard retains direct weight entry and its trend; this alignment introduces no history link.
+Dashboard retains direct weight entry and its trend; the workout patterns below are feature-specific, not a mandate to give every page workout chrome.
+
+## Live workout
+
+**Accepted: replaces Workout V3, selected by Valentin on 11 October 2026.** The
+active workout overview and exercise screens follow the "Active Workout" design
+archive, with these rules:
+
+- **Type:** the workout and exercise names, stat values and set numbers use
+  Crimson Pro; small section labels use 11px uppercase DM Sans with 0.08em
+  tracking. Other text keeps the Quiet editorial roles.
+- **Set cards:** each set is a 44px-high card: number, reps, load, then delete
+  or RIR, then the tick. The next set has a `--tomato-7` border and
+  `--tomato-3` ring. A planned value is a dashed cell with a muted value. A
+  completed set uses a `--green-2` fill, `--green-5` border and a solid green
+  tick. A warm-up shows an amber "W" (`--amber-3` / `--amber-11`).
+- **Rest:** a floating dark bar above the tab bar or exercise navigation, with
+  ±15s, Skip and presets on expansion; it turns green when rest is over.
+- **Sheets:** choices and confirmations open as bottom sheets
+  (`app/components/BottomSheet`, `ConfirmSheet`) with a drag handle and a
+  display-font title: RIR, add or replace exercise, history, finish and remove.
+- **Chrome:** the exercise screen hides the tab bar and has its own Back link
+  and Previous/Next bar.
 
 ## Nutrition navigation and meal filters
 

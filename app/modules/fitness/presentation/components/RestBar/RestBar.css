@@ -1,0 +1,183 @@
+.rest-bar {
+  position: fixed;
+  right: 12px;
+  /* Clears the tab bar or the exercise navigation below it. */
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  left: 12px;
+  z-index: 20;
+  max-width: 616px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--gray-12);
+  color: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  transition:
+    border-radius 0.2s,
+    background 0.3s;
+  animation: rest-bar-up 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  --ring-color: var(--tomato-9);
+  --ring-track: rgba(255, 255, 255, 0.15);
+}
+
+.rest-bar--over {
+  background: var(--green-11);
+  --ring-color: white;
+}
+
+.rest-bar--expanded {
+  border-radius: 24px;
+  padding: 16px 20px 20px;
+}
+
+.rest-bar button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+.rest-bar__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 10px;
+}
+
+.rest-bar__summary {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+
+.rest-bar__summary:disabled {
+  cursor: default;
+}
+
+.rest-bar__ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+}
+
+.rest-bar__ring .progress-ring {
+  position: absolute;
+  inset: 0;
+}
+
+.rest-bar__time {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rest-bar__pill {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rest-bar__pill--light {
+  background: white;
+  color: var(--gray-12);
+}
+
+.rest-bar__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rest-bar__notify {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.rest-bar__icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+.rest-bar__big {
+  margin: 4px 0 16px;
+  font-family: var(--font-display);
+  font-size: 64px;
+  line-height: 60px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.rest-bar__presets {
+  display: flex;
+  gap: 6px;
+}
+
+.rest-bar__preset {
+  flex: 1;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rest-bar__preset--on {
+  background: var(--tomato-9);
+}
+
+.rest-bar__actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+}
+
+@keyframes rest-bar-up {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rest-bar {
+    animation: none;
+  }
+}

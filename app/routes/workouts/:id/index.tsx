@@ -1,972 +1,203 @@
-import {
-  closestCenter,
-  DndContext,
-  type DragEndEvent,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { ArrowLeftIcon, DotsVerticalIcon } from "@radix-ui/react-icons";
-import {
-  Box,
-  Button,
-  DropdownMenu,
-  Flex,
-  IconButton,
-  Kbd,
-  Text,
-  TextField,
-  Tooltip,
-} from "@radix-ui/themes";
-import type React from "react";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import { Link, useFetcher, useFetchers, useSearchParams } from "react-router";
-import { z } from "zod";
-import { zfd } from "zod-form-data";
-import { CancelConfirmationDialog } from "~/components/workout/CancelConfirmationDialog";
-import { CompletionModal } from "~/components/workout/CompletionModal";
+import { DropdownMenu } from "@radix-ui/themes";
+import { MoreVertical, Plus } from "lucide-react";
+import { useId, useState } from "react";
+import { useFetcher } from "react-router";
 import { DeleteConfirmationDialog } from "~/components/workout/DeleteConfirmationDialog";
-import { ExerciseSelector } from "~/components/workout/ExerciseSelector";
-import { RestTimer, useRestTimer } from "~/components/workout/RestTimer";
-import { useLiveDuration } from "~/components/workout/useLiveDuration";
-import { logger } from "~/logger.server";
-import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
-import type { WorkoutExerciseGroup } from "~/modules/fitness/domain/workout";
-import { duplicateWorkout } from "~/modules/fitness/infra/duplicate-workout.service.server";
-import {
-  addExercisesToWorkout,
-  addExerciseToWorkout,
-  addSetToWorkout,
-  completeWorkout,
-  destroyWorkout,
-  getWorkoutSessionData,
-  removeExerciseFromWorkout,
-  removeSetFromWorkout,
-  reorderExercisesInWorkout,
-  replaceExerciseInWorkout,
-  updateExerciseMmcInstructions,
-  updateExerciseNotes,
-  updateSetInWorkout,
-  updateWorkoutName,
-} from "~/modules/fitness/infra/workout-session.service.server";
-import {
-  createWorkoutExerciseCardViewModel,
-  EditMMCModal,
-  ExerciseHistoryModal,
-  WorkoutExerciseCard,
-} from "~/modules/fitness/presentation";
-import { reorderExerciseGroups } from "~/modules/fitness/presentation/reorder-exercise-groups";
-import {
-  createWorkoutProgressViewModel,
-  type WorkoutExerciseProgressViewModel,
-} from "~/modules/fitness/presentation/view-models/workout-progress.view-model";
-import { isEditableTarget } from "~/utils/dom";
-import { formOptionalText, formText } from "~/utils/form-data";
-import type { Route } from "./+types/index";
-import "./active-workout.css";
+import { ExercisePickerSheet } from "~/modules/fitness/presentation/components/ExercisePickerSheet";
+import { ExerciseProgressList } from "~/modules/fitness/presentation/components/ExerciseProgressList";
+import { useNow } from "~/modules/fitness/presentation/hooks/useNow";
+import { formatClock } from "~/time";
+import { WorkoutName } from "./WorkoutName";
+import { useWorkoutContext } from "./workout-context";
 
-export async function loader({ params, request, context }: Route.LoaderArgs) {
-  const id = parseWorkoutId(params.id);
-  const focusExerciseId = z
-    .uuid()
-    .optional()
-    .catch(undefined)
-    .parse(new URL(request.url).searchParams.get("exercise") ?? undefined);
-  return {
-    ...(await getWorkoutSessionData(
-      context.get(authenticatedUserContext).id,
-      id,
-    )),
-    focusExerciseId,
+export default function WorkoutOverview() {
+  const { workout, isComplete, exerciseOptions, actionPath, requestFinish } =
+    useWorkoutContext();
+  const now = useNow(isComplete ? 60_000 : 1000);
+  const reorderer = useFetcher();
+  const adder = useFetcher();
+  const repeater = useFetcher();
+  const [sheet, setSheet] = useState<"add" | "delete">();
+  const headingId = useId();
+
+  const pendingOrder = reorderer.formData?.getAll("exerciseIds").map(String);
+  const exercises = pendingOrder
+    ? pendingOrder.flatMap((id) => workout.exercises.filter((e) => e.id === id))
+    : workout.exercises;
+  const progress = workout.totalSets
+    ? (workout.completedSets / workout.totalSets) * 100
+    : 0;
+  const end = workout.stop ? Date.parse(workout.stop) : now;
+  const duration = formatClock((end - Date.parse(workout.start)) / 1000);
+
+  const reorder = (exerciseIds: ReadonlyArray<string>) => {
+    const formData = new FormData();
+    formData.append("intent", "reorder-exercises");
+    for (const id of exerciseIds) formData.append("exerciseIds", id);
+    reorderer.submit(formData, { method: "post", action: actionPath });
   };
-}
-
-export async function action({ request, params, context }: Route.ActionArgs) {
-  const id = parseWorkoutId(params.id);
-  await getWorkoutSessionData(context.get(authenticatedUserContext).id, id);
-  const formData = await request.formData();
-  const intentSchema = zfd.formData({
-    intent: formText(z.string().min(1)),
-  });
-  const intentParsed = intentSchema.safeParse(formData);
-
-  if (!intentParsed.success) {
-    return { error: "Intent is required" };
-  }
-  const intent = intentParsed.data.intent;
-
-  try {
-    switch (intent) {
-      case "update-name": {
-        const schema = zfd.formData({
-          name: formText(z.string().min(1)),
-        });
-        const parsed = schema.parse(formData);
-        return updateWorkoutName(
-          context.get(authenticatedUserContext).id,
-          id,
-          parsed.name,
-        );
-      }
-
-      case "add-exercise": {
-        const schema = zfd.formData({
-          exerciseId: formText(z.string().min(1)),
-          notes: formOptionalText(),
-        });
-        const parsed = schema.parse(formData);
-        return addExerciseToWorkout(context.get(authenticatedUserContext).id, {
-          workoutId: id,
-          exerciseId: parsed.exerciseId,
-          notes: parsed.notes ?? undefined,
-        });
-      }
-
-      case "add-exercises": {
-        const exerciseIds = formData.getAll("exerciseIds").map(String);
-        return addExercisesToWorkout(context.get(authenticatedUserContext).id, {
-          workoutId: id,
-          exerciseIds,
-        });
-      }
-
-      case "update-exercise-mmc": {
-        const schema = zfd.formData({
-          exerciseId: formText(z.string().min(1)),
-          mmcInstructions: formOptionalText(),
-        });
-        const parsed = schema.parse(formData);
-        return updateExerciseMmcInstructions(
-          context.get(authenticatedUserContext).id,
-          {
-            workoutId: id,
-            exerciseId: parsed.exerciseId,
-            mmcInstructions: parsed.mmcInstructions,
-          },
-        );
-      }
-
-      case "update-exercise-notes": {
-        const schema = zfd.formData({
-          exerciseId: formText(z.string().min(1)),
-          notes: formOptionalText(),
-        });
-        const parsed = schema.parse(formData);
-        return updateExerciseNotes(context.get(authenticatedUserContext).id, {
-          workoutId: id,
-          exerciseId: parsed.exerciseId,
-          notes: parsed.notes ?? null,
-        });
-      }
-
-      case "remove-exercise": {
-        const schema = zfd.formData({
-          exerciseId: formText(z.string().min(1)),
-        });
-        const parsed = schema.parse(formData);
-        return removeExerciseFromWorkout(
-          context.get(authenticatedUserContext).id,
-          {
-            workoutId: id,
-            exerciseId: parsed.exerciseId,
-          },
-        );
-      }
-
-      case "replace-exercise": {
-        const schema = zfd.formData({
-          oldExerciseId: formText(z.string().min(1)),
-          newExerciseId: formText(z.string().min(1)),
-        });
-        const parsed = schema.parse(formData);
-        return replaceExerciseInWorkout(
-          context.get(authenticatedUserContext).id,
-          {
-            workoutId: id,
-            oldExerciseId: parsed.oldExerciseId,
-            newExerciseId: parsed.newExerciseId,
-          },
-        );
-      }
-
-      case "reorder-exercises": {
-        const exerciseIdsJson = formData.get("exerciseIds")?.toString();
-
-        if (!exerciseIdsJson) {
-          return { error: "Exercise IDs are required" };
-        }
-
-        const exerciseIds: string[] = JSON.parse(exerciseIdsJson);
-        return reorderExercisesInWorkout(
-          context.get(authenticatedUserContext).id,
-          {
-            workoutId: id,
-            exerciseIds,
-          },
-        );
-      }
-
-      case "add-set": {
-        const schema = zfd.formData({
-          exerciseId: formText(z.string().min(1)),
-          reps: formOptionalText(),
-          weight: formOptionalText(),
-          note: formOptionalText(),
-        });
-        const parsed = schema.parse(formData);
-        return addSetToWorkout(context.get(authenticatedUserContext).id, {
-          workoutId: id,
-          exerciseId: parsed.exerciseId,
-          repsStr: parsed.reps ?? undefined,
-          weightStr: parsed.weight ?? undefined,
-          note: parsed.note ?? undefined,
-        });
-      }
-
-      case "update-set": {
-        const schema = zfd.formData({
-          exerciseId: formText(z.string().min(1)),
-          setNumber: formText(z.string().min(1)),
-          reps: formOptionalText(),
-          weight: formOptionalText(),
-          note: formOptionalText(),
-          rpe: formOptionalText(),
-          reportedRir: formOptionalText(),
-          isCompleted: formOptionalText(),
-          isWarmup: formOptionalText(),
-        });
-        const parsed = schema.parse(formData);
-        return updateSetInWorkout(context.get(authenticatedUserContext).id, {
-          workoutId: id,
-          exerciseId: parsed.exerciseId,
-          setNumberStr: parsed.setNumber,
-          repsStr: parsed.reps ?? undefined,
-          weightStr: parsed.weight ?? undefined,
-          note: parsed.note ?? undefined,
-          rpeStr: parsed.rpe ?? undefined,
-          reportedRirStr: parsed.reportedRir ?? undefined,
-          isCompletedStr: parsed.isCompleted ?? undefined,
-          isWarmupStr: parsed.isWarmup ?? undefined,
-        });
-      }
-
-      case "remove-set": {
-        const schema = zfd.formData({
-          exerciseId: formText(z.string().min(1)),
-          setNumber: formText(z.string().min(1)),
-        });
-        const parsed = schema.parse(formData);
-        return removeSetFromWorkout(context.get(authenticatedUserContext).id, {
-          workoutId: id,
-          exerciseId: parsed.exerciseId,
-          setNumberStr: parsed.setNumber,
-        });
-      }
-
-      case "complete-workout": {
-        return completeWorkout(context.get(authenticatedUserContext).id, {
-          workoutId: id,
-        });
-      }
-
-      case "cancel-workout":
-      case "delete-workout": {
-        return destroyWorkout(context.get(authenticatedUserContext).id, {
-          workoutId: id,
-        });
-      }
-
-      case "duplicate-workout": {
-        return duplicateWorkout(context.get(authenticatedUserContext).id, id);
-      }
-
-      default:
-        return { error: "Unknown intent" };
-    }
-  } catch (error) {
-    logger.error({ err: error }, "Workout action error");
-    return { error: "Internal server error" };
-  }
-}
-
-function parseWorkoutId(id: string): string {
-  const parsed = z.uuid().safeParse(id);
-  if (!parsed.success) throw new Response("Workout not found", { status: 404 });
-  return parsed.data;
-}
-
-export default function WorkoutSession({ loaderData }: Route.ComponentProps) {
-  const { workoutSession, exercises } = loaderData;
-  const workoutId = workoutSession.workout.id;
-  const [searchParams] = useSearchParams();
-  const focusExerciseId = workoutSession.exerciseGroups.find(
-    (group) => group.exercise.id === loaderData.focusExerciseId,
-  )?.exercise.id;
-  const focusedIndex = workoutSession.exerciseGroups.findIndex(
-    (group) => group.exercise.id === focusExerciseId,
-  );
-  const progress = createWorkoutProgressViewModel(
-    workoutSession.exerciseGroups,
-  );
-  const pendingSave = useFetchers().some((fetcher) => fetcher.state !== "idle");
-  const scrollPositions = useRef(new Map<string, number>());
-  const viewKey = `${workoutId}:${focusExerciseId ?? "overview"}`;
-  const rememberScroll = () => {
-    const content = document.querySelector<HTMLElement>(".main-content");
-    if (content) scrollPositions.current.set(viewKey, content.scrollTop);
-  };
-  useLayoutEffect(() => {
-    const content = document.querySelector<HTMLElement>(".main-content");
-    if (!content) return;
-    content.scrollTop = scrollPositions.current.get(viewKey) ?? 0;
-    const saveScroll = () => {
-      scrollPositions.current.set(viewKey, content.scrollTop);
-    };
-    content.addEventListener("scroll", saveScroll);
-    return () => content.removeEventListener("scroll", saveScroll);
-  }, [viewKey]);
-  const exerciseHref = (exerciseId?: string) => {
-    const params = new URLSearchParams(searchParams);
-    if (exerciseId) params.set("exercise", exerciseId);
-    else params.delete("exercise");
-    const query = params.toString();
-    return `/workouts/${workoutId}${query ? `?${query}` : ""}`;
-  };
-  const [openReport, setOpenReport] = useState<{
-    readonly workoutId: string;
-    readonly key: string;
-  }>();
-  const openReportSetKey =
-    openReport?.workoutId === workoutId ? openReport.key : undefined;
-  const pendingCompletionReport = useRef<
-    | {
-        readonly workoutId: string;
-        readonly key: string;
-      }
-    | undefined
-  >(undefined);
-  const onReportPromptChange = useCallback(
-    (key: string, open: boolean) => {
-      if (
-        !open &&
-        pendingCompletionReport.current?.workoutId === workoutId &&
-        pendingCompletionReport.current.key === key
-      ) {
-        pendingCompletionReport.current = undefined;
-        if (!workoutSession.workout.stop && progress.allSetsCompleted)
-          setShowCompletionModal(true);
-      }
-      setOpenReport((current) =>
-        open
-          ? { workoutId, key }
-          : current?.workoutId === workoutId && current.key === key
-            ? undefined
-            : current,
-      );
-    },
-    [workoutId, workoutSession.workout.stop, progress.allSetsCompleted],
-  );
-  const [showExerciseSelector, setShowExerciseSelector] = useState(false);
-  const [replaceExerciseId, setReplaceExerciseId] = useState<string>();
-  const [showCompletionModal, setShowCompletionModal] = useState(false);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [historyExercise, setHistoryExercise] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
-  const [mmcExercise, setMmcExercise] = useState<{
-    id: string;
-    name: string;
-    mmcInstructions?: string;
-  } | null>(null);
-
-  const fetcher = useFetcher();
-  const reorderFetcher = useFetcher();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const chromeRef = useRef<HTMLDivElement>(null);
-  const [chromeHeight, setChromeHeight] = useState(0);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 200, tolerance: 5 },
-    }),
-  );
-
-  const isComplete = !!workoutSession.workout.stop;
-
-  const { startedAgo, formattedDuration } = useLiveDuration({
-    startTime: workoutSession.workout.start,
-    endTime: workoutSession.workout.stop ?? undefined,
-  });
-
-  const restTimer = useRestTimer();
-
-  useEffect(() => {
-    if (isEditingName && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditingName]);
-
-  useEffect(() => {
-    const chrome = chromeRef.current;
-    if (!chrome) return;
-
-    const updateChromeHeight = () => {
-      setChromeHeight(chrome.getBoundingClientRect().height);
-    };
-
-    updateChromeHeight();
-
-    const observer = new ResizeObserver(updateChromeHeight);
-    observer.observe(chrome);
-
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
-
-      if (isEditableTarget(e.target)) return;
-
-      if (e.key.toLowerCase() === "n") {
-        e.preventDefault();
-        setReplaceExerciseId(undefined);
-        setShowExerciseSelector(true);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  const { totalSets, completedSets, percent: progressPercent } = progress;
-  const handleCompletedSet = useCallback(
-    (key: string, needsReport: boolean) => {
-      restTimer.start();
-      if (isComplete || !progress.allSetsCompleted) return;
-      if (needsReport) pendingCompletionReport.current = { workoutId, key };
-      else setShowCompletionModal(true);
-    },
-    [restTimer.start, isComplete, progress.allSetsCompleted, workoutId],
-  );
-
-  const optimisticName =
-    fetcher.formData?.get("name")?.toString() || workoutSession.workout.name;
-
-  const handleNameSubmit = (name: string) => {
-    if (name.trim() && name !== workoutSession.workout.name) {
-      fetcher.submit(
-        { intent: "update-name", name: name.trim() },
-        { method: "post" },
-      );
-    }
-    setIsEditingName(false);
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const reordered = reorderExerciseGroups(
-      workoutSession.exerciseGroups,
-      String(active.id),
-      String(over.id),
-    );
-    if (!reordered) return;
-
-    reorderFetcher.submit(
-      {
-        intent: "reorder-exercises",
-        exerciseIds: JSON.stringify(reordered.map((g) => g.exercise.id)),
-      },
-      { method: "post" },
-    );
-  };
-
-  const pageStyle: React.CSSProperties & { "--session-chrome-height": string } =
-    {
-      "--session-chrome-height": `${chromeHeight}px`,
-    };
 
   return (
-    <div className="active-workout-page" style={pageStyle}>
-      {/* Header — editorial style */}
-      <div ref={chromeRef} className="active-workout-chrome">
-        <header className="active-workout-header">
-          <Flex justify="between" align="start" gap="2">
-            <Flex align="start" gap="2" className="active-workout-header__left">
-              <Tooltip content="Back to Workouts">
-                <IconButton
-                  asChild
-                  variant="ghost"
-                  size="1"
-                  className="active-workout-header__back"
-                  aria-label="Back to Workouts"
+    <main className="active-workout">
+      <header className="active-workout__header">
+        <div className="active-workout__eyebrow">
+          <p
+            className={
+              isComplete
+                ? "active-workout__caps"
+                : "active-workout__caps active-workout__caps--accent"
+            }
+          >
+            {isComplete ? "Completed" : "Workout in progress"}
+          </p>
+          {isComplete && (
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger>
+                <button
+                  type="button"
+                  className="active-workout__menu"
+                  aria-label="Workout actions"
                 >
-                  <Link to="/workouts">
-                    <ArrowLeftIcon />
-                  </Link>
-                </IconButton>
-              </Tooltip>
-
-              <div className="active-workout-header__title-group">
-                {isEditingName ? (
-                  <TextField.Root
-                    ref={inputRef}
-                    defaultValue={optimisticName}
-                    size="3"
-                    onBlur={(e) => handleNameSubmit(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleNameSubmit(e.currentTarget.value);
-                      } else if (e.key === "Escape") {
-                        setIsEditingName(false);
-                      }
-                    }}
-                  />
-                ) : (
-                  <Text
-                    size="3"
-                    weight="bold"
-                    className={`active-workout-header__name${!isComplete ? " active-workout-header__name--live" : ""}`}
-                    onClick={() => !isComplete && setIsEditingName(true)}
-                  >
-                    {optimisticName}
-                  </Text>
-                )}
-                <div className="active-workout-header__subtitle">
-                  {!isComplete && (
-                    <span className="active-workout-header__live-badge">
-                      Live
-                    </span>
-                  )}
-                  <Text size="2" className="active-workout-header__started-ago">
-                    {isComplete
-                      ? `Completed · ${formattedDuration}`
-                      : startedAgo}
-                  </Text>
-                </div>
-              </div>
-            </Flex>
-
-            <Flex
-              align="center"
-              gap="2"
-              className="active-workout-header__actions"
-            >
-              {focusExerciseId && (
-                <>
-                  <Text size="1">
-                    {focusedIndex + 1} / {workoutSession.exerciseGroups.length}
-                  </Text>
-                  <Button asChild variant="soft" size="1">
-                    <Link
-                      to={exerciseHref()}
-                      onClick={rememberScroll}
-                      preventScrollReset
-                    >
-                      Overview
-                    </Link>
-                  </Button>
-                </>
-              )}
-
-              <DropdownMenu.Root>
-                <Tooltip content="Workout actions">
-                  <DropdownMenu.Trigger>
-                    <IconButton
-                      variant="ghost"
-                      size="1"
-                      aria-label="Workout actions"
-                    >
-                      <DotsVerticalIcon />
-                    </IconButton>
-                  </DropdownMenu.Trigger>
-                </Tooltip>
-                <DropdownMenu.Content>
-                  {isComplete ? (
-                    <>
-                      <DropdownMenu.Item
-                        onSelect={() =>
-                          fetcher.submit(
-                            { intent: "duplicate-workout" },
-                            { method: "post" },
-                          )
-                        }
-                      >
-                        Repeat Workout
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item
-                        color="red"
-                        onSelect={() => setShowDeleteDialog(true)}
-                      >
-                        Delete Workout
-                      </DropdownMenu.Item>
-                    </>
-                  ) : (
-                    <DropdownMenu.Item
-                      color="red"
-                      onSelect={() => setShowCancelDialog(true)}
-                    >
-                      Cancel Workout
-                    </DropdownMenu.Item>
-                  )}
-                </DropdownMenu.Content>
-              </DropdownMenu.Root>
-            </Flex>
-          </Flex>
-        </header>
-
-        {!isComplete && (
-          <RestTimer
-            isActive={restTimer.isActive}
-            secondsRemaining={restTimer.secondsRemaining}
-            totalSeconds={restTimer.totalSeconds}
-            onStart={restTimer.start}
-            onDismiss={restTimer.dismiss}
-            onSetDuration={restTimer.setDuration}
-          />
-        )}
-      </div>
-
-      {!focusExerciseId && (
-        <div className="active-workout-progress-summary">
-          <h1>{optimisticName}</h1>
-          <Text as="p" size="2" color="gray">
-            {completedSets} of {totalSets} sets saved
-          </Text>
-          {totalSets > 0 && (
-            <div
-              className="active-workout-progress__bar"
-              role="progressbar"
-              aria-label="Workout progress"
-              aria-valuenow={Math.round(progressPercent)}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuetext={`${completedSets} of ${totalSets} sets completed`}
-            >
-              <div
-                className="active-workout-progress__fill"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
+                  <MoreVertical size={18} />
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content>
+                <DropdownMenu.Item
+                  onSelect={() =>
+                    repeater.submit(
+                      { intent: "duplicate-workout" },
+                      { method: "post", action: actionPath },
+                    )
+                  }
+                >
+                  Repeat workout
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  color="red"
+                  onSelect={() => setSheet("delete")}
+                >
+                  Delete workout
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
           )}
         </div>
-      )}
-
-      {/* Exercise sections */}
-      <div className="active-workout-content">
-        <DndContext
-          sensors={isComplete ? [] : sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={isComplete ? undefined : handleDragEnd}
-        >
-          <SortableContext
-            items={workoutSession.exerciseGroups.map((g) => g.exercise.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            {workoutSession.exerciseGroups.map((group) => (
-              <SortableExerciseCard
-                key={group.exercise.id}
-                group={group}
-                isWorkoutComplete={isComplete}
-                summary={progress.exercises.find(
-                  (exercise) => exercise.id === group.exercise.id,
-                )}
-                focusExerciseId={focusExerciseId}
-                href={exerciseHref(group.exercise.id)}
-                onNavigate={rememberScroll}
-                openReportSetKey={openReportSetKey}
-                onReportPromptChange={onReportPromptChange}
-                onCompleteSet={handleCompletedSet}
-                onReplaceExercise={(exerciseId) => {
-                  setReplaceExerciseId(exerciseId);
-                  setShowExerciseSelector(true);
-                }}
-                onExerciseNameClick={(exerciseId) => {
-                  const g = workoutSession.exerciseGroups.find(
-                    (eg) => eg.exercise.id === exerciseId,
-                  );
-                  if (g)
-                    setHistoryExercise({
-                      id: g.exercise.id,
-                      name: g.exercise.name,
-                    });
-                }}
-                onMMCClick={(exerciseId) => {
-                  const g = workoutSession.exerciseGroups.find(
-                    (eg) => eg.exercise.id === exerciseId,
-                  );
-                  if (g)
-                    setMmcExercise({
-                      id: g.exercise.id,
-                      name: g.exercise.name,
-                      mmcInstructions: g.exercise.mmcInstructions,
-                    });
-                }}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
-
-        {!isComplete && workoutSession.exerciseGroups.length === 0 && (
-          <div className="active-workout-empty">
-            <div className="active-workout-empty__icon">🏋️</div>
-            <Text size="3" weight="medium">
-              No exercises yet
-            </Text>
-            <Text size="2" color="gray">
-              Add your first exercise to get started
-            </Text>
-          </div>
+        {isComplete ? (
+          <h1 className="active-workout__name">{workout.name}</h1>
+        ) : (
+          <WorkoutName name={workout.name} actionPath={actionPath} />
         )}
-
-        {focusExerciseId && (
-          <nav
-            className="active-workout-exercise-navigation"
-            aria-label="Exercise navigation"
-          >
-            {focusedIndex > 0 ? (
-              <Link
-                to={exerciseHref(
-                  workoutSession.exerciseGroups[focusedIndex - 1].exercise.id,
-                )}
-                onClick={rememberScroll}
-                preventScrollReset
-              >
-                ‹ Previous
-              </Link>
-            ) : (
-              <span />
-            )}
-            {focusedIndex < workoutSession.exerciseGroups.length - 1 ? (
-              <Link
-                to={exerciseHref(
-                  workoutSession.exerciseGroups[focusedIndex + 1].exercise.id,
-                )}
-                onClick={rememberScroll}
-                preventScrollReset
-              >
-                Next ›
-              </Link>
-            ) : (
-              <span />
-            )}
-          </nav>
-        )}
-        {!isComplete && !focusExerciseId && totalSets > 0 && (
-          <Button
-            type="button"
-            className="active-workout-finish"
-            disabled={pendingSave}
-            onClick={() => setShowCompletionModal(true)}
-          >
-            Finish workout
-          </Button>
-        )}
-        {!isComplete && !focusExerciseId && (
-          <div className="active-workout-add-exercise">
-            <Button
-              onClick={() => {
-                setReplaceExerciseId(undefined);
-                setShowExerciseSelector(true);
-              }}
-              size="2"
-              variant="soft"
-              aria-keyshortcuts="n"
+        <div className="active-workout__stats">
+          <div>
+            <p className="active-workout__stat-label">
+              {isComplete ? "Duration" : "Elapsed"}
+            </p>
+            <p
+              className="active-workout__stat"
+              role={isComplete ? undefined : "timer"}
+              // The server and the device clocks render different elapsed times.
+              suppressHydrationWarning
             >
-              Add Exercise
-              <Box ml="2" display={{ initial: "none", md: "inline-block" }}>
-                <Kbd size="1">N</Kbd>
-              </Box>
-            </Button>
+              {duration}
+            </p>
           </div>
-        )}
-      </div>
-
-      <ExerciseSelector
-        exercises={exercises}
-        open={showExerciseSelector}
-        onOpenChange={(open) => {
-          setShowExerciseSelector(open);
-          if (!open) setReplaceExerciseId(undefined);
-        }}
-        replaceExerciseId={replaceExerciseId}
-      />
-
-      <CompletionModal
-        workoutSession={workoutSession}
-        open={showCompletionModal}
-        onOpenChange={setShowCompletionModal}
-        isSaving={pendingSave}
-      />
-
-      <CancelConfirmationDialog
-        workoutSession={workoutSession}
-        open={showCancelDialog}
-        onOpenChange={setShowCancelDialog}
-      />
-
-      {isComplete && (
-        <DeleteConfirmationDialog
-          workoutSession={workoutSession}
-          open={showDeleteDialog}
-          onOpenChange={setShowDeleteDialog}
-        />
-      )}
-
-      {historyExercise && (
-        <ExerciseHistoryModal
-          exerciseId={historyExercise.id}
-          exerciseName={historyExercise.name}
-          open={!!historyExercise}
-          onOpenChange={(open) => {
-            if (!open) setHistoryExercise(null);
-          }}
-        />
-      )}
-
-      {mmcExercise && (
-        <EditMMCModal
-          exerciseId={mmcExercise.id}
-          exerciseName={mmcExercise.name}
-          mmcInstructions={mmcExercise.mmcInstructions}
-          open={!!mmcExercise}
-          onOpenChange={(open) => {
-            if (!open) setMmcExercise(null);
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-function SortableExerciseCard({
-  group,
-  isWorkoutComplete,
-  summary,
-  focusExerciseId,
-  href,
-  onNavigate,
-  onCompleteSet,
-  onReplaceExercise,
-  onExerciseNameClick,
-  onMMCClick,
-  openReportSetKey,
-  onReportPromptChange,
-}: {
-  readonly group: WorkoutExerciseGroup;
-  readonly isWorkoutComplete: boolean;
-  readonly summary?: WorkoutExerciseProgressViewModel;
-  readonly focusExerciseId?: string;
-  readonly href: string;
-  readonly onNavigate: () => void;
-  readonly onCompleteSet?: (key: string, needsReport: boolean) => void;
-  readonly onReplaceExercise?: (exerciseId: string) => void;
-  readonly onExerciseNameClick?: (exerciseId: string) => void;
-  readonly onMMCClick?: (exerciseId: string) => void;
-  readonly openReportSetKey?: string;
-  readonly onReportPromptChange?: (key: string, open: boolean) => void;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: group.exercise.id, disabled: isWorkoutComplete });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  const viewModel = createWorkoutExerciseCardViewModel(
-    group,
-    isWorkoutComplete,
-  );
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="active-workout-exercise"
-      data-exercise-id={group.exercise.id}
-      hidden={
-        focusExerciseId !== undefined && focusExerciseId !== group.exercise.id
-      }
-    >
-      <div
-        hidden={focusExerciseId !== undefined}
-        className={`active-workout-overview-exercise${summary?.isCompleted ? " active-workout-overview-exercise--completed" : ""}`}
-      >
-        {!isWorkoutComplete && (
-          <button
-            type="button"
-            ref={setActivatorNodeRef}
-            {...listeners}
-            {...attributes}
-            className="exercise-card__drag-handle"
-            aria-label={`Reorder ${group.exercise.name}`}
-          >
-            <span aria-hidden="true">⠿</span>
-          </button>
-        )}
-        <Link
-          to={href}
-          onClick={onNavigate}
-          preventScrollReset
-          aria-label={`Open ${group.exercise.name}`}
+          <div className="active-workout__stats-end">
+            <p className="active-workout__stat-label">Sets</p>
+            <p className="active-workout__stat">
+              {workout.completedSets}
+              <span className="active-workout__stat-total">
+                {" "}
+                / {workout.totalSets}
+              </span>
+            </p>
+          </div>
+        </div>
+        <div
+          className="active-workout__progress"
+          role="progressbar"
+          aria-label="Workout progress"
+          aria-valuemin={0}
+          aria-valuemax={workout.totalSets}
+          aria-valuenow={workout.completedSets}
+          aria-valuetext={`${workout.completedSets} of ${workout.totalSets} sets completed`}
         >
-          <span className="active-workout-overview-exercise__copy">
-            <span className="active-workout-overview-exercise__name">
-              {group.exercise.name}
-            </span>
-            <span className="active-workout-overview-exercise__meta">
-              {summary?.isCompleted
-                ? "Completed"
-                : `${summary?.totalSets ?? 0} sets`}{" "}
-              · {group.exercise.type}
-            </span>
-          </span>
-          <span>
-            {summary?.completedSets ?? 0}/{summary?.totalSets ?? 0} ›
-          </span>
-        </Link>
-      </div>
-      <div hidden={focusExerciseId === undefined}>
-        <WorkoutExerciseCard
-          focused
-          canEditCompletedSets={isWorkoutComplete}
-          progressLabel={`${summary?.completedSets ?? 0} of ${summary?.totalSets ?? 0} sets saved`}
-          viewModel={viewModel}
-          openReportSetKey={openReportSetKey}
-          onReportPromptChange={onReportPromptChange}
-          onCompleteSet={isWorkoutComplete ? undefined : onCompleteSet}
-          onReplaceExercise={isWorkoutComplete ? undefined : onReplaceExercise}
-          onExerciseNameClick={onExerciseNameClick}
-          onMMCClick={isWorkoutComplete ? undefined : onMMCClick}
+          <div
+            className="active-workout__progress-fill"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </header>
+
+      <section className="active-workout__list" aria-labelledby={headingId}>
+        <p id={headingId} className="active-workout__caps">
+          Exercises
+        </p>
+        {exercises.length === 0 ? (
+          <p className="active-workout__empty">
+            {isComplete
+              ? "No exercises were logged."
+              : "No exercises yet. Add one to get started."}
+          </p>
+        ) : (
+          <ExerciseProgressList
+            exercises={exercises}
+            linkTo={(exerciseId) => `${actionPath}/exercises/${exerciseId}`}
+            onReorder={isComplete ? undefined : reorder}
+          />
+        )}
+        {!isComplete && (
+          <>
+            <button
+              type="button"
+              className="active-workout__add"
+              onClick={() => setSheet("add")}
+            >
+              <Plus size={18} />
+              Add exercise
+            </button>
+            {workout.totalSets > 0 && (
+              <button
+                type="button"
+                className={
+                  workout.completedSets === workout.totalSets
+                    ? "active-workout__finish active-workout__finish--ready"
+                    : "active-workout__finish"
+                }
+                onClick={requestFinish}
+              >
+                Finish workout
+              </button>
+            )}
+          </>
+        )}
+      </section>
+
+      {!isComplete && (
+        <ExercisePickerSheet
+          open={sheet === "add"}
+          title="Add exercise"
+          options={exerciseOptions}
+          onPick={(exerciseId) => {
+            setSheet(undefined);
+            adder.submit(
+              { intent: "add-exercise", exerciseId },
+              { method: "post", action: actionPath },
+            );
+          }}
+          onClose={() => setSheet(undefined)}
         />
-      </div>
-    </div>
+      )}
+      {workout.stop && (
+        <DeleteConfirmationDialog
+          stop={new Date(workout.stop)}
+          exerciseCount={workout.exercises.length}
+          completedSets={workout.completedSets}
+          totalSets={workout.totalSets}
+          actionPath={actionPath}
+          open={sheet === "delete"}
+          onOpenChange={(open) => !open && setSheet(undefined)}
+        />
+      )}
+    </main>
   );
 }

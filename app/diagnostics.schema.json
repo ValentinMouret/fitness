@@ -44,6 +44,7 @@
     "/workouts/exercises/create",
     "/workouts/exercises/:exercise-id/edit",
     "/workouts/:id/substitute/:exercise-id",
+    "/workouts/:id/exercises/:exercise-id",
     "/workouts/:id",
     "/measurements",
     "/measurements/new",

@@ -5,6 +5,7 @@ import {
   eq,
   type InferSelectModel,
   inArray,
+  isNotNull,
   isNull,
   sql,
 } from "drizzle-orm";
@@ -34,6 +35,7 @@ import { workoutOperations } from "../application/workout-operations";
 import type {
   Exercise,
   ExerciseHistoryPage,
+  ReportedRir,
   Workout,
   WorkoutExerciseGroup,
   WorkoutSession,
@@ -57,6 +59,7 @@ type ExerciseHistoryRow = {
   readonly weight: string | null;
   readonly is_warmup: boolean;
   readonly rpe: number | null;
+  readonly reported_rir: ReportedRir | null;
 };
 
 type LastCompletedSetRow = {
@@ -215,7 +218,11 @@ async function persist(
   } else if (!isDeepStrictEqual(workout, previous.workout)) {
     await tx
       .update(workouts)
-      .set({ stop: workout.stop ?? null, updated_at: changedAt })
+      .set({
+        name: workout.name,
+        stop: workout.stop ?? null,
+        updated_at: changedAt,
+      })
       .where(and(eq(workouts.userId, userId), eq(workouts.id, workout.id)));
   }
   const oldGroups = new Map(
@@ -1086,37 +1093,6 @@ export function createWorkoutSessionRepository(
       ).andThen((result) => result);
     },
 
-    updateExerciseNotes(
-      workoutId: string,
-      exerciseId: string,
-      notes: string | null,
-    ): ResultAsync<void, ErrRepository> {
-      return ResultAsync.fromPromise(
-        database.transaction(async (tx) => {
-          const session = await loadSession(tx, userId, workoutId);
-          if (
-            !session ||
-            !session.exerciseGroups.some(
-              (group) => group.exercise.id === exerciseId,
-            )
-          )
-            return err("not_found" as const);
-          await tx
-            .update(workoutExercises)
-            .set({ notes, updated_at: new Date() })
-            .where(
-              and(
-                eq(workoutExercises.workout_id, workoutId),
-                eq(workoutExercises.exercise_id, exerciseId),
-                isNull(workoutExercises.deleted_at),
-              ),
-            );
-          return ok(undefined);
-        }),
-        () => "database_error" as const,
-      ).andThen((result) => result);
-    },
-
     getExerciseHistory(
       exerciseId: string,
       cursor?: string,
@@ -1136,7 +1112,8 @@ export function createWorkoutSessionRepository(
         ws.reps,
         ws.weight,
         ws."isWarmup" AS is_warmup,
-        ws.rpe
+        ws.rpe,
+        ws.reported_rir
       FROM workout_sets ws
       INNER JOIN workouts w ON ws.workout = w.id
       WHERE w.user_id = ${userId}
@@ -1171,6 +1148,7 @@ export function createWorkoutSessionRepository(
               weight?: number;
               isWarmup: boolean;
               rpe?: number;
+              reportedRir?: ReportedRir;
             }>;
           }
         >();
@@ -1195,6 +1173,7 @@ export function createWorkoutSessionRepository(
             weight: row.weight ? Number.parseFloat(row.weight) : undefined,
             isWarmup: row.is_warmup,
             rpe: row.rpe ?? undefined,
+            reportedRir: row.reported_rir ?? undefined,
           });
         }
 
@@ -1264,6 +1243,35 @@ export function createWorkoutSessionRepository(
           reps: row.reps ?? undefined,
           weight: row.weight ? Number.parseFloat(row.weight) : undefined,
         })),
+      );
+    },
+
+    /** When each exercise was last trained in one of this user's finished workouts. */
+    lastPerformedByExercise(): ResultAsync<
+      ReadonlyMap<string, Date>,
+      ErrRepository
+    > {
+      const query = database
+        .select({
+          exercise: workoutSets.exercise,
+          lastPerformed: sql<Date>`max(${workouts.start})`.mapWith(
+            workouts.start,
+          ),
+        })
+        .from(workoutSets)
+        .innerJoin(workouts, eq(workoutSets.workout, workouts.id))
+        .where(
+          and(
+            eq(workouts.userId, userId),
+            eq(workoutSets.isCompleted, true),
+            isNotNull(workouts.stop),
+            isNull(workoutSets.deleted_at),
+            isNull(workouts.deleted_at),
+          ),
+        )
+        .groupBy(workoutSets.exercise);
+      return executeQuery(query, "lastPerformedByExercise").map(
+        (rows) => new Map(rows.map((row) => [row.exercise, row.lastPerformed])),
       );
     },
   };

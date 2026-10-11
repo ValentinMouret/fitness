@@ -1,0 +1,44 @@
+.rir-sheet__options {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.rir-sheet__option,
+.rir-sheet__unsure {
+  border: 1px solid var(--gray-5);
+  border-radius: 14px;
+  color: var(--brand-text);
+  cursor: pointer;
+}
+
+.rir-sheet__option {
+  height: 64px;
+  background: var(--brand-surface);
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 30px;
+}
+
+.rir-sheet__unsure {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 10px;
+  background: var(--gray-3);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.rir-sheet__option--on {
+  border-color: var(--tomato-9);
+  background: var(--tomato-9);
+  color: white;
+}
+
+.rir-sheet__unsure--on {
+  border-color: var(--gray-12);
+  background: var(--gray-12);
+  color: white;
+}

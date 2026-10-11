@@ -1,0 +1,203 @@
+.active-set,
+.active-set-table__head {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr) 52px 44px;
+  gap: 8px;
+  align-items: center;
+}
+
+.active-set {
+  padding: 8px 12px;
+  border: 1px solid var(--gray-4);
+  border-radius: 14px;
+  background: var(--brand-surface);
+  transition: background 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.active-set--next {
+  border-color: var(--tomato-7);
+  box-shadow: 0 0 0 3px var(--tomato-3);
+}
+
+.active-set--done {
+  border-color: var(--green-5);
+  background: var(--green-2);
+}
+
+.active-set button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+.active-set__no {
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--brand-text-secondary);
+  font-family: var(--font-display);
+  font-size: 22px;
+  text-align: center;
+}
+
+.active-set .active-set__no--warm {
+  background: var(--amber-3);
+  color: var(--amber-11);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.active-set-cell {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  height: 44px;
+  padding: 10px 6px 0;
+  border: 1px solid var(--gray-5);
+  border-radius: 10px;
+  background: var(--gray-1);
+  color: var(--brand-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.active-set-cell__value {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 22px;
+}
+
+.active-set-cell__unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--brand-text-secondary);
+}
+
+.active-set-cell--read-only {
+  border-color: transparent;
+  background: transparent;
+}
+
+.active-set-cell--target {
+  border: 1px dashed var(--gray-7);
+  background: transparent;
+}
+
+.active-set-cell--target .active-set-cell__value {
+  color: var(--gray-9);
+  font-weight: 500;
+}
+
+.active-set-cell--muted .active-set-cell__value {
+  color: var(--gray-9);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.active-set--done .active-set-cell {
+  border-color: transparent;
+  background: transparent;
+}
+
+.active-set-cell--editing {
+  border: 1.5px solid var(--tomato-9);
+  background: var(--color-panel-solid);
+  box-shadow: 0 0 0 2px var(--tomato-4);
+}
+
+.active-set-cell--editing input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--brand-text);
+  font: 600 19px / 22px var(--font-body);
+  text-align: center;
+}
+
+.active-set__remove {
+  display: grid;
+  place-items: center;
+  height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--gray-8);
+}
+
+.active-set__rir {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: var(--green-4);
+  color: var(--green-11);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 13px;
+}
+
+.active-set__rir--empty {
+  border: 1px dashed var(--gray-7);
+  background: transparent;
+  color: var(--gray-9);
+}
+
+.active-set__rir-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+
+.active-set__tick {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid var(--gray-6);
+  border-radius: 12px;
+  background: var(--gray-1);
+  color: var(--gray-8);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.active-set--next .active-set__tick {
+  border-color: var(--tomato-9);
+  color: var(--tomato-9);
+}
+
+.active-set .active-set__tick--on {
+  border-color: var(--green-9);
+  background: var(--green-9);
+  color: var(--green-contrast);
+}
+
+.active-set-table__head {
+  padding: 0 12px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-text-secondary);
+}
+
+@media (hover: hover) {
+  .active-set__no:hover,
+  .active-set__remove:hover {
+    background: var(--gray-3);
+  }
+
+  .active-set__remove:hover {
+    color: var(--red-11);
+  }
+}

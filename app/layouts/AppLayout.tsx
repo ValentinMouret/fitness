@@ -74,6 +74,10 @@ const HeaderHandleSchema = z.object({
   }),
 });
 
+const TabBarHandleSchema = z.object({
+  hidesTabBar: z.function({ input: [z.unknown()], output: z.boolean() }),
+});
+
 const AppLayout: React.FC = () => {
   const matches = useMatches();
   const { pathname } = useLocation();
@@ -83,6 +87,12 @@ const AppLayout: React.FC = () => {
     (pathname === "/workouts" || pathname === "/measurements") &&
     navigation.state === "idle" &&
     fetchers.every((fetcher) => fetcher.state === "idle");
+
+  // Focused screens, such as an exercise in a workout, hide the tab bar.
+  const hidesTabBar = matches.some((match) => {
+    const result = TabBarHandleSchema.safeParse(match.handle);
+    return result.success && result.data.hidesTabBar(match.data);
+  });
 
   const headerConfig = matches
     .map((match) => {
@@ -307,7 +317,12 @@ const AppLayout: React.FC = () => {
         </Container>
       </Box>
 
-      <BottomTabBar pathname={pathname} canReloadDocument={canReloadDocument} />
+      {!hidesTabBar && (
+        <BottomTabBar
+          pathname={pathname}
+          canReloadDocument={canReloadDocument}
+        />
+      )}
     </Flex>
   );
 };

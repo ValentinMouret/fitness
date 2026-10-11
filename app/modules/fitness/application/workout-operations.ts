@@ -2,6 +2,7 @@ import { err, ok } from "neverthrow";
 import { Workout } from "../domain/workout";
 import {
   type AddExercise,
+  type AppendSet,
   type CreateExercise,
   type CreateWorkout,
   type DeleteSets,
@@ -9,6 +10,7 @@ import {
   failure,
   makeSet,
   type PatchSet,
+  type RenameWorkout,
   type ReplaceExercise,
   replaceSessionExercise,
   type SaveSets,
@@ -215,6 +217,36 @@ export function workoutOperations(
           ),
         });
       }),
+    renameWorkout: ({ workoutId, name }: RenameWorkout) =>
+      repository.changeSession(workoutId, (session) =>
+        ok({ ...session, workout: { ...session.workout, name } }),
+      ),
+    /** Adds a pending set after the exercise's last set. */
+    appendSet: ({ workoutId, exerciseId, targetReps, weight }: AppendSet) =>
+      repository.changeSession(workoutId, (session) => {
+        const group = session.exerciseGroups.find(
+          (entry) => entry.exercise.id === exerciseId,
+        );
+        if (!group)
+          return err(failure("not_found", "Exercise is not in this workout"));
+        const set = makeSet(workoutId, exerciseId, {
+          set: Math.max(0, ...group.sets.map((entry) => entry.set)) + 1,
+          targetReps,
+          weight,
+          isCompleted: false,
+          isWarmup: false,
+          isFailure: false,
+        });
+        if (set.isErr()) return err(set.error);
+        return ok({
+          ...session,
+          exerciseGroups: session.exerciseGroups.map((entry) =>
+            entry === group
+              ? { ...group, sets: [...group.sets, set.value] }
+              : entry,
+          ),
+        });
+      }),
     updateSet: ({ workoutId, exerciseId, set, updates }: PatchSet) =>
       repository.changeSession(workoutId, (session) => {
         const group = session.exerciseGroups.find(
@@ -225,8 +257,16 @@ export function workoutOperations(
         const supplied = Object.fromEntries(
           Object.entries(updates).filter(([, value]) => value !== undefined),
         );
+        // Effort belongs to completed working sets; reopening a set or marking
+        // it as a warm-up discards the report unless one is supplied.
+        const discarded =
+          (updates.isCompleted === false || updates.isWarmup === true) &&
+          updates.reportedRir === undefined
+            ? { reportedRir: undefined }
+            : {};
         const saved = makeSet(workoutId, exerciseId, {
           ...existing,
+          ...discarded,
           ...supplied,
         });
         if (saved.isErr()) return err(saved.error);
