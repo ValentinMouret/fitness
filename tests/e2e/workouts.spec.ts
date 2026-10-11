@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { expect, type Page, test } from "@playwright/test";
 
 test.describe("Workouts Page", () => {
@@ -151,16 +152,22 @@ async function startWorkout(page: Page) {
   await expect(page.getByText("Workout in progress")).toBeVisible();
 }
 
-/** Adds the first catalogue exercise and returns its name. */
-async function addFirstExercise(page: Page): Promise<string> {
+/**
+ * Creates an exercise only this test uses, then adds it to the workout and
+ * returns its name. Shared catalogue entries can be deleted by parallel specs.
+ */
+async function addOwnExercise(page: Page): Promise<string> {
+  const name = `E2E Workout Lift ${randomUUID()}`;
+  const created = await page.request.post("/workouts/exercises/create", {
+    form: { name, type: "barbell", movementPattern: "push" },
+  });
+  expect(created.ok()).toBeTruthy();
+  // Load the overview afresh so the picker includes the new exercise.
+  await page.goto(new URL(page.url()).pathname.split("/exercises/")[0]);
   await page.getByRole("button", { name: "Add exercise" }).click();
-  const option = page
-    .getByRole("dialog", { name: "Add exercise" })
-    .locator(".exercise-picker__option")
-    .first();
-  const name =
-    (await option.locator(".exercise-picker__name").textContent()) ?? "";
-  await option.click();
+  const picker = page.getByRole("dialog", { name: "Add exercise" });
+  await picker.getByRole("searchbox", { name: "Search exercises" }).fill(name);
+  await picker.getByRole("button", { name: new RegExp(name) }).click();
   await expect(page).toHaveURL(/\/exercises\/[a-z0-9-]+$/);
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
   return name;
@@ -190,8 +197,10 @@ async function logSet(page: Page, label: string, reps: string, weight: string) {
     .click();
 }
 
-const backToWorkout = (page: Page) =>
-  page.getByRole("link", { name: "Workout", exact: true }).click();
+async function backToWorkout(page: Page) {
+  await page.getByRole("link", { name: "Workout", exact: true }).click();
+  await expect(page).toHaveURL(/\/workouts\/[a-z0-9-]+$/);
+}
 
 test.describe("Active workout overview", () => {
   test.beforeEach(async ({ page }) => startWorkout(page));
@@ -231,7 +240,7 @@ test.describe("Active workout overview", () => {
   test("redirects focused-exercise links to the exercise screen", async ({
     page,
   }) => {
-    const name = await addFirstExercise(page);
+    const name = await addOwnExercise(page);
     const exerciseUrl = page.url();
     const workoutPath = new URL(exerciseUrl).pathname.split("/exercises/")[0];
     const exerciseId = exerciseUrl.split("/exercises/")[1];
@@ -244,7 +253,7 @@ test.describe("Active workout overview", () => {
 test.describe("Exercise screen", () => {
   test.beforeEach(async ({ page }) => {
     await startWorkout(page);
-    await addFirstExercise(page);
+    await addOwnExercise(page);
   });
 
   test("logs a set with RIR and keeps it after reload", async ({ page }) => {
@@ -368,23 +377,12 @@ test.describe("Exercise screen", () => {
 
 test.describe("Reordering exercises", () => {
   test("drags an exercise to a new position", async ({ page }) => {
+    // Several page loads and saves; allow for a loaded CI runner.
+    test.slow();
     await startWorkout(page);
-    const first = await addFirstExercise(page);
+    const first = await addOwnExercise(page);
     await backToWorkout(page);
-    // A fresh catalogue may hold a single exercise, so create the second one.
-    const second = `E2E Reorder Row ${Date.now()}`;
-    const created = await page.request.post("/workouts/exercises/create", {
-      form: { name: second, type: "cable", movementPattern: "pull" },
-    });
-    expect(created.ok()).toBeTruthy();
-    await page.reload();
-    await page.getByRole("button", { name: "Add exercise" }).click();
-    const picker = page.getByRole("dialog", { name: "Add exercise" });
-    await picker
-      .getByRole("searchbox", { name: "Search exercises" })
-      .fill(second);
-    await picker.getByRole("button", { name: new RegExp(second) }).click();
-    await expect(page).toHaveURL(/\/exercises\/[a-z0-9-]+$/);
+    await addOwnExercise(page);
     await backToWorkout(page);
 
     const grip = page.getByRole("button", { name: `Reorder ${first}` });
@@ -413,7 +411,7 @@ test.describe("Finishing a workout", () => {
     page,
   }) => {
     await startWorkout(page);
-    await addFirstExercise(page);
+    await addOwnExercise(page);
     await backToWorkout(page);
 
     await page.getByRole("button", { name: "Finish workout" }).click();
@@ -435,7 +433,7 @@ test.describe("Finishing a workout", () => {
     page,
   }) => {
     await startWorkout(page);
-    await addFirstExercise(page);
+    await addOwnExercise(page);
     await logSet(page, "Set 1", "5", "100");
     await page
       .getByRole("dialog", { name: "Reps in reserve" })
@@ -451,9 +449,11 @@ test.describe("Finishing a workout", () => {
   test("a finished workout only allows correcting saved sets", async ({
     page,
   }) => {
+    // Several page loads and saves; allow for a loaded CI runner.
+    test.slow();
     await startWorkout(page);
     const workoutPath = new URL(page.url()).pathname;
-    const name = await addFirstExercise(page);
+    const name = await addOwnExercise(page);
     await page.getByRole("button", { name: "Add set" }).click();
     await logSet(page, "Set 1", "8", "60");
     await page

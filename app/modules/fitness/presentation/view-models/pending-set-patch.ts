@@ -22,6 +22,11 @@ const pendingForm = z.discriminatedUnion("intent", [
     isWarmup: flag.optional(),
   }),
   z.object({
+    intent: z.literal("complete-set"),
+    exerciseId: z.string(),
+    setNumber: number,
+  }),
+  z.object({
     intent: z.literal("remove-set"),
     exerciseId: z.string(),
     setNumber: number,
@@ -36,5 +41,7 @@ export function pendingSetPatch(
   const parsed = pendingForm.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return undefined;
   const { intent, ...patch } = parsed.data;
-  return intent === "remove-set" ? { ...patch, removed: true } : patch;
+  if (intent === "remove-set") return { ...patch, removed: true };
+  if (intent === "complete-set") return { ...patch, isCompleted: true };
+  return patch;
 }

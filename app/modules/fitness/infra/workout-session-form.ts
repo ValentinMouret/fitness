@@ -5,6 +5,8 @@ import { reportedRirValues } from "../domain/workout";
 import {
   type AppendSet,
   appendSetSchema,
+  type CompleteSet,
+  completeSetSchema,
   type DeleteSets,
   deleteSetsSchema,
   type FinishWorkout,
@@ -33,6 +35,7 @@ export type WorkoutSessionCommand =
       readonly exerciseIds: ReadonlyArray<string>;
     }
   | { readonly intent: "add-set"; readonly input: AppendSet }
+  | { readonly intent: "complete-set"; readonly input: CompleteSet }
   | { readonly intent: "update-set"; readonly input: PatchSet }
   | { readonly intent: "remove-set"; readonly input: DeleteSets }
   | { readonly intent: "complete-workout"; readonly input: FinishWorkout }
@@ -47,6 +50,7 @@ const intents = [
   "replace-exercise",
   "reorder-exercises",
   "add-set",
+  "complete-set",
   "update-set",
   "remove-set",
   "complete-workout",
@@ -98,6 +102,7 @@ const forms = {
     isWarmup: flag.optional(),
   }),
   "remove-set": zfd.formData({ exerciseId: z.string(), setNumber: whole }),
+  "complete-set": zfd.formData({ exerciseId: z.string(), setNumber: whole }),
 };
 
 const parse = <T>(schema: z.ZodType<T>, value: unknown): Result<T, string> => {
@@ -153,6 +158,16 @@ export function parseWorkoutSessionForm(
                 exerciseId,
                 set: setNumber,
                 updates,
+              }),
+            )
+            .map((input) => ({ intent, input }));
+        case "complete-set":
+          return parse(forms[intent], formData)
+            .andThen(({ exerciseId, setNumber }) =>
+              parse(completeSetSchema, {
+                workoutId,
+                exerciseId,
+                set: setNumber,
               }),
             )
             .map((input) => ({ intent, input }));

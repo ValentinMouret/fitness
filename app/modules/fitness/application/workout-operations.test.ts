@@ -118,3 +118,70 @@ describe("renameWorkout", () => {
     });
   });
 });
+
+describe("completeSet", () => {
+  const planned: WorkoutSession = {
+    ...session,
+    exerciseGroups: [
+      {
+        ...session.exerciseGroups[0],
+        sets: [
+          {
+            workoutId,
+            exerciseId,
+            set: 1,
+            targetReps: 8,
+            weight: 60,
+            isCompleted: false,
+            isFailure: false,
+            isWarmup: false,
+          },
+          {
+            workoutId,
+            exerciseId,
+            set: 2,
+            targetReps: 8,
+            reps: 9,
+            weight: 60,
+            isCompleted: false,
+            isFailure: false,
+            isWarmup: false,
+          },
+        ],
+      },
+    ],
+  };
+
+  it("logs the plan when no reps were entered", async () => {
+    const result = await operationsOn(planned).completeSet({
+      workoutId,
+      exerciseId,
+      set: 1,
+    });
+    expect(result._unsafeUnwrap().exerciseGroups[0].sets[0]).toMatchObject({
+      reps: 8,
+      isCompleted: true,
+    });
+  });
+
+  it("keeps reps that were entered", async () => {
+    const result = await operationsOn(planned).completeSet({
+      workoutId,
+      exerciseId,
+      set: 2,
+    });
+    expect(result._unsafeUnwrap().exerciseGroups[0].sets[1]).toMatchObject({
+      reps: 9,
+      isCompleted: true,
+    });
+  });
+
+  it("rejects an unknown set", async () => {
+    const result = await operationsOn(planned).completeSet({
+      workoutId,
+      exerciseId,
+      set: 3,
+    });
+    expect(result._unsafeUnwrapErr().code).toBe("not_found");
+  });
+});

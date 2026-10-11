@@ -20,7 +20,8 @@ const event = {
   duration_ms: 1,
   category: "none",
 };
-describe("safe diagnostic boundaries", () => {
+// Several tests start Node with tsx; startup time depends on machine load.
+describe("safe diagnostic boundaries", { timeout: 30_000 }, () => {
   it("does not label events with an unverified release", async () => {
     const { stdout, stderr } = await execute(
       process.execPath,

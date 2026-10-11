@@ -29,6 +29,14 @@ describe("pendingSetPatch", () => {
     });
   });
 
+  it("reads a completed set", () => {
+    expect(
+      pendingSetPatch(
+        form({ intent: "complete-set", exerciseId: "bench", setNumber: "1" }),
+      ),
+    ).toEqual({ exerciseId: "bench", setNumber: 1, isCompleted: true });
+  });
+
   it("reads a removed set", () => {
     expect(
       pendingSetPatch(

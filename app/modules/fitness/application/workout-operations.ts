@@ -3,6 +3,7 @@ import { Workout } from "../domain/workout";
 import {
   type AddExercise,
   type AppendSet,
+  type CompleteSet,
   type CreateExercise,
   type CreateWorkout,
   type DeleteSets,
@@ -221,6 +222,35 @@ export function workoutOperations(
       repository.changeSession(workoutId, (session) =>
         ok({ ...session, workout: { ...session.workout, name } }),
       ),
+    /** Marks a set done, logging its plan when no reps were entered. */
+    completeSet: ({ workoutId, exerciseId, set }: CompleteSet) =>
+      repository.changeSession(workoutId, (session) => {
+        const group = session.exerciseGroups.find(
+          (entry) => entry.exercise.id === exerciseId,
+        );
+        const existing = group?.sets.find((entry) => entry.set === set);
+        if (!group || !existing)
+          return err(failure("not_found", "Set does not exist"));
+        const saved = makeSet(workoutId, exerciseId, {
+          ...existing,
+          reps: existing.reps ?? existing.targetReps,
+          isCompleted: true,
+        });
+        if (saved.isErr()) return err(saved.error);
+        return ok({
+          ...session,
+          exerciseGroups: session.exerciseGroups.map((entry) =>
+            entry === group
+              ? {
+                  ...entry,
+                  sets: entry.sets.map((current) =>
+                    current === existing ? saved.value : current,
+                  ),
+                }
+              : entry,
+          ),
+        });
+      }),
     /** Adds a pending set after the exercise's last set. */
     appendSet: ({ workoutId, exerciseId, targetReps, weight }: AppendSet) =>
       repository.changeSession(workoutId, (session) => {
