@@ -4,7 +4,7 @@ import { build } from "vite";
 const result = await build({
   configFile: false,
   define: { "process.env.NODE_ENV": JSON.stringify("production") },
-  esbuild: { jsx: "automatic" },
+  esbuild: { jsx: "automatic", jsxDev: false },
   resolve: { alias: { "~": new URL("../app", import.meta.url).pathname } },
   build: {
     write: false,

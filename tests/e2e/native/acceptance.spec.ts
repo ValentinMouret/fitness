@@ -608,11 +608,14 @@ test("native B saves and reloads private habits, measurements, notes, meals, tar
     const location = created.headers().location;
     const workout = z.uuid().parse(location.split("/").at(-1));
     createdWorkouts.push(workout);
-    expect(
-      (
-        await post(location, { intent: "add-exercise", exerciseId: exercise })
-      ).ok(),
-    ).toBe(true);
+    const addedExercise = await post(location, {
+      intent: "add-exercise",
+      exerciseId: exercise,
+    });
+    expect(addedExercise.status()).toBe(302);
+    expect(addedExercise.headers().location).toBe(
+      `${location}/exercises/${exercise}`,
+    );
     const substitutePath = `${location}/substitute/${exercise}`;
     expect((await page.request.get(substitutePath)).ok()).toBe(true);
     expect((await a.request.get(substitutePath)).status()).toBe(404);
