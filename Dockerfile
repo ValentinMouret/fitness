@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
+FROM postgres:18-alpine3.22@sha256:774521500f4c22761b25a6bdb772a0a3c2e8dd32468210bdad9231c5752ea398 AS postgres-tools
+
 FROM oven/bun:1-alpine@sha256:819f91180e721ba09e0e5d3eb7fb985832fd23f516e18ddad7e55aaba8100be7 AS base
 WORKDIR /app
 
@@ -23,7 +25,9 @@ FROM prod-deps AS runtime
 
 # Node is required to serve the app: Bun's react-dom/server.bun.js shim
 # does not export renderToPipeableStream. Bun is kept for `bun db:migrate`.
-RUN apk add --no-cache nodejs postgresql-client
+RUN apk add --no-cache nodejs postgresql-client lz4-libs zstd-libs
+COPY --from=postgres-tools /usr/local/bin/pg_dump /usr/local/bin/pg_restore /usr/local/bin/
+RUN pg_dump --version && pg_restore --version
 
 ARG GIT_SHA=unknown
 ENV GIT_SHA=$GIT_SHA
