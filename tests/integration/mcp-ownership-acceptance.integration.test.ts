@@ -905,7 +905,19 @@ describe.sequential("full-stack external HTTP SDK ownership acceptance", () => {
     const connected = sdk(access);
     client = connected.value;
     await client.connect(connected.transport);
-    const names = (await client.listTools()).tools.map((tool) => tool.name);
+    const tools = (await client.listTools()).tools;
+    const names = tools.map((tool) => tool.name);
+    for (const name of ["log_meal", "update_meal_log"]) {
+      const tool = tools.find((entry) => entry.name === name);
+      expect(tool?.inputSchema.properties?.ingredients).toMatchObject({
+        type: "array",
+        minItems: 1,
+        items: { type: "object", required: ["id", "quantity"] },
+      });
+      expect(tool?.inputSchema.properties?.ingredients).not.toHaveProperty(
+        "additionalItems",
+      );
+    }
     expect(names).toContain("query");
     expect(names).toContain("create_workout");
     expect(names).toContain("log_meal");
