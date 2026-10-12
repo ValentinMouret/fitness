@@ -12,8 +12,9 @@ const ingredient = z
   .object({ id: z.uuid(), quantity: z.number().positive() })
   .strict();
 export const mealCompositionSchema = z
-  .tuple([ingredient])
-  .rest(ingredient)
+  .array(ingredient)
+  .min(1)
+  .pipe(z.tuple([ingredient]).rest(ingredient))
   .readonly()
   .refine(
     (items) => validateMealComposition(items).isOk(),

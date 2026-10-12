@@ -83,6 +83,18 @@ describe("MCP tool registration", () => {
     await client.connect(clientTransport);
     try {
       const listed = await client.listTools();
+      for (const name of ["log_meal", "update_meal_log"]) {
+        const tool = listed.tools.find((entry) => entry.name === name);
+        expect(tool?.inputSchema.properties?.ingredients).toMatchObject({
+          type: "array",
+          minItems: 1,
+          items: { type: "object", required: ["id", "quantity"] },
+        });
+        expect(tool?.inputSchema.properties?.ingredients).not.toHaveProperty(
+          "additionalItems",
+        );
+      }
+
       expect(listed.tools.map((tool) => tool.name)).toEqual([
         "describe_schema",
         "query",
