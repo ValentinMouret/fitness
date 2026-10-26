@@ -1,1 +1,1 @@
-/Users/valentinmouret/Developer/valentinmouret/fitness/goals/AGENTS.md
+AGENTS.md

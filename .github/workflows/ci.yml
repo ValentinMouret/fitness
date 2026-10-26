@@ -7,9 +7,23 @@ on:
     branches: [main]
   # Every pull request, including stacked ones based on another branch.
   pull_request:
+  workflow_dispatch:
+    inputs:
+      tree:
+        description: Exact approved staged tree (40 lowercase hex characters)
+        required: true
+        type: string
+      archive_sha256:
+        description: Canonical archive SHA256 (64 lowercase hex characters)
+        required: true
+        type: string
+      source_head:
+        description: Original source HEAD (40 lowercase hex characters)
+        required: true
+        type: string
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && 'snapshot' || 'normal' }}-${{ github.event.inputs.tree || github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -18,7 +32,7 @@ permissions:
 jobs:
   gate:
     name: Gate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     services:
       postgres:
@@ -35,21 +49,43 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Preserve trusted toolchain pins
+        run: |
+          mkdir -p .git/fitness-pins
+          cp .bun-version .node-version .git/fitness-pins/
+
+      - name: Apply the approved staged snapshot
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          SNAPSHOT_TREE: ${{ inputs.tree }}
+          SNAPSHOT_ARCHIVE_SHA256: ${{ inputs.archive_sha256 }}
+          SNAPSHOT_SOURCE_HEAD: ${{ inputs.source_head }}
+        run: |
+          test "$GITHUB_REF" = refs/heads/main
+          cp scripts/hosted-snapshot.py "$RUNNER_TEMP/fitness-hosted-snapshot.py"
+          python3 "$RUNNER_TEMP/fitness-hosted-snapshot.py" apply \
+            --tree "$SNAPSHOT_TREE" --archive-sha256 "$SNAPSHOT_ARCHIVE_SHA256" \
+            --source-head "$SNAPSHOT_SOURCE_HEAD"
+
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version-file: .bun-version
+          bun-version-file: .git/fitness-pins/.bun-version
       - uses: actions/setup-node@v4
         with:
-          node-version-file: .node-version
+          node-version-file: .git/fitness-pins/.node-version
 
       - run: bun install --frozen-lockfile
 
       - name: Cache Playwright browsers
+        if: github.event_name != 'workflow_dispatch'
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-      - run: bunx playwright install --with-deps chromium
+      - run: bunx playwright install --with-deps chromium webkit
 
       - name: Install PostgreSQL server tools for the MCP acceptance cluster
         run: |
@@ -57,9 +93,31 @@ jobs:
           sudo apt-get install -y postgresql-16
           echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
 
+      - name: Verify the staged source before the gate
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          SNAPSHOT_TREE: ${{ inputs.tree }}
+          SNAPSHOT_ARCHIVE_SHA256: ${{ inputs.archive_sha256 }}
+          SNAPSHOT_SOURCE_HEAD: ${{ inputs.source_head }}
+        run: |
+          python3 "$RUNNER_TEMP/fitness-hosted-snapshot.py" verify \
+            --tree "$SNAPSHOT_TREE" --archive-sha256 "$SNAPSHOT_ARCHIVE_SHA256" \
+            --source-head "$SNAPSHOT_SOURCE_HEAD"
+
       - run: bun run gate
         env:
           GATE_POSTGRES_URL: postgresql://postgres:password@localhost:5432/postgres
+
+      - name: Verify the staged source stayed unchanged
+        if: ${{ always() && github.event_name == 'workflow_dispatch' }}
+        env:
+          SNAPSHOT_TREE: ${{ inputs.tree }}
+          SNAPSHOT_ARCHIVE_SHA256: ${{ inputs.archive_sha256 }}
+          SNAPSHOT_SOURCE_HEAD: ${{ inputs.source_head }}
+        run: |
+          python3 "$RUNNER_TEMP/fitness-hosted-snapshot.py" verify \
+            --tree "$SNAPSHOT_TREE" --archive-sha256 "$SNAPSHOT_ARCHIVE_SHA256" \
+            --source-head "$SNAPSHOT_SOURCE_HEAD"
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
