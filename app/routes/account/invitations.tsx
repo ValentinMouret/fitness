@@ -20,12 +20,16 @@ import type { Route } from "./+types/invitations";
 
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
-    const user = await requirePersonalUser(request);
+    const headers = new Headers();
+    const user = await requirePersonalUser(request, headers);
     await requireLegacyOwnerIdentity();
     if (!canManageInvitations(user.id, env.AUTH_FOUNDATION_OWNER_USER_ID ?? ""))
       throw new Response("Forbidden", { status: 403 });
     context.set(authenticatedUserContext, user);
-    return next();
+    const response = await next();
+    for (const cookie of headers.getSetCookie())
+      response.headers.append("Set-Cookie", cookie);
+    return response;
   },
 ];
 

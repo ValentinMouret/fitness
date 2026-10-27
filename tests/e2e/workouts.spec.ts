@@ -429,22 +429,150 @@ test.describe("Finishing a workout", () => {
     await expect(page).toHaveURL(/\/dashboard/);
   });
 
-  test("the final set asks to finish but only confirmation stops the workout", async ({
-    page,
-  }) => {
-    await startWorkout(page);
-    await addOwnExercise(page);
-    await logSet(page, "Set 1", "5", "100");
-    await page
-      .getByRole("dialog", { name: "Reps in reserve" })
-      .getByRole("button", { name: "0", exact: true })
-      .click();
-    const confirm = page.getByRole("dialog", { name: "Finish workout?" });
-    await expect(confirm.getByText("Every set is done.")).toBeVisible();
-    await confirm.getByRole("button", { name: "Keep training" }).click();
-    await backToWorkout(page);
-    await expect(page.getByText("Workout in progress")).toBeVisible();
-  });
+  for (const warmup of [false, true]) {
+    test(`the final ${warmup ? "warm-up" : "working"} set asks to finish but only confirmation stops the workout`, async ({
+      page,
+    }) => {
+      await startWorkout(page);
+      await addOwnExercise(page);
+      if (warmup) {
+        await page
+          .getByRole("button", {
+            name: "Set 1. Tap to mark as warm-up",
+            exact: true,
+          })
+          .click();
+        await expect(
+          page.getByRole("button", {
+            name: "Warm-up set. Tap to make it a working set",
+            exact: true,
+          }),
+        ).toHaveAttribute("aria-pressed", "true");
+      }
+      await logSet(page, warmup ? "Warm-up set" : "Set 1", "5", "100");
+      if (!warmup) {
+        await page
+          .getByRole("dialog", { name: "Reps in reserve" })
+          .getByRole("button", { name: "0", exact: true })
+          .click();
+      }
+      const confirm = page.getByRole("dialog", { name: "Finish workout?" });
+      await expect(confirm.getByText("Every set is done.")).toBeVisible();
+      await confirm.getByRole("button", { name: "Keep training" }).click();
+      await backToWorkout(page);
+      await expect(page.getByText("Workout in progress")).toBeVisible();
+    });
+  }
+
+  for (const scenario of [
+    "working set",
+    "warm-up",
+    "failed addition",
+    "addition settles before RIR",
+  ]) {
+    test(`adding a set while logging another does not finish the workout (${scenario})`, async ({
+      page,
+    }) => {
+      await startWorkout(page);
+      await addOwnExercise(page);
+      if (scenario === "warm-up") {
+        await page
+          .getByRole("button", {
+            name: "Set 1. Tap to mark as warm-up",
+            exact: true,
+          })
+          .click();
+        await expect(
+          page.getByRole("button", {
+            name: "Warm-up set. Tap to make it a working set",
+            exact: true,
+          }),
+        ).toHaveAttribute("aria-pressed", "true");
+      }
+      let releaseAddition = () => {};
+      let additionStarted = () => {};
+      const pendingAddition = new Promise<void>((resolve) => {
+        releaseAddition = resolve;
+      });
+      const started = new Promise<void>((resolve) => {
+        additionStarted = resolve;
+      });
+      await page.route("**/workouts/**", async (route) => {
+        const request = route.request();
+        if (
+          request.method() === "POST" &&
+          new URLSearchParams(request.postData() ?? "").get("intent") ===
+            "add-set"
+        ) {
+          additionStarted();
+          await pendingAddition;
+          if (scenario === "failed addition") {
+            const form = new URLSearchParams(request.postData() ?? "");
+            form.set("targetReps", "-1");
+            await route.continue({ postData: form.toString() });
+            return;
+          }
+        }
+        await route.continue();
+      });
+      try {
+        await page.getByRole("button", { name: "Add set" }).click();
+        await started;
+        const additionResponse = workoutSaved(page, "intent=add-set");
+        await logSet(
+          page,
+          scenario === "warm-up" ? "Warm-up set" : "Set 1",
+          "8",
+          "60",
+        );
+        if (scenario === "addition settles before RIR") {
+          releaseAddition();
+          expect((await additionResponse).status()).toBe(200);
+          await expect(page.locator(".active-set")).toHaveCount(2);
+        }
+        if (scenario !== "warm-up") {
+          await page
+            .getByRole("dialog", { name: "Reps in reserve" })
+            .getByRole("button", { name: "2", exact: true })
+            .click();
+        }
+        await expect(
+          page.getByRole("dialog", { name: "Finish workout?" }),
+        ).toHaveCount(0);
+        releaseAddition();
+        if (scenario === "failed addition") {
+          expect((await additionResponse).status()).toBe(400);
+          await expect(
+            page.getByRole("button", { name: "Add set", exact: true }),
+          ).toBeEnabled();
+          await backToWorkout(page);
+          await page
+            .getByRole("button", { name: "Finish workout", exact: true })
+            .click();
+          const confirmation = page.getByRole("dialog", {
+            name: "Finish workout?",
+          });
+          await expect(confirmation).toBeVisible();
+          await confirmation
+            .getByRole("button", { name: "Keep training" })
+            .click();
+        } else {
+          expect((await additionResponse).status()).toBe(200);
+          const rows = page.locator(".active-set");
+          await expect(rows).toHaveCount(2);
+          await expect(
+            rows.nth(0).getByRole("button", { name: /^Complete/ }),
+          ).toHaveAttribute("aria-pressed", "true");
+          await expect(
+            rows.nth(1).getByRole("button", { name: /^Complete/ }),
+          ).toHaveAttribute("aria-pressed", "false");
+        }
+      } finally {
+        releaseAddition();
+        await page.unrouteAll({ behavior: "wait" });
+      }
+    });
+  }
 
   test("a finished workout only allows correcting saved sets", async ({
     page,

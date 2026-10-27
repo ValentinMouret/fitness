@@ -7,10 +7,14 @@ export const authenticatedUserContext = createContext<AuthenticatedUser>();
 
 export async function requirePersonalUser(
   request: Request,
+  responseHeaders?: Headers,
 ): Promise<AuthenticatedUser> {
   const runtime = getAuthFoundation();
   if (!runtime) throw new Response("Not found", { status: 404 });
-  const session = await runtime.getAdmittedSession(request.headers);
+  const session = await runtime.getAdmittedSession(
+    request.headers,
+    responseHeaders,
+  );
   if (!session) throw redirect("/sign-in");
   if (!["GET", "HEAD", "OPTIONS"].includes(request.method))
     requireSameOrigin(request);

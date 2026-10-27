@@ -50,8 +50,9 @@
 }
 
 .active-set-cell {
+  box-sizing: border-box;
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: center;
   gap: 3px;
   min-width: 0;
@@ -71,8 +72,10 @@
 }
 
 .active-set-cell__unit {
+  margin-top: 5px;
   font-size: 12px;
   font-weight: 500;
+  line-height: 16px;
   color: var(--brand-text-secondary);
 }
 
@@ -103,13 +106,14 @@
 }
 
 .active-set-cell--editing {
-  border: 1.5px solid var(--tomato-9);
+  border-color: var(--tomato-9);
   background: var(--color-panel-solid);
   box-shadow: 0 0 0 2px var(--tomato-4);
 }
 
 .active-set-cell--editing input {
   width: 100%;
+  height: 22px;
   min-width: 0;
   padding: 0;
   border: 0;
@@ -117,6 +121,7 @@
   background: none;
   color: var(--brand-text);
   font: 600 19px / 22px var(--font-body);
+  font-size: 19px !important;
   text-align: center;
 }
 
@@ -189,6 +194,20 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--brand-text-secondary);
+}
+
+@media (max-width: 389px) {
+  .active-set,
+  .active-set-table__head {
+    grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr) 44px 44px;
+    gap: 4px;
+    padding-inline: 4px;
+  }
+
+  .active-set-cell {
+    gap: 1px;
+    padding-inline: 0;
+  }
 }
 
 @media (hover: hover) {

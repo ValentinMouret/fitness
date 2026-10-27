@@ -13,11 +13,15 @@ import type { Route } from "./+types/sign-in";
 export async function loader({ request }: Route.LoaderArgs) {
   const runtime = getAuthFoundation();
   if (!runtime) throw new Response("Not found", { status: 404 });
-  const session = await runtime.getAdmittedSession(request.headers);
-  return {
-    email: session?.user.email ?? null,
-    isOwner: session?.user.id === env.AUTH_FOUNDATION_OWNER_USER_ID,
-  };
+  const headers = new Headers();
+  const session = await runtime.getAdmittedSession(request.headers, headers);
+  return data(
+    {
+      email: session?.user.email ?? null,
+      isOwner: session?.user.id === env.AUTH_FOUNDATION_OWNER_USER_ID,
+    },
+    { headers },
+  );
 }
 
 export async function action({ request }: Route.ActionArgs) {

@@ -257,8 +257,18 @@ export function createMagicLinkAuth(input: {
     );
   }
 
-  async function getAdmittedSession(headers: Headers) {
-    const session = await auth.api.getSession({ headers });
+  async function getAdmittedSession(
+    headers: Headers,
+    responseHeaders?: Headers,
+  ) {
+    const { response: session, headers: sessionHeaders } =
+      await auth.api.getSession({
+        headers,
+        returnHeaders: true,
+        query: { disableRefresh: responseHeaders === undefined },
+      });
+    for (const cookie of sessionHeaders.getSetCookie())
+      responseHeaders?.append("Set-Cookie", cookie);
     if (!session) return null;
     const invitation = await invitations.findByUserId(session.user.id);
     return invitationAllowsSignIn(invitation, session.user.email, new Date())
