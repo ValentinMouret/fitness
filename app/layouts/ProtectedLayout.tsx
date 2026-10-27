@@ -8,8 +8,15 @@ import type { Route } from "./+types/ProtectedLayout";
 
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
-    context.set(authenticatedUserContext, await requireFitnessUser(request));
-    return next();
+    const headers = new Headers();
+    context.set(
+      authenticatedUserContext,
+      await requireFitnessUser(request, headers),
+    );
+    const response = await next();
+    for (const cookie of headers.getSetCookie())
+      response.headers.append("Set-Cookie", cookie);
+    return response;
   },
 ];
 

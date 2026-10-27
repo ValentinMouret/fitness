@@ -85,6 +85,10 @@ export default function ExerciseScreen() {
       ? exercise.sets.find((set) => set.setNumber === sheet.setNumber)
       : undefined;
   const logged = exercise.sets.filter((set) => set.isCompleted).length;
+  const hasPendingAddition = fetchers.some(
+    (fetcher) =>
+      fetcher.state !== "idle" && fetcher.formData?.get("intent") === "add-set",
+  );
 
   const submit = (group: SubmissionGroup, fields: Record<string, string>) =>
     submitForm(
@@ -126,6 +130,7 @@ export default function ExerciseScreen() {
       setNumber: String(set.setNumber),
     });
     const setsLeft = workout.totalSets - workout.completedSets - 1;
+    const canFinish = setsLeft === 0 && !hasPendingAddition;
     if (setsLeft > 0)
       rest.start(
         restSecondsFor(set.isWarmup, rest.defaultSeconds),
@@ -137,7 +142,7 @@ export default function ExerciseScreen() {
         setNumber: set.setNumber,
         finishAfter: setsLeft === 0,
       });
-    else if (setsLeft === 0) requestFinish();
+    else if (canFinish) requestFinish();
   };
 
   const closeRir = (rir?: ReportedRir) => {
@@ -149,7 +154,15 @@ export default function ExerciseScreen() {
         isCompleted: "true",
       });
     setSheet(undefined);
-    if (sheet.finishAfter) requestFinish();
+    const otherSetsComplete = workout.exercises.every((group) =>
+      group.sets.every(
+        (set) =>
+          set.isCompleted ||
+          (group.id === exercise.id && set.setNumber === sheet.setNumber),
+      ),
+    );
+    if (sheet.finishAfter && !hasPendingAddition && otherSetsComplete)
+      requestFinish();
   };
 
   const addSetKey = [exercise.id, "", "add-set" satisfies SubmissionGroup].join(

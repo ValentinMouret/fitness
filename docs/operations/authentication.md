@@ -12,6 +12,12 @@ mode and one-time-code autocomplete so leading zeroes remain intact. Verificatio
 sets an HttpOnly session cookie in that same context and redirects to Dashboard.
 No session credentials are copied between browser/PWA contexts.
 
+Native browser sessions retain Better Auth's seven-day lifetime and one-day
+renewal interval. Admitted page and data requests forward renewal cookies to the
+requesting browser, including redirects; session reads without a response sink
+do not renew. Activity can therefore extend sign-in, while inactivity expiry,
+explicit logout and invitation revocation still apply.
+
 Codes use a domain-separated HMAC-SHA-256 hash with the existing server session
 secret, so the stored value cannot be brute-forced from a database-only leak.
 They expire after five minutes, allow three incorrect attempts,

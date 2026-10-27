@@ -882,6 +882,74 @@ test("owner manages invitations from Dashboard while invited accounts cannot", a
   }
 });
 
+test("protected page and data requests persist rolling session cookies across browser contexts", async ({
+  page,
+  browser,
+}) => {
+  await signIn(page, ownerEmail);
+  const sessionCookie = (await page.context().cookies()).find((cookie) =>
+    cookie.name.endsWith("better-auth.session_token"),
+  );
+  if (!sessionCookie) throw new Error("Missing fixture session cookie");
+  const session = (
+    await pool.query(
+      "select id from auth_sessions where user_id=$1 order by created_at desc limit 1",
+      [fixtureOwnerId()],
+    )
+  ).rows[0];
+  for (const destination of ["/dashboard", "/dashboard.data", "/"]) {
+    await pool.query(
+      "update auth_sessions set expires_at=now()+interval '1 day',updated_at=now()-interval '6 days' where id=$1",
+      [session.id],
+    );
+    await page
+      .context()
+      .addCookies([
+        { ...sessionCookie, expires: Math.floor(Date.now() / 1000) + 60 },
+      ]);
+    await page.context().addCookies([
+      {
+        name: "better-auth.session_data",
+        value: "retired-cache",
+        url: process.env.E2E_BASE_URL ?? "http://127.0.0.1",
+      },
+    ]);
+    const response = await page.context().request.get(destination, {
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(destination === "/" ? 302 : 200);
+    if (destination === "/")
+      expect(response.headers().location).toBe("/dashboard");
+    const setCookies = (await response.headersArray())
+      .filter((header) => header.name.toLowerCase() === "set-cookie")
+      .map((header) => header.value);
+    expect(setCookies).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/better-auth\.session_token=.*Max-Age=604800/),
+        expect.stringMatching(/better-auth\.session_data=.*Max-Age=0/),
+      ]),
+    );
+    const renewed = (await page.context().cookies()).find(
+      (cookie) => cookie.name === sessionCookie.name,
+    );
+    expect(renewed?.httpOnly).toBe(true);
+    expect(renewed?.sameSite).toBe("Lax");
+    expect(renewed?.expires).toBeGreaterThan(Date.now() / 1000 + 6 * 86400);
+  }
+  const resumed = await browser.newContext({
+    baseURL: process.env.E2E_BASE_URL,
+    storageState: await page.context().storageState(),
+    extraHTTPHeaders: nextFixtureHeaders(),
+  });
+  try {
+    const response = await resumed.request.get("/dashboard");
+    expect(response.status()).toBe(200);
+    expect(new URL(response.url()).pathname).toBe("/dashboard");
+  } finally {
+    await resumed.close();
+  }
+});
+
 test("email code stays in the requesting app context through retry and resend", async ({
   page,
   browser,

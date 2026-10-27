@@ -664,6 +664,58 @@ describe.skipIf(!adminUrl)(
       });
     }
 
+    it("renews the browser cookie with the persisted session and never renews without a response", async () => {
+      const user = await invite("code-session-renewal@example.invalid");
+      const signedIn = await verify(user.email, await issue(user.email));
+      const requestHeaders = new Headers({
+        Cookie: `${cookie(signedIn)}; better-auth.session_data=retired-cache`,
+      });
+      const aged = await pool.query(
+        "update auth_sessions set expires_at=now()+interval '1 day', updated_at=now()-interval '6 days' where user_id=$1 returning id,expires_at",
+        [user.id],
+      );
+      const oldExpiry = aged.rows[0].expires_at;
+      expect((await runtime.getAdmittedSession(requestHeaders))?.user.id).toBe(
+        user.id,
+      );
+      expect(
+        (
+          await pool.query("select expires_at from auth_sessions where id=$1", [
+            aged.rows[0].id,
+          ])
+        ).rows[0].expires_at,
+      ).toEqual(oldExpiry);
+      const responseHeaders = new Headers({
+        "Set-Cookie": "existing-response-cookie=retained; Path=/",
+      });
+      expect(
+        (await runtime.getAdmittedSession(requestHeaders, responseHeaders))
+          ?.user.id,
+      ).toBe(user.id);
+      expect(responseHeaders.getSetCookie()).toEqual(
+        expect.arrayContaining([
+          "existing-response-cookie=retained; Path=/",
+          expect.stringMatching(/better-auth\.session_data=.*Max-Age=0/),
+          expect.stringMatching(/better-auth\.session_token=.*Max-Age=604800/),
+        ]),
+      );
+      const renewed = (
+        await pool.query("select expires_at from auth_sessions where id=$1", [
+          aged.rows[0].id,
+        ])
+      ).rows[0].expires_at;
+      expect(renewed.getTime()).toBeGreaterThan(Date.now() + 6 * 86400_000);
+      expect(renewed.getTime()).toBeGreaterThan(oldExpiry.getTime());
+      const signedOut = await runtime.auth.api.signOut({
+        headers: requestHeaders,
+        asResponse: true,
+      });
+      expect(signedOut.status).toBe(200);
+      expect(
+        await runtime.getAdmittedSession(requestHeaders, new Headers()),
+      ).toBeNull();
+    });
+
     it("revocation removes code sessions and blocks outstanding codes without affecting another user", async () => {
       const user = await invite("code-revoke-session@example.invalid");
       const other = await invite("code-keep-session@example.invalid");
