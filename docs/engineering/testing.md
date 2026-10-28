@@ -105,6 +105,16 @@ production-image checks. Each step logs to `.gate/<step>.log`, and failures
 print the end of their log. Set `GATE_KEEP_DATABASES=1` to inspect databases
 after a run.
 
+After orchestration finishes, `.gate/summary.md` and `summary.json` index stage
+results, source HEAD/index tree, working-tree differences and existing evidence.
+Open the linked logs or Playwright reports for assertion/scenario details; trace,
+error-context and image paths are included when those files exist. No log,
+inbox or trace payload is copied into the summary. CI links the existing gate-log
+artifact from its job summary; precommit copies the same files into
+`.gate/precommit/`. Rerun with `bun run gate`, which recreates the isolated test
+environment. These are diagnostic artifacts, never cached permission or commit
+receipts. Early toolchain failures still report directly in the terminal.
+
 Keep required test environment values aligned with server validation. When a
 failure occurs before tests start, inspect transitive imports and setup first;
 when a page returns a server error, distinguish schema/configuration failures

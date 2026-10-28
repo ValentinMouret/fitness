@@ -55,6 +55,10 @@ export function precommitGate(root: string): void {
         const destination = join(root, ".gate", "precommit");
         rmSync(destination, { recursive: true, force: true });
         cpSync(join(checkout, ".gate"), destination, { recursive: true });
+        const summary = join(destination, "summary.md");
+        console.log(
+          `Precommit evidence: ${existsSync(summary) ? summary : destination}`,
+        );
       }
     } finally {
       rmSync(temporary, { recursive: true, force: true });

@@ -55,12 +55,17 @@ function fixture(gate: string) {
 }
 
 test("tests the index while preserving unstaged and untracked bytes", () => {
-  const { root, git } = fixture('[ "$(cat source)" = staged ]');
+  const { root, git } = fixture(`[ "$(cat source)" = staged ]
+mkdir .gate
+printf evidence > .gate/summary.md`);
   const tree = git("write-tree");
   precommitGate(root);
   expect(readFileSync(join(root, "source"), "utf8")).toBe("unstaged");
   expect(readFileSync(join(root, "untracked"), "utf8")).toBe("keep");
   expect(git("write-tree")).toBe(tree);
+  expect(
+    readFileSync(join(root, ".gate", "precommit", "summary.md"), "utf8"),
+  ).toBe("evidence");
 });
 
 test("fails closed when the gate fails", () => {

@@ -65,9 +65,20 @@ jobs:
           GATE_POSTGRES_URL: postgresql://postgres:password@localhost:5432/postgres
 
       - uses: actions/upload-artifact@v4
+        id: gate_logs
         if: ${{ !cancelled() }}
         with:
           name: gate-logs-${{ github.run_attempt }}
           path: .gate/
           include-hidden-files: true
           retention-days: 14
+
+      - name: Link gate evidence
+        if: ${{ !cancelled() && steps.gate_logs.outputs.artifact-url != '' }}
+        env:
+          GATE_ARTIFACT_URL: ${{ steps.gate_logs.outputs.artifact-url }}
+        run: |
+          printf '[Gate logs and evidence](%s)\n\n' "$GATE_ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f .gate/summary.md ]; then
+            printf 'Open `summary.md` in the artifact for source identity, failed stages, evidence links and the rerun command.\n' >> "$GITHUB_STEP_SUMMARY"
+          fi
