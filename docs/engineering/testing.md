@@ -132,3 +132,15 @@ browser suite with the foundation disabled, then starts a native server and
 runs this separate profile against the same isolated job database. The unit and
 integration CI job also runs full HTTP SDK acceptance with its own PostgreSQL
 cluster.
+
+### Before committing
+
+The pre-commit hook formats staged files with lint-staged, then runs the same
+`bun run gate` as CI in a temporary local checkout of the index. It installs
+locked dependencies there and leaves unstaged and untracked work untouched.
+A failed gate, changed index/HEAD, or source modification during testing blocks
+the commit. Logs are retained in `.gate/precommit/`; the checkout is removed.
+No source is uploaded and no hosted test receipt or publication approval is used.
+Install the versions in `.node-version` and `.bun-version`, PostgreSQL server
+tools, Docker and Playwright Chromium/WebKit before running it. On macOS, Docker
+must support host networking so the image migration check can reach PostgreSQL.

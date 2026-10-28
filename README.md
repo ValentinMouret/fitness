@@ -55,7 +55,8 @@ against the production build, and the production image. It creates and drops
 its own databases, so it needs a local PostgreSQL superuser connection
 (`GATE_POSTGRES_URL`, default `postgresql://localhost/postgres`), Playwright's
 Chromium, PostgreSQL server binaries and Docker, with the Node and Bun versions
-in `.node-version` and `.bun-version` (the flake provides them). Logs land in
+in `.node-version` and `.bun-version` (check installed versions; a cached dev shell
+may have older ones). Logs land in
 `.gate/`.
 `bun run fmt` and `bun run lint` write changes, so
 review their output before running them in a dirty worktree.

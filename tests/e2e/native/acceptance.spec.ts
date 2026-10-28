@@ -897,6 +897,34 @@ test("protected page and data requests persist rolling session cookies across br
       [fixtureOwnerId()],
     )
   ).rows[0];
+  const databaseOnlyRenewal = (
+    await pool.query(
+      "update auth_sessions set expires_at=now()+interval '7 days',updated_at=now() where id=$1 returning expires_at,updated_at",
+      [session.id],
+    )
+  ).rows[0];
+  await page
+    .context()
+    .addCookies([
+      { ...sessionCookie, expires: Math.floor(Date.now() / 1000) + 60 },
+    ]);
+  await page.goto("/dashboard");
+  await expect(page).toHaveURL(/\/dashboard(?:\?|$)/);
+  const repaired = (await page.context().cookies()).find(
+    (cookie) => cookie.name === sessionCookie.name,
+  );
+  expect(repaired?.expires).toBeGreaterThan(Date.now() / 1000 + 6 * 86400);
+  expect(repaired?.expires).toBeLessThanOrEqual(
+    databaseOnlyRenewal.expires_at.getTime() / 1000 + 1,
+  );
+  expect(
+    (
+      await pool.query(
+        "select expires_at,updated_at from auth_sessions where id=$1",
+        [session.id],
+      )
+    ).rows[0],
+  ).toEqual(databaseOnlyRenewal);
   for (const destination of ["/dashboard", "/dashboard.data", "/"]) {
     await pool.query(
       "update auth_sessions set expires_at=now()+interval '1 day',updated_at=now()-interval '6 days' where id=$1",

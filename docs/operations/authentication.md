@@ -15,7 +15,12 @@ No session credentials are copied between browser/PWA contexts.
 Native browser sessions retain Better Auth's seven-day lifetime and one-day
 renewal interval. Admitted page and data requests forward renewal cookies to the
 requesting browser, including redirects; session reads without a response sink
-do not renew. Activity can therefore extend sign-in, while inactivity expiry,
+do not renew. When a valid database session was renewed before its browser
+received the cookie, admitted responses resynchronize the cookie to the existing
+database expiry even before the next renewal interval. This does not extend the
+database session or turn session-only cookies into persistent cookies. An already
+absent or expired browser token cannot be recovered without sign-in.
+Activity can therefore extend sign-in, while inactivity expiry,
 explicit logout and invitation revocation still apply.
 
 Codes use a domain-separated HMAC-SHA-256 hash with the existing server session
