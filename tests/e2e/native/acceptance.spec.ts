@@ -942,9 +942,11 @@ test("protected page and data requests persist rolling session cookies across br
         url: process.env.E2E_BASE_URL ?? "http://127.0.0.1",
       },
     ]);
+    const requestedAt = Date.now();
     const response = await page.context().request.get(destination, {
       maxRedirects: 0,
     });
+    const receivedAt = Date.now();
     expect(response.status()).toBe(destination === "/" ? 302 : 200);
     if (destination === "/")
       expect(response.headers().location).toBe("/dashboard");
@@ -953,9 +955,26 @@ test("protected page and data requests persist rolling session cookies across br
       .map((header) => header.value);
     expect(setCookies).toEqual(
       expect.arrayContaining([
-        expect.stringMatching(/better-auth\.session_token=.*Max-Age=604800/),
         expect.stringMatching(/better-auth\.session_data=.*Max-Age=0/),
       ]),
+    );
+    const tokenCookies = setCookies.filter((cookie) =>
+      cookie.startsWith(`${sessionCookie.name}=`),
+    );
+    expect(tokenCookies).toHaveLength(1);
+    const maxAge = Number(/Max-Age=(\d+)/.exec(tokenCookies[0])?.[1]);
+    const persisted = (
+      await pool.query("select expires_at from auth_sessions where id=$1", [
+        session.id,
+      ])
+    ).rows[0];
+    expect(maxAge).toBeGreaterThan(6 * 86400);
+    expect(maxAge).toBeLessThanOrEqual(7 * 86400);
+    expect(maxAge).toBeGreaterThanOrEqual(
+      Math.floor((persisted.expires_at.getTime() - receivedAt) / 1000),
+    );
+    expect(maxAge).toBeLessThanOrEqual(
+      Math.floor((persisted.expires_at.getTime() - requestedAt) / 1000),
     );
     const renewed = (await page.context().cookies()).find(
       (cookie) => cookie.name === sessionCookie.name,

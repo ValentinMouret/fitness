@@ -147,7 +147,7 @@ test("orders today's habits by time and keeps manual, minimum and backfill compl
       .toEqual([{ completed: false }]);
     const yesterday = new Date();
     yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-    const response = await request.post("/habits/week", {
+    const response = await page.request.post("/habits/week", {
       form: {
         intent: "toggle-completion",
         habitId: definitions[0].id,
