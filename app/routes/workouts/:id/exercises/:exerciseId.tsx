@@ -6,7 +6,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Link,
   Navigate,
@@ -66,6 +66,7 @@ export default function ExerciseScreen() {
   const navigation = useNavigation();
   const fetchers = useFetchers();
   const [sheet, setSheet] = useState<Sheet>();
+  const historyOpener = useRef<HTMLButtonElement>(null);
 
   const index = workout.exercises.findIndex((e) => e.id === exerciseId);
   const exercise = workout.exercises[index];
@@ -198,6 +199,7 @@ export default function ExerciseScreen() {
             <button
               type="button"
               className="exercise-screen__tool exercise-screen__tool--text"
+              ref={historyOpener}
               onClick={() => setSheet({ kind: "history" })}
             >
               <Clock size={18} strokeWidth={1.8} />
@@ -278,6 +280,13 @@ export default function ExerciseScreen() {
               set={set}
               isBodyweight={exercise.isBodyweight}
               mode={isComplete ? "correct" : "log"}
+              completionPending={fetchers.some(
+                (fetcher) =>
+                  fetcher.state !== "idle" &&
+                  (fetcher.key ===
+                    `${exercise.id}:${set.setNumber}:completion` ||
+                    fetcher.key === `${exercise.id}:${set.setNumber}:effort`),
+              )}
               onChange={(field, value) =>
                 updateSet(field, set.setNumber, { [field]: value })
               }
@@ -371,6 +380,10 @@ export default function ExerciseScreen() {
         exerciseName={exercise.name}
         isBodyweight={exercise.isBodyweight}
         onClose={() => setSheet(undefined)}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          historyOpener.current?.focus();
+        }}
       />
       <ExercisePickerSheet
         open={sheet?.kind === "replace"}

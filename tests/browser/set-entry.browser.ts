@@ -1,9 +1,10 @@
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { chromium, expect, test, webkit } from "@playwright/test";
+import { type Browser, chromium, expect, test, webkit } from "@playwright/test";
 import { build } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { hermeticLaunchOptions } from "../hermetic-browser";
+import { captureLayout, expectStableLayout } from "./interaction-layout";
 
 let script = "";
 let styles = "";
@@ -42,17 +43,23 @@ test.beforeAll(async () => {
 
 for (const browserName of ["chromium", "webkit"] as const) {
   test.describe(browserName, () => {
+    let browser: Browser;
+    test.beforeAll(async () => {
+      browser = await { chromium, webkit }[browserName].launch({
+        args: browserName === "webkit" ? [] : hermeticLaunchOptions.args,
+      });
+    });
+    test.afterAll(async () => {
+      await browser?.close();
+    });
     for (const width of [320, 361, 375, 389, 390]) {
       test(`set entry retains row and number alignment at ${width}px`, async () => {
-        const browser = await { chromium, webkit }[browserName].launch({
-          args: browserName === "webkit" ? [] : hermeticLaunchOptions.args,
+        const page = await browser.newPage({
+          viewport: { width, height: 844 },
+          isMobile: true,
+          hasTouch: true,
         });
         try {
-          const page = await browser.newPage({
-            viewport: { width, height: 844 },
-            isMobile: true,
-            hasTouch: true,
-          });
           await page.route("**/*", (route) => route.abort());
           await page.setContent(
             '<html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="root"></div></body></html>',
@@ -65,8 +72,51 @@ for (const browserName of ["chromium", "webkit"] as const) {
               document.fonts.check('600 19px "DM Sans"'),
             ),
           ).toBe(true);
+          if (width === 320 || width === 390) {
+            for (const title of ["Dashboard", "Workouts"]) {
+              const header = page.getByRole("region", {
+                name: `${title} header`,
+              });
+              const heading = header.getByRole("heading", {
+                name: title === "Dashboard" ? "Wed, Sep 30" : title,
+                exact: true,
+              });
+              const action = header.getByRole(
+                title === "Dashboard" ? "link" : "button",
+              );
+              const layout = await captureLayout({ heading, action });
+              expect(layout.action.x).toBeGreaterThanOrEqual(
+                layout.heading.x + layout.heading.width,
+              );
+              expect(layout.action.y).toBeLessThan(
+                layout.heading.y + layout.heading.height,
+              );
+              expect(layout.action.x + layout.action.width).toBeLessThanOrEqual(
+                width,
+              );
+              const wrapping = await action.evaluate((element) => {
+                const range = document.createRange();
+                const text = [...element.childNodes].find(
+                  (node) =>
+                    node.nodeType === Node.TEXT_NODE &&
+                    node.textContent?.trim(),
+                );
+                if (!text) throw new Error("Missing header action label");
+                range.selectNodeContents(text);
+                return range.getClientRects().length;
+              });
+              expect(wrapping, `${title} action stays on one line`).toBe(1);
+              await action.focus();
+              expectStableLayout(
+                layout,
+                await captureLayout({ heading, action }),
+                `${title} action focus`,
+              );
+            }
+          }
           for (const name of [
             "Loaded set",
+            ...(width === 320 || width === 390 ? ["Saved sets"] : []),
             "Empty load",
             "Added bodyweight load",
           ]) {
@@ -87,6 +137,67 @@ for (const browserName of ["chromium", "webkit"] as const) {
                 }),
               );
             const initial = await geometry();
+            const anchors = {
+              firstRow: rows.nth(0),
+              followingRow: rows.nth(1),
+              setMarker: rows.nth(0).locator(".active-set__no"),
+              adjacentAction: rows.nth(0).locator(":scope > :nth-child(4)"),
+              completion: rows.nth(0).locator(":scope > :nth-child(5)"),
+              blur: group.getByRole("button", {
+                name: "Blur input",
+                exact: true,
+              }),
+            };
+            const initialLayout = await captureLayout(anchors);
+            for (const marker of await group.locator(".active-set__no").all()) {
+              const offset = await marker.evaluate((element) => {
+                const range = document.createRange();
+                range.selectNodeContents(element);
+                const text = range.getBoundingClientRect();
+                const box = element.getBoundingClientRect();
+                return {
+                  x: Math.abs(text.x + text.width / 2 - box.x - box.width / 2),
+                  y: Math.abs(
+                    text.y + text.height / 2 - box.y - box.height / 2,
+                  ),
+                };
+              });
+              expect(
+                offset.x,
+                `${name} W/number horizontal center`,
+              ).toBeLessThanOrEqual(1);
+              expect(
+                offset.y,
+                `${name} W/number vertical center`,
+              ).toBeLessThanOrEqual(2);
+            }
+            if (
+              browserName === "chromium" &&
+              width === 320 &&
+              name === "Loaded set"
+            ) {
+              const injected = await page.addStyleTag({
+                content:
+                  ".active-set__tick { position: relative !important; left: 7px !important; transition: none !important; }",
+              });
+              const regressed = await captureLayout(anchors);
+              expect(() =>
+                expectStableLayout(
+                  initialLayout,
+                  regressed,
+                  "deliberate adjacent control regression",
+                ),
+              ).toThrow(/completion.x/);
+              await injected.evaluate((element) =>
+                element.parentNode?.removeChild(element),
+              );
+              expectStableLayout(
+                initialLayout,
+                await captureLayout(anchors),
+                "regression removed",
+              );
+            }
+
             const assertHeaderAlignment = async () => {
               const offsets = await group.evaluate((element) => {
                 const headers = element.querySelectorAll(
@@ -120,6 +231,11 @@ for (const browserName of ["chromium", "webkit"] as const) {
                 }
               }
               await assertHeaderAlignment();
+              expectStableLayout(
+                initialLayout,
+                await captureLayout(anchors),
+                "focus/type/clear/blur/save",
+              );
             };
             for (const field of ["reps", "weight"]) {
               const label =
@@ -277,9 +393,87 @@ for (const browserName of ["chromium", "webkit"] as const) {
                 .tap();
               await assertGeometry();
             }
+            if (name !== "Saved sets") {
+              await group
+                .getByRole("button", { name: "Complete set 1", exact: true })
+                .tap();
+              await expect(
+                group.getByRole("button", {
+                  name: "Complete set 1",
+                  exact: true,
+                }),
+              ).toHaveAttribute("aria-pressed", "true");
+              await assertGeometry();
+            }
+          }
+          if (browserName === "chromium" && width === 320) {
+            const probeStyles = await page.addStyleTag({
+              content: `
+              .layout-scroll-probe { overflow: scroll; width: 100px; height: 60px; }
+              .layout-scroll-probe__inner { overflow: scroll; width: 180px; height: 150px; }
+              .layout-scroll-probe__content { width: 400px; height: 400px; padding: 100px; }
+            `,
+            });
+            const probe = page.getByRole("region", {
+              name: "Nested scrolling",
+            });
+            const anchors = {
+              button: probe.getByRole("button", {
+                name: "Nested scroll anchor",
+              }),
+            };
+            const before = await captureLayout(anchors);
+            const offsets = await probe.evaluate((outer) => {
+              const inner = outer.querySelector("div");
+              if (!inner) throw new Error("Missing inner scroll container");
+              outer.scrollLeft = 20;
+              outer.scrollTop = 30;
+              inner.scrollLeft = 15;
+              inner.scrollTop = 40;
+              return [
+                outer.scrollLeft,
+                outer.scrollTop,
+                inner.scrollLeft,
+                inner.scrollTop,
+              ];
+            });
+            expect(offsets).toEqual([20, 30, 15, 40]);
+            expectStableLayout(
+              before,
+              await captureLayout(anchors),
+              "nested scrolling is not a layout shift",
+            );
+            await probeStyles.evaluate((element) =>
+              element.parentNode?.removeChild(element),
+            );
+          }
+          if (width === 320 || width === 390) {
+            const disclosure = page.getByRole("region", {
+              name: "Intentional expansion",
+            });
+            const anchors = {
+              disclosure: disclosure.locator("details"),
+              following: disclosure.getByRole("button", {
+                name: "Following disclosure",
+              }),
+            };
+            const collapsed = await captureLayout(anchors);
+            await disclosure.locator("summary").tap();
+            const expanded = await captureLayout(anchors);
+            // Opening a disclosure deliberately establishes a new layout baseline.
+            expect(expanded.disclosure.height).toBeGreaterThan(
+              collapsed.disclosure.height,
+            );
+            expect(expanded.following.y).toBeGreaterThan(collapsed.following.y);
+            await anchors.following.focus();
+            expectStableLayout(
+              expanded,
+              await captureLayout(anchors),
+              "focus after intentional expansion",
+            );
           }
         } finally {
-          await browser.close();
+          await page.close();
         }
       });
     }

@@ -2,21 +2,24 @@
   padding-bottom: var(--space-section);
 }
 .nutrition-date-nav {
-  display: flex;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
   gap: 0;
+  width: 100%;
   padding: 16px 0;
   min-height: 76px;
   box-sizing: border-box;
 }
+.nutrition-date-nav .rt-IconButton {
+  box-sizing: border-box;
+  margin: 0;
+  width: 44px;
+  height: 44px;
+}
 .nutrition-date-nav .rt-Button {
   margin: 0;
   padding: 0 6px;
-}
-.nutrition-description {
-  margin: 0;
-  font-size: var(--type-support-size);
-  color: var(--brand-text-secondary);
 }
 .nutrition-page > .rt-Flex {
   margin-bottom: 4px;

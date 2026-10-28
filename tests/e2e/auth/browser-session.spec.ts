@@ -152,18 +152,18 @@ test("login preserves a safe local destination and query", async ({ page }) => {
 test("client navigation to a loaderless page checks the session before showing its form", async ({
   page,
 }) => {
-  await login(page, "/measurements");
-  const link = page.getByRole("link", { name: /^New Measurement\b/ });
+  await login(page, "/habits");
+  const link = page.getByRole("link", { name: "Add new habit (N)" });
   await expect(link).toBeVisible();
   await page.context().clearCookies({ name: sessionCookieName });
   const dataRequest = page.waitForRequest(
-    (request) => new URL(request.url()).pathname === "/measurements/new.data",
+    (request) => new URL(request.url()).pathname === "/habits/new.data",
   );
   await link.click();
   await dataRequest;
   await expect(page).toHaveURL(/\/login\?/);
   expect(new URL(page.url()).searchParams.get("redirectTo")).toBe(
-    "/measurements/new",
+    "/habits/new",
   );
   await expect(
     page.getByRole("button", { name: "Login", exact: true }),

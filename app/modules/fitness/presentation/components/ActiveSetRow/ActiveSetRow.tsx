@@ -8,6 +8,7 @@ interface ActiveSetRowProps {
   readonly isBodyweight: boolean;
   /** "log" while training; "correct" only edits saved sets of a finished workout. */
   readonly mode: "log" | "correct";
+  readonly completionPending?: boolean;
   readonly onChange: (field: "reps" | "weight", value: string) => void;
   readonly onToggleComplete: () => void;
   readonly onToggleWarmup: () => void;
@@ -20,6 +21,7 @@ export function ActiveSetRow({
   set,
   isBodyweight,
   mode,
+  completionPending = false,
   onChange,
   onToggleComplete,
   onToggleWarmup,
@@ -119,6 +121,7 @@ export function ActiveSetRow({
           }
           aria-pressed={set.isCompleted}
           aria-label={`Complete ${name.toLowerCase()}`}
+          disabled={completionPending}
           onClick={onToggleComplete}
         >
           <Check size={20} strokeWidth={2.4} />

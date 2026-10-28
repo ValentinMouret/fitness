@@ -57,6 +57,15 @@ starting the app or using a database. It checks touch, focus, Escape and selecti
 at phone width, and runs as part of `bun run gate`. Full persistence workflows
 still use the E2E suite against the existing test server or isolated CI server.
 
+The set-entry fixture also uses the actual app CSS and fonts in Chromium and
+WebKit at phone boundary widths. Reuse `tests/browser/interaction-layout.ts`
+to capture named controls in document coordinates and assert stability through
+focus, typing, clearing, blur and save, including adjacent controls. Capture a
+new baseline after intentional expansion or navigation. The existing fixture
+proves the detector rejects an injected adjacent-control displacement; CLS alone
+is not sufficient for input interactions. Keep new scenarios within the existing
+matrix when they share its risks rather than multiplying whole-page suites.
+
 ## Exercise user workflows with Playwright
 
 Prefer `getByRole()` and `getByLabel()` selectors. Use test IDs when there is no

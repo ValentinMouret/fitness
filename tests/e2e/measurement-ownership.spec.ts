@@ -13,7 +13,7 @@ test.skip(
 );
 test.use({ viewport: { width: 390, height: 844 } });
 
-test("measurement routes and dashboard exclude another account's definitions, history and note", async ({
+test("retired measurement routes preserve another account's data while dashboard excludes it", async ({
   page,
   request,
 }) => {
@@ -50,14 +50,12 @@ test("measurement routes and dashboard exclude another account's definitions, hi
       "insert into daily_note (user_id,id,content) values ($1,1,$2)",
       [otherId, note],
     );
-    await page.goto("/measurements");
-    await expect(page.getByText(name, { exact: true })).toHaveCount(0);
-    await page.goto("/measurements/weight");
-    await expect(page.getByText("9999", { exact: true })).toHaveCount(0);
     await page.goto("/dashboard");
     await expect(page.getByText(note, { exact: true })).toHaveCount(0);
     await expect(page.getByText("9999", { exact: true })).toHaveCount(0);
     for (const path of [
+      "/measurements",
+      "/measurements/new",
       `/measurements/${name}`,
       `/measurements/${name}.data`,
     ]) {

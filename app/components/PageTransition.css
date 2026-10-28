@@ -6,3 +6,11 @@
   opacity: 1;
   animation: none;
 }
+
+@media (max-width: 767px) {
+  .page-transition,
+  .page-transition.animate-fade-slide-up {
+    opacity: 1;
+    animation: none;
+  }
+}

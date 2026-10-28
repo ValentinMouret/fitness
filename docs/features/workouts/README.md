@@ -40,6 +40,8 @@ muscle-group volume.
   saved sets are retained. Saving the final remaining set opens confirmation
   automatically. Only explicit confirmation stops the workout; Keep training
   returns to logging. Finishing shows a summary of duration, sets and exercises.
+- Active sessions can be cancelled from Workout actions after confirmation. This
+  removes the session and its sets without marking it finished.
 - Completed sessions show Completed with their recorded duration; Repeat and
   Delete remain available. Their saved sets can still be corrected, including
   the effort report; rest, adding, removing, sorting and finishing belong to

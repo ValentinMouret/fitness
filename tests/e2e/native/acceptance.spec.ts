@@ -343,7 +343,7 @@ test("native A and B retain separate histories and catalogue controls, and logou
   }
 });
 
-test("native B saves and reloads private habits, measurements, notes, meals, targets and sets", async ({
+test("native B saves and reloads private habits, notes, meals, targets and sets", async ({
   page,
   browser,
 }) => {
@@ -398,36 +398,6 @@ test("native B saves and reloads private habits, measurements, notes, meals, tar
     ).toBe(404);
     expect(await (await a.request.get("/habits")).text()).not.toContain(
       habitName,
-    );
-    const measureName = `native_b_${other.replaceAll("-", "")}`;
-    expect(
-      (
-        await post("/measurements/new", { name: measureName, unit: "cm" })
-      ).status(),
-    ).toBe(302);
-    await page.goto(`/measurements/${measureName}`);
-    await page.getByLabel("Value (cm)", { exact: true }).fill("33.75");
-    await page.getByLabel("Date", { exact: true }).fill("2020-05-06");
-    await page
-      .getByRole("button", { name: "Add Measurement", exact: true })
-      .click();
-    await expect
-      .poll(
-        async () =>
-          (
-            await pool.query(
-              "select value from measures where user_id=$1 and measurement_name=$2",
-              [other, measureName],
-            )
-          ).rows[0]?.value,
-      )
-      .toBe(33.75);
-    await page.reload();
-    await expect(
-      page.getByRole("cell", { name: "33.75 cm", exact: true }),
-    ).toBeVisible();
-    expect((await a.request.get(`/measurements/${measureName}`)).status()).toBe(
-      404,
     );
     expect(
       (
@@ -719,12 +689,7 @@ test("native B saves and reloads private habits, measurements, notes, meals, tar
         .parse(await resolved.json())
         .ingredients.map((item) => item.ingredientId),
     ).toEqual([food]);
-    for (const path of [
-      "/dashboard.data",
-      "/habits.data",
-      "/nutrition.data",
-      `/measurements/${measureName}.data`,
-    ]) {
+    for (const path of ["/dashboard.data", "/habits.data", "/nutrition.data"]) {
       const response = await a.request.get(path);
       const body = await response.text();
       expect(body).not.toContain(habitName);
@@ -758,9 +723,7 @@ test("owner manages invitations from Dashboard while invited accounts cannot", a
   });
   try {
     await signIn(page, ownerEmail);
-    await page
-      .getByRole("link", { name: "Manage invitations", exact: true })
-      .click();
+    await page.getByRole("link", { name: "Invitations", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Invitations", exact: true }),
     ).toBeVisible();
@@ -799,18 +762,16 @@ test("owner manages invitations from Dashboard while invited accounts cannot", a
       .getByRole("link", { name: "Back to Dashboard", exact: true })
       .click();
     await expect(
-      page.getByRole("link", { name: "Manage invitations", exact: true }),
+      page.getByRole("link", { name: "Invitations", exact: true }),
     ).toBeVisible();
     await page.screenshot({
       path: "/tmp/fitness-in-app-invitations-dashboard-320.png",
     });
-    await page
-      .getByRole("link", { name: "Manage invitations", exact: true })
-      .click();
+    await page.getByRole("link", { name: "Invitations", exact: true }).click();
     const recipient = await recipientContext.newPage();
     await signIn(recipient, email);
     await expect(
-      recipient.getByRole("link", { name: "Manage invitations", exact: true }),
+      recipient.getByRole("link", { name: "Invitations", exact: true }),
     ).toHaveCount(0);
     const user = z
       .object({ id: z.uuid() })

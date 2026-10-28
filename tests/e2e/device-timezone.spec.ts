@@ -86,14 +86,11 @@ test("device timezone persists before calendar interaction and rejects forged ac
   }
 });
 
-test("a time-zone change keeps workout edits and unsaved measurement edits", async ({
-  page,
-}) => {
+test("a time-zone change keeps workout edits", async ({ page }) => {
   const pool = new pg.Pool({ connectionString: databaseUrl });
   const owner = fixtureOwnerId();
   const workout = randomUUID();
   const exercise = randomUUID();
-  const measurement = `timezone_${randomUUID().replaceAll("-", "")}`;
   const previous = (
     await pool.query("select * from account_settings where user_id=$1", [owner])
   ).rows[0];
@@ -114,14 +111,6 @@ test("a time-zone change keeps workout edits and unsaved measurement edits", asy
     await pool.query(
       'insert into workout_sets(workout,exercise,set,reps,weight,"isCompleted") values($1,$2,1,8,60,true),($1,$2,2,null,null,false)',
       [workout, exercise],
-    );
-    await pool.query(
-      "insert into measurements(user_id,name,unit) values($1,$2,'kg')",
-      [owner, measurement],
-    );
-    await pool.query(
-      "insert into measures(user_id,measurement_name,value,t) values($1,$2,10,'1900-01-01')",
-      [owner, measurement],
     );
     await page.goto(`/workouts/${workout}?exercise=${exercise}`);
     const enterWeight = async (label: string, value: string) => {
@@ -154,37 +143,6 @@ test("a time-zone change keeps workout edits and unsaved measurement edits", asy
     await expect(
       page.getByRole("button", { name: "Set 2 weight: 44", exact: true }),
     ).toBeVisible();
-    await page.goto(`/measurements/${measurement}`);
-    await page.getByLabel("Value (kg)", { exact: true }).fill("88.5");
-    await page.getByLabel("Date", { exact: true }).fill("2020-05-06");
-    await page
-      .getByRole("button", { name: "Delete measurement", exact: true })
-      .click();
-    await page.getByRole("button", { name: "Delete", exact: true }).click();
-    await expect(
-      page.getByText(
-        "No measurements recorded yet. Add your first measurement above.",
-      ),
-    ).toBeVisible();
-    await expect(page.getByLabel("Value (kg)", { exact: true })).toHaveValue(
-      "88.5",
-    );
-    await expect(page.getByLabel("Date", { exact: true })).toHaveValue(
-      "2020-05-06",
-    );
-    await page
-      .getByRole("button", { name: "Add Measurement", exact: true })
-      .click();
-    await expect
-      .poll(async () =>
-        (
-          await pool.query(
-            "select t from measures where user_id=$1 and measurement_name=$2",
-            [owner, measurement],
-          )
-        ).rows[0]?.t.toISOString(),
-      )
-      .toBe("2020-05-06T00:00:00.000Z");
   } finally {
     await pool.query("delete from workout_sets where workout=$1", [workout]);
     await pool.query("delete from workout_exercises where workout_id=$1", [
@@ -192,14 +150,6 @@ test("a time-zone change keeps workout edits and unsaved measurement edits", asy
     ]);
     await pool.query("delete from workouts where id=$1", [workout]);
     await pool.query("delete from exercises where id=$1", [exercise]);
-    await pool.query(
-      "delete from measures where user_id=$1 and measurement_name=$2",
-      [owner, measurement],
-    );
-    await pool.query("delete from measurements where user_id=$1 and name=$2", [
-      owner,
-      measurement,
-    ]);
     await pool.query("delete from account_settings where user_id=$1", [owner]);
     if (previous)
       await pool.query(

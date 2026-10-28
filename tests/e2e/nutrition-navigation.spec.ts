@@ -8,12 +8,39 @@ for (const width of [320, 390]) {
     await page.goto("/nutrition?date=1905-05-08");
     await expect(
       page.getByRole("heading", { name: "Your day", exact: true }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     const dayControl = page.getByRole("button", {
       name: "Mon, May 8. Go to Today (T)",
       exact: true,
     });
     await expect(dayControl).toHaveText("Mon, May 8");
+    await expect(
+      page.getByText("Meals and progress, one day at a time.", { exact: true }),
+    ).toHaveCount(0);
+    const dateBounds = await page.locator(".nutrition-date-nav").boundingBox();
+    const contentBounds = await page.locator(".nutrition-page").boundingBox();
+    expect(dateBounds).not.toBeNull();
+    expect(contentBounds).not.toBeNull();
+    expect(
+      Math.abs((dateBounds?.width ?? 0) - (contentBounds?.width ?? 0)),
+    ).toBeLessThanOrEqual(1);
+    const previous = await page
+      .getByRole("button", { name: "Previous day (Left Arrow)", exact: true })
+      .boundingBox();
+    const next = await page
+      .getByRole("button", { name: "Next day (Right Arrow)", exact: true })
+      .boundingBox();
+    expect(
+      Math.abs((previous?.x ?? -100) - (dateBounds?.x ?? 0)),
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(
+        (next?.x ?? 0) +
+          (next?.width ?? 0) -
+          (dateBounds?.x ?? 0) -
+          (dateBounds?.width ?? 0),
+      ),
+    ).toBeLessThanOrEqual(1);
     await expect(page.getByRole("tab")).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "Log meal", exact: true }),
@@ -79,7 +106,7 @@ for (const width of [320, 390]) {
     await expect(page).toHaveURL(/\/nutrition\?date=1905-05-08$/);
     await expect(
       page.getByRole("heading", { name: "Your day", exact: true }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(width);

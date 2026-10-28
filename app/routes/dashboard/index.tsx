@@ -125,7 +125,7 @@ export const handle = {
         : "Today",
       primaryAction:
         loaded.success && loaded.data.canManageInvitations
-          ? { label: "Manage invitations", to: "/account/invitations" }
+          ? { label: "Invitations", to: "/account/invitations" }
           : undefined,
     };
   },

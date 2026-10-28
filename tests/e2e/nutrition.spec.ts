@@ -16,7 +16,7 @@ test.describe("Nutrition Page", () => {
     await expect(page.getByText("kcal target")).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Your day", exact: true }),
-    ).toBeVisible();
+    ).toHaveCount(0);
   });
 
   test("should display nutrition action links", async ({ page }) => {
