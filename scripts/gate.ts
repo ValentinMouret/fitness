@@ -14,6 +14,11 @@ import { availableParallelism, userInfo } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { Client } from "pg";
+import {
+  type GateStepResult,
+  gateSource,
+  writeGateReport,
+} from "./gate-report";
 
 const adminUrl =
   process.env.GATE_POSTGRES_URL ?? "postgresql://localhost/postgres";
@@ -54,7 +59,8 @@ const databases = {
   native: `fitness_gate_${runId}_native_test`,
 } as const;
 
-const gitSha = execFileSync("git", ["rev-parse", "HEAD"]).toString().trim();
+const source = gateSource(process.cwd());
+const gitSha = source.head;
 
 /** Everything a step sees. Nothing comes from the caller's shell or .env. */
 const baseEnv: Record<string, string> = {
@@ -109,12 +115,7 @@ const baseEnv: Record<string, string> = {
   MCP_TEST_ADMIN_URL: adminUrl,
 };
 
-interface Result {
-  readonly name: string;
-  readonly ok: boolean;
-  readonly seconds: number;
-}
-const results: Result[] = [];
+const results: GateStepResult[] = [];
 const servers: ChildProcess[] = [];
 
 /** Starts a command with the gate environment, writing its output to a log. */
@@ -434,9 +435,18 @@ for (const signal of ["SIGINT", "SIGTERM"] as const)
     process.exit(130);
   });
 
+const started = performance.now();
 const ok = await main().catch((error: unknown) => {
   console.error(error);
   return false;
 });
 await cleanup();
+writeGateReport({
+  directory: logDir,
+  source,
+  ok,
+  seconds: (performance.now() - started) / 1000,
+  results,
+});
+console.log(`Gate summary: ${logDir}/summary.md`);
 process.exit(ok ? 0 : 1);
