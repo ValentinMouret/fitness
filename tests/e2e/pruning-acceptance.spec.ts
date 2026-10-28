@@ -26,6 +26,25 @@ test.skip(
 );
 test.use({ viewport: { width: 390, height: 844 } });
 
+let drizzle: typeof import("drizzle-orm/node-postgres").drizzle;
+let workoutOperations: typeof import("../../app/modules/fitness/application/workout-operations").workoutOperations;
+let createWorkoutSchema: typeof import("../../app/modules/fitness/domain/workout-commands").createWorkoutSchema;
+let createWorkoutRepository: typeof import("../../app/modules/fitness/infra/workout.repository.server").createWorkoutRepository;
+
+test.beforeAll(async () => {
+  if (!canWriteFixtureDatabase(databaseUrl)) return;
+  ({ drizzle } = await import("drizzle-orm/node-postgres"));
+  ({ workoutOperations } = await import(
+    "../../app/modules/fitness/application/workout-operations"
+  ));
+  ({ createWorkoutSchema } = await import(
+    "../../app/modules/fitness/domain/workout-commands"
+  ));
+  ({ createWorkoutRepository } = await import(
+    "../../app/modules/fitness/infra/workout.repository.server"
+  ));
+});
+
 test("historical template, Strong and Fitbod sessions retain their records", async ({
   page,
   pool,
@@ -178,16 +197,6 @@ test("a current session created by MCP operations remains editable and loggable"
   page,
   pool,
 }) => {
-  const { drizzle } = await import("drizzle-orm/node-postgres");
-  const { workoutOperations } = await import(
-    "../../app/modules/fitness/application/workout-operations"
-  );
-  const { createWorkoutSchema } = await import(
-    "../../app/modules/fitness/domain/workout-commands"
-  );
-  const { createWorkoutRepository } = await import(
-    "../../app/modules/fitness/infra/workout.repository.server"
-  );
   const exercise = await pool.query<{ id: string }>(
     "select id from exercises where deleted_at is null order by created_at, id limit 1",
   );
