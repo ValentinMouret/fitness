@@ -120,6 +120,13 @@ failure occurs before tests start, inspect transitive imports and setup first;
 when a page returns a server error, distinguish schema/configuration failures
 from selector failures.
 
+## Fast feedback while editing
+
+`bun run tc:watch` reruns typechecking when app, tests, server, scripts or
+`tsconfig.json` change. Use the existing `bun run test:debug <path>` for focused
+unit-test watching and `bunx biome check <files>` for non-mutating lint/format
+feedback. These checks support iteration; the full gate still runs before commit.
+
 ## Before hand-off
 
 Run focused checks while iterating, then `bun run gate`. Formatting and lint
