@@ -21,7 +21,7 @@
     "prepare": "husky",
     "start": "node --require ./server/request-logging.cjs ./node_modules/@react-router/serve/bin.js ./build/server/index.js",
     "tc": "bun typecheck",
-    "tc:watch": "nodemon --exec 'bun tc' --watch src --ext ts,tsx,js,jsx",
+    "tc:watch": "nodemon --exec 'bun tc' --watch app --watch tests --watch server --watch scripts --watch tsconfig.json --ext ts,tsx,js,jsx,mjs,cjs,json",
     "test": "vitest run",
     "test:debug": "vitest --reporter=verbose --silent=false",
     "test:e2e": "playwright test",
