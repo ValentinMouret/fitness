@@ -9,6 +9,7 @@ import {
   createAuthMiddleware,
   formCsrfMiddleware,
 } from "better-auth/api";
+import { setSessionCookie } from "better-auth/cookies";
 import { emailOTP, magicLink } from "better-auth/plugins";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -97,6 +98,35 @@ export function createMagicLinkAuth(input: {
       "/email-otp/change-email",
     ],
     hooks: {
+      after: createAuthMiddleware(async (context) => {
+        if (context.path !== "/get-session" || context.query?.disableRefresh)
+          return;
+        const session = context.context.session;
+        if (!session) return;
+        const remaining = Math.floor(
+          (session.session.expiresAt.getTime() - Date.now()) / 1000,
+        );
+        if (remaining <= 0) return;
+        const cookies = context.context.authCookies;
+        if (
+          context.context.responseHeaders
+            ?.getSetCookie()
+            .some((cookie) =>
+              cookie.startsWith(`${cookies.sessionToken.name}=`),
+            )
+        )
+          return;
+        if (
+          await context.getSignedCookie(
+            cookies.dontRememberToken.name,
+            context.context.secret,
+          )
+        )
+          return;
+        await setSessionCookie(context, session, undefined, {
+          maxAge: remaining,
+        });
+      }),
       before: createAuthMiddleware(async (context) => {
         if (
           context.path === "/email-otp/send-verification-otp" ||

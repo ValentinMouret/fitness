@@ -699,6 +699,11 @@ describe.skipIf(!adminUrl)(
           expect.stringMatching(/better-auth\.session_token=.*Max-Age=604800/),
         ]),
       );
+      expect(
+        responseHeaders
+          .getSetCookie()
+          .filter((cookie) => cookie.startsWith("better-auth.session_token=")),
+      ).toHaveLength(1);
       const renewed = (
         await pool.query("select expires_at from auth_sessions where id=$1", [
           aged.rows[0].id,
@@ -714,6 +719,105 @@ describe.skipIf(!adminUrl)(
       expect(
         await runtime.getAdmittedSession(requestHeaders, new Headers()),
       ).toBeNull();
+    });
+
+    it("repairs a browser cookie after a pre-fix database-only renewal without extending the database session again", async () => {
+      const user = await invite("code-pre-fix-session@example.invalid");
+      const signedIn = await verify(user.email, await issue(user.email));
+      const requestHeaders = new Headers({ Cookie: cookie(signedIn) });
+      const persisted = await pool.query(
+        "update auth_sessions set expires_at=now()+interval '7 days', updated_at=now() where user_id=$1 returning id,expires_at,updated_at",
+        [user.id],
+      );
+      const responseHeaders = new Headers();
+      const checkedAt = Date.now();
+      expect(
+        (await runtime.getAdmittedSession(requestHeaders, responseHeaders))
+          ?.user.id,
+      ).toBe(user.id);
+      const repaired = responseHeaders
+        .getSetCookie()
+        .find((cookie) => cookie.startsWith("better-auth.session_token="));
+      const maxAge = repaired?.match(/Max-Age=(\d+)/)?.[1];
+      expect(Number(maxAge)).toBeLessThanOrEqual(
+        Math.floor((persisted.rows[0].expires_at.getTime() - checkedAt) / 1000),
+      );
+      expect(responseHeaders.getSetCookie()).toEqual(
+        expect.arrayContaining([
+          expect.stringMatching(
+            /better-auth\.session_token=.*Max-Age=60[0-9]{4}/,
+          ),
+        ]),
+      );
+      expect(
+        (
+          await pool.query(
+            "select expires_at,updated_at from auth_sessions where id=$1",
+            [persisted.rows[0].id],
+          )
+        ).rows[0],
+      ).toEqual({
+        expires_at: persisted.rows[0].expires_at,
+        updated_at: persisted.rows[0].updated_at,
+      });
+    });
+
+    it("does not persist nonpersistent sessions or reissue unavailable sessions", async () => {
+      const user = await invite("code-cookie-boundaries@example.invalid");
+      const signedIn = await verify(user.email, await issue(user.email));
+      const requestHeaders = new Headers({ Cookie: cookie(signedIn) });
+      const signature = createHmac(
+        "sha256",
+        "fixture-only-code-secret-32-characters",
+      )
+        .update("true")
+        .digest("base64");
+      const nonpersistent = new Headers({
+        Cookie: `${cookie(signedIn)}; better-auth.dont_remember=${encodeURIComponent(`true.${signature}`)}`,
+      });
+      const nonpersistentResponse = new Headers();
+      expect(
+        (await runtime.getAdmittedSession(nonpersistent, nonpersistentResponse))
+          ?.user.id,
+      ).toBe(user.id);
+      expect(nonpersistentResponse.getSetCookie()).toEqual([]);
+      expect((await runtime.getAdmittedSession(requestHeaders))?.user.id).toBe(
+        user.id,
+      );
+      const readOnly = await runtime.auth.api.getSession({
+        headers: requestHeaders,
+        returnHeaders: true,
+        query: { disableRefresh: true },
+      });
+      expect(readOnly.response?.user.id).toBe(user.id);
+      expect(readOnly.headers.getSetCookie()).toEqual([]);
+      for (const absent of [
+        new Headers(),
+        new Headers({ Cookie: "better-auth.session_token=invalid" }),
+      ]) {
+        const responseHeaders = new Headers();
+        expect(
+          await runtime.getAdmittedSession(absent, responseHeaders),
+        ).toBeNull();
+        expect(
+          responseHeaders
+            .getSetCookie()
+            .filter((cookie) => /session_token=.*Max-Age=[1-9]/.test(cookie)),
+        ).toEqual([]);
+      }
+      await pool.query(
+        "update auth_sessions set expires_at=now()-interval '1 second' where user_id=$1",
+        [user.id],
+      );
+      const expiredResponse = new Headers();
+      expect(
+        await runtime.getAdmittedSession(requestHeaders, expiredResponse),
+      ).toBeNull();
+      expect(
+        expiredResponse
+          .getSetCookie()
+          .filter((cookie) => /session_token=.*Max-Age=[1-9]/.test(cookie)),
+      ).toEqual([]);
     });
 
     it("revocation removes code sessions and blocks outstanding codes without affecting another user", async () => {
