@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test.use({ viewport: { width: 390, height: 844 } });
 
-for (const path of ["/workouts", "/measurements"]) {
+for (const path of ["/workouts"]) {
   test(`idle ${path} adopts a document only when leaving through a tab`, async ({
     page,
   }) => {

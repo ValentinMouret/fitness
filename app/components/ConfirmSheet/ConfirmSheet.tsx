@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { BottomSheet } from "~/components/BottomSheet";
 import "./ConfirmSheet.css";
 
@@ -10,6 +11,7 @@ interface ConfirmSheetProps {
   readonly destructive?: boolean;
   readonly onConfirm: () => void;
   readonly onCancel: () => void;
+  readonly onCloseAutoFocus?: (event: Event) => void;
 }
 
 /** A bottom sheet asking to confirm one action. */
@@ -22,13 +24,24 @@ export function ConfirmSheet({
   destructive = false,
   onConfirm,
   onCancel,
+  onCloseAutoFocus,
 }: ConfirmSheetProps) {
+  const cancelRef = useRef<HTMLButtonElement>(null);
   return (
     <BottomSheet
       open={open}
       onOpenChange={(next) => !next && onCancel()}
       title={title}
       description={description}
+      onOpenAutoFocus={
+        destructive
+          ? (event) => {
+              event.preventDefault();
+              cancelRef.current?.focus();
+            }
+          : undefined
+      }
+      onCloseAutoFocus={onCloseAutoFocus}
     >
       <div className="confirm-sheet__actions">
         <button
@@ -44,6 +57,7 @@ export function ConfirmSheet({
         </button>
         <button
           type="button"
+          ref={cancelRef}
           className="confirm-sheet__cancel"
           onClick={onCancel}
         >

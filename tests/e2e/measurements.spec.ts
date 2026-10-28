@@ -1,32 +1,28 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("Measurements Page", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/measurements");
-  });
+test("retired measurement pages and actions are unavailable", async ({
+  page,
+}) => {
+  await page.goto("/dashboard");
+  await expect(
+    page.locator('.bottom-tabs a[href="/measurements"]'),
+  ).toHaveCount(0);
 
-  test("should display measurements header", async ({ page }) => {
-    await expect(
-      page.getByRole("heading", { name: "Measurements" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "New Measurement" }),
-    ).toBeVisible();
-  });
+  for (const path of [
+    "/measurements",
+    "/measurements/new",
+    "/measurements/weight",
+    "/measurements.data",
+    "/measurements/new.data",
+    "/measurements/weight.data",
+  ]) {
+    expect((await page.request.get(path)).status(), path).toBe(404);
+  }
 
-  test("should show empty state or grid", async ({ page }) => {
-    const emptyState = page.getByText("No measurements configured");
-    const grid = page.locator(".rt-Grid");
-
-    await expect
-      .poll(
-        async () => (await emptyState.isVisible()) || (await grid.isVisible()),
-      )
-      .toBe(true);
-  });
-
-  test("should navigate to new measurement page", async ({ page }) => {
-    await page.getByRole("link", { name: "New Measurement" }).click();
-    await expect(page).toHaveURL(/\/measurements\/new/);
-  });
+  for (const [path, form] of [
+    ["/measurements/new", { name: "Retired", unit: "cm" }],
+    ["/measurements/weight", { intent: "add-measure", value: "75" }],
+  ] as const) {
+    expect((await page.request.post(path, { form })).status(), path).toBe(404);
+  }
 });

@@ -23,6 +23,13 @@ For implementation conventions, start with [architecture](../engineering/archite
 - [Overview](workouts/README.md): sessions, exercises, sets, and history.
 - [Equipment and exercise substitution](workouts/adaptive-generation.md): retained substitution flow.
 
+## Retired Measurements UI
+
+The Measurements screens and navigation are retired. Historical measurement
+records remain stored; Dashboard weight entry/trends and nutrition targets still
+use their existing data and operations. This retirement does not migrate or
+delete measurements.
+
 ## Ideas
 
 [Exploratory ideas](../proposals/ideas.md) are not committed requirements.

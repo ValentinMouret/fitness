@@ -30,6 +30,8 @@
 }
 
 .active-set__no {
+  display: grid;
+  place-items: center;
   height: 44px;
   padding: 0;
   border: 0;

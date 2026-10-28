@@ -225,7 +225,7 @@ Page-level headers use warm surface with shadow:
 | Foundation | Responsibility |
 | --- | --- |
 | `AppLayout` | Shared navigation, route-header composition and safe-area layout |
-| `PageHeader` | Page identity, optional back link and primary/secondary actions; existing CSS stacks actions on mobile |
+| `PageHeader` | Page identity, optional back link and primary/secondary actions; actions remain beside the title on mobile |
 | `SectionHeader` | Section title and optional trailing action |
 | Radix controls | Primary primitives for buttons, dialogs, inputs and tab panels |
 | `NumberInput`, `EmptyState`, `Skeleton`, `Celebration` | Existing reusable controls and feedback; inspect before adding equivalents |
@@ -252,15 +252,14 @@ archive, with these rules:
 - **Rest:** a floating dark bar above the tab bar or exercise navigation, with
   ±15s, Skip and presets on expansion; it turns green when rest is over.
 - **Sheets:** choices and confirmations open as bottom sheets
-  (`app/components/BottomSheet`, `ConfirmSheet`) with a drag handle and a
-  display-font title: RIR, add or replace exercise, history, finish and remove.
+  (`app/components/BottomSheet`, `ConfirmSheet`) with a display-font title: RIR, add or replace exercise, history, finish and remove.
 - **Chrome:** the exercise screen hides the tab bar and has its own Back link
   and Previous/Next bar.
 
 ## Nutrition navigation and meal filters
 
 **Accepted: Action workspace, selected by Valentin on 6 October 2026.** Nutrition
-Today uses date controls, Your day with grouped nutrition totals, meal-level
+Today uses full-width date controls and grouped nutrition totals, meal-level
 Log/Edit and action menus, quiet tools, and a full-width soft Meal templates link
 at the bottom. Do not add a Today/Templates tab strip or a page-level Log meal
 button or a page-level overflow menu. Keep Meal Builder, Calculate targets and

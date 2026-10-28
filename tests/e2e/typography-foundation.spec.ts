@@ -11,7 +11,6 @@ for (const width of [320, 390]) {
       "/nutrition/templates",
       "/workouts",
       "/workouts/exercises",
-      "/measurements",
     ]) {
       await page.goto(path);
       const title = page.locator(".page-header__title");

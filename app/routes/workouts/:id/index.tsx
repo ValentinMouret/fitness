@@ -1,7 +1,8 @@
 import { DropdownMenu } from "@radix-ui/themes";
 import { MoreVertical, Plus } from "lucide-react";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useFetcher } from "react-router";
+import { ConfirmSheet } from "~/components/ConfirmSheet";
 import { DeleteConfirmationDialog } from "~/components/workout/DeleteConfirmationDialog";
 import { ExercisePickerSheet } from "~/modules/fitness/presentation/components/ExercisePickerSheet";
 import { ExerciseProgressList } from "~/modules/fitness/presentation/components/ExerciseProgressList";
@@ -17,8 +18,10 @@ export default function WorkoutOverview() {
   const reorderer = useFetcher();
   const adder = useFetcher();
   const repeater = useFetcher();
-  const [sheet, setSheet] = useState<"add" | "delete">();
+  const canceller = useFetcher();
+  const [sheet, setSheet] = useState<"add" | "delete" | "cancel">();
   const headingId = useId();
+  const actionsRef = useRef<HTMLButtonElement>(null);
 
   const pendingOrder = reorderer.formData?.getAll("exerciseIds").map(String);
   const exercises = pendingOrder
@@ -50,18 +53,19 @@ export default function WorkoutOverview() {
           >
             {isComplete ? "Completed" : "Workout in progress"}
           </p>
-          {isComplete && (
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger>
-                <button
-                  type="button"
-                  className="active-workout__menu"
-                  aria-label="Workout actions"
-                >
-                  <MoreVertical size={18} />
-                </button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <button
+                type="button"
+                className="active-workout__menu"
+                aria-label="Workout actions"
+                ref={actionsRef}
+              >
+                <MoreVertical size={18} />
+              </button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              {isComplete && (
                 <DropdownMenu.Item
                   onSelect={() =>
                     repeater.submit(
@@ -72,15 +76,15 @@ export default function WorkoutOverview() {
                 >
                   Repeat workout
                 </DropdownMenu.Item>
-                <DropdownMenu.Item
-                  color="red"
-                  onSelect={() => setSheet("delete")}
-                >
-                  Delete workout
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
-          )}
+              )}
+              <DropdownMenu.Item
+                color="red"
+                onSelect={() => setSheet(isComplete ? "delete" : "cancel")}
+              >
+                {isComplete ? "Delete workout" : "Cancel workout"}
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
         </div>
         {isComplete ? (
           <h1 className="active-workout__name">{workout.name}</h1>
@@ -185,6 +189,28 @@ export default function WorkoutOverview() {
             );
           }}
           onClose={() => setSheet(undefined)}
+        />
+      )}
+      {!isComplete && (
+        <ConfirmSheet
+          open={sheet === "cancel"}
+          title="Cancel workout?"
+          description="This removes the workout and all its sets. This cannot be undone."
+          confirmLabel="Cancel workout"
+          cancelLabel="Keep training"
+          destructive
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            actionsRef.current?.focus();
+          }}
+          onCancel={() => setSheet(undefined)}
+          onConfirm={() => {
+            setSheet(undefined);
+            canceller.submit(
+              { intent: "delete-workout" },
+              { method: "post", action: actionPath },
+            );
+          }}
         />
       )}
       {workout.stop && (

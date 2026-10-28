@@ -205,6 +205,48 @@ async function backToWorkout(page: Page) {
 test.describe("Active workout overview", () => {
   test.beforeEach(async ({ page }) => startWorkout(page));
 
+  test("cancels an active workout only after destructive confirmation", async ({
+    page,
+  }) => {
+    await addOwnExercise(page);
+    await backToWorkout(page);
+    const workoutPath = new URL(page.url()).pathname;
+    await page
+      .getByRole("button", { name: "Workout actions", exact: true })
+      .click();
+    await page
+      .getByRole("menuitem", { name: "Cancel workout", exact: true })
+      .click();
+    const confirmation = page.getByRole("dialog", {
+      name: "Cancel workout?",
+      exact: true,
+    });
+    await expect(confirmation).toBeVisible();
+    await expect(
+      confirmation.getByRole("button", { name: "Keep training", exact: true }),
+    ).toBeFocused();
+    await confirmation
+      .getByRole("button", { name: "Keep training", exact: true })
+      .click();
+    await expect(
+      page.getByText("Workout in progress", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Workout actions", exact: true }),
+    ).toBeFocused();
+    await page
+      .getByRole("button", { name: "Workout actions", exact: true })
+      .click();
+    await page
+      .getByRole("menuitem", { name: "Cancel workout", exact: true })
+      .click();
+    await confirmation
+      .getByRole("button", { name: "Cancel workout", exact: true })
+      .click();
+    await expect(page).toHaveURL("/workouts");
+    expect((await page.request.get(workoutPath)).status()).toBe(404);
+  });
+
   test("shows an empty workout that cannot be finished", async ({ page }) => {
     await expect(page.getByText("No exercises yet")).toBeVisible();
     await expect(page.getByRole("timer")).toBeVisible();
@@ -254,6 +296,23 @@ test.describe("Exercise screen", () => {
   test.beforeEach(async ({ page }) => {
     await startWorkout(page);
     await addOwnExercise(page);
+  });
+
+  test("History restores its opener after Escape and visible Close", async ({
+    page,
+  }) => {
+    const opener = page.getByRole("button", { name: "History", exact: true });
+    for (const close of ["Escape", "Close"]) {
+      await opener.click();
+      const sheet = page.getByRole("dialog");
+      await expect(sheet).toBeVisible();
+      await expect(sheet.locator(".bottom-sheet__handle")).toHaveCount(0);
+      if (close === "Escape") await page.keyboard.press("Escape");
+      else
+        await sheet.getByRole("button", { name: "Close", exact: true }).click();
+      await expect(sheet).not.toBeVisible();
+      await expect(opener).toBeFocused();
+    }
   });
 
   test("logs a set with RIR and keeps it after reload", async ({ page }) => {
@@ -310,22 +369,76 @@ test.describe("Exercise screen", () => {
 
   test("unticks a completed set and cancels its rest", async ({ page }) => {
     await page.getByRole("button", { name: "Add set" }).click();
-    await logSet(page, "Set 1", "10", "40");
-    await page
-      .getByRole("dialog", { name: "Reps in reserve" })
-      .getByRole("button", { name: "Not sure" })
-      .click();
     await expect(
-      page.getByRole("button", { name: "Set 1 reps in reserve: ?" }),
+      page.getByRole("button", { name: "Complete set 2" }),
     ).toBeVisible();
-
-    await page.getByRole("button", { name: "Complete set 1" }).click();
-    await expect(
-      page.getByRole("button", { name: "Remove set 1" }),
-    ).toBeVisible();
-    await expect(page.getByRole("region", { name: "Rest timer" })).toHaveCount(
-      0,
-    );
+    let releaseEffort = () => {};
+    let releaseCompletion = () => {};
+    let effortStarted = () => {};
+    const pendingEffort = new Promise<void>((resolve) => {
+      releaseEffort = resolve;
+    });
+    const pendingCompletion = new Promise<void>((resolve) => {
+      releaseCompletion = resolve;
+    });
+    const started = new Promise<void>((resolve) => {
+      effortStarted = resolve;
+    });
+    await page.route("**/workouts/**", async (route) => {
+      const request = route.request();
+      const form = new URLSearchParams(request.postData() ?? "");
+      if (request.method() === "POST" && form.get("intent") === "complete-set")
+        await pendingCompletion;
+      if (request.method() === "POST" && form.get("reportedRir") === "unsure") {
+        effortStarted();
+        await pendingEffort;
+      }
+      await route.continue();
+    });
+    try {
+      const completionSaved = workoutSaved(page, "intent=complete-set");
+      await logSet(page, "Set 1", "10", "40");
+      const effortSaved = workoutSaved(page, "reportedRir=unsure");
+      await page
+        .getByRole("dialog", { name: "Reps in reserve" })
+        .getByRole("button", { name: "Not sure" })
+        .click();
+      await started;
+      const tick = page.getByRole("button", {
+        name: "Complete set 1",
+        exact: true,
+      });
+      await expect(tick).toBeDisabled();
+      releaseEffort();
+      await effortSaved;
+      await expect(tick).toBeDisabled();
+      releaseCompletion();
+      await completionSaved;
+      await expect(tick).toBeEnabled();
+      await expect(
+        page.getByRole("button", { name: "Set 1 reps in reserve: ?" }),
+      ).toBeVisible();
+      const reopened = workoutSaved(page, "isCompleted=false");
+      await tick.click();
+      await reopened;
+      await expect(
+        page.getByRole("button", { name: "Remove set 1" }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("region", { name: "Rest timer" }),
+      ).toHaveCount(0);
+      await page.reload();
+      await expect(
+        page.getByRole("button", { name: "Complete set 1" }),
+      ).toHaveAttribute("aria-pressed", "false");
+      await expect(
+        page.getByRole("button", { name: "Remove set 1" }),
+      ).toBeVisible();
+    } finally {
+      releaseEffort();
+      releaseCompletion();
+      await page.unrouteAll({ behavior: "wait" });
+    }
   });
 
   test("edits the mind-muscle cue more than once", async ({ page }) => {

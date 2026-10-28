@@ -31,7 +31,6 @@ import { zfd } from "zod-form-data";
 import { Celebration, SuccessPulse } from "~/components/Celebration";
 import { PageHeader } from "~/components/PageHeader";
 import RequiredStar from "~/components/RequiredStar";
-import { SectionHeader } from "~/components/SectionHeader";
 import { getAccountToday } from "~/modules/auth/infra/account-settings.server";
 import { authenticatedUserContext } from "~/modules/auth/infra/user-context.server";
 import type { MealLogWithNutrition } from "~/modules/nutrition/domain/meal-log";
@@ -417,10 +416,6 @@ export default function NutritionPage({ loaderData }: Route.ComponentProps) {
         </Tooltip>
       </div>
 
-      <SectionHeader title="Your day" />
-      <p className="nutrition-description">
-        Meals and progress, one day at a time.
-      </p>
       <output className="nutrition-feedback">
         {completedCount === mealTypes.length && (
           <Text size="1" color="green">

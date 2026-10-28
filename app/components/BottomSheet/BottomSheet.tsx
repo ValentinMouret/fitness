@@ -14,6 +14,8 @@ interface BottomSheetProps {
   readonly tall?: boolean;
   /** Shows a close button in the header. */
   readonly closable?: boolean;
+  readonly onOpenAutoFocus?: (event: Event) => void;
+  readonly onCloseAutoFocus?: (event: Event) => void;
   readonly children: ReactNode;
 }
 
@@ -27,6 +29,8 @@ export function BottomSheet({
   tall = false,
   closable = false,
   children,
+  onOpenAutoFocus,
+  onCloseAutoFocus,
 }: BottomSheetProps) {
   const heading = (
     <Dialog.Title className="bottom-sheet__title">{title}</Dialog.Title>
@@ -34,10 +38,11 @@ export function BottomSheet({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content
+        onOpenAutoFocus={onOpenAutoFocus}
+        onCloseAutoFocus={onCloseAutoFocus}
         className={tall ? "bottom-sheet bottom-sheet--tall" : "bottom-sheet"}
         {...(description ? {} : { "aria-describedby": undefined })}
       >
-        <div className="bottom-sheet__handle" aria-hidden="true" />
         <div className="bottom-sheet__header">
           <div className="bottom-sheet__heading">
             {hideTitle ? <VisuallyHidden>{heading}</VisuallyHidden> : heading}

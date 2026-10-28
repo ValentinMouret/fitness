@@ -13,6 +13,7 @@ interface ExerciseHistorySheetProps {
   readonly exerciseName: string;
   readonly isBodyweight: boolean;
   readonly onClose: () => void;
+  readonly onCloseAutoFocus?: (event: Event) => void;
 }
 
 type HistoryState =
@@ -30,6 +31,7 @@ export function ExerciseHistorySheet({
   exerciseName,
   isBodyweight,
   onClose,
+  onCloseAutoFocus,
 }: ExerciseHistorySheetProps) {
   const [history, setHistory] = useState<HistoryState>({ status: "loading" });
 
@@ -65,6 +67,7 @@ export function ExerciseHistorySheet({
       open={open}
       onOpenChange={(next) => !next && onClose()}
       title={exerciseName}
+      onCloseAutoFocus={onCloseAutoFocus}
       tall
       closable
     >

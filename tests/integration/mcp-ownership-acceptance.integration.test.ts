@@ -720,7 +720,6 @@ describe.sequential("full-stack external HTTP SDK ownership acceptance", () => {
         "/dashboard",
         "/habits",
         "/habits/week",
-        "/measurements",
         "/workouts",
         `/workouts/${own}`,
         "/workouts/exercises",
@@ -735,6 +734,13 @@ describe.sequential("full-stack external HTTP SDK ownership acceptance", () => {
           expect(body).not.toContain("Retained private description");
           expect(body).not.toContain("Retained owner workout");
         }
+      }
+      for (const path of [
+        "/measurements",
+        "/measurements/new",
+        "/measurements/weight",
+      ]) {
+        expect((await get(path)).status, path).toBe(404);
       }
       for (const path of [
         `/workouts/${foreign}`,
