@@ -1,0 +1,2594 @@
+[
+  {
+    "variant": "editorial",
+    "screen": "workout",
+    "width": 320,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H1",
+        "cls": "",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "STRONG",
+        "cls": "",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "STRONG",
+        "cls": "saved-reps",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button add-set",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "workout",
+    "width": 390,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H1",
+        "cls": "",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "STRONG",
+        "cls": "",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "STRONG",
+        "cls": "saved-reps",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button add-set",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "workout",
+    "width": 1024,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H1",
+        "cls": "",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "STRONG",
+        "cls": "",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "STRONG",
+        "cls": "saved-reps",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button add-set",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "dashboard",
+    "width": 320,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "dashboard",
+    "width": 390,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "dashboard",
+    "width": 1024,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "nutrition",
+    "width": 320,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-4 empty-state__title",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-3 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "nutrition",
+    "width": 390,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-4 empty-state__title",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-3 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "nutrition",
+    "width": 1024,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-4 empty-state__title",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-3 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "habits",
+    "width": 320,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "habits",
+    "width": 390,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "habits",
+    "width": 1024,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "editor",
+    "width": 320,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-4 empty-state__title",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "editor",
+    "width": 390,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-4 empty-state__title",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "editor",
+    "width": 1024,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-4 empty-state__title",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "public",
+    "width": 320,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H1",
+        "cls": "shared-meal__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-1 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "public",
+    "width": 390,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H1",
+        "cls": "shared-meal__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-1 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "public",
+    "width": 1024,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H1",
+        "cls": "shared-meal__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-1 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "auth",
+    "width": 320,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-6 rt-r-ta-center rt-r-mb-5",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "auth",
+    "width": 390,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-6 rt-r-ta-center rt-r-mb-5",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "editorial",
+    "screen": "auth",
+    "width": 1024,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"Crimson Pro\", Georgia, serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-6 rt-r-ta-center rt-r-mb-5",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "workout",
+    "width": 320,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H1",
+        "cls": "",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "STRONG",
+        "cls": "",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "STRONG",
+        "cls": "saved-reps",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button add-set",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "workout",
+    "width": 390,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H1",
+        "cls": "",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "STRONG",
+        "cls": "",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "STRONG",
+        "cls": "saved-reps",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button add-set",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "workout",
+    "width": 1024,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H1",
+        "cls": "",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "STRONG",
+        "cls": "",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "STRONG",
+        "cls": "saved-reps",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button add-set",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "dashboard",
+    "width": 320,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "dashboard",
+    "width": 390,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "dashboard",
+    "width": 1024,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "nutrition",
+    "width": 320,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-4 empty-state__title",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-3 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "nutrition",
+    "width": 390,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-4 empty-state__title",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-3 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "nutrition",
+    "width": 1024,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-4 empty-state__title",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-3 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "habits",
+    "width": 320,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "habits",
+    "width": 390,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "habits",
+    "width": 1024,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "editor",
+    "width": 320,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-4 empty-state__title",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "editor",
+    "width": 390,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-4 empty-state__title",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "editor",
+    "width": 1024,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-soft rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-5",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      },
+      {
+        "tag": "H2",
+        "cls": "rt-Heading rt-r-size-4 empty-state__title",
+        "size": "20px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "28px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "public",
+    "width": 320,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H1",
+        "cls": "shared-meal__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-1 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "public",
+    "width": 390,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H1",
+        "cls": "shared-meal__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-1 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "public",
+    "width": 1024,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H1",
+        "cls": "shared-meal__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-1 rt-variant-ghost rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "auth",
+    "width": 320,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-6 rt-r-ta-center rt-r-mb-5",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "auth",
+    "width": 390,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-6 rt-r-ta-center rt-r-mb-5",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  },
+  {
+    "variant": "sans",
+    "screen": "auth",
+    "width": 1024,
+    "overflow": false,
+    "styles": [
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-7 page-header__title",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "H1",
+        "cls": "rt-Heading rt-r-size-6 rt-r-ta-center rt-r-mb-5",
+        "size": "28px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "35px"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "rt-reset rt-TextFieldInput",
+        "size": "16px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "400",
+        "line": "24px"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "rt-reset rt-BaseButton rt-r-size-2 rt-variant-solid rt-Button",
+        "size": "14px",
+        "family": "\"DM Sans\", system-ui, sans-serif",
+        "weight": "500",
+        "line": "20.3px"
+      }
+    ]
+  }
+]

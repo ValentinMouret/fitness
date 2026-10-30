@@ -6,6 +6,8 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
+  route("design/type", "routes/design/type/index.tsx"),
+  route("design/type/:variant", "routes/design/type/variant.tsx"),
   route(
     ".well-known/oauth-authorization-server",
     "routes/.well-known/oauth-authorization-server.ts",
