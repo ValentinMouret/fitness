@@ -28,21 +28,23 @@ resource "scaleway_instance_security_group" "fitness" {
     }
   }
 
-  inbound_rule {
-    action   = "accept"
-    protocol = "TCP"
-    port     = 80
+  dynamic "inbound_rule" {
+    for_each = setproduct(["::/0", "0.0.0.0/0"], [80, 443])
+    content {
+      action   = "accept"
+      protocol = "TCP"
+      ip_range = inbound_rule.value[0]
+      port     = inbound_rule.value[1]
+    }
   }
 
-  inbound_rule {
-    action   = "accept"
-    protocol = "TCP"
-    port     = 443
-  }
-
-  inbound_rule {
-    action   = "accept"
-    protocol = "ICMP"
+  dynamic "inbound_rule" {
+    for_each = toset(["::/0", "0.0.0.0/0"])
+    content {
+      action   = "accept"
+      protocol = "ICMP"
+      ip_range = inbound_rule.value
+    }
   }
 }
 
