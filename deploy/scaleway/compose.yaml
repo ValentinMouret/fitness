@@ -18,6 +18,7 @@ services:
     mem_limit: 256m
   app:
     image: ${APP_IMAGE:?Set APP_IMAGE to the locally loaded release image}
+    entrypoint: []
     network_mode: host
     restart: unless-stopped
     env_file:

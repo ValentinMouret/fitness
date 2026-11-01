@@ -65,6 +65,28 @@ contexts, invalid-code retry, resend, change-email and account ownership. Physic
 installed iPhone PWA acceptance remains a release acceptance step; desktop phone
 emulation does not prove email/app switching on an actual phone.
 
+## Production email delivery
+
+With native authentication enabled, set `AUTH_EMAIL_FROM` to a plain verified
+sender address and choose one transport:
+
+- **Resend HTTPS:** set `RESEND_API_KEY` to a sending key scoped to the verified
+  domain; leave SMTP host/port/credentials unset. The app uses the
+  [Resend send-email API](https://resend.com/docs/api-reference/emails/send-email)
+  at `https://api.resend.com/emails`, which is reachable from the IPv6-only
+  Scaleway instance. Requests time out after 15 seconds, do not follow redirects,
+  and expose only a generic delivery error. No SDK or SMTP relay is required.
+- **SMTP:** leave `RESEND_API_KEY` unset and supply the SMTP settings below.
+  Existing `AUTH_SMTP_FROM` remains a sender fallback for compatibility.
+
+Both transports use the same invitation notice, six-digit code and retained-link
+text. Production still requires the HTTPS `AUTH_FOUNDATION_ORIGIN`, stable owner
+identity and `AUTH_FOUNDATION_ENABLED=true`; changing delivery does not create
+accounts or enable invitations. Development/tests use only `AUTH_LOCAL_INBOX`
+and reject provider credentials when native authentication is enabled.
+Never put API keys, codes or provider error bodies in logs. Verify real delivery
+and recovery with the configured domain before admitting invited accounts.
+
 ## Historical local magic-link foundation (ENSO-89)
 
 The approved next authentication model is invitation-only email magic links with
@@ -104,8 +126,10 @@ and is written with mode 0600. Do not publish its contents.
 Production configuration is now supported but activation remains held. With
 `NODE_ENV=production` and `AUTH_FOUNDATION_ENABLED=true`, startup requires a
 canonical HTTPS `AUTH_FOUNDATION_ORIGIN`, the approved durable owner UUID and
-complete `AUTH_SMTP_HOST`, `AUTH_SMTP_PORT`, `AUTH_SMTP_SECURE`, `AUTH_SMTP_USER`,
-`AUTH_SMTP_PASSWORD` and `AUTH_SMTP_FROM`. The sender is a plain verified email
+either the Resend configuration above or complete
+`AUTH_SMTP_HOST`, `AUTH_SMTP_PORT`, `AUTH_SMTP_SECURE`, `AUTH_SMTP_USER`,
+`AUTH_SMTP_PASSWORD` and a sender (`AUTH_EMAIL_FROM`, falling back to
+`AUTH_SMTP_FROM`). The sender is a plain verified email
 address. `AUTH_SMTP_SECURE=true` uses implicit TLS; `false` requires STARTTLS and
 refuses cleartext fallback. Certificates are verified with TLS 1.2 or newer.
 Production forbids `AUTH_LOCAL_INBOX`; development/test require the loopback
@@ -133,7 +157,7 @@ The standard server and Docker entry use a Morgan preload that logs request path
 without query strings. Better Auth's verbose library logger is disabled, so
 rejected callback URLs cannot leak tokens into error logs. Status/path logging
 remains available. The SMTP transport is exercised over real loopback SMTP;
-production selects the SMTP adapter with mandatory TLS. Real provider delivery,
+production selects either Resend HTTPS or the SMTP adapter with mandatory TLS. Real provider delivery,
 verified sender DNS and owner access recovery remain cutover gates.
 
 Run `bun run test:auth:integration` with `AUTH_TEST_ADMIN_URL` pointing explicitly
@@ -666,7 +690,7 @@ is still separate from the isolated SDK proof.
 
 The current local cutover supersedes the admission-hold audit above when
 `AUTH_FOUNDATION_ENABLED=true`. The foundation remains disabled by default. Nonproduction uses loopback inboxes;
-production uses validated HTTPS and SMTP settings. Actual SMTP delivery, the durable owner
+production uses validated HTTPS and email-provider settings. Actual email delivery, the durable owner
 bootstrap, fresh restored-history rehearsal and integrated exact-head CI remain
 release prerequisites; local inbox capture is not production delivery proof.
 

@@ -16,6 +16,7 @@ for setup and verification commands, then read the guides relevant to your task.
 | Configure login or external clients | [Authentication](operations/authentication.md) |
 | Investigate server/MCP failures | [Server diagnostics](operations/diagnostics.md) |
 | Deploy the app | [Deployment guide](../deploy/README.md) |
+| Operate Scaleway, Terraform state and deployment credentials | [Scaleway operator guide](../deploy/scaleway/README.md) |
 | Understand authentication boundaries | [ADR 0001](adr/0001-server-auth-middleware.md) |
 | Investigate similar CI failures | [CI incident](incidents/2026-02-10-ci-test-failures.md) |
 | Explore future directions | [Ideas](proposals/ideas.md) and [habit research](features/habits/research.md) |

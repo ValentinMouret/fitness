@@ -3,6 +3,7 @@ import { env } from "~/env.server";
 import { createMagicLinkAuth } from "./magic-link.server";
 import {
   createLocalSignInInbox,
+  createResendSignInEmail,
   createSmtpSignInEmail,
 } from "./sign-in-email.server";
 
@@ -14,14 +15,18 @@ export function getAuthFoundation() {
     throw new Error("Auth foundation is not configured");
   if (runtime) return runtime;
   let sendEmail: ReturnType<typeof createSmtpSignInEmail>;
-  if (env.NODE_ENV === "production") {
+  const from = env.AUTH_EMAIL_FROM ?? env.AUTH_SMTP_FROM;
+  if (env.NODE_ENV === "production" && env.RESEND_API_KEY) {
+    if (!from) throw new Error("Production auth email is not configured");
+    sendEmail = createResendSignInEmail({ apiKey: env.RESEND_API_KEY, from });
+  } else if (env.NODE_ENV === "production") {
     if (
       !env.AUTH_SMTP_HOST ||
       !env.AUTH_SMTP_PORT ||
       env.AUTH_SMTP_SECURE === undefined ||
       !env.AUTH_SMTP_USER ||
       !env.AUTH_SMTP_PASSWORD ||
-      !env.AUTH_SMTP_FROM ||
+      !from ||
       env.AUTH_LOCAL_INBOX
     )
       throw new Error("Production auth email is not configured");
@@ -30,7 +35,7 @@ export function getAuthFoundation() {
       port: env.AUTH_SMTP_PORT,
       secure: env.AUTH_SMTP_SECURE,
       requireTLS: !env.AUTH_SMTP_SECURE,
-      from: env.AUTH_SMTP_FROM,
+      from,
       credentials: { user: env.AUTH_SMTP_USER, pass: env.AUTH_SMTP_PASSWORD },
     });
   } else {
