@@ -368,6 +368,12 @@ const browsers = () =>
 const image = heavy(
   sequence(
     () => run("image-build", ["docker", "build", "--tag", "fitness-gate", "."]),
+    () =>
+      run("deployment-isolation", [
+        "bash",
+        "deploy/scaleway/test-isolation.sh",
+        "fitness-gate",
+      ]),
     // The entrypoint applies migrations before running the command.
     () =>
       run("image-migrations", [

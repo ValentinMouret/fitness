@@ -28,7 +28,7 @@ remote() {
 }
 
 docker save "fitness:$sha" | gzip | remote 'gzip -d | docker load'
-tar -C deploy/scaleway -cf - compose.yaml release.sh backup.sh | remote 'tar -xf - -C /srv/fitness'
 if superseded; then echo 'Superseded during the build; skipped.'; exit 0; fi
+tar -C deploy/scaleway -cf - compose.yaml compose.sh release.sh backup.sh provision-runtime.ts | remote 'tar -xf - -C /srv/fitness'
 remote "/srv/fitness/release.sh $sha"
 echo "Deployed \`$sha\` on Scaleway." >> "$GITHUB_STEP_SUMMARY"
