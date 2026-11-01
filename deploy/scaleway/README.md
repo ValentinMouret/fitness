@@ -152,3 +152,104 @@ restricted retention as other operator secrets.
 credentials to check the Compose allowlists and actual omission of optional env
 values. It does not contact production or the backup bucket. The repository gate
 runs this check against its built image locally and in CI.
+
+## Backup failure and freshness evidence
+
+`backup.sh` requires host Python 3 (standard library only), Docker and curl with
+AWS SigV4 support. The Ubuntu production host was checked with Python 3.12.3.
+It serializes backup attempts with a host file lock and atomically replaces the
+private mode-0600 `/srv/fitness/backup-status.json` receipt. Upload credentials
+stay in a temporary private curl config, outside command arguments and logs.
+
+The last-success timestamp advances only after `pg_dump` succeeds and the
+checksum-bearing PUT receives HTTP 2xx. Both Content-MD5 and SHA-256 are sent for
+the actual dump bytes. This is an acknowledged upload, **not an independent
+GET/hash or restore verification**. The write-only key gains no read permission.
+Failed attempts retain the previous upload evidence and record only their stage,
+failure category and subprocess exit code. Raw command errors and credentials
+are not logged. A killed process leaves a running receipt that becomes unfinished.
+A concurrent invocation exits nonzero without overwriting the active receipt.
+
+The nightly cron calls the backup directly; it must not pipe through `logger`,
+which masks failures. The helper attempts local syslog delivery itself while
+preserving its own exit code and durable receipt. Receipt persistence failure
+also exits nonzero. No helper can guarantee a durable write on a full/broken disk;
+the external monitor must detect unreachable hosts and missing/unfinished state.
+
+Using existing operator SSH as `fitness-deploy` (or root), run:
+
+```sh
+python3 /srv/fitness/backup.py check --max-age-seconds 108000
+```
+
+The 30-hour example is a **proposed threshold**, not an approved recovery point
+objective or an installed monitor. The threshold is mandatory; the unfinished
+attempt limit defaults to 600 seconds. The check reads only the receipt, not `.env`
+or the bucket, and writes one JSON result to stdout:
+
+| Exit | Meaning |
+| --- | --- |
+| 0 | Prior upload is fresh; `in_progress` does not mean the current attempt succeeded. |
+| 1 | Latest attempt failed, or a running attempt exceeded its time limit. |
+| 2 | No acknowledged upload or last upload older than the supplied limit. |
+| 3 | Missing, malformed or future-dated receipt. |
+
+The existing Fitness watchdog → EM → Martin route is the selected delivery path.
+Do not add a service, app endpoint, sign-in email use, credential grant or second
+backup schedule. The monitor needs existing operator SSH access to this private
+file; it must treat SSH timeout, unreachable host, malformed/non-JSON output and
+unexpected exit codes as unknown/failure, never healthy. Keep diagnostics to this
+sanitized check output. App containers receive neither this receipt nor backup
+configuration. A missing receipt before rollout is an evidence gap, not proof a
+scheduled backup was missed.
+
+**Nightly execution is separate from overall backup freshness.** Release uploads
+can keep `last_success_at` fresh indefinitely. Monitor `last_daily_success_at`
+independently against the agreed daily schedule and explicit grace. The first
+expected nightly run is **2026-11-02 03:17 UTC / 04:17 Europe/Paris**, not before;
+thereafter 03:17 UTC daily. The owner/EM must choose the grace and freshness
+threshold. A release upload never closes nightly execution acceptance. Watchdog
+integration and end-to-end failure/stale/unreachable notification delivery are
+**not installed or proven by this patch**. They require an explicit integration
+update and synthetic routing proof before closing alert acceptance. Continue
+independent exact-object restore checks using the existing operator credentials.
+
+Run `python3 deploy/scaleway/test-backup.py -v` locally (also in `bun run gate`).
+It uses synthetic data in a disposable network-isolated PostgreSQL 17 container
+and a loopback TLS endpoint/proxy, with real `pg_dump`, curl and `pg_restore`.
+No production secrets, data, bucket requests or remote writes are involved.
+
+## Draft storage protection decisions
+
+As inspected on 2026-11-01: the existing bucket has 30-day expiry, versioning off,
+no bucket SSE configuration, and a project-wide `ObjectStorageObjectsWrite`
+writer policy. The payload is a raw PostgreSQL dump over HTTPS; this says nothing
+about physical disk encryption. Read/list denial does not make a writer
+append-only: it can overwrite a known object key. These options are preparation
+only; none changes the bucket, keys, retention or existing objects.
+
+| Decision | Benefit and remaining work |
+| --- | --- |
+| Bucket-default SSE-ONE | Provider-managed AES-256 for **new uploads**. Existing objects are unaffected. No customer key recovery workflow, but account/operator recovery still matters. Verify a newly uploaded object's encryption metadata and a restore before acceptance. [Provider guide](https://www.scaleway.com/en/docs/object-storage/how-to/enable-sse-one/). |
+| Client-side encryption and recoverable custody | Existing encrypted laptop copy uses the existing FITNESS1/AES-256-GCM format. Agree an independent protected recovery-key copy, custodian and recovery test; prove decryption/restore from that recovery copy, plus wrong-key/tamper rejection. A key stored beside the VM uploader does not protect against VM compromise. Changing the production upload format or adopting public-key encryption requires a separately reviewed implementation. Historical raw objects need a separately authorized download/encrypt/new-object/restore plan; do not overwrite or delete originals here. |
+| Constrain writer | Review explicit bucket/prefix/principal PutObject policy while preserving operator recovery access; enforce create-only conditional writes with bucket policy if chosen. `If-None-Match: *` in a client alone cannot constrain a compromised writer. A policy on this bucket does not remove project-wide write access to other buckets: verify supported IAM resource scoping or separately decide project isolation. Never widen access as a shortcut. [Conditional writes](https://www.scaleway.com/en/docs/object-storage/api-cli/using-conditional-writes/), [bucket policies](https://www.scaleway.com/en/docs/object-storage/api-cli/bucket-policy/). |
+| Versioning plus bounded noncurrent retention | Keeps prior versions after overwrite; previous versions remain billable. Explicitly decide noncurrent expiry as well as current 30-day expiry. Existing null-version objects are retained; enabling versioning cannot be undone to an unversioned state, only suspended. This does not repair an overwrite that predates enablement. [Versioning](https://www.scaleway.com/en/docs/object-storage/how-to/use-bucket-versioning/). |
+| Object Lock | Stronger retention requires versioning and an irreversible bucket-level choice; compliance retention cannot be shortened during its term. Decide retention, bypass authority and storage budget separately. No activation in this patch. [Object Lock](https://www.scaleway.com/en/docs/object-storage/how-to/use-object-lock/). |
+
+Published prices checked 2026-11-01 are €0.01606/GB/month Standard Multi-AZ,
+€0.00803/GB/month Standard One Zone, requests/ingress included, and 75 GB egress
+free monthly then €0.01/GB, before tax. The public page defaults to Paris: confirm
+the existing Warsaw bucket's actual storage class, region price and billing
+rounding before treating this as its quote. Each additional 100 GB of retained
+versions would be approximately €1.606/month at that Multi-AZ rate; version count
+and retention determine growth. No separate SSE-ONE surcharge was identified on
+that page, which is **not a confirmed zero-cost quote**. Key custody can use the
+existing private tooling; no new paid key service is proposed. These are storage
+rates, not an assertion of the actual bill. [Current pricing and billing-unit
+notice](https://www.scaleway.com/en/pricing/storage/).
+
+Owner decisions remain: acceptable freshness/grace; provider-managed versus
+client-side confidentiality and key custody; writer containment; version/noncurrent
+retention and any irreversible lock; approved budget. Martin owns any subsequent
+production application and verification. No rotation, object rewrite, access
+expansion or new schedule is authorized by this draft.

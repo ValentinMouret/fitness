@@ -3,7 +3,7 @@ set -euo pipefail
 
 test_image="${1:?Pass the locally built publishing image}"
 test_prefix="fitness-retention-swarm-$$"
-cleanup() { docker rm -f "$test_prefix" >/dev/null 2>&1 || true; }
+cleanup() { docker rm -fv "$test_prefix" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
 # A disposable inner daemon keeps the developer/CI daemon's Swarm state untouched.
