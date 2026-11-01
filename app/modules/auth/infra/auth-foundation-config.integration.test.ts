@@ -127,3 +127,40 @@ describe("production authentication configuration", () => {
     ).not.toBe(0);
   });
 });
+
+const resend = {
+  NODE_ENV: "production",
+  AUTH_FOUNDATION_ENABLED: "true",
+  AUTH_FOUNDATION_ORIGIN: production.AUTH_FOUNDATION_ORIGIN,
+  AUTH_FOUNDATION_OWNER_USER_ID: local.AUTH_FOUNDATION_OWNER_USER_ID,
+  AUTH_EMAIL_FROM: "fitness@example.invalid",
+  RESEND_API_KEY: "fixture-resend-secret",
+};
+
+describe("Resend authentication email configuration", () => {
+  it("accepts the HTTPS API provider with a verified sender", () => {
+    expect(validate(resend).status).toBe(0);
+    expect(
+      validate({ ...production, AUTH_EMAIL_FROM: resend.AUTH_EMAIL_FROM })
+        .status,
+    ).toBe(0);
+  });
+
+  it("rejects missing sender/key, mixed providers and local use without printing secrets", () => {
+    const invalid = [
+      { ...resend, AUTH_EMAIL_FROM: "" },
+      { ...resend, RESEND_API_KEY: "" },
+      { ...resend, AUTH_SMTP_HOST: production.AUTH_SMTP_HOST },
+      { ...resend, AUTH_LOCAL_INBOX: local.AUTH_LOCAL_INBOX },
+      { ...resend, AUTH_FOUNDATION_ORIGIN: "http://fitness.example.invalid" },
+      { ...resend, AUTH_FOUNDATION_OWNER_USER_ID: "" },
+      { ...local, RESEND_API_KEY: resend.RESEND_API_KEY },
+      { ...local, AUTH_EMAIL_FROM: resend.AUTH_EMAIL_FROM },
+    ];
+    for (const settings of invalid) {
+      const result = validate(settings);
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).not.toContain(resend.RESEND_API_KEY);
+    }
+  });
+});

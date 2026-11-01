@@ -45,6 +45,8 @@ const authFoundationSchema = z.object({
   AUTH_SMTP_USER: z.string().min(1).optional(),
   AUTH_SMTP_PASSWORD: z.string().min(1).optional(),
   AUTH_SMTP_FROM: z.email().optional(),
+  AUTH_EMAIL_FROM: z.email().optional(),
+  RESEND_API_KEY: z.string().min(1).optional(),
   AUTH_INVITATION_TTL_SECONDS: z.coerce
     .number()
     .int()
@@ -106,25 +108,31 @@ const schema = z
         value.AUTH_SMTP_SECURE,
         value.AUTH_SMTP_USER,
         value.AUTH_SMTP_PASSWORD,
-        value.AUTH_SMTP_FROM,
       ];
       const production = value.NODE_ENV === "production";
+      const sender = value.AUTH_EMAIL_FROM ?? value.AUTH_SMTP_FROM;
+      const validProvider = value.RESEND_API_KEY
+        ? smtpValues.every((setting) => setting === undefined)
+        : smtpValues.every((setting) => setting !== undefined);
       const validDelivery = production
         ? validOrigin &&
           url.protocol === "https:" &&
           !value.AUTH_LOCAL_INBOX &&
-          smtpValues.every((setting) => setting !== undefined)
+          !!sender &&
+          validProvider
         : validOrigin &&
           url.protocol === "http:" &&
           ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) &&
           !!value.AUTH_LOCAL_INBOX &&
+          !value.RESEND_API_KEY &&
+          !sender &&
           smtpValues.every((setting) => setting === undefined);
       if (!value.AUTH_FOUNDATION_OWNER_USER_ID || !validDelivery) {
         ctx.addIssue({
           code: "custom",
           message: production
-            ? "Production auth requires an HTTPS origin, owner ID and complete SMTP settings; local inbox is forbidden."
-            : "Local auth requires a loopback HTTP origin, owner ID and private inbox; SMTP settings are forbidden.",
+            ? "Production auth requires an HTTPS origin, owner ID, sender and either Resend or complete SMTP settings; local inbox is forbidden."
+            : "Local auth requires a loopback HTTP origin, owner ID and private inbox; production email settings are forbidden.",
         });
       }
     }

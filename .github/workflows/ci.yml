@@ -10,7 +10,7 @@ on:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -82,3 +82,28 @@ jobs:
           if [ -f .gate/summary.md ]; then
             printf 'Open `summary.md` in the artifact for source identity, failed stages, evidence links and the rerun command.\n' >> "$GITHUB_STEP_SUMMARY"
           fi
+
+  deploy:
+    name: Deploy Scaleway
+    needs: gate
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    concurrency:
+      group: scaleway-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Build and deploy verified revision
+        run: bash scripts/deploy-scaleway-ci.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SCALEWAY_DEPLOY_HOST: ${{ vars.SCALEWAY_DEPLOY_HOST }}
+          SCALEWAY_DEPLOY_SSH_KEY: ${{ secrets.SCALEWAY_DEPLOY_SSH_KEY }}
+          SCALEWAY_DEPLOY_KNOWN_HOSTS: ${{ secrets.SCALEWAY_DEPLOY_KNOWN_HOSTS }}
+          TUNNEL_SERVICE_TOKEN_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
