@@ -1,12 +1,14 @@
 name: fitness
+x-service: &service
+  network_mode: host
+  restart: unless-stopped
+  env_file:
+    - path: ./.env
+      format: raw
 services:
   postgres:
+    <<: *service
     image: postgres:17-alpine
-    network_mode: host
-    restart: unless-stopped
-    env_file:
-      - path: ./database.env
-        format: raw
     command: [postgres, -c, listen_addresses=127.0.0.1, -c, shared_buffers=64MB, -c, max_connections=30]
     volumes:
       - postgres:/var/lib/postgresql/data
@@ -17,13 +19,9 @@ services:
       retries: 20
     mem_limit: 256m
   app:
-    image: ${APP_IMAGE:?Set APP_IMAGE to the locally loaded release image}
+    <<: *service
+    image: ${APP_IMAGE:?Set APP_IMAGE in release.env}
     entrypoint: []
-    network_mode: host
-    restart: unless-stopped
-    env_file:
-      - path: ./app.env
-        format: raw
     environment:
       NODE_ENV: production
       HOST: 127.0.0.1
@@ -39,21 +37,11 @@ services:
       retries: 12
       start_period: 15s
     mem_limit: 384m
-  caddy:
-    image: caddy:2-alpine
-    network_mode: host
-    restart: unless-stopped
-    environment:
-      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN to the public hostname}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      app:
-        condition: service_healthy
+  # Serves the app and CI's SSH; the VM accepts no inbound web traffic.
+  cloudflared:
+    <<: *service
+    image: cloudflare/cloudflared:2026.10.7
+    command: [tunnel, --no-autoupdate, --edge-ip-version, '6', run]
     mem_limit: 128m
 volumes:
   postgres:
-  caddy_data:
-  caddy_config:

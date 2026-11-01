@@ -18,6 +18,6 @@ terraform {
 provider "cloudflare" {}
 
 provider "scaleway" {
-  zone   = var.zone
-  region = join("-", slice(split("-", var.zone), 0, 2))
+  zone   = "pl-waw-2"
+  region = "pl-waw"
 }
