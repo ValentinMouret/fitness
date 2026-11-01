@@ -20,6 +20,7 @@ const test = base.extend<{ readonly pool: pg.Pool }>({
     }
   },
 });
+test.describe.configure({ mode: "default" });
 test.skip(
   !canWriteFixtureDatabase(databaseUrl),
   "Requires isolated CI DB or explicit local E2E_ALLOW_FIXTURE_WRITES with matching test DB/server",

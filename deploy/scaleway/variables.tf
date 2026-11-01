@@ -38,3 +38,16 @@ variable "backup_bucket" {
   type    = string
   default = "fitness-backups-valentinmouret"
 }
+
+variable "backup_operator_principals" {
+  description = "Existing owner/recovery SCW principals to preserve; excludes the backup writer. No new IAM grants."
+  type        = set(string)
+
+  validation {
+    condition = length(var.backup_operator_principals) > 0 && alltrue([
+      for principal in var.backup_operator_principals :
+      can(regex("^(user_id|application_id):[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", principal))
+    ])
+    error_message = "Explicit existing user_id/application_id UUID principals are required; wildcard/project principals are forbidden."
+  }
+}

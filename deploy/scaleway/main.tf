@@ -92,3 +92,20 @@ resource "scaleway_iam_api_key" "backup" {
   default_project_id = scaleway_object_bucket.backups.project_id
   description        = "Nightly PostgreSQL dumps from the fitness VM"
 }
+
+resource "scaleway_object_bucket_policy" "backups" {
+  bucket     = scaleway_object_bucket.backups.id
+  project_id = scaleway_object_bucket.backups.project_id
+  policy = templatefile("${path.module}/backup-policy.json.tftpl", {
+    bucket                = scaleway_object_bucket.backups.name
+    writer_application_id = scaleway_iam_application.backup.id
+    operator_principals   = var.backup_operator_principals
+  })
+
+  lifecycle {
+    precondition {
+      condition     = !contains(var.backup_operator_principals, "application_id:${scaleway_iam_application.backup.id}")
+      error_message = "The backup writer cannot be an operator/recovery principal."
+    }
+  }
+}
