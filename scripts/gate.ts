@@ -361,7 +361,6 @@ const browsers = () =>
         "vitest.mcp-acceptance.config.ts",
       ]),
     ),
-    heavy(() => run("browser-components", ["bun", "run", "test:browser"])),
   );
 
 /** The production image: build, runtime migrations, asset retention. */
@@ -373,6 +372,12 @@ const image = heavy(
         "bash",
         "deploy/scaleway/test-isolation.sh",
         "fitness-gate",
+      ]),
+    () =>
+      run("backup-receipts", [
+        "python3",
+        "deploy/scaleway/test-backup.py",
+        "-v",
       ]),
     // The entrypoint applies migrations before running the command.
     () =>
@@ -406,13 +411,21 @@ const image = heavy(
 /**
  * On Linux, Docker adds network interfaces to the host for builds and
  * containers, and Chromium aborts every in-flight request on a network change
- * (net::ERR_NETWORK_CHANGED). Elsewhere Docker runs in a VM, so all overlap.
+ * (net::ERR_NETWORK_CHANGED). Elsewhere Docker runs in a VM, so they overlap.
+ * Component interaction checks run last to avoid CPU contention with those suites.
  */
 const dockerSharesHostNetwork = process.platform === "linux";
 const tests = async () => {
-  if (!dockerSharesHostNetwork) return parallel(services, browsers, image);
-  const first = await parallel(services, image);
-  return (await browsers()) && first;
+  const first = dockerSharesHostNetwork
+    ? await parallel(services, image)
+    : await parallel(services, browsers, image);
+  const browsersOk = dockerSharesHostNetwork ? await browsers() : true;
+  const componentsOk = await run("browser-components", [
+    "bun",
+    "run",
+    "test:browser",
+  ]);
+  return first && browsersOk && componentsOk;
 };
 
 /** Prints the outcome and the end of each failed step's log. */

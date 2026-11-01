@@ -27,6 +27,6 @@ echo "APP_IMAGE=$APP_IMAGE" > release.env
 
 # shellcheck disable=SC2016 # cron expands the date, not this shell.
 (crontab -l 2>/dev/null | grep -v backup.sh || true
-  echo '17 3 * * * /srv/fitness/backup.sh "daily/$(date -u +\%F)" 2>&1 | logger -t fitness-backup') | crontab -
+  echo '17 3 * * * /srv/fitness/backup.sh "daily/$(date -u +\%F)"') | crontab -
 docker image prune -af --filter "until=168h" >/dev/null
 echo "Released source $sha, image $APP_IMAGE"
