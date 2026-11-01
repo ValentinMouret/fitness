@@ -177,7 +177,8 @@ export function createMagicLinkAuth(input: {
       },
     },
     advanced: {
-      ipAddress: { ipAddressHeaders: ["x-real-ip"] },
+      // Production is reachable only through the Cloudflare tunnel, which sets this header.
+      ipAddress: { ipAddressHeaders: ["cf-connecting-ip", "x-real-ip"] },
       database: { generateId: () => randomUUID() },
       disableOriginCheck: false,
       disableCSRFCheck: false,

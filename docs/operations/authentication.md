@@ -37,11 +37,11 @@ session finalization runs after commit. Keep the pinned core transaction API
 and blocked-interleaving, process-stop and small-pool regressions together when
 updating Better Auth.
 Both public request and verification HTTP endpoints are limited to three requests
-per minute per IP. The library reads only `X-Real-IP`: production Caddy
-explicitly overwrites it with the client IP, while Traefik appends another address
-to `X-Forwarded-For`. The app port is private to that proxy chain. Operator
-acceptance must retain this trusted-header boundary; local HTTP fixtures supply
-synthetic `X-Real-IP` values and check the real production forwarded-chain shape.
+per minute per IP. The library reads `CF-Connecting-IP`, then `X-Real-IP`.
+Production is reachable only through the Cloudflare tunnel, and Cloudflare always
+overwrites `CF-Connecting-IP` with the client IP; the app port stays on localhost.
+Operator acceptance must retain this trusted-header boundary; local HTTP fixtures
+supply synthetic `X-Real-IP` values.
 Unknown, expired, revoked and uninvited accounts receive the
 same request response without email or account creation. Delivery failures do
 not change that response. A wrong code has the same response for an admitted or
@@ -182,7 +182,7 @@ Session-protected pages and API routes inherit server authentication middleware 
 
 Set `AUTH_USERNAME`, `AUTH_PASSWORD`, and `AUTH_SESSION_SECRET` in the server environment or the ignored `.env`. Generate the session secret with `openssl rand -hex 32`. Keep it stable across restarts. Replacing it invalidates existing browser sessions. The default session lifetime is seven days; the server checks the signed expiry even if an expired cookie is sent manually.
 
-The migration from unsigned cookies requires signing in again. Use HTTPS in production; production sessions always set Secure. The reverse proxy must preserve the public Host header. Production origin checks expect HTTPS for that host, even when TLS terminates at Caddy and the internal request uses HTTP. OAuth redirects use the configured public issuer.
+The migration from unsigned cookies requires signing in again. Use HTTPS in production; production sessions always set Secure. The reverse proxy must preserve the public Host header. Production origin checks expect HTTPS for that host, even when TLS terminates at Cloudflare and the tunnel's internal request uses HTTP. OAuth redirects use the configured public issuer.
 
 The existing local server uses Vite's `PORT` setting (for example, `5175`). Do not start a second server in an agent session. Vite and the server launcher own `PORT`; Playwright owns `TEST_PORT`, validated in `tests/e2e/support/auth.ts`. Neither belongs to the application environment schema. Set test-only options on the test command. Restart the existing server after changing `.env`. Use `NODE_ENV=development` for local HTTP.
 
