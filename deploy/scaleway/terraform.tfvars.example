@@ -1,0 +1,4 @@
+zone              = "pl-waw-2"
+allocate_ipv4     = false
+ssh_public_key    = "ssh-ed25519 REPLACE_WITH_YOUR_PUBLIC_KEY"
+ssh_allowed_cidrs = ["2001:db8::1/128"] # Replace with your administrator IPv6 CIDR.

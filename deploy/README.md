@@ -1,5 +1,9 @@
 # Deployment
 
+For the requested lowest-cost Scaleway replacement, see the
+[Terraform deployment guide](scaleway/README.md). The OVH details below describe
+the previous deployment and remain useful for data recovery.
+
 This document describes the target deployment architecture for Fitness on the OVH VPS.
 
 The preferred direction is Dokploy-first: use Dokploy for the deployment UI, Git integration, Docker builds, routing, logs, production deploys, and review apps. Keep custom scripts only for Fitness-specific behavior that Dokploy does not own, mainly database preparation.
