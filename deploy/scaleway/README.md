@@ -253,3 +253,97 @@ client-side confidentiality and key custody; writer containment; version/noncurr
 retention and any irreversible lock; approved budget. Martin owns any subsequent
 production application and verification. No rotation, object rewrite, access
 expansion or new schedule is authorized by this draft.
+
+## Prepared same-bucket create-only policy
+
+The uploader now keeps the logical `daily/<date>` or `release/<sha>` prefix and
+adds a UTC timestamp plus random suffix before `.dump`. Every invocation chooses
+one unique key and sends exactly `If-None-Match: *`; HTTP 412 is a failed attempt,
+not success or permission to overwrite. The receipt records the exact uploaded
+key. Old receipts/objects remain readable; the existing key validator accepts
+both formats. Restore from the receipt's `last_success_object`, verify the
+independently downloaded hash and restore; do not reconstruct `release/<sha>.dump`
+or select the newest arbitrary object. Clock order alone is not recovery proof.
+
+`scaleway_object_bucket_policy.backups` uses the existing provider and bucket,
+with explicit project scope. `backup-policy.json.tftpl` is the authoritative
+policy. The mandatory `backup_operator_principals` set accepts explicit existing
+`user_id:<UUID>` / `application_id:<UUID>` principals only. The existing
+Organization Owner/recovery user must be included in the private canonical
+inputs after independent identity verification. No wildcard or project principal
+is accepted; a lifecycle precondition forbids the backup writer in this set.
+The operator statement preserves existing S3 permissions through the intersection
+with existing IAM; it creates no IAM grant. The writer statement allows only
+PutObject under this bucket's `daily/*` and `release/*` prefixes, with both header
+presence and **StringEquals `*`**, not wildcard StringLike matching. No multipart
+exception, broad writer allowance or AWS Deny policy is added.
+
+Provider evidence: [2023 policy semantics and owner recovery](https://www.scaleway.com/en/docs/object-storage/api-cli/bucket-policy/),
+[conditional-write key/enforcement](https://www.scaleway.com/en/docs/object-storage/api-cli/using-conditional-writes/),
+and the [pinned Terraform policy resource](https://github.com/scaleway/terraform-provider-scaleway/blob/v2.89.0/docs/resources/object_bucket_policy.md).
+Scaleway documents header-presence enforcement and StringEquals separately;
+the exact combination is a **candidate pending live synthetic verification**.
+Terraform compilation/schema checks and local HTTP tests do not prove provider
+condition evaluation, effective permissions or lockout prevention. Client headers
+alone do not contain a compromised writer. The existing project-wide writer IAM
+rule remains unchanged: this protects only the named bucket, not other project
+buckets. [Object Storage has no documented IAM resource-level condition support](https://www.scaleway.com/en/docs/iam/policies-permissions/supported-products-resource-level/).
+Do not inspect/change other buckets or invent an IAM bucket condition.
+
+Martin's controlled rollout and rollback contract (not executed by preparation):
+
+1. Privately preserve current bucket policy or confirmed absence, canonical
+   Terraform state/inputs, and bucket lifecycle/versioning/encryption settings.
+   Independently verify existing operator identity and Organization Owner
+   break-glass authority. An unexpected existing policy stops this plan; review
+   and preserve it before any replacement. Never print state, API keys or inputs.
+2. Deploy the compatible unique-key uploader first. Verify a new upload and exact
+   receipt/hash using existing operator access. Update canonical inputs with the
+   verified existing recovery principals. Plan against the canonical local state;
+   accept only the intended same-bucket policy addition. Stop on IAM, bucket/VM
+   replacement, lifecycle, encryption, versioning or Object Lock changes. No
+   Terraform apply or production upload is part of local preparation.
+3. Apply only the reviewed saved plan through the existing operator. Use a unique
+   **synthetic `.txt` probe** under `daily/` for live acceptance, never an existing
+   backup. Probes must not enter receipt-based backup/restore selection. Prove new
+   conditional PUT succeeds; replacement with `*`, missing/empty/non-star header,
+   quoted alternate ETag, and duplicate headers in both orders cannot replace
+   the original bytes. Re-download and compare the original hash after each
+   negative check. Verify out-of-prefix writes fail and operator HEAD confirms
+   no object was created; writer GET/list/delete/ACL changes remain denied.
+   Verify operator list, GET/hash and bucket-policy recovery/control access.
+   Unsupported conditions or any unexpected success stops acceptance.
+4. On failure, the existing Organization Owner restores the exact privately
+   saved prior policy. **Delete only the bucket policy if it was originally
+   absent**; never delete a bucket, object or IAM grant as rollback. Scaleway
+   documents that this Owner can put/delete policies even when data access is
+   restricted. Keep the compatible uploader; rolling back to the old stable-key
+   uploader while policy is enforced breaks uploads. Hold subsequent Terraform
+   apply until configuration/state are deliberately reconciled; do not run a
+   broad Terraform destroy or blindly reapply a failed policy.
+
+The existing 30-day lifecycle, versioning OFF, Object Lock OFF and SSE configuration
+are unchanged. Historical dumps are neither rewritten nor deleted. Account/key
+recovery still needs an independently accessible encrypted state/input bundle and
+separately protected recovery material. The owner destination/custodian question
+is tracked once by EM; it does not block this policy preparation. No sensitive
+bundle is transferred or new service introduced here.
+
+Pricing check on 2026-11-01: the [public catalog filtered to Warsaw Object Storage](https://api.scaleway.com/product-catalog/v2alpha1/public-catalog/products?product_types=object_storage&region=pl-waw&page_size=100)
+reports current Standard Multi-AZ SKU `usage-new-gen-bucket-standard/pl-waw` at
+€0.000022 per GB (hourly rate on the pricing page), about €0.01606/GB/month, and
+also a retired legacy Standard SKU at half that rate. `STANDARD` alone does not
+identify the account's billed generation. No separate SSE item appears in these
+catalog rows; absence is **not proof of a zero SSE surcharge**. Actual billed SKU,
+SSE pricing, rounding/minima and account terms must be confirmed before recommending
+new-object SSE. The existing operator's narrow November ObjectStorage consumption
+query for the Fitness project returned no posted lines; that proves no zero-cost
+claim and does not identify its billed SKU. No SSE, paid key service, rotation or historical rewrite is
+implemented by this patch. [Pricing and billing-unit notice](https://www.scaleway.com/en/pricing/storage/).
+
+The backup test suite uses the existing Terraform tool in a pinned Docker image,
+with network disabled and synthetic inputs, to compile the actual policy template
+and reject unsafe principal inputs through a real Terraform plan. Real curl/TLS
+and PostgreSQL tests verify unique keys, the exact header, checksum/restore and
+HTTP-precondition failure handling. These are isolated preparation tests, not
+live Scaleway authorization proof.

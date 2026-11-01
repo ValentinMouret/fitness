@@ -1,0 +1,23 @@
+${jsonencode({
+  Version = "2023-04-17"
+  Statement = [
+    {
+      Sid       = "PreserveOperatorRecovery"
+      Effect    = "Allow"
+      Principal = { SCW = sort(tolist(operator_principals)) }
+      Action    = "s3:*"
+      Resource  = [bucket, "${bucket}/*"]
+    },
+    {
+      Sid       = "CreateBackupObjectsOnly"
+      Effect    = "Allow"
+      Principal = { SCW = "application_id:${writer_application_id}" }
+      Action    = "s3:PutObject"
+      Resource  = ["${bucket}/daily/*", "${bucket}/release/*"]
+      Condition = {
+        Null         = { "s3:if-none-match" = "false" }
+        StringEquals = { "s3:if-none-match" = "*" }
+      }
+    }
+  ]
+})}

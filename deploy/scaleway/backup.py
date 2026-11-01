@@ -3,6 +3,7 @@
 import argparse
 import base64
 import fcntl
+from datetime import datetime, timezone
 import hashlib
 import json
 import math
@@ -13,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import uuid
 
 ROOT = Path(__file__).resolve().parent
 STATE = ROOT / 'backup-status.json'
@@ -136,7 +138,8 @@ def backup(name):
             previous = load_state(STATE)
         except (OSError, ValueError, TypeError):
             previous = {}
-        state = {'version': 1, 'status': 'running', 'object': name + '.dump',
+        key = name + '-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ') + '-' + uuid.uuid4().hex + '.dump'
+        state = {'version': 1, 'status': 'running', 'object': key,
                  'attempted_at': time.time(), 'last_success_at': previous.get('last_success_at'),
                  'last_daily_success_at': previous.get('last_daily_success_at'), 'stage': 'configuration'}
         for field in ('last_success_object', 'last_success_sha256', 'last_success_bytes'):
@@ -170,15 +173,16 @@ def backup(name):
                     'curl', '--disable', '--config', str(credentials), '--silent', '--show-error',
                     '--fail', '--connect-timeout', '10', '--max-time', '180',
                     '--aws-sigv4', 'aws:amz:pl-waw:s3',
+                    '--header', 'If-None-Match: *',
                     '--header', 'Content-MD5: ' + base64.b64encode(md5.digest()).decode(),
                     '--header', 'x-amz-content-sha256: ' + sha.hexdigest(),
                     '--upload-file', str(dump), '--output', os.devnull, '--write-out', '%{http_code}',
-                    'https://' + config['BACKUP_BUCKET'] + '.s3.pl-waw.scw.cloud/' + name + '.dump',
+                    'https://' + config['BACKUP_BUCKET'] + '.s3.pl-waw.scw.cloud/' + key,
                 ], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=190, check=True)
                 if not re.fullmatch(rb'2[0-9]{2}', response.stdout):
                     raise ValueError('upload not acknowledged')
                 state.update(status='uploaded', stage='complete', last_success_at=time.time(),
-                             last_success_object=name + '.dump', last_success_sha256=sha.hexdigest(),
+                             last_success_object=key, last_success_sha256=sha.hexdigest(),
                              last_success_bytes=dump.stat().st_size)
                 if name.startswith('daily/'):
                     state['last_daily_success_at'] = state['last_success_at']

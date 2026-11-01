@@ -82,9 +82,53 @@ class ReceiptTests(unittest.TestCase):
                     backup.load_state(path)
 
 
+class PolicyTests(unittest.TestCase):
+    def render(self, operators, validate_only=False):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shutil.copy2(HERE / 'variables.tf', root / 'variables.tf')
+            values = {'ssh_public_key': 'synthetic', 'deploy_ssh_public_key': 'synthetic',
+                      'backup_operator_principals': operators}
+            (root / 'terraform.tfvars.json').write_text(json.dumps(values))
+            inputs = {'bucket': 'synthetic-bucket', 'writer_application_id': '22222222-2222-4222-8222-222222222222'}
+            expression = 'jsonencode(jsondecode(templatefile("/source/backup-policy.json.tftpl", ' + json.dumps(inputs)[:-1] + ', "operator_principals": var.backup_operator_principals})))'
+            command = ['plan', '-input=false', '-no-color'] if validate_only else ['console', '-no-color']
+            return subprocess.run(['docker', 'run', '--rm', '-i', '--network', 'none',
+                                   '--mount', 'type=bind,source=' + str(HERE) + ',target=/source,readonly',
+                                   '--mount', 'type=bind,source=' + str(root) + ',target=/work',
+                                   '--workdir', '/work', 'hashicorp/terraform:1.13.4@sha256:eebc943e69008b6d6d986800087164274d8c92d83db8d53fb9baa4ccff309884',
+                                   *command], input=expression + '\n', text=True,
+                                  capture_output=True, timeout=60)
+
+    def test_real_terraform_policy_compiles_preserving_operator_and_exact_writer_scope(self):
+        owner = 'user_id:11111111-1111-4111-8111-111111111111'
+        result = self.render([owner])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        policy = json.loads(json.loads(result.stdout))
+        self.assertEqual(policy['Version'], '2023-04-17')
+        operator, writer = policy['Statement']
+        self.assertEqual(operator['Principal'], {'SCW': [owner]})
+        self.assertEqual(operator['Resource'], ['synthetic-bucket', 'synthetic-bucket/*'])
+        self.assertEqual(operator['Action'], 's3:*')
+        self.assertEqual(writer['Principal'], {'SCW': 'application_id:22222222-2222-4222-8222-222222222222'})
+        self.assertEqual(writer['Action'], 's3:PutObject')
+        self.assertEqual(writer['Resource'], ['synthetic-bucket/daily/*', 'synthetic-bucket/release/*'])
+        self.assertEqual(writer['Condition'], {'Null': {'s3:if-none-match': 'false'}, 'StringEquals': {'s3:if-none-match': '*'}})
+        self.assertEqual(len(policy['Statement']), 2)
+
+    def test_real_terraform_rejects_empty_wildcard_and_project_operator_principals(self):
+        for operators in ([], ['*'], ['project_id:11111111-1111-4111-8111-111111111111']):
+            result = self.render(operators, validate_only=True)
+            self.assertNotEqual(result.returncode, 0, result.stdout)
+            self.assertIn('Invalid value for variable', result.stderr)
+            self.assertIn('wildcard/project principals are forbidden', result.stderr)
+
+
 class Upload(http.server.BaseHTTPRequestHandler):
     status = 200
     bodies = []
+    headers_seen = []
+    paths_seen = []
 
     def do_PUT(self):
         body = self.rfile.read(int(self.headers['Content-Length']))
@@ -95,6 +139,8 @@ class Upload(http.server.BaseHTTPRequestHandler):
             self.send_error(400)
             return
         self.bodies.append(body)
+        self.headers_seen.append(self.headers.get_all('If-None-Match'))
+        self.paths_seen.append(self.path)
         self.send_response(self.status)
         self.send_header('Content-Length', '0')
         self.end_headers()
@@ -157,8 +203,8 @@ class IntegrationTests(unittest.TestCase):
             def docker(*args, **kwargs):
                 return subprocess.run(['docker', *args], check=True, stdout=subprocess.PIPE,
                                       stderr=subprocess.PIPE, **kwargs)
-            def invoke():
-                return subprocess.run(['bash', str(root / 'backup.sh'), 'daily/2099-01-01'],
+            def invoke(logical_name='daily/2099-01-01'):
+                return subprocess.run(['bash', str(root / 'backup.sh'), logical_name],
                                       env=env, capture_output=True, timeout=210)
             try:
                 docker('run', '-d', '--name', name, '--network', 'none', '--tmpfs', '/var/lib/postgresql/data:rw,size=256m',
@@ -182,11 +228,22 @@ class IntegrationTests(unittest.TestCase):
                 receipt = json.loads((root / 'backup-status.json').read_text())
                 self.assertEqual(receipt['last_success_sha256'], hashlib.sha256(Upload.bodies[-1]).hexdigest())
                 self.assertEqual((root / 'backup-status.json').stat().st_mode & 0o777, 0o600)
+                self.assertEqual(Upload.headers_seen[-1], ['*'])
+                self.assertEqual(Upload.paths_seen[-1], '/' + receipt['object'])
+                self.assertRegex(receipt['object'], r'^daily/2099-01-01-[0-9]{8}T[0-9]{12}Z-[0-9a-f]{32}\.dump$')
+                self.assertEqual(invoke().returncode, 0)
+                second = json.loads((root / 'backup-status.json').read_text())
+                self.assertNotEqual(receipt['object'], second['object'])
+                self.assertEqual(Upload.headers_seen[-1], ['*'])
+                self.assertEqual(invoke('release/' + 'a' * 40).returncode, 0)
+                receipt = json.loads((root / 'backup-status.json').read_text())
+                self.assertRegex(receipt['object'], r'^release/a{40}-[0-9]{8}T[0-9]{12}Z-[0-9a-f]{32}\.dump$')
+                self.assertEqual(receipt['last_daily_success_at'], second['last_daily_success_at'])
                 docker('exec', name, 'createdb', '-U', 'fixture', 'restored')
                 docker('exec', '-i', name, 'pg_restore', '-U', 'fixture', '-d', 'restored', input=Upload.bodies[-1])
                 rows = docker('exec', name, 'psql', '-U', 'fixture', '-d', 'restored', '-Atc', 'SELECT value FROM synthetic')
                 self.assertEqual(rows.stdout.strip(), b'42')
-                for status in (503, 307):
+                for status in (503, 307, 412):
                     Upload.status = status
                     self.assertNotEqual(invoke().returncode, 0)
                     failed = json.loads((root / 'backup-status.json').read_text())
