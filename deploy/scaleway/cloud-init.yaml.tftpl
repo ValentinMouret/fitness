@@ -1,0 +1,37 @@
+#cloud-config
+package_update: true
+packages:
+  - docker.io
+  - docker-compose-v2
+  - ca-certificates
+  - curl
+  - unattended-upgrades
+ssh_pwauth: false
+disable_root: false
+users:
+  - name: root
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ${jsonencode(ssh_public_key)}
+write_files:
+  - path: /etc/ssh/sshd_config.d/10-fitness.conf
+    permissions: '0644'
+    content: |
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PermitRootLogin prohibit-password
+  - path: /etc/docker/daemon.json
+    permissions: '0644'
+    content: |
+      {"log-driver":"local","log-opts":{"max-size":"10m","max-file":"3"}}
+  - path: /etc/sysctl.d/90-fitness.conf
+    permissions: '0644'
+    content: |
+      vm.swappiness=10
+runcmd:
+  - [install, -d, -m, '0700', /srv/fitness]
+  - [sh, -ec, 'if [ ! -f /swapfile ]; then fallocate -l 2G /swapfile; chmod 600 /swapfile; mkswap /swapfile; fi; swapon /swapfile; grep -q "^/swapfile " /etc/fstab || echo "/swapfile none swap sw 0 0" >> /etc/fstab']
+  - [sysctl, --system]
+  - [systemctl, enable, --now, docker]
+  - [systemctl, restart, docker]
+  - [systemctl, reload, ssh]

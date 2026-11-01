@@ -3,7 +3,8 @@
 FROM oven/bun:1-alpine@sha256:819f91180e721ba09e0e5d3eb7fb985832fd23f516e18ddad7e55aaba8100be7 AS base
 WORKDIR /app
 
-FROM base AS deps
+FROM --platform=$BUILDPLATFORM oven/bun:1-alpine@sha256:819f91180e721ba09e0e5d3eb7fb985832fd23f516e18ddad7e55aaba8100be7 AS deps
+WORKDIR /app
 COPY package.json bun.lock ./
 RUN --mount=type=cache,id=bun,target=/root/.bun/install/cache \
     bun install --frozen-lockfile --ignore-scripts

@@ -1,0 +1,58 @@
+name: fitness
+services:
+  postgres:
+    image: postgres:17-alpine
+    network_mode: host
+    restart: unless-stopped
+    env_file:
+      - path: ./database.env
+        format: raw
+    command: [postgres, -c, listen_addresses=127.0.0.1, -c, shared_buffers=64MB, -c, max_connections=30]
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -h 127.0.0.1 -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 256m
+  app:
+    image: ${APP_IMAGE:?Set APP_IMAGE to the locally loaded release image}
+    network_mode: host
+    restart: unless-stopped
+    env_file:
+      - path: ./app.env
+        format: raw
+    environment:
+      NODE_ENV: production
+      HOST: 127.0.0.1
+      PORT: '5174'
+      NODE_OPTIONS: --max-old-space-size=256
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:5174/healthz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    mem_limit: 384m
+  caddy:
+    image: caddy:2-alpine
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN to the public hostname}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    mem_limit: 128m
+volumes:
+  postgres:
+  caddy_data:
+  caddy_config:
