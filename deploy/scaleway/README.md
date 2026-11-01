@@ -18,21 +18,25 @@ reader role. The VM has 1 GB RAM and 2 GB swap; images are built in CI.
 ## Files
 
 - `*.tf`: VM, security group, tunnel, DNS, Access, backup bucket and write-only key.
-- `compose.yaml`: `postgres`, `app`, `cloudflared`. Every service reads `/srv/fitness/.env`.
-- `release.sh <sha>`: backup, migrate, provision the MCP reader, start, verify `/healthz`,
+- `compose.yaml`: `postgres`, `app`, `cloudflared`, plus an on-demand `maintenance` profile. Each service has an explicit environment allowlist.
+- `release.sh <sha>`: backup, migrate, provision restricted runtime/MCP roles, start, verify `/healthz`,
   install the nightly backup cron.
 - `backup.sh <name>`: dump PostgreSQL and upload `<name>.dump` to the bucket.
 - `../../scripts/deploy-scaleway-ci.sh`: CI builds the image, uploads it over SSH and releases.
 
 ## Server secrets
 
-`/srv/fitness/.env` (owner `fitness-deploy`, mode 0600, literal values, no quotes):
+`/srv/fitness/.env` (owner `fitness-deploy`, mode 0600, literal values, no surrounding quotes).
+`compose.sh` reads exact allowlisted values without shell evaluation or dotenv
+interpolation, preserving leading `#`, `$` and literal quotes. Always use the
+wrapper rather than passing this raw file to `docker compose --env-file`:
 
 ```dotenv
 POSTGRES_USER=fitness
 POSTGRES_DB=fitness
 POSTGRES_PASSWORD=<hex>
-DATABASE_URL=postgresql://fitness:<hex>@127.0.0.1:5432/fitness
+DATABASE_URL=postgresql://fitness_app:<different-runtime-hex>@127.0.0.1:5432/fitness
+MIGRATION_DATABASE_URL=postgresql://fitness:<admin-hex>@127.0.0.1:5432/fitness
 AUTH_USERNAME=…
 AUTH_PASSWORD=…
 AUTH_SESSION_SECRET=…
@@ -48,8 +52,20 @@ BACKUP_SECRET_KEY=<terraform output -raw backup_secret_key>
 ```
 
 Plus the `AUTH_FOUNDATION_*` and `AUTH_EMAIL_FROM` values documented in
-[authentication](../../docs/operations/authentication.md). Every container sees
-this file; that is the accepted trade-off for a single-owner host.
+[authentication](../../docs/operations/authentication.md). The file is an operator input, never mounted or loaded wholesale into a container.
+The app receives only application settings and the restricted `fitness_app` URL;
+PostgreSQL receives only `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD`;
+cloudflared receives only `TUNNEL_TOKEN`. Backup credentials remain host-side.
+Unset optional app settings are omitted rather than converted to empty strings.
+
+The short-lived `maintenance` service overrides `DATABASE_URL` with
+`MIGRATION_DATABASE_URL` and receives the runtime URL as `APP_DATABASE_URL`.
+It runs Bun commands directly, never an HTTP server. After migrations, the
+[idempotent provisioner](provision-runtime.ts) grants runtime DML and sequence
+access for existing/future public tables created by the migration role, removes
+privileged role flags, and refuses role memberships or object ownership.
+PUBLIC database CREATE/TEMP and public-schema CREATE are revoked. Application
+authorization still owns account isolation. Runtime startup skips migrations.
 
 ## Terraform
 
@@ -77,7 +93,7 @@ Pushes to `main` deploy after the gate passes. The workflow needs the secrets
 `CF_ACCESS_CLIENT_SECRET` and the variable `SCALEWAY_DEPLOY_HOST`. A failed backup
 or migration stops the release before the app is replaced; a successful migration
 is not undone by deploying an older image. Inspect with
-`docker compose --env-file release.env logs` in `/srv/fitness`. Never run
+`./compose.sh logs` in `/srv/fitness`. Never run
 `docker compose down -v`.
 
 ## Restore
@@ -93,33 +109,46 @@ docker exec -i fitness-postgres-1 pg_restore --clean --if-exists --no-owner --no
 If the VM is lost, Stardust stock may be unavailable: change `type` to the cheapest
 available instance, apply, restore the latest dump and release.
 
-## One-time cutover from the Caddy setup (2026-11)
+## One-time credential isolation cutover
 
-1. As root on the VM, build `.env` from the old files, keeping the owner URL:
+Prepare a coordinated environment cutover before the first release; merging
+alone must not race the environment change.
 
-   ```sh
-   cd /srv/fitness && umask 077
-   { grep -v '^DATABASE_URL=' app.env; cat migration.env database.env
-     printf 'TUNNEL_TOKEN=%s\n' "$(cat /etc/cloudflared/fitness.token)"; } > .env
-   chown fitness-deploy:fitness-deploy .env
-   ```
+1. Keep a private mode-0600 copy of the existing `.env` and a verified current
+   bucket backup. Preserve every existing app setting, owner UUID, session secret,
+   email/OAuth/MCP credential, tunnel token and backup setting.
+2. In a private editor, copy the current admin `DATABASE_URL` unchanged into
+   `MIGRATION_DATABASE_URL`. Change only `DATABASE_URL` to the `fitness_app`
+   username and a new random hex password; keep the same host, port and database.
+   Do not print either URL or use secret-bearing shell arguments. Keep
+   `POSTGRES_PASSWORD` unchanged; editing it does not rotate an existing role.
+   Preserve all existing raw values exactly. Never print `./compose.sh config`
+   with real secrets.
+3. Upload the reviewed compose YAML/wrapper, release, backup and provisioner files together.
+   Run the initial release SHA over independent direct IPv6 operator SSH, not
+   the Cloudflare SSH tunnel. The changed cloudflared environment recreates the
+   only connector, which would disconnect a CI release using that same tunnel.
+   Once this initial release is healthy and the connector is back, subsequent CI
+   releases with unchanged connector configuration can use the tunnel. It verifies the image's embedded SHA, resolves
+   its immutable Docker image ID, backs up before migration, provisions the role,
+   then replaces the app. A backup failure prevents migrations and app replacement.
+   `release.env` records the digest only after the expected SHA is healthy.
+4. Verify health, login, a normal app write and MCP; inspect only environment
+   variable names to confirm admin/backup/tunnel credentials are absent from the
+   app. Verify runtime DML succeeds and DDL/role escalation fail. Do not drop the
+   admin role or the new runtime role.
 
-2. Add `deploy_ssh_public_key` (`ssh-keygen -y` of the CI key) to
-   `local.auto.tfvars.json`. Delete the manual proxied AAAA for
-   `fitness.valentinmouret.io` in Cloudflare, then plan and apply. Expect two
-   moved tunnel resources, an updated tunnel config and security group, and new
-   app CNAME, bucket, IAM application, policy and key; nothing on the server.
-   The running connector serves the app through the tunnel immediately.
-3. Append `BACKUP_BUCKET`, `BACKUP_ACCESS_KEY` and `BACKUP_SECRET_KEY` to `.env`.
-4. Merge to `main`. The release removes Caddy and starts the compose `cloudflared`.
-   Check `/healthz`, login and MCP, and that `release/<sha>.dump` is in the bucket.
-5. Clean up as root:
+If provisioning fails, the old running app keeps its existing environment. Keep
+its image available, inspect the error privately, and correct the prepared env.
+If app replacement fails, a code rollback does not undo migrations; use a matching
+image/schema and preserve new account writes. After restoring with `--no-acl`,
+run the maintenance provisioner and MCP reader provisioning before starting app.
+The previous environment copy contains admin credentials and needs the same
+restricted retention as other operator secrets.
 
-   ```sh
-   systemctl disable --now fitness-deployment-tunnel
-   rm /etc/systemd/system/fitness-deployment-tunnel.service /usr/local/bin/cloudflared
-   rm -r /etc/cloudflared && userdel cloudflared
-   cd /srv/fitness && rm -r app.env database.env migration.env runtime.env Caddyfile provision-runtime.ts backups
-   docker volume rm fitness_caddy_data fitness_caddy_config
-   docker exec fitness-postgres-1 psql -U fitness -d fitness -c 'drop owned by fitness_app; drop role fitness_app;'
-   ```
+## Local deployment checks
+
+`./deploy/scaleway/test-isolation.sh <locally-built-image>` uses only synthetic
+credentials to check the Compose allowlists and actual omission of optional env
+values. It does not contact production or the backup bucket. The repository gate
+runs this check against its built image locally and in CI.
