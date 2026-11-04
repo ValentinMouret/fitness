@@ -5,7 +5,7 @@ Fitness uses one owner login. Browser sessions use a signed, expiring HttpOnly c
 ## Email-code sign-in (ENSO-115)
 
 Valentin approved replacing new email sign-in links with six-digit codes on
-7 October 2026. The existing Better Auth 1.7.7 PostgreSQL adapter and invitation
+7 October 2026. The existing Better Auth 1.7.16 PostgreSQL adapter and invitation
 admission rules stay in place. Request a code at `/sign-in`, then enter it in
 the original Fitness app or browser. Code entry uses text with numeric input
 mode and one-time-code autocomplete so leading zeroes remain intact. Verification
