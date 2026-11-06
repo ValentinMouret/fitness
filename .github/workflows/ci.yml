@@ -52,6 +52,31 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - name: Prefer Ubuntu archive for runner package downloads
+        run: |
+          sudo python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('/etc/apt/apt-mirrors.txt')
+          original = path.read_text()
+          azure = 'http://azure.archive.ubuntu.com/ubuntu/\tpriority:'
+          archive = 'https://archive.ubuntu.com/ubuntu/\tpriority:'
+          lines = original.splitlines(keepends=True)
+          entries = {prefix: [i for i, line in enumerate(lines) if line.startswith(prefix)] for prefix in (azure, archive)}
+          if any(len(indices) != 1 for indices in entries.values()):
+              raise SystemExit('Unexpected runner APT mirror layout; left unchanged')
+          a, b = entries[azure][0], entries[archive][0]
+          current = (lines[a].rstrip('\n'), lines[b].rstrip('\n'))
+          if current == (azure + '2', archive + '1'):
+              pass
+          elif current == (azure + '1', archive + '2'):
+              lines[a] = lines[a].replace('priority:1', 'priority:2')
+              lines[b] = lines[b].replace('priority:2', 'priority:1')
+              path.write_text(''.join(lines))
+          else:
+              raise SystemExit('Unexpected runner APT mirror priorities; left unchanged')
+          PY
+
       - run: bunx playwright install --with-deps chromium webkit
 
       - name: Install PostgreSQL server tools for the MCP acceptance cluster
