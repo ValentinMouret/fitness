@@ -47,12 +47,23 @@
             sha256 = bunArchive.sha256;
           };
         });
+        nodeVersion = pkgs.lib.removeSuffix "\n" (builtins.readFile ./.node-version);
+        node = pkgs.callPackage "${pkgs.path}/pkgs/development/web/nodejs/nodejs.nix" {
+          python = pkgs.python3;
+        } {
+          version = nodeVersion;
+          sha256 = "6cce7c58bf058700c643944903d60a325e8c9ceede1f5c2c088b435f2ada091a";
+          # Node's bundled npm already contains this gyp fix.
+          patches = builtins.filter (
+            patch: (patch.name or "") != "8224deef984add7e7afe846cfb82c9d3fa6da1fb.patch?full_index=1"
+          ) pkgs.nodejs_22.patches;
+        };
       in
       {
         devShells.default = pkgs.mkShell {
           buildInputs = [
             bun
-            pkgs.nodejs_22
+            node
           ];
         };
       }
