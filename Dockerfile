@@ -24,7 +24,7 @@ FROM prod-deps AS runtime
 
 # Node is required to serve the app: Bun's react-dom/server.bun.js shim
 # does not export renderToPipeableStream. Bun is kept for `bun db:migrate`.
-RUN apk add --no-cache nodejs postgresql-client
+RUN apk add --no-cache nodejs=24.22.3-r0 postgresql-client
 
 ARG GIT_SHA=unknown
 ENV GIT_SHA=$GIT_SHA
