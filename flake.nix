@@ -48,8 +48,32 @@
           };
         });
         nodeVersion = pkgs.lib.removeSuffix "\n" (builtins.readFile ./.node-version);
+        nodeOpenSSL = pkgs.openssl.overrideAttrs (finalAttrs: previousAttrs: {
+          version = "3.6.5";
+          src = pkgs.fetchurl {
+            url = "https://github.com/openssl/openssl/releases/download/openssl-${finalAttrs.version}/openssl-${finalAttrs.version}.tar.gz";
+            hash = "sha256-ohV8KDDv3sN4iTmwDJsGODBtPwu7dtxIMu5QO7OX35g=";
+          };
+          patches = map (
+            patch:
+            if builtins.match "use-etc-ssl-certs.*" (builtins.baseNameOf patch) != null then
+              pkgs.fetchurl {
+                url = "https://raw.githubusercontent.com/NixOS/nixpkgs/55bfb4d7437bd4e09ab7cba58a43bd68eb310044/pkgs/development/libraries/openssl/3.5/${builtins.baseNameOf patch}";
+                sha256 = if pkgs.stdenv.hostPlatform.isDarwin then
+                  "2da24e0b9bca9d2dbe5eb28cf832fab3e49c066db4dc922af4d7097f630ff97e"
+                else
+                  "2ba3558f4dbd23812f9d1133c85a4dc6af9c317a32a75504c96f01fb126a91cc";
+              }
+            else
+              patch
+          ) previousAttrs.patches;
+          meta = previousAttrs.meta // {
+            changelog = "https://github.com/openssl/openssl/blob/openssl-${finalAttrs.version}/CHANGES.md";
+          };
+        });
         node = pkgs.callPackage "${pkgs.path}/pkgs/development/web/nodejs/nodejs.nix" {
           python = pkgs.python3;
+          openssl = nodeOpenSSL;
         } {
           version = nodeVersion;
           sha256 = "6cce7c58bf058700c643944903d60a325e8c9ceede1f5c2c088b435f2ada091a";
