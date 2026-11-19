@@ -298,6 +298,18 @@ async function main(): Promise<boolean> {
   await createDatabases();
 
   const staticChecks = parallel(
+    () =>
+      run("apt-mirrors", [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_apt_mirrors.py",
+      ]),
     () => run("format-lint", ["bunx", "biome", "ci", "."]),
     () => run("import-boundaries", ["bun", "run", "lint:boundaries"]),
     () => run("type-assertions", ["bun", "run", "lint:type-assertions"]),
