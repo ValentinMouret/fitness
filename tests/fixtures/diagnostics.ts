@@ -8,14 +8,16 @@ import { observeMcpTransport } from "../../app/modules/mcp/infra/diagnostics.ser
 
 const secret = "private-health-token-email@example.invalid";
 async function request(path: string, next: () => Promise<Response>) {
+  const url = new URL(`http://localhost${path}`);
   const response = await diagnosticMiddleware(
     {
-      request: new Request(`http://localhost${path}`, {
+      request: new Request(url, {
         headers: { "X-Request-Id": secret },
       }),
       params: {},
-      unstable_pattern: "/",
       context: new RouterContextProvider(),
+      url,
+      pattern: "/",
     },
     next,
   );
