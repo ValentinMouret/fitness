@@ -5,6 +5,11 @@
 
 .progress-chart__metrics {
   width: 100%;
+  min-height: 44px;
+}
+
+.progress-chart__metrics .rt-SegmentedControlItem {
+  min-width: 44px;
 }
 
 .progress-chart__summary {
@@ -17,8 +22,10 @@
 }
 
 .progress-chart__latest {
-  font-family: var(--font-display);
-  font-size: 22px;
+  font-family: var(--font-body);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .progress-chart__change {
