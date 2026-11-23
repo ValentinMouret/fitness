@@ -147,7 +147,18 @@ const bodyweightMetrics: ReadonlyArray<MetricDefinition> = [
     key: "load",
     label: "Added load",
     unit: "kg",
-    value: (session) => session.maxWeight,
+    value: (session) =>
+      session.maxWeight ??
+      (session.sets.some(
+        (set) =>
+          !set.isWarmup &&
+          set.reps !== undefined &&
+          Number.isFinite(set.reps) &&
+          set.reps > 0 &&
+          (set.weight === undefined || set.weight === 0),
+      )
+        ? 0
+        : undefined),
   },
 ];
 

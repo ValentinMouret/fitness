@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  ExerciseHistorySession,
+  type ExerciseHistorySet,
+} from "~/modules/fitness/domain/workout";
+import {
   createHistorySessionViewModels,
   createProgressMetricViewModels,
   exerciseHistoryResponseSchema,
@@ -117,6 +121,63 @@ describe("createProgressMetricViewModels", () => {
     expect(metrics.map((metric) => metric.key)).toEqual(["reps", "load"]);
     expect(metrics[0].points.map((point) => point.value)).toEqual([8, 11]);
   });
+
+  it.each([undefined, 0])(
+    "includes a completed unweighted bodyweight session in added load: %s",
+    (unweightedLoad) => {
+      const sessions = [20, 30, unweightedLoad]
+        .map((weight, index) =>
+          ExerciseHistorySession.fromSets(
+            `bw-${index}`,
+            "Pull-ups",
+            new Date(Date.UTC(2026, 10, 9 + index * 7, 8)),
+            [{ set: 1, reps: 8, weight, isWarmup: false }],
+          ),
+        )
+        .reverse();
+      const metrics = createProgressMetricViewModels(
+        exerciseHistoryResponseSchema.parse({ sessions }),
+        true,
+      );
+      const load = metrics.find((metric) => metric.key === "load");
+      expect(load?.points.map((point) => point.value)).toEqual([20, 30, 0]);
+      expect(load?.latestDisplay).toBe("0 kg");
+      expect(load?.changeDisplay).toBe("−20 kg since 9 Nov");
+    },
+  );
+
+  it.each<{ readonly sets: ReadonlyArray<ExerciseHistorySet> }>([
+    { sets: [] },
+    { sets: [{ set: 1, reps: 8, isWarmup: true }] },
+    { sets: [{ set: 1, isWarmup: false }] },
+    { sets: [{ set: 1, reps: 0, isWarmup: false }] },
+    { sets: [{ set: 1, reps: -1, isWarmup: false }] },
+    { sets: [{ set: 1, reps: 8, weight: -1, isWarmup: false }] },
+  ])(
+    "does not invent zero load without valid working reps: $sets",
+    ({ sets }) => {
+      const sessions = [
+        ExerciseHistorySession.fromSets(
+          "weighted",
+          "Pull-ups",
+          new Date("2026-11-09T08:00:00Z"),
+          [{ set: 1, reps: 8, weight: 20, isWarmup: false }],
+        ),
+        ExerciseHistorySession.fromSets(
+          "missing",
+          "Pull-ups",
+          new Date("2026-11-16T08:00:00Z"),
+          sets,
+        ),
+      ];
+      expect(
+        createProgressMetricViewModels(
+          exerciseHistoryResponseSchema.parse({ sessions }),
+          true,
+        ).find((metric) => metric.key === "load"),
+      ).toBeUndefined();
+    },
+  );
 
   it("returns no metric without two sessions to compare", () => {
     const [latest] = progressResponse.sessions;
