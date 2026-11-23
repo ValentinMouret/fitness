@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { BottomSheet } from "~/components/BottomSheet";
 import {
   createHistorySessionViewModels,
+  createProgressMetricViewModels,
   exerciseHistoryResponseSchema,
   type HistorySessionViewModel,
+  type ProgressMetricViewModel,
 } from "../../view-models/exercise-history-sheet.view-model";
+import { ExerciseProgressChart } from "../ExerciseProgressChart";
 import "./ExerciseHistorySheet.css";
 
 interface ExerciseHistorySheetProps {
@@ -22,9 +25,10 @@ type HistoryState =
   | {
       readonly status: "loaded";
       readonly sessions: ReadonlyArray<HistorySessionViewModel>;
+      readonly metrics: ReadonlyArray<ProgressMetricViewModel>;
     };
 
-/** Recent finished sessions of one exercise. */
+/** Progress and recent finished sessions of one exercise. */
 export function ExerciseHistorySheet({
   open,
   exerciseId,
@@ -39,7 +43,7 @@ export function ExerciseHistorySheet({
     if (!open) return;
     const controller = new AbortController();
     setHistory({ status: "loading" });
-    const params = new URLSearchParams({ exerciseId, limit: "10" });
+    const params = new URLSearchParams({ exerciseId, limit: "20" });
     fetch(`/api/exercises/history?${params}`, { signal: controller.signal })
       .then((response) => (response.ok ? response.json() : null))
       .then((body: unknown) => {
@@ -49,6 +53,10 @@ export function ExerciseHistorySheet({
             ? {
                 status: "loaded",
                 sessions: createHistorySessionViewModels(
+                  parsed.data,
+                  isBodyweight,
+                ),
+                metrics: createProgressMetricViewModels(
                   parsed.data,
                   isBodyweight,
                 ),
@@ -81,6 +89,9 @@ export function ExerciseHistorySheet({
         <p className="history-sheet__note">
           No previous workouts for this exercise.
         </p>
+      )}
+      {history.status === "loaded" && (
+        <ExerciseProgressChart metrics={history.metrics} />
       )}
       {history.status === "loaded" &&
         history.sessions.map((session) => (
