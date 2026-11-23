@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createHistorySessionViewModels,
+  createProgressMetricViewModels,
   exerciseHistoryResponseSchema,
 } from "./exercise-history-sheet.view-model";
 
@@ -56,5 +57,71 @@ describe("createHistorySessionViewModels", () => {
       exerciseHistoryResponseSchema.safeParse({ sessions: [{ date: 1 }] })
         .success,
     ).toBe(false);
+  });
+});
+
+const progressResponse = exerciseHistoryResponseSchema.parse({
+  sessions: [
+    {
+      workoutId: "w-3",
+      workoutName: "Upper A",
+      date: "2026-10-20T08:00:00.000Z",
+      totalVolume: 1440,
+      maxWeight: 82.5,
+      estimatedOneRepMax: 99,
+      sets: [
+        { set: 1, reps: 20, weight: 40, isWarmup: true },
+        { set: 2, reps: 6, isWarmup: false },
+        { set: 3, reps: 5, isWarmup: false },
+      ],
+    },
+    {
+      workoutId: "w-2",
+      workoutName: "Upper A",
+      date: "2026-10-13T08:00:00.000Z",
+      totalVolume: 0,
+      sets: [],
+    },
+    {
+      workoutId: "w-1",
+      workoutName: "Upper A",
+      date: "2026-10-06T08:00:00.000Z",
+      totalVolume: 1200,
+      maxWeight: 80,
+      estimatedOneRepMax: 99,
+      sets: [{ set: 1, reps: 8, isWarmup: false }],
+    },
+  ],
+  hasMore: false,
+});
+
+describe("createProgressMetricViewModels", () => {
+  it("plots weighted metrics oldest first and skips missing values", () => {
+    const metrics = createProgressMetricViewModels(progressResponse, false);
+    expect(metrics.map((metric) => metric.key)).toEqual([
+      "volume",
+      "e1rm",
+      "top",
+    ]);
+    const [volume, e1rm, top] = metrics;
+    expect(volume.points.map((point) => point.value)).toEqual([1200, 1440]);
+    expect(volume.points[0].dateDisplay).toBe("6 Oct");
+    expect(volume.latestDisplay).toBe("1,440 kg");
+    expect(volume.changeDisplay).toBe("+240 kg since 6 Oct");
+    expect(e1rm.changeDisplay).toBe("No change since 6 Oct");
+    expect(top.changeDisplay).toBe("+2.5 kg since 6 Oct");
+  });
+
+  it("plots working reps for bodyweight exercises", () => {
+    const metrics = createProgressMetricViewModels(progressResponse, true);
+    expect(metrics.map((metric) => metric.key)).toEqual(["reps", "load"]);
+    expect(metrics[0].points.map((point) => point.value)).toEqual([8, 11]);
+  });
+
+  it("returns no metric without two sessions to compare", () => {
+    const [latest] = progressResponse.sessions;
+    expect(
+      createProgressMetricViewModels({ sessions: [latest] }, false),
+    ).toEqual([]);
   });
 });
